@@ -20,8 +20,8 @@
 |------|-------|--------|--------|
 | [PART 1](#part1) | System Design Fundamentals | Scalability, CAP, Monolith vs Microservices | ✅ |
 | [PART 2](#part2) | Networking & Communication | HTTP, REST, WebSocket, JWT, CDN | ✅ |
-| [PART 3](#part3) | Database Design | SQL vs NoSQL, Sharding, Replication | 🔜 |
-| [PART 4](#part4) | Caching & Performance | Redis, Rate Limiting, CDN | 🔜 |
+| [PART 3](#part3) | Database Design | SQL vs NoSQL, Sharding, Replication | ✅ |
+| [PART 4](#part4) | Caching & Performance | Redis, Rate Limiting, CDN | ✅ |
 | [PART 5](#part5) | Message Queues & Distributed Systems | Kafka, RabbitMQ, Pub/Sub | 🔜 |
 | [PART 6](#part6) | System Design Case Studies | URL Shortener, Chat App, E-commerce | 🔜 |
 | [PART 7](#part7) | Low-Level Design (LLD) | SOLID, Design Patterns, UML | 🔜 |
@@ -58,6 +58,37 @@
 - API Gateway
 - Authentication vs Authorization
 - JWT ও Session Management
+
+</details>
+
+<details>
+<summary>🗄️ <strong>PART 3: Database Design in System Design</strong> — কী কী শিখবো?</summary>
+
+- SQL vs NoSQL — কোনটা কখন
+- Database Scaling (Vertical, Read Replicas, Sharding)
+- Replication — Master-Slave, Synchronous vs Asynchronous
+- Sharding — Range, Hash, Directory, Geographic
+- Indexing — B-Tree, Composite, Full-text
+- Caching Patterns — Cache-Aside, Write-Through
+- Read-Heavy vs Write-Heavy systems
+- Data Consistency — Strong vs Eventual
+- ACID vs BASE
+
+</details>
+
+<details>
+<summary>⚡ <strong>PART 4: Caching & Performance Optimization</strong> — কী কী শিখবো?</summary>
+
+- Caching কী এবং cache tiers
+- Redis — Data structures, implementation, use cases
+- Memcached vs Redis
+- Cache Invalidation — TTL, Event-based, Versioning
+- Cache problems — Stampede, Penetration, Avalanche
+- CDN Caching — Cache-Control headers
+- Browser Caching — ETag, Cache Busting
+- Rate Limiting — Token Bucket, Fixed Window, Sliding Window
+- Compression — gzip, Brotli
+- Lazy Loading — Images, ORM, API Pagination
 
 </details>
 
@@ -2016,6 +2047,1816 @@ HTTP/2 এ একটা connection এ multiple request simultaneously চলে
 
 ---
 
+
+
+<a id="part3"></a>
+
+---
+
+# PART 3: Database Design in System Design
+### 🗄️ System এ Database এর ভূমিকা
+
+> **Interview টিপস:** System Design interview এ database নিয়ে সবচেয়ে বেশি প্রশ্ন আসে। "কোন database use করবে এবং কেন?" — এই প্রশ্নের confident উত্তর দিতে পারলে interviewer impressed হবে।
+
+---
+
+## 3.1 SQL vs NoSQL
+
+### 📖 সংজ্ঞা
+
+**SQL (Relational Database):**
+- Structured data, predefined schema
+- Tables, rows, columns
+- ACID compliance
+- Complex queries, JOINs support
+- উদাহরণ: MySQL, PostgreSQL, SQLite, SQL Server
+
+**NoSQL (Non-Relational Database):**
+- Flexible/dynamic schema
+- Various data models (document, key-value, column, graph)
+- Eventually consistent (mostly)
+- Horizontal scaling সহজ
+- উদাহরণ: MongoDB, Redis, Cassandra, DynamoDB, Neo4j
+
+### 📊 বিস্তারিত তুলনা
+
+| বিষয় | SQL | NoSQL |
+|------|-----|-------|
+| Schema | Fixed, predefined | Flexible, dynamic |
+| Data model | Tables & rows | Documents, K-V, Column, Graph |
+| Relationships | JOINs (strong) | Embedded/denormalized |
+| ACID | ✅ Full support | ⚠️ Varies (some support) |
+| Scaling | Vertical (mostly) | Horizontal (easy) |
+| Query language | SQL (standardized) | Varies per DB |
+| Performance | Complex queries ভালো | Simple, high-volume reads ভালো |
+| Maturity | দীর্ঘদিনের, proven | তুলনামূলক নতুন |
+| Use case | Financial, ERP, CRM | Real-time, Big Data, Cache |
+| BD Junior interviews | বেশি জিজ্ঞেস করে | Concept জানলেই হবে |
+
+### 🎯 NoSQL Types
+
+```
+NoSQL Database Types:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Document Store (MongoDB):
+   {
+     "_id": "123",
+     "name": "Rahim",
+     "orders": [
+       {"item": "Rice", "qty": 2},
+       {"item": "Dal", "qty": 1}
+     ]
+   }
+   Use: CMS, E-commerce, User profiles
+
+2. Key-Value (Redis, DynamoDB):
+   "user:123" → "{name: Rahim, role: admin}"
+   Use: Cache, Session, Real-time leaderboard
+
+3. Column Family (Cassandra, HBase):
+   Row key → Multiple columns per family
+   Use: Time-series, IoT, Analytics
+
+4. Graph (Neo4j):
+   Nodes + Edges + Properties
+   Use: Social networks, Fraud detection, Recommendations
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎯 Database Selection Strategy
+
+```
+Decision Tree — কোন Database বেছে নেবে?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Data কি structured এবং relationships complex?
+    → YES: SQL (PostgreSQL / MySQL)
+
+Data কি document-based এবং schema flexible?
+    → YES: MongoDB
+
+High-speed key-value access দরকার (cache)?
+    → YES: Redis
+
+Massive write throughput, time-series, IoT?
+    → YES: Cassandra
+
+Graph-based relationships (social network)?
+    → YES: Neo4j
+
+Fully managed, serverless, AWS ecosystem?
+    → YES: DynamoDB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎤 Interview Explanation
+> "SQL vs NoSQL একটা trade-off। আমি সবসময় SQL দিয়ে শুরু করি — data যদি structured হয়, relationships complex হয়, financial data হয়। NoSQL choose করি যখন schema flexible দরকার, horizontal scale দরকার, বা write throughput অনেক বেশি। MongoDB document store, Redis cache এর জন্য — দুটোই আলাদা purpose।"
+
+### ⚠️ Common Mistakes
+- "NoSQL মানেই fast, SQL মানেই slow" — ভুল। Context নির্ভর।
+- NoSQL এ complex relationships করার চেষ্টা
+- SQL কে scale করা যায় না ভাবা
+- একটা system এ শুধু একটাই database use করার চিন্তা (Polyglot persistence)
+
+---
+
+## 3.2 Database Scaling
+
+### 📖 সংজ্ঞা
+Database scaling মানে বেশি data এবং বেশি traffic handle করার ক্ষমতা বাড়ানো।
+
+### 🔑 Scaling Strategies
+
+```
+Database Scaling Options:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Vertical Scaling (Scale Up):
+   ┌──────────────────┐      ┌──────────────────┐
+   │ DB: 8 CPU, 32GB  │ ──▶  │ DB: 32 CPU, 256GB│
+   └──────────────────┘      └──────────────────┘
+   Limit আছে, expensive
+
+2. Read Replicas:
+   ┌──────────────┐
+   │  Primary DB  │ ──write──▶ [Application writes here]
+   │  (Master)    │
+   └──────┬───────┘
+          │ replication
+   ┌──────┴──────┐──────────────┐
+   │  Replica 1  │  Replica 2   │  [Application reads from replicas]
+   └─────────────┘──────────────┘
+
+3. Sharding (Horizontal Partitioning):
+   User ID 1-1000    → Shard 1 (DB Server 1)
+   User ID 1001-2000 → Shard 2 (DB Server 2)
+   User ID 2001+     → Shard 3 (DB Server 3)
+
+4. Caching Layer:
+   Application → Redis → DB (cache miss হলে)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 3.3 Replication
+
+### 📖 সংজ্ঞা
+Replication মানে **একই data multiple servers এ copy রাখা** — availability, reliability, এবং read performance বাড়ানো।
+
+### 🔄 Replication Types
+
+```
+Master-Slave (Primary-Replica) Replication:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         [Application]
+         ┌─────┴──────┐
+       Write          Read
+         │              │
+    [Primary DB]   [Replica 1]
+    (Master)    ──▶ [Replica 2]   ← sync হয় continuously
+                ──▶ [Replica 3]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Master-Master (Multi-Primary) Replication:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Primary 1] ←──sync──▶ [Primary 2]
+Both accept reads AND writes
+Conflict resolution দরকার
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Replication Modes
+
+| Mode | কীভাবে | Latency | Data Loss Risk |
+|------|--------|---------|---------------|
+| Synchronous | Primary wait করে replica confirm | বেশি | শূন্য |
+| Asynchronous | Primary write করে, replica পরে sync | কম | সামান্য possible |
+| Semi-synchronous | কমপক্ষে একটা replica confirm | মাঝামাঝি | কম |
+
+### 🎤 Interview Explanation
+> "Replication দুই কাজে লাগে — high availability এবং read scaling। Master-Slave তে write সব master এ, read replicas এ distribute হয়। Master fail করলে slave কে promote করি — failover। কিন্তু replication lag হতে পারে asynchronous mode এ — replica তে stale data থাকতে পারে।"
+
+### ❓ Interview Questions
+1. "Replication lag কী এবং কীভাবে handle করবে?"
+2. "Master fail করলে কী হবে? (Failover process)"
+3. "Synchronous replication এর downside কী?"
+
+---
+
+## 3.4 Sharding
+
+### 📖 সংজ্ঞা
+Sharding হলো **large database কে smaller pieces (shards) এ ভাগ করা** — প্রতিটা shard আলাদা server এ থাকে।
+
+### 🏗️ Sharding Strategies
+
+```
+1. Range-based Sharding:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+User ID: 1 - 1,000,000      → Shard 1
+User ID: 1,000,001 - 2,000,000 → Shard 2
+User ID: 2,000,001+         → Shard 3
+
+✅ Simple, range queries efficient
+❌ Hotspot problem (নতুন user সব Shard 3 এ!)
+
+2. Hash-based Sharding:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+shard = hash(user_id) % number_of_shards
+
+user_id=123 → hash → Shard 1
+user_id=456 → hash → Shard 3
+user_id=789 → hash → Shard 2
+
+✅ Even distribution, no hotspot
+❌ Range queries inefficient, resharding কঠিন
+
+3. Directory-based Sharding:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Lookup Table/Directory]
+user_id=123 → Shard 2
+user_id=456 → Shard 1
+user_id=789 → Shard 3
+
+✅ Flexible, resharding সহজ
+❌ Directory নিজেই bottleneck/single point of failure
+
+4. Geographic Sharding:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bangladesh users → BD Shard (Asia DB)
+US users        → US Shard (US DB)
+Europe users    → EU Shard (EU DB)
+
+✅ Low latency for users, GDPR compliance
+❌ Cross-region queries কঠিন
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### ⚠️ Sharding Challenges
+```
+Sharding এর সমস্যাগুলো:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ Cross-shard JOINs: User Shard 1 এ, Order Shard 3 এ
+   → JOIN করা complex/impossible
+   → Denormalization বা Application-level JOIN দরকার
+
+❌ Cross-shard Transactions: ACID maintain করা কঠিন
+   → Two-Phase Commit (2PC) use করতে হয়
+
+❌ Rebalancing: নতুন shard যোগ করলে data move করতে হয়
+   → Consistent Hashing দিয়ে minimize করা যায়
+
+❌ Hotspot: একটা shard এ বেশি load
+   → Proper sharding key selection critical
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎤 Interview Explanation
+> "Sharding vertical scaling এর limit হলে use করি — data কে multiple servers এ horizontally ভাগ করি। Hash-based sharding even distribution দেয়। কিন্তু সমস্যা হলো cross-shard queries — JOIN করা কঠিন, transaction manage করা কঠিন। তাই sharding এ যাওয়ার আগে read replicas, caching সব try করি।"
+
+---
+
+## 3.5 Partitioning
+
+### 📖 সংজ্ঞা
+Partitioning হলো **একটা table কে logical বা physical pieces এ ভাগ করা** — same database server এ থাকে (sharding থেকে আলাদা)।
+
+### 📊 Partitioning Types
+
+```
+1. Horizontal Partitioning (Row-based):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+orders_2024 (Jan-Jun) → Partition 1
+orders_2024 (Jul-Dec) → Partition 2
+orders_2025           → Partition 3
+[Same server, different tables/files]
+
+2. Vertical Partitioning (Column-based):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+users table:
+Partition A: id, name, email (frequently accessed)
+Partition B: bio, profile_pic, preferences (rarely accessed)
+
+3. Range Partitioning (Date/Time):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-- PostgreSQL Partition by date:
+CREATE TABLE orders (
+    id BIGINT,
+    created_at DATE,
+    total DECIMAL
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE orders_2025_q1 PARTITION OF orders
+    FOR VALUES FROM ('2025-01-01') TO ('2025-04-01');
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎤 Interview Explanation
+> "Partitioning আর Sharding সহজে confuse হয়। Partitioning একটা server এর মধ্যে — table কে ভাগ করি। Sharding multiple servers এ। Time-series data এ date-based partitioning দারুণ কাজ করে — পুরনো partition delete করা সহজ, query fast।"
+
+---
+
+## 3.6 Indexing
+
+### 📖 সংজ্ঞা
+Index হলো database এ **extra data structure** যা queries কে fast করে — book এর সূচিপত্রের মতো।
+
+### 🔄 Index কীভাবে কাজ করে?
+
+```
+Index ছাড়া (Full Table Scan):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SELECT * FROM users WHERE email = 'rahim@gmail.com';
+
+Row 1: id=1, email='karim@gmail.com'  ← check
+Row 2: id=2, email='salam@gmail.com'  ← check
+...
+Row 999999: id=999999, email='rahim@gmail.com' ← FOUND!
+O(n) — 1 million rows scan করতে হলো!
+
+Index সহ (B-Tree Index):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Index: email → row_pointer]
+B-Tree তে binary search → O(log n)
+'rahim@gmail.com' → row_id=999999 → directly fetch
+Millions of rows তেও milliseconds!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Index Types
+
+| Type | কাজ | Best For |
+|------|-----|---------|
+| B-Tree (default) | Range queries, equality | Most queries |
+| Hash | Equality only (=) | Exact match lookups |
+| Composite | Multiple columns together | Multi-column WHERE |
+| Unique | Duplicate prevent | email, username |
+| Full-text | Text search | Blog search, product name |
+| Partial | Subset of rows | WHERE status='active' |
+
+### 💻 SQL Index Examples
+```sql
+-- Single column index:
+CREATE INDEX idx_users_email ON users(email);
+
+-- Composite index:
+CREATE INDEX idx_orders_user_date ON orders(user_id, created_at);
+
+-- Unique index:
+CREATE UNIQUE INDEX idx_users_email_unique ON users(email);
+
+-- Partial index (only active users):
+CREATE INDEX idx_active_users ON users(email) WHERE status = 'active';
+
+-- Full-text search index (PostgreSQL):
+CREATE INDEX idx_products_fts ON products USING gin(to_tsvector('english', name));
+```
+
+### ⚠️ Index Trade-offs
+```
+✅ Index এর সুবিধা:
+- SELECT query অনেক fast
+- ORDER BY, GROUP BY fast
+
+❌ Index এর অসুবিধা:
+- Extra disk space (sometimes 20-30% extra)
+- INSERT/UPDATE/DELETE slow (index ও update করতে হয়)
+- Too many indexes → write performance খারাপ
+```
+
+### 🎤 Interview Explanation
+> "Index হলো database এর সূচিপত্র — full table scan না করে সরাসরি data খুঁজে পায়। B-Tree index most common — range queries এ efficient। কিন্তু সব column এ index দিলে write operation slow হয়। Rule of thumb: WHERE, JOIN, ORDER BY column গুলোতে index দাও।"
+
+### ❓ Interview Questions
+1. "Index থাকলেও কখন কখন full table scan হয়?"
+2. "Composite index এর column order কেন important?"
+3. "Covering index কী?"
+4. "Index এর কারণে insert কীভাবে slow হয়?"
+
+---
+
+## 3.7 Caching (Database Level)
+
+### 📖 সংজ্ঞা
+Database caching মানে **frequently accessed data কে memory তে রেখে** database query এড়ানো।
+
+### 🔄 Caching Patterns
+
+```
+Cache-Aside (Lazy Loading) — সবচেয়ে Common:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. App → Redis: "user:123 আছে?"
+2. Cache Miss → App → Database
+3. Database → App → Redis cache করো
+4. পরবর্তী request → Cache Hit → fast!
+
+[App] ──check──▶ [Redis Cache]
+              Cache Miss ↓
+         [Database] ──data──▶ [App] ──store──▶ [Redis]
+
+Write-Through — Write এও cache update:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Write: App → Database + Redis (same time)
+✅ Cache always fresh
+❌ Write latency বেশি
+
+Write-Back (Write-Behind) — Cache প্রথমে:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Write: App → Redis (async) → Database later
+✅ Write fast
+❌ Data loss risk (Redis crash হলে)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 3.8 Read-Heavy vs Write-Heavy Systems
+
+### 📖 সংজ্ঞা
+
+**Read-Heavy System:** বেশিরভাগ operation হলো read — data পড়া।
+**Write-Heavy System:** বেশিরভাগ operation হলো write — data লেখা।
+
+### 📊 Optimization Strategies
+
+```
+Read-Heavy System (e.g., News site, Blog):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Read : Write ratio → 100:1 বা বেশি
+Solutions:
+✅ Read Replicas — reads multiple servers এ distribute
+✅ Caching (Redis) — DB hit কম করো
+✅ CDN — static content edge এ
+✅ Database indexing — queries fast করো
+✅ Denormalization — JOINs কমাও
+
+Write-Heavy System (e.g., IoT sensors, logging):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Write : Read ratio → 10:1 বা বেশি
+Solutions:
+✅ Sharding — writes multiple servers এ distribute
+✅ Message Queue (Kafka) — burst writes buffer করো
+✅ Batch writes — একসাথে অনেক write
+✅ LSM-tree DB (Cassandra, RocksDB) — write-optimized
+✅ Avoid unnecessary indexes — write fast করো
+✅ Async writes — immediate response, write later
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎤 Interview Explanation
+> "System design এ প্রথমেই জিজ্ঞেস করি — read-heavy নাকি write-heavy? Twitter feed read-heavy (1:100 write:read) — read replicas, cache use করি। IoT sensor data write-heavy — Cassandra বা Kafka use করি। Design সম্পূর্ণ আলাদা।"
+
+---
+
+## 3.9 Data Consistency
+
+### 📖 সংজ্ঞা
+Data Consistency মানে **সব nodes বা users একই time এ same data দেখবে।**
+
+### 📊 Consistency Levels
+
+```
+Strong Consistency:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Write হওয়ার সাথে সাথে সব node update
+পরের read সবসময় latest data পাবে
+Example: Banking, Stock trading
+Cost: High latency, low availability
+
+Eventual Consistency:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Write হলে সব node eventually update হবে
+কিছু সময় পুরনো data দেখা যেতে পারে
+Example: Social media likes, DNS propagation
+Cost: Low latency, high availability
+
+Read-Your-Own-Writes:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+তুমি নিজে যা write করেছো তা সাথে সাথে দেখবে
+অন্যরা হয়তো later দেখবে
+Example: Facebook post — তুমি সাথে সাথে দেখো
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 3.10 Eventual Consistency
+
+### 📖 সংজ্ঞা
+Eventual Consistency হলো guarantee যে **সব updates propagate হলে সব nodes same value দেখাবে** — কিন্তু কতক্ষণ লাগবে সেটা নির্দিষ্ট নয়।
+
+### 🎯 Real-Life Analogy
+> Facebook এ status update করলে — তুমি সাথে সাথে দেখো। তোমার বন্ধু (অন্য region এ) হয়তো ৫ সেকেন্ড পরে দেখবে। কিন্তু eventually সবাই same status দেখবে। এটাই eventual consistency।
+
+### 📊 Eventual Consistency কোথায় OK?
+
+| ✅ OK | ❌ Not OK |
+|-------|---------|
+| Social media likes | Bank balance |
+| Product view count | Stock inventory |
+| DNS propagation | Payment processing |
+| User profile update | Medical records |
+| Shopping cart (sometimes) | Flight seat booking |
+
+### 🎤 Interview Explanation
+> "Eventual consistency মানে হলো system strong consistency sacrifice করে high availability আর low latency পায়। Cassandra AP database — এটা eventual consistency দেয়। Social media feed এ fine — like count ১ সেকেন্ড পরে update হলে সমস্যা নেই। কিন্তু banking তে CP database দরকার — money অনেক consistent হতে হবে।"
+
+---
+
+## 3.11 ACID vs BASE
+
+### 📖 সংজ্ঞা
+
+**ACID (SQL Databases এর guarantee):**
+- **A — Atomicity:** Transaction পুরো হয় বা একদম হয় না
+- **C — Consistency:** Database সবসময় valid state এ থাকে
+- **I — Isolation:** Concurrent transactions একে অন্যকে affect করে না
+- **D — Durability:** Committed data permanent (crash হলেও)
+
+**BASE (NoSQL Databases এর approach):**
+- **B — Basically Available:** System সবসময় response দেয় (data stale হলেও)
+- **A — Soft State:** System state change হতে পারে input ছাড়াই
+- **E — Eventually Consistent:** সময়মতো সব node sync হবে
+
+### 🎯 Real-Life Analogy
+> **ACID — Bank Transfer:**
+> তুমি ৫০০০ টাকা Bkash থেকে পাঠাচ্ছো।
+> - Atomicity: তোমার account থেকে কাটবে AND recipient পাবে — একসাথে বা একদমই না
+> - Consistency: Total money system এ same থাকবে
+> - Isolation: অন্য transaction তোমার transaction এ interfere করবে না
+> - Durability: Transaction complete হলে power গেলেও টাকা safe
+
+> **BASE — Facebook Like:**
+> তুমি একটা post এ like দিলে — তোমার বন্ধু হয়তো এখনই দেখবে না, কিছুক্ষণ পরে দেখবে।
+
+### 📊 ACID vs BASE তুলনা
+
+| বিষয় | ACID | BASE |
+|------|------|------|
+| Consistency | Strong | Eventual |
+| Availability | Sacrifice করে | Prioritize করে |
+| Complexity | High | Low |
+| Performance | Lower (locks, etc.) | Higher |
+| Scale | Harder | Easier |
+| Use case | Financial, Medical | Social, Analytics |
+| Examples | PostgreSQL, MySQL | Cassandra, DynamoDB |
+
+### 🎤 Interview Explanation
+> "ACID guarantee হলো strong consistency — banking এ এটা দরকার। BASE হলো availability কে priority দেওয়া — eventual consistency accept করা। NoSQL databases বেশিরভাগ BASE follow করে, তাই scale করা সহজ কিন্তু strong consistency নেই। Modern systems often polyglot — banking transactions PostgreSQL (ACID), user feed Cassandra (BASE)।"
+
+### ❓ Interview Questions
+1. "ACID এর Isolation এর different levels কী কী?"
+2. "Phantom read কী?"
+3. "Two-Phase Commit (2PC) কী?"
+4. "Saga pattern কী এবং কেন use করো?"
+
+---
+
+## 📋 PART 3: Quick Revision Table
+
+| Concept | এক কথায় | Key Point |
+|---------|---------|-----------|
+| SQL | Relational, ACID | Tables, JOINs, structured |
+| NoSQL | Non-relational, BASE | Flexible, scalable |
+| Replication | Data copy in multiple servers | Read scaling, availability |
+| Sharding | Horizontal DB partition | Write scaling, large data |
+| Partitioning | Table partition (same server) | Query performance |
+| Indexing | Fast lookup data structure | B-Tree most common |
+| Cache-Aside | App manages cache | Most common pattern |
+| Write-Through | Write DB + cache together | Consistent cache |
+| Read-Heavy | বেশি read | Replicas, cache |
+| Write-Heavy | বেশি write | Sharding, queue, LSM |
+| Strong Consistency | সব node same data instantly | Banking |
+| Eventual Consistency | Eventually same, not instantly | Social media |
+| ACID | Atomicity, Consistency, Isolation, Durability | SQL |
+| BASE | Basically Available, Soft state, Eventually consistent | NoSQL |
+
+---
+
+## 🎯 PART 3: Top 10 Interview Questions
+
+<details>
+<summary><strong>Q1: SQL vs NoSQL — কোনটা বেছে নেবে এবং কেন?</strong></summary>
+
+**উত্তর:**
+এটা use case নির্ভর। আমি এভাবে decide করি:
+
+**SQL choose করি যখন:**
+- Data structured এবং relationships complex (users, orders, payments)
+- ACID guarantee দরকার (banking, finance)
+- Complex queries/JOINs দরকার
+- Data consistency critical
+
+**NoSQL choose করি যখন:**
+- Schema flexible বা evolving (product catalog)
+- Massive horizontal scaling দরকার
+- High write throughput (IoT, logs)
+- Key-value simple access (session, cache)
+- Graph relationships (social network)
+
+Real answer: Most production systems use both (Polyglot Persistence) — user data PostgreSQL, cache Redis, search Elasticsearch.
+
+</details>
+
+<details>
+<summary><strong>Q2: Database sharding করবে কখন এবং কীভাবে?</strong></summary>
+
+**উত্তর:**
+Sharding করার আগে এই steps নিই:
+
+1. **Optimize queries** — indexes, query rewrite
+2. **Add read replicas** — reads distribute করো
+3. **Add caching** — Redis দিয়ে DB load কমাও
+4. **Vertical scale** — bigger hardware
+5. **তারপর sharding** — এটা last resort কারণ complexity অনেক বাড়ে
+
+Sharding key সতর্কে choose করি:
+- Even distribution (hotspot avoid)
+- Common query pattern এর সাথে align
+- Join minimal করার চেষ্টা
+- Future growth consider
+
+Hash-based sharding usually prefer করি — even distribution। কিন্তু Consistent Hashing use করি resharding সহজ করতে।
+
+</details>
+
+<details>
+<summary><strong>Q3: Database index কখন দেবে, কখন দেবে না?</strong></summary>
+
+**উত্তর:**
+**Index দেবো:**
+- WHERE clause এ frequently used columns
+- JOIN condition columns (foreign keys)
+- ORDER BY, GROUP BY columns
+- High cardinality columns (email, user_id)
+
+**Index দেবো না:**
+- Low cardinality columns (gender: M/F — শুধু ২টা value)
+- Rarely queried columns
+- Small tables (full scan faster)
+- Frequently updated columns (index maintenance overhead)
+- Too many indexes → write performance দেখো
+
+Rule: Production এ EXPLAIN ANALYZE দিয়ে query plan দেখো, সেটা বলবে index দরকার কিনা।
+
+</details>
+
+<details>
+<summary><strong>Q4: N+1 query problem কী এবং কীভাবে fix করবে?</strong></summary>
+
+**উত্তর:**
+```python
+# N+1 Problem:
+users = User.objects.all()  # 1 query
+for user in users:
+    print(user.orders.all())  # N queries (প্রতি user এর জন্য!)
+# Total: N+1 queries!
+
+# Fix: Eager loading (JOIN/prefetch):
+users = User.objects.prefetch_related('orders').all()
+# Total: 2 queries (users + all orders in one go)
+
+# অথবা SQL JOIN:
+SELECT u.*, o.*
+FROM users u
+LEFT JOIN orders o ON o.user_id = u.id;
+# Total: 1 query!
+```
+
+Django তে `select_related` (FK/OneToOne) এবং `prefetch_related` (ManyToMany) use করো।
+
+</details>
+
+<details>
+<summary><strong>Q5: ACID transaction কীভাবে implement করবে?</strong></summary>
+
+**উত্তর:**
+```python
+# Django/SQLAlchemy transaction:
+from django.db import transaction
+
+def transfer_money(from_user_id, to_user_id, amount):
+    with transaction.atomic():  # ACID transaction শুরু
+        from_user = User.objects.select_for_update().get(id=from_user_id)
+        to_user = User.objects.select_for_update().get(id=to_user_id)
+        
+        if from_user.balance < amount:
+            raise ValueError("Insufficient balance")
+        
+        from_user.balance -= amount
+        to_user.balance += amount
+        
+        from_user.save()
+        to_user.save()
+    # transaction.atomic() এর block শেষ → commit
+    # Exception হলে → automatic rollback
+
+# select_for_update() → row-level lock
+# concurrent requests একসাথে same row update করতে পারবে না
+```
+
+</details>
+
+<details>
+<summary><strong>Q6: Database replication lag কীভাবে handle করবে?</strong></summary>
+
+**উত্তর:**
+Replication lag মানে master এ write হওয়ার পর replica তে পৌঁছাতে কিছু সময় লাগে।
+
+**Solutions:**
+1. **Read-your-own-writes:** User নিজে write করা data পড়তে চাইলে master থেকে read করো
+2. **Monotonic reads:** Same user কে same replica থেকে read করাও (sticky session)
+3. **Synchronous replication:** Lag শূন্য কিন্তু write latency বেশি
+4. **Application level:** Write করার পর কিছুটা wait করো (wait_for_replica)
+5. **Cache:** Write করার সাথে cache update করো — read replica এর উপর depend না করে
+
+```python
+# Read-your-own-writes pattern:
+def get_user(user_id, just_updated=False):
+    if just_updated:
+        return db_master.get_user(user_id)  # master থেকে read
+    return db_replica.get_user(user_id)     # replica থেকে read
+```
+
+</details>
+
+<details>
+<summary><strong>Q7: Eventual consistency এ কীভাবে conflict resolve করবে?</strong></summary>
+
+**উত্তর:**
+Distributed systems এ two nodes একই data আলাদাভাবে update করলে conflict হয়।
+
+**Conflict Resolution Strategies:**
+
+1. **Last Write Wins (LWW):** Latest timestamp জেতে
+   - Simple কিন্তু data loss হতে পারে
+   - Cassandra default
+
+2. **Multi-Version Concurrency Control (MVCC):**
+   - সব versions রাখো, user decide করুক
+   - Amazon shopping cart
+
+3. **CRDTs (Conflict-free Replicated Data Types):**
+   - Mathematically conflict-free operations
+   - Counters, sets
+
+4. **Application-level merge:**
+   - Business logic দিয়ে merge করো
+   - Google Docs operational transformation
+
+</details>
+
+<details>
+<summary><strong>Q8: Polyglot persistence কী?</strong></summary>
+
+**উত্তর:**
+Polyglot persistence মানে একটা application এ **multiple database technologies** use করা — প্রতিটা use case এর জন্য best-fit database।
+
+**উদাহরণ (E-commerce):**
+```
+User profiles, orders → PostgreSQL (ACID, relationships)
+Product search        → Elasticsearch (full-text search)
+Session data          → Redis (fast key-value)
+Product images        → S3 (object storage)
+Analytics data        → Redshift/BigQuery (columnar, OLAP)
+Real-time inventory   → Redis (fast atomic operations)
+Recommendations       → Neo4j (graph relationships)
+```
+
+প্রতিটা database তার purpose এ best। কিন্তু complexity বেশি — operations, backups, monitoring সব আলাদা।
+
+</details>
+
+<details>
+<summary><strong>Q9: Database connection pool কী এবং কেন দরকার?</strong></summary>
+
+**উত্তর:**
+প্রতিটা DB connection establish করতে সময় লাগে (~100ms) এবং resource দরকার। প্রতিটা request এ নতুন connection বানালে:
+- Slow (connection overhead)
+- Resource wasteful
+- DB connection limit exceed হতে পারে
+
+**Connection Pool:**
+```python
+# SQLAlchemy connection pool:
+from sqlalchemy import create_engine
+
+engine = create_engine(
+    "postgresql://user:pass@localhost/db",
+    pool_size=20,        # permanent connections
+    max_overflow=10,     # extra connections if needed
+    pool_timeout=30,     # wait time for available connection
+    pool_recycle=1800    # connection refresh interval
+)
+```
+
+Pool তে আগে থেকে connections ready থাকে। Request আসলে pool থেকে connection নেয়, শেষে ফেরত দেয়।
+
+</details>
+
+<details>
+<summary><strong>Q10: Database এ Deadlock কী এবং কীভাবে prevent করবে?</strong></summary>
+
+**উত্তর:**
+Deadlock: দুটো transaction একে অন্যের lock এর জন্য wait করছে — কেউই proceed করতে পারছে না।
+
+```
+Transaction A: Lock(user_1) → waiting for Lock(user_2)
+Transaction B: Lock(user_2) → waiting for Lock(user_1)
+→ Deadlock!
+```
+
+**Prevention:**
+1. **Consistent lock ordering:** সবসময় same order এ locks নাও (user_1 আগে, user_2 পরে)
+2. **Lock timeout:** অনেকক্ষণ wait করলে rollback
+3. **SELECT FOR UPDATE NOWAIT:** Lock না পেলে immediately fail
+4. **Minimize transaction scope:** ছোট ছোট transactions
+5. **Deadlock detection:** DB automatically detect করে একটাকে rollback করে
+
+```python
+# Correct lock ordering (always lock smaller ID first):
+def transfer(from_id, to_id, amount):
+    first_id, second_id = sorted([from_id, to_id])
+    with transaction.atomic():
+        first = User.objects.select_for_update().get(id=first_id)
+        second = User.objects.select_for_update().get(id=second_id)
+        # proceed...
+```
+
+</details>
+
+<div align="right">
+
+[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 4 →](#part4)
+
+</div>
+
+---
+
+<a id="part4"></a>
+
+---
+
+# PART 4: Caching & Performance Optimization
+### ⚡ System কে দ্রুত করার কৌশল
+
+> **Interview টিপস:** Caching system design এর সবচেয়ে powerful tool। "System slow হচ্ছে, কী করবে?" — প্রায় সব ক্ষেত্রে answer এ cache আসবে। এটা ভালো বুঝলে interview এ অনেক এগিয়ে থাকবে।
+
+---
+
+## 4.1 Caching কী? (What is Caching)
+
+### 📖 সংজ্ঞা
+Caching হলো **frequently accessed data কে fast storage এ রাখা** — পরের request এ slow source (DB, API) থেকে না নিয়ে cache থেকে serve করা।
+
+### 🎯 Real-Life Analogy
+> পরীক্ষার আগে textbook থেকে important points নিজের খাতায় লিখে রাখো — পরীক্ষার হলে textbook খোঁজার দরকার নেই, খাতা দেখো। Cache হলো সেই খাতা।
+
+### 📊 Caching Tiers
+
+```
+Cache Hierarchy (Fastest to Slowest):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+L1 CPU Cache       ~0.5 ns    ← Fastest, smallest (KB)
+L2 CPU Cache       ~5 ns
+L3 CPU Cache       ~40 ns
+RAM                ~100 ns    ← Application level cache
+SSD                ~100 μs
+Redis (network)    ~0.5 ms    ← Distributed cache
+HDD                ~10 ms
+Database           ~100ms+    ← Slowest
+Network (CDN miss) ~200ms+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Caching Benefits
+```
+Without Cache:                    With Cache:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+100 users → 100 DB queries        100 users → 1 DB query
+                                             99 cache hits
+Response time: ~200ms             Response time: ~2ms
+DB load: High                     DB load: Minimal
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 4.2 Redis
+
+### 📖 সংজ্ঞা
+Redis (Remote Dictionary Server) হলো **in-memory data structure store** — cache, session store, message broker, real-time database হিসেবে use হয়।
+
+### 🔑 Redis Data Structures
+
+```
+Redis এর Data Types:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. String:
+   SET user:123:name "Rahim"
+   GET user:123:name → "Rahim"
+   SETEX session:abc 3600 "user_data"  ← TTL সহ
+
+2. Hash (Object store):
+   HSET user:123 name "Rahim" email "rahim@mail.com" age 25
+   HGET user:123 name → "Rahim"
+   HGETALL user:123 → {name: Rahim, email: ..., age: 25}
+
+3. List (Queue/Stack):
+   LPUSH notifications:user:123 "New message!"
+   RPOP notifications:user:123 → "New message!"
+
+4. Set (Unique values):
+   SADD online_users "user:123" "user:456"
+   SMEMBERS online_users → {"user:123", "user:456"}
+   SISMEMBER online_users "user:123" → 1 (true)
+
+5. Sorted Set (Leaderboard):
+   ZADD leaderboard 1500 "player:rahim"
+   ZADD leaderboard 2000 "player:karim"
+   ZRANK leaderboard "player:rahim" → 1 (2nd place)
+   ZRANGE leaderboard 0 9 WITHSCORES → top 10
+
+6. HyperLogLog (Unique count):
+   PFADD visitors "ip1" "ip2" "ip3"
+   PFCOUNT visitors → 3 (approximate unique)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 💻 Redis Implementation (Python)
+
+```python
+import redis
+import json
+from functools import wraps
+
+r = redis.Redis(host='localhost', port=6379, db=0)
+
+# Cache-Aside Pattern:
+def get_user(user_id: int) -> dict:
+    cache_key = f"user:{user_id}"
+    
+    # Cache check:
+    cached = r.get(cache_key)
+    if cached:
+        return json.loads(cached)  # Cache Hit!
+    
+    # Cache Miss → DB query:
+    user = db.query("SELECT * FROM users WHERE id = %s", user_id)
+    
+    # Cache store with TTL:
+    r.setex(cache_key, 3600, json.dumps(user))  # 1 hour TTL
+    return user
+
+# Decorator pattern for caching:
+def cache(ttl=3600):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            key = f"{func.__name__}:{args}:{kwargs}"
+            cached = r.get(key)
+            if cached:
+                return json.loads(cached)
+            result = func(*args, **kwargs)
+            r.setex(key, ttl, json.dumps(result))
+            return result
+        return wrapper
+    return decorator
+
+@cache(ttl=600)  # 10 minutes cache
+def get_product_list(category: str) -> list:
+    return db.query("SELECT * FROM products WHERE category = %s", category)
+```
+
+### 🔑 Redis Use Cases
+
+| Use Case | Redis Command | Example |
+|----------|-------------|---------|
+| Cache | GET/SET/SETEX | Product data, user profile |
+| Session store | SETEX | User login session |
+| Rate limiting | INCR + EXPIRE | API rate limit |
+| Pub/Sub | PUBLISH/SUBSCRIBE | Real-time notifications |
+| Job queue | LPUSH/RPOP | Background tasks |
+| Leaderboard | ZADD/ZRANGE | Game rankings |
+| Real-time counter | INCR | Page views, likes |
+| Distributed lock | SET NX | Prevent duplicate operations |
+
+### 🎤 Interview Explanation
+> "Redis আমার go-to caching solution। In-memory তাই অনেক fast (sub-millisecond)। String, Hash, List, Set, Sorted Set — আলাদা use case এ আলাদা data structure। TTL দিয়ে cache expiry set করি। Production এ Redis Cluster use করি high availability এর জন্য।"
+
+---
+
+## 4.3 Memcached Basics
+
+### 📖 সংজ্ঞা
+Memcached হলো **simple distributed memory caching system** — শুধু key-value string store করে।
+
+### 📊 Redis vs Memcached
+
+| বিষয় | Redis | Memcached |
+|------|-------|-----------|
+| Data structures | String, Hash, List, Set, Sorted Set | শুধু String |
+| Persistence | Optional (RDB/AOF) | নেই (memory only) |
+| Replication | আছে | নেই (manually) |
+| Pub/Sub | আছে | নেই |
+| Cluster | আছে | আছে |
+| Lua scripting | আছে | নেই |
+| Memory efficiency | Slightly higher | Slightly lower overhead |
+| Use case | Versatile, feature-rich | Simple string cache only |
+| Recommended | ✅ Modern choice | Legacy systems |
+
+### 🎤 Interview Explanation
+> "Memcached শুধু simple string caching — Redis এর subset। আজকাল নতুন project এ Redis use করি কারণ Redis এ অনেক বেশি features আছে। Memcached পুরনো systems এ দেখি।"
+
+---
+
+## 4.4 Cache Invalidation
+
+### 📖 সংজ্ঞা
+Cache Invalidation মানে **stale (outdated) data কে cache থেকে remove বা update করা** যাতে user পুরনো data না দেখে।
+
+> **বিখ্যাত quote:** "There are only two hard things in Computer Science: cache invalidation and naming things." — Phil Karlton
+
+### 🔑 Cache Invalidation Strategies
+
+```
+1. TTL (Time-To-Live) — সবচেয়ে Common:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+r.setex("product:123", 3600, data)  # 1 hour পর auto expire
+✅ Simple, automatic
+❌ Stale data TTL পর্যন্ত থাকতে পারে
+
+2. Event-based Invalidation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+def update_product(product_id, new_data):
+    db.update("products", product_id, new_data)
+    r.delete(f"product:{product_id}")  # Cache clear!
+✅ Always fresh after update
+❌ Miss করলে stale data
+
+3. Cache-through (Write-Through):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+def update_product(product_id, new_data):
+    db.update("products", product_id, new_data)
+    r.setex(f"product:{product_id}", 3600, new_data)  # Also update cache
+✅ Cache always consistent
+❌ Write latency বেশি
+
+4. Cache Versioning:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Version increment করলে পুরনো key automatically stale:
+version = r.incr("product:123:version")
+cache_key = f"product:123:v{version}"
+✅ Instant invalidation across all caches
+❌ Old keys accumulate (cleanup দরকার)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### ⚠️ Cache Problems
+
+```
+1. Cache Stampede (Thundering Herd):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Cache expire → ১০০০ request একসাথে DB তে যায়!
+→ DB overloaded
+
+Solution:
+- Mutex/Lock: একটাই DB query, বাকি wait
+- Probabilistic early expiration: TTL এর কাছাকাছি time এ refresh
+- Background refresh: TTL শেষের আগেই background এ refresh
+
+2. Cache Penetration:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Non-existent key এর request → সবসময় DB hit
+→ Attacker intentionally করলে DB overload
+
+Solution:
+- Bloom Filter: "এই key exist করে?" fast check
+- Cache null result: "user:999" → null store করো
+
+3. Cache Avalanche:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+একসাথে অনেক cache expire → সব DB তে যায়
+
+Solution:
+- Random TTL: 3600 ± random(300) — সব একসাথে expire না করে
+- Pre-warming: Deploy এর আগে cache গরম করো
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎤 Interview Explanation
+> "Cache invalidation কঠিন কারণ data update হলে cache এ পুরনো data থাকে। TTL based approach simple — কিছু সময়ের জন্য stale data accept করি। Critical data এ event-based invalidation — update হলে সাথে সাথে cache delete। Cache Stampede problem এ mutex lock বা probabilistic refresh use করি।"
+
+---
+
+## 4.5 CDN Caching
+
+### 📖 সংজ্ঞা
+CDN (Content Delivery Network) globally distributed servers এ **static content cache করে** — user এর কাছের server থেকে serve করে।
+
+### 🔄 CDN Cache Flow
+
+```
+CDN Caching Flow:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+First Request (BD User → Singapore CDN):
+[BD User] ──GET /logo.png──▶ [Singapore CDN]
+                               Cache Miss!
+[Singapore CDN] ──GET /logo.png──▶ [Origin Server, Dhaka]
+[Origin] ──logo.png──▶ [Singapore CDN] (cache করে রাখলো)
+[Singapore CDN] ──logo.png──▶ [BD User]
+Latency: ~500ms
+
+Second Request (any BD User):
+[BD User] ──GET /logo.png──▶ [Singapore CDN]
+                               Cache Hit! ✅
+[Singapore CDN] ──logo.png──▶ [BD User]
+Latency: ~20ms (25x faster!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Cache-Control Headers
+
+```http
+# Response headers that control CDN caching:
+
+# 1 hour cache, CDN can cache:
+Cache-Control: public, max-age=3600
+
+# No CDN cache, browser can cache:
+Cache-Control: private, max-age=3600
+
+# Never cache:
+Cache-Control: no-store
+
+# Validate before using:
+Cache-Control: no-cache
+
+# Immutable (versioned assets):
+Cache-Control: public, max-age=31536000, immutable
+# e.g., /static/app.abc123.js — hash in filename
+```
+
+### 🎯 What to CDN Cache?
+
+| ✅ CDN তে Cache করো | ❌ CDN তে Cache করো না |
+|--------------------|----------------------|
+| Images, videos | Personalized content |
+| CSS, JavaScript | User-specific API responses |
+| HTML static pages | Payment pages |
+| Fonts | Auth pages |
+| PDF, documents | Real-time data |
+
+---
+
+## 4.6 Browser Caching
+
+### 📖 সংজ্ঞা
+Browser user এর machine এ **files locally store করে** — পরের visit এ server থেকে না নিয়ে local থেকে load করে।
+
+### 🔑 Browser Cache Headers
+
+```
+ETag + Last-Modified (Validation):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Server Response:
+    ETag: "abc123xyz"
+    Last-Modified: Sun, 11 May 2026 00:00:00 GMT
+
+Browser পরের বার:
+    If-None-Match: "abc123xyz"
+    If-Modified-Since: Sun, 11 May 2026 00:00:00 GMT
+
+Server: পরিবর্তন নেই → 304 Not Modified (no body)
+        পরিবর্তন আছে → 200 OK (new content)
+
+Benefit: Bandwidth save! File transfer না হলে শুধু headers।
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 💡 Cache Busting
+```html
+<!-- Problem: CSS update করলে browser পুরনো CSS দেখায়! -->
+<link rel="stylesheet" href="/static/app.css">
+
+<!-- Solution: Content hash filename এ যোগ করো: -->
+<link rel="stylesheet" href="/static/app.a1b2c3d4.css">
+<!-- File change হলে hash বদলায় → browser নতুন file download করে -->
+```
+
+---
+
+## 4.7 Rate Limiting
+
+### 📖 সংজ্ঞা
+Rate Limiting মানে **একটা client কতবার request করতে পারবে** তার সীমা নির্ধারণ করা — abuse, DDoS, spam prevent করতে।
+
+### 🔑 Rate Limiting Algorithms
+
+```
+1. Fixed Window Counter:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Per minute: max 100 requests
+Window: 00:00 - 01:00 → counter
+        01:00 - 02:00 → counter reset
+
+Problem: Window boundary এ burst possible
+(59তম second এ 100 + 00তম second এ 100 = 200 in 2 sec)
+
+2. Sliding Window Log:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Last 60 seconds এর সব timestamps track করো
+Count > 100 হলে block
+
+✅ Accurate
+❌ Memory intensive (সব timestamps store)
+
+3. Token Bucket (Most Popular):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Bucket এ tokens আছে (e.g., 100)
+প্রতি request এ 1 token consume
+প্রতি second এ 10 tokens refill
+Bucket full হলে নতুন token overflow (discard)
+
+✅ Burst allow করে
+✅ Smooth rate limiting
+Example: AWS API Gateway, Stripe
+
+4. Leaky Bucket:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Requests queue তে আসে, fixed rate এ process হয়
+Burst absorb করে কিন্তু fixed rate output
+Example: Nginx limit_req
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 💻 Redis দিয়ে Rate Limiting
+
+```python
+import redis
+import time
+
+r = redis.Redis()
+
+def check_rate_limit(user_id: str, limit: int = 100, window: int = 60) -> bool:
+    """
+    Sliding Window Rate Limiter using Redis
+    Returns True if request is allowed, False if rate limited
+    """
+    now = time.time()
+    key = f"rate_limit:{user_id}"
+    
+    pipe = r.pipeline()
+    # Remove old timestamps outside window
+    pipe.zremrangebyscore(key, 0, now - window)
+    # Count current requests in window
+    pipe.zcard(key)
+    # Add current request timestamp
+    pipe.zadd(key, {str(now): now})
+    # Set expiry
+    pipe.expire(key, window)
+    
+    results = pipe.execute()
+    request_count = results[1]
+    
+    if request_count >= limit:
+        return False  # Rate limited!
+    return True
+
+# API endpoint এ use:
+def api_endpoint(request):
+    user_id = request.user.id
+    if not check_rate_limit(str(user_id), limit=100, window=60):
+        return Response(
+            {"error": "Rate limit exceeded. Try after 60 seconds."},
+            status=429  # Too Many Requests
+        )
+    # Process request...
+```
+
+### 📊 Rate Limiting Headers
+
+```http
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 45
+X-RateLimit-Reset: 1683849600
+
+HTTP/1.1 429 Too Many Requests
+Retry-After: 30
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+```
+
+---
+
+## 4.8 Compression
+
+### 📖 সংজ্ঞা
+Compression মানে **data size কমানো** — network transfer এ কম bandwidth, faster load।
+
+### 🔑 Compression Types
+
+```
+HTTP Response Compression:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Client Header: Accept-Encoding: gzip, br, deflate
+Server Response: Content-Encoding: gzip
+
+Algorithms:
+- gzip: Most compatible, good compression (60-80% for text)
+- Brotli (br): Better than gzip for text, modern browsers
+- deflate: Older, less common
+
+Example:
+Raw HTML: 100 KB
+gzip compressed: 20 KB  ← 80% smaller!
+Brotli compressed: 17 KB ← Even better!
+
+Nginx compression config:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+gzip on;
+gzip_types text/plain text/css application/json application/javascript;
+gzip_min_length 1000;
+gzip_comp_level 6;
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Compression Comparison
+
+| Algorithm | Ratio | Speed | CPU Cost |
+|-----------|-------|-------|---------|
+| gzip level 6 | ~65% | Fast | Medium |
+| Brotli level 11 | ~70% | Slow | High |
+| Brotli level 4 | ~65% | Fast | Low |
+| LZ4 | ~50% | Very fast | Very low |
+
+> **Rule:** Text content (HTML, JSON, CSS) compress করো। Images, videos আলাদা format (JPEG, WebP, H.264) ইতিমধ্যে compressed।
+
+---
+
+## 4.9 Lazy Loading
+
+### 📖 সংজ্ঞা
+Lazy Loading মানে **data বা resource তখনই load করো যখন actually দরকার** — আগে থেকে সব load না করা।
+
+### 🔑 Types of Lazy Loading
+
+```
+1. Image Lazy Loading (Browser):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<img src="product.jpg" loading="lazy" alt="Product">
+← User scroll না করা পর্যন্ত image load হয় না
+
+2. Database Lazy Loading (ORM):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Eager (load everything upfront):
+user = User.objects.select_related('profile').get(id=123)
+# SELECT users JOIN profiles in one query
+
+# Lazy (load when accessed):
+user = User.objects.get(id=123)
+# SELECT from users only
+# পরে:
+profile = user.profile  # তখন SELECT from profiles (extra query!)
+# N+1 problem হতে পারে!
+
+3. Module Lazy Loading (JavaScript):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Admin module শুধু admin page এ দরকার:
+const AdminPanel = lazy(() => import('./AdminPanel'));
+// Initial load fast — AdminPanel bundle আলাদা চলে
+
+4. API Pagination (Lazy Data Loading):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GET /api/products?page=1&limit=20   ← প্রথমে ২০টা
+GET /api/products?page=2&limit=20   ← user scroll করলে আরো ২০টা
+← 1 million products একসাথে load না করে
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 4.10 Performance Bottleneck Analysis
+
+### 📖 কীভাবে Bottleneck খুঁজবে?
+
+```
+Performance Debugging Process:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1: Measure (পরিমাপ করো)
+   - Response time distribution (P50, P95, P99)
+   - Error rate
+   - CPU, Memory, Disk, Network usage
+   - Database query times
+
+Step 2: Profile (কোথায় সময় যাচ্ছে?)
+   - Application profiler (cProfile, py-spy)
+   - Database slow query log
+   - APM tools (Datadog, New Relic, Jaeger)
+
+Step 3: Identify Bottleneck
+   Common bottlenecks:
+   - Database: Slow queries, missing indexes, N+1
+   - Network: High latency, no CDN, uncompressed
+   - Application: CPU intensive code, memory leak
+   - External APIs: Slow third-party calls
+
+Step 4: Fix
+   - Add cache
+   - Add index
+   - Optimize query
+   - Add CDN
+   - Use async/background processing
+
+Step 5: Validate
+   - Run load test again
+   - Compare metrics
+   - Repeat if needed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Performance Optimization Checklist
+
+```
+Database Optimization:
+✅ Proper indexes on WHERE/JOIN/ORDER BY columns
+✅ No N+1 queries (use JOIN or prefetch)
+✅ Query pagination (LIMIT/OFFSET)
+✅ Connection pooling
+✅ Read replicas for read-heavy loads
+✅ Cache frequent queries in Redis
+✅ Analyze slow query log
+
+Application Optimization:
+✅ Async processing for heavy tasks (Celery, Queue)
+✅ Response compression (gzip/brotli)
+✅ Efficient algorithms (O(n) not O(n²))
+✅ Memory leak check
+✅ Connection reuse (HTTP Keep-Alive)
+
+Frontend Optimization:
+✅ Image compression (WebP, AVIF)
+✅ Lazy loading images
+✅ Code splitting (bundle size কমাও)
+✅ CDN for static assets
+✅ Browser caching headers
+✅ Minimize HTTP requests
+
+Infrastructure Optimization:
+✅ Load balancing
+✅ Auto-scaling
+✅ CDN
+✅ Proper server sizing
+```
+
+---
+
+## 📋 PART 4: Quick Revision Table
+
+| Concept | এক কথায় | Key Point |
+|---------|---------|-----------|
+| Caching | Fast storage এ data রাখা | DB hits কমায় |
+| Redis | In-memory data store | Multi data structures |
+| Memcached | Simple string cache | Redis এর subset |
+| Cache-Aside | App manages cache | Most common pattern |
+| Write-Through | Write DB + cache together | Consistent |
+| Cache Stampede | Cache expire → DB overload | Mutex/probabilistic fix |
+| Cache Penetration | Non-existent key → DB | Bloom filter |
+| Cache Avalanche | Many caches expire together | Random TTL |
+| CDN Caching | Edge server এ static files | Nearest server |
+| Browser Caching | Local machine এ file store | ETag, Cache-Control |
+| Rate Limiting | Request সংখ্যা সীমা | 429 Too Many Requests |
+| Token Bucket | Burst-friendly rate limit | AWS API Gateway |
+| Compression | Data size কমানো | gzip 60-80% smaller |
+| Lazy Loading | দরকার হলে তবেই load | Performance, UX |
+| TTL | Cache expiry time | Auto-invalidation |
+
+---
+
+## 🎯 PART 4: Top 10 Interview Questions
+
+<details>
+<summary><strong>Q1: Cache কোথায় রাখবে এবং কী cache করবে?</strong></summary>
+
+**উত্তর:**
+**Cache করার জন্য ideal data:**
+- Frequently read, rarely changed: Product catalog, user profile
+- Expensive to compute: Complex aggregations, recommendation results
+- Shared across users: Configuration, category lists
+- External API responses: Weather data, exchange rates
+
+**Cache করবো না:**
+- User-specific sensitive data (payment info)
+- Real-time data (live stock prices)
+- Rapidly changing data (inventory count - better to cache with short TTL)
+- Data যা rarely accessed
+
+**কোথায় রাখবো:**
+- Application in-memory (local cache): Same process এ, fastest, no network
+- Redis (distributed cache): Multiple servers share, persistent option
+- CDN: Static files, global distribution
+
+</details>
+
+<details>
+<summary><strong>Q2: Redis আর Memcached এর মধ্যে কোনটা choose করবে?</strong></summary>
+
+**উত্তর:**
+**Redis choose করবো যখন:**
+- Multiple data structures দরকার (Hash, List, Sorted Set)
+- Persistence দরকার (restart এর পরেও data থাকবে)
+- Pub/Sub messaging দরকার
+- Distributed locks দরকার
+- Lua scripting দরকার
+- Atomic operations (INCR, ZADD)
+
+**Memcached choose করবো যখন:**
+- শুধু simple string caching (pure cache use case)
+- Very high throughput, extremely low latency
+- Legacy system এ already আছে
+
+**Real answer:** আজকাল প্রায় সবাই Redis use করে। Memcached শুধু specific legacy cases এ।
+
+</details>
+
+<details>
+<summary><strong>Q3: Cache Invalidation এর best strategy কী?</strong></summary>
+
+**উত্তর:**
+Context নির্ভর:
+
+**TTL-based** (product list, static content):
+```python
+r.setex("products:category:electronics", 3600, data)
+# 1 hour পর auto expire — acceptable stale window
+```
+
+**Event-based** (user profile, critical data):
+```python
+def update_user(user_id, data):
+    db.update(user_id, data)
+    r.delete(f"user:{user_id}")  # Immediate invalidation
+```
+
+**Write-through** (high read consistency দরকার):
+```python
+def update_product(product_id, data):
+    db.update(product_id, data)
+    r.setex(f"product:{product_id}", 3600, data)  # Cache also updated
+```
+
+**Combination:** TTL as safety net + event-based for known updates।
+
+</details>
+
+<details>
+<summary><strong>Q4: Rate Limiting implement করলে কোন algorithm use করবে?</strong></summary>
+
+**উত্তর:**
+**Token Bucket** — most cases এ best:
+- Burst handle করতে পারে (user হঠাৎ ১০টা request করলে OK)
+- Average rate enforce করে
+- AWS API Gateway, Stripe এই algorithm use করে
+
+```python
+def token_bucket_rate_limit(user_id, capacity=100, refill_rate=10):
+    # capacity: max tokens (burst size)
+    # refill_rate: tokens per second
+    key = f"token_bucket:{user_id}"
+    now = time.time()
+    
+    bucket = r.hgetall(key)
+    tokens = float(bucket.get(b'tokens', capacity))
+    last_refill = float(bucket.get(b'last_refill', now))
+    
+    # Refill tokens
+    elapsed = now - last_refill
+    tokens = min(capacity, tokens + elapsed * refill_rate)
+    
+    if tokens >= 1:
+        tokens -= 1
+        r.hset(key, mapping={'tokens': tokens, 'last_refill': now})
+        r.expire(key, 3600)
+        return True  # Allowed
+    return False  # Rate limited
+```
+
+</details>
+
+<details>
+<summary><strong>Q5: Redis cluster কীভাবে কাজ করে?</strong></summary>
+
+**উত্তর:**
+Redis Cluster horizontally scale করে:
+- Data 16384 hash slots এ ভাগ
+- প্রতিটা node কিছু slots responsible
+- Key → hash(key) % 16384 → সঠিক node এ যায়
+
+```
+Redis Cluster (3 master + 3 replica):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Master 1 (slots 0-5460)     → Replica 1
+Master 2 (slots 5461-10922) → Replica 2
+Master 3 (slots 10923-16383)→ Replica 3
+
+GET user:123
+→ hash("user:123") = 5649
+→ Slot 5649 → Master 2
+→ Data returned
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Master fail করলে Replica automatically promoted। High availability।
+
+</details>
+
+<details>
+<summary><strong>Q6: Cache hit rate কীভাবে improve করবে?</strong></summary>
+
+**উত্তর:**
+Cache Hit Rate = Cache Hits / Total Requests × 100%
+
+**Improve করার উপায়:**
+1. **TTL বাড়াও:** Data বেশিক্ষণ cache এ থাকলে hit rate বাড়বে (কিন্তু staleness বাড়বে)
+2. **Cache warming:** Deploy এর আগে cache কে popular data দিয়ে গরম করো
+3. **Better cache key design:** Granular keys — না হলে অনেক miss
+4. **Increase cache size:** More data cache → fewer misses
+5. **Identify hot data:** কোন data সবচেয়ে বেশি request হয় সেটা cache করো
+6. **Reduce churn:** Cache থেকে data বের করার আগে expiry বাড়াও
+
+Target: Production এ 90%+ hit rate ভালো।
+
+</details>
+
+<details>
+<summary><strong>Q7: HTTP Cache-Control header কীভাবে set করবে?</strong></summary>
+
+**উত্তর:**
+```python
+# Django example:
+from django.views.decorators.cache import cache_control
+
+# Public static content (CDN cache করবে):
+@cache_control(public=True, max_age=86400)  # 24 hours
+def product_image(request, image_id):
+    ...
+
+# Private user content:
+@cache_control(private=True, max_age=3600)  # 1 hour, no CDN
+def user_profile(request):
+    ...
+
+# Never cache:
+@cache_control(no_store=True)
+def payment_page(request):
+    ...
+
+# Versioned static files (forever):
+# /static/app.abc123.css
+Cache-Control: public, max-age=31536000, immutable
+```
+
+ETag use করলে conditional requests কাজ করে — bandwidth save।
+
+</details>
+
+<details>
+<summary><strong>Q8: Distributed caching এ data consistency কীভাবে maintain করবে?</strong></summary>
+
+**উত্তর:**
+Multiple app servers → Multiple cache instances → Consistency challenge।
+
+**Solutions:**
+
+1. **Centralized cache (Redis):** সব app server একই Redis → consistent
+2. **Cache invalidation broadcast:** একটা server cache update করলে সব server কে notify (Pub/Sub)
+3. **Short TTL:** Stale window ছোট রাখো
+4. **Versioned cache keys:** Update হলে নতুন key → পুরনো automatically stale
+
+```python
+# Pub/Sub based invalidation:
+# Server A: user update করলো
+r.delete(f"user:{user_id}")
+r.publish("cache_invalidation", f"user:{user_id}")
+
+# Server B, C: subscribe করে listen করছে
+def on_invalidation(message):
+    key = message['data']
+    local_cache.delete(key)
+```
+
+</details>
+
+<details>
+<summary><strong>Q9: Image optimization কীভাবে করবে?</strong></summary>
+
+**উত্তর:**
+```
+Image Optimization Strategy:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Format:
+   JPEG → Photos (lossy, small)
+   PNG → Logos, transparent (lossless)
+   WebP → Better than both, 30% smaller
+   AVIF → Even better, newer browsers
+
+2. Resize:
+   Serve appropriate size: Mobile → 400px, Desktop → 1200px
+   srcset: Browser chooses right size
+   <img srcset="img-400.webp 400w, img-1200.webp 1200w">
+
+3. Compression:
+   imagemin, squoosh, Sharp (Node.js)
+   Quality 80-85% বেশিরভাগ case এ পার্থক্য বোঝা যায় না
+
+4. Lazy Loading:
+   <img loading="lazy"> (browser native)
+
+5. CDN:
+   Images CDN তে serve করো
+   Cloudflare Images auto resize/convert করে
+
+Result: 70-90% image size reduction possible!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+</details>
+
+<details>
+<summary><strong>Q10: Background job queue কীভাবে performance improve করে?</strong></summary>
+
+**উত্তর:**
+Heavy operations (email send, PDF generate, image resize) synchronously করলে user request slow হয়।
+
+**Pattern: Async background processing**
+
+```python
+# Without queue (slow):
+def register_user(data):
+    user = create_user(data)
+    send_welcome_email(user)     # 2-3 seconds!
+    generate_avatar(user)        # 1 second!
+    send_sms_notification(user)  # 1 second!
+    return {"message": "Registered"}
+# Total: 4-5 seconds wait!
+
+# With Celery + Redis queue:
+from celery import shared_task
+
+@shared_task
+def send_welcome_email(user_id):
+    # background এ run হবে
+    ...
+
+def register_user(data):
+    user = create_user(data)
+    send_welcome_email.delay(user.id)    # Queue তে পাঠালো, return immediately
+    generate_avatar.delay(user.id)
+    send_sms_notification.delay(user.id)
+    return {"message": "Registered"}
+# Total: ~100ms! User অপেক্ষা করে না।
+```
+
+Queue: Redis বা RabbitMQ। Worker: Celery (Python), Bull (Node.js), Sidekiq (Ruby)।
+
+</details>
+
+---
+
+## 🔥 Rapid Fire Q&A — PART 3 & 4
+
+| প্রশ্ন | উত্তর |
+|--------|--------|
+| Redis default port? | 6379 |
+| Cache miss কী? | Cache এ data নেই → DB query |
+| Cache hit কী? | Cache এ data আছে → fast response |
+| TTL মানে? | Time To Live — cache expiry |
+| Rate limit exceed হলে কোন status code? | 429 Too Many Requests |
+| Sharding আর Partitioning পার্থক্য? | Sharding multiple servers, Partitioning same server |
+| SQL এর ACID এর A মানে? | Atomicity |
+| NoSQL এর BASE এর E মানে? | Eventually Consistent |
+| Redis sorted set কীসে use? | Leaderboard, ranking |
+| Cache Stampede সমাধান? | Mutex lock বা probabilistic refresh |
+| Bloom Filter কীসে use? | Cache penetration prevent |
+| gzip compression এ কত % ছোট হয়? | Text এ 60-80% |
+| Index কোন column এ? | WHERE, JOIN, ORDER BY |
+| Master-Slave DB তে write কোথায়? | শুধু Master এ |
+| Eventual consistency কোথায় OK? | Social media, DNS |
+| Strong consistency কোথায় দরকার? | Banking, payments |
+| Connection pool এর সুবিধা? | Connection overhead কমায় |
+| Lazy loading কখন? | দরকার হলে তবেই |
+| Replication lag কী? | Master → Replica sync delay |
+| Hot key problem কী? | একটা cache key এ অতিরিক্ত load |
+
+<div align="right">
+
+[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 5 →](#part5)
+
+</div>
+
+---
+
 *হ্যান্ডবুক তৈরিতে: Senior Software Architect, Backend Engineer & System Design Interviewer*
 *Version: 1.0 | তারিখ: মে ২০২৬*
-*মোট PART: 10 | সম্পন্ন: PART 1-2 ✅ | বাকি: PART 3-10 🔜*
+*মোট PART: 10 | সম্পন্ন: PART 1-4 ✅ | বাকি: PART 5-10 🔜*
