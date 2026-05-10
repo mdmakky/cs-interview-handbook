@@ -58,7 +58,26 @@
 <summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-*(শীঘ্রই আসছে)*
+- [২.১ Execution Context](#২১-execution-context)
+- [২.২ Call Stack](#২২-call-stack)
+- [২.৩ Memory Heap](#২৩-memory-heap)
+- [২.৪ Event Loop](#২৪-event-loop)
+- [২.৫ Callback Queue ও Microtask Queue](#২৫-callback-queue--microtask-queue)
+- [২.৬ Callback Functions](#২৬-callback-functions)
+- [২.৭ Promises](#২৭-promises)
+- [২.৮ Async/Await](#২৮-asyncawait)
+- [২.৯ Fetch API](#২৯-fetch-api)
+- [২.১০ this keyword](#২১০-this-keyword)
+- [২.১১ bind, call, apply](#২১১-bind-call-apply)
+- [২.১২ Prototype](#২১২-prototype)
+- [২.১৩ Prototype Chain](#২১৩-prototype-chain)
+- [২.১৪ Inheritance](#২১৪-inheritance-in-javascript)
+- [২.১৫ Classes](#২১৫-classes)
+- [২.১৬ Modules](#২১৬-modules)
+- [২.১৭ Debouncing ও Throttling](#২১৭-debouncing--throttling)
+- [২.১৮ Currying](#২১৮-currying)
+- [২.১৯ Memoization](#২১৯-memoization)
+- [২.২০ Interview Q&A](#২২০-part-2--interview-questions--answers)
 
 </details>
 
@@ -1643,3 +1662,1510 @@ line2` `` without `\n` |
 > **🚀 PART 2 আসছে:** Advanced JavaScript — Execution Context, Call Stack, Event Loop, Promises, Async/Await, Prototype Chain এবং আরও অনেক কিছু।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 2 দাও" বা "Next" লিখুন।
+
+
+---
+
+<a id="part2"></a>
+
+# PART 2 — Advanced JavaScript
+
+> **📍 এই PART-এর Sections:** [২.১ Execution Context](#২১-execution-context) · [২.২ Call Stack](#২২-call-stack) · [২.৩ Memory Heap](#২৩-memory-heap) · [২.৪ Event Loop](#২৪-event-loop) · [২.৫ Callback Queue](#২৫-callback-queue--microtask-queue) · [২.৬ Callback Functions](#২৬-callback-functions) · [২.৭ Promises](#২৭-promises) · [২.৮ Async/Await](#২৮-asyncawait) · [২.৯ Fetch API](#২৯-fetch-api) · [২.১০ this keyword](#২১০-this-keyword) · [২.১১ bind, call, apply](#২১১-bind-call-apply) · [২.১২ Prototype](#২১২-prototype) · [২.১৩ Prototype Chain](#২১৩-prototype-chain) · [২.১৪ Inheritance](#২১৪-inheritance-in-javascript) · [২.১৫ Classes](#২১৫-classes) · [২.১৬ Modules](#২১৬-modules) · [২.১৭ Debouncing & Throttling](#২১৭-debouncing--throttling) · [২.১৮ Currying](#২১৮-currying) · [২.১৯ Memoization](#২১৯-memoization) · [২.২০ Interview Q&A](#২২০-part-2--interview-questions--answers)
+
+---
+
+## ২.১ Execution Context
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Execution Context** হলো JavaScript code execute হওয়ার পরিবেশ (environment)। প্রতিটি JS code একটি Execution Context-এর মধ্যে চলে।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> একটি মঞ্চ নাটকের কথা ভাবুন। প্রতিটি দৃশ্যের (scene) জন্য আলাদা সেট থাকে — আলো, পর্দা, props। প্রতিটি function call একটি নতুন "দৃশ্য" তৈরি করে যার নিজস্ব variables, scope, `this` আছে।
+
+### 📊 Execution Context-এর প্রকারভেদ
+
+| ধরন | কখন তৈরি হয় | কতটি থাকে |
+|-----|-------------|-----------|
+| **Global Execution Context (GEC)** | Program শুরুতে | শুধু একটি |
+| **Function Execution Context (FEC)** | প্রতিটি function call-এ | প্রতিটি call-এ নতুন |
+| **Eval Execution Context** | `eval()` এ | এড়িয়ে চলুন |
+
+### ⚙️ Execution Context-এ কী থাকে?
+
+```
+Execution Context
+├── Variable Environment
+│   ├── Variables (var)
+│   ├── Function declarations
+│   └── arguments object
+├── Lexical Environment
+│   ├── let, const
+│   └── Outer environment reference (scope chain)
+└── this binding
+```
+
+### 💻 দুটি Phase
+
+```javascript
+// Phase 1: Creation Phase (Memory Allocation)
+// Phase 2: Execution Phase (Code runs line by line)
+
+var name = "Rahim";      // Phase 1: name = undefined
+                          // Phase 2: name = "Rahim"
+
+function greet() {        // Phase 1: greet = function (fully hoisted)
+  var msg = "Hello";     // নতুন FEC তৈরি
+  console.log(msg);
+}
+
+greet();                  // Phase 2: FEC তৈরি, execute, destroy
+```
+
+### 📊 Execution Context Lifecycle
+
+```
+GEC তৈরি
+  ↓
+Creation Phase: var hoisting (undefined), function declarations, this setup
+  ↓
+Execution Phase: code line by line
+  ↓
+greet() call → FEC তৈরি
+  ↓
+FEC Creation Phase → FEC Execution Phase
+  ↓
+greet() শেষ → FEC destroy
+  ↓
+GEC চলতে থাকে
+```
+
+### 🎤 Interview-style Explanation
+
+> **প্রশ্ন:** "Execution Context কী? এটি কীভাবে কাজ করে?"
+>
+> **আদর্শ উত্তর:** "Execution Context হলো JavaScript code execute হওয়ার পরিবেশ। দুটি প্রধান type: Global Execution Context (program শুরুতে একটি তৈরি হয়) এবং Function Execution Context (প্রতিটি function call-এ নতুন তৈরি হয়)। প্রতিটি context দুটি phase-এ কাজ করে: Creation Phase — variable declarations hoisted হয়, `var` undefined পায়, function declarations fully hoisted হয়, `this` set হয়। Execution Phase — code line by line execute হয়। Function শেষ হলে তার context destroy হয়।"
+
+---
+
+## ২.২ Call Stack
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Call Stack** হলো একটি **LIFO (Last In, First Out)** data structure যেখানে JS engine Execution Contexts track করে। JavaScript single-threaded — একসময় একটি কাজ, এই stack দিয়ে manage করা হয়।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> থালা বাসনের স্তূপের কথা ভাবুন। নতুন থালা উপরে রাখা হয়, তুলতেও উপর থেকে নেওয়া হয়। function call = নতুন থালা রাখা, function return = থালা তোলা।
+
+### 💻 Call Stack Visualization
+
+```javascript
+function multiply(a, b) {
+  return a * b;           // 3rd — এখানে calculate হয়
+}
+
+function square(n) {
+  return multiply(n, n);  // 2nd — multiply কে call করে
+}
+
+function printSquare(n) {
+  const result = square(n); // 1st — square কে call করে
+  console.log(result);
+}
+
+printSquare(5);
+
+/*  Call Stack এভাবে দেখায়:
+
+    Step 1: [GEC]
+    Step 2: [GEC] [printSquare]
+    Step 3: [GEC] [printSquare] [square]
+    Step 4: [GEC] [printSquare] [square] [multiply]
+    Step 5: [GEC] [printSquare] [square] (multiply returns 25)
+    Step 6: [GEC] [printSquare] (square returns 25)
+    Step 7: [GEC] (printSquare logs 25, returns)
+    Step 8: [GEC]
+*/
+```
+
+### 🔥 Stack Overflow
+
+```javascript
+// Recursive function without base case
+function infinite() {
+  return infinite(); // নিজেকেই call করে থাকে
+}
+
+infinite(); // Uncaught RangeError: Maximum call stack size exceeded
+```
+
+### 🎤 Interview-style Explanation
+
+> **প্রশ্ন:** "Call Stack কী? Stack Overflow কেন হয়?"
+>
+> **আদর্শ উত্তর:** "Call Stack হলো LIFO data structure যেখানে JavaScript engine function calls track করে। প্রতিটি function call একটি frame (stack frame) push করে। Function return হলে frame pop হয়। JavaScript single-threaded, তাই একসময় একটিই function execute হয় — Call Stack-এর top frame। Stack Overflow হয় যখন function বারবার নিজেকে call করে (infinite recursion) এবং stack-এর maximum size অতিক্রম করে। Chrome-এ এই limit প্রায় ১০,০০০ থেকে ১৫,০০০।"
+
+---
+
+## ২.৩ Memory Heap
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Memory Heap** হলো unstructured memory যেখানে JavaScript objects, arrays, functions store হয়। Stack-এ primitive values ও references store হয়, Heap-এ actual objects।
+
+```
+Memory Layout:
+┌─────────────────┐  ┌─────────────────────────────┐
+│    CALL STACK   │  │         MEMORY HEAP         │
+│                 │  │                             │
+│  let x = 10    │  │  { name: "Rahim" }  ←──┐   │
+│  let obj ──────┼──┼──►                      │   │
+│  (reference)   │  │  [1, 2, 3]              │   │
+│                 │  │  function() {}          │   │
+└─────────────────┘  └─────────────────────────────┘
+```
+
+### 🗑️ Garbage Collection
+
+JS engine automatically unreachable objects কে Heap থেকে সরিয়ে দেয় — এটা **Garbage Collection**। V8 **Mark-and-Sweep** algorithm ব্যবহার করে।
+
+```javascript
+function example() {
+  let obj = { name: "Rahim" }; // Heap-এ তৈরি
+  // function শেষ হলে obj-এর reference নেই
+  // Garbage Collector এটি পরিষ্কার করবে
+}
+example();
+
+// Memory Leak উদাহরণ
+let leakedObjects = [];
+function leak() {
+  leakedObjects.push(new Array(10000).fill("data")); // reference রয়ে যাচ্ছে!
+}
+```
+
+---
+
+## ২.৪ Event Loop
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Event Loop** হলো JavaScript-এর সেই mechanism যা single-threaded হওয়া সত্ত্বেও asynchronous operations handle করতে দেয়।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> একজন রেস্টুরেন্টের ওয়েটার কল্পনা করুন। সে একসময় একজন customer serve করতে পারে (single-threaded)। কিন্তু রান্না হওয়ার সময় (async) অন্য customer নেয়। রান্না শেষে notification পেলে আবার সেই customer-এ যায়। Event Loop এই ওয়েটার।
+
+### 📊 Complete Picture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Browser / Node.js                       │
+│                                                             │
+│  ┌──────────────┐    ┌─────────────────────────────────┐  │
+│  │  Call Stack  │    │           Web APIs               │  │
+│  │              │    │  setTimeout, fetch, DOM events   │  │
+│  │  [main()]    │    │  (Browser এর অংশ, JS নয়)       │  │
+│  │              │    └──────────────────┬──────────────┘  │
+│  └──────┬───────┘                       │                  │
+│         │                               ▼                  │
+│         │                    ┌──────────────────────┐      │
+│         │     Event Loop     │   Callback Queue     │      │
+│         │ ◄──────────────────│   (Macrotask Queue)  │      │
+│         │  Stack খালি হলে   │   [cb1, cb2, ...]    │      │
+│         │  queue থেকে নেয়  └──────────────────────┘      │
+│         │                    ┌──────────────────────┐      │
+│         │  ◄─────────────────│   Microtask Queue    │      │
+│         │  Macrotask আগে!   │   [Promise.then...]  │      │
+│                              └──────────────────────┘      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 💻 Dry Run — Event Loop
+
+```javascript
+console.log("1: Start");              // ① Sync — তাৎক্ষণিক
+
+setTimeout(() => {
+  console.log("2: Timeout");          // ④ Macrotask queue — শেষে
+}, 0);
+
+Promise.resolve()
+  .then(() => console.log("3: Promise")); // ③ Microtask queue — Timeout এর আগে
+
+console.log("4: End");                // ② Sync — তাৎক্ষণিক
+
+/*
+Output:
+1: Start
+4: End
+3: Promise    ← Microtask (Promise) আগে
+2: Timeout    ← Macrotask (setTimeout) পরে
+*/
+```
+
+### 🔍 Event Loop Algorithm
+
+```
+1. Call Stack খালি না হওয়া পর্যন্ত execute করো
+2. Microtask Queue সম্পূর্ণ খালি করো (Promise callbacks)
+3. Callback Queue থেকে একটি Macrotask নাও
+4. আবার ১ থেকে শুরু
+```
+
+### 🎤 Interview-style Explanation
+
+> **প্রশ্ন:** "JavaScript single-threaded হওয়ার পরও async কাজ কীভাবে করে?"
+>
+> **আদর্শ উত্তর:** "JavaScript single-threaded — একটি Call Stack, একসময় একটি কাজ। কিন্তু async operations যেমন `setTimeout`, `fetch` ব্রাউজারের Web APIs-এ যায় — JS engine এগুলো wait করে না। Web API কাজ শেষ করলে callback Callback Queue-এ যায়। Event Loop সবসময় দেখে — Call Stack খালি কিনা। খালি হলে Microtask Queue সম্পূর্ণ drain করে (Promise callbacks), তারপর Callback Queue থেকে একটি Macrotask নেয়। এভাবে non-blocking behavior অর্জন করা হয়।"
+
+### ⚠️ Common Mistakes
+
+```javascript
+// ❌ setTimeout(fn, 0) মানে "সঙ্গে সঙ্গে" নয়
+setTimeout(() => console.log("এটা পরে আসবে"), 0);
+console.log("এটা আগে আসবে");
+
+// ❌ Microtask vs Macrotask ভুল ধারণা
+// Microtask (Promise.then, queueMicrotask, MutationObserver) → সবসময় setTimeout আগে
+```
+
+---
+
+## ২.৫ Callback Queue & Microtask Queue
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📊 Macrotask vs Microtask
+
+| | Macrotask Queue | Microtask Queue |
+|--|----------------|----------------|
+| **নাম** | Callback Queue / Task Queue | Microtask Queue / Job Queue |
+| **কী যায়** | `setTimeout`, `setInterval`, `setImmediate`, I/O, UI rendering | `Promise.then/catch/finally`, `queueMicrotask`, `MutationObserver` |
+| **Priority** | কম | বেশি (Macrotask এর আগে) |
+| **একবারে কতটি** | একটি Macrotask | সব Microtasks drain হয় |
+
+### 💻 Detailed Example
+
+```javascript
+console.log("Script start");      // 1
+
+setTimeout(() => {
+  console.log("setTimeout");      // 5
+}, 0);
+
+Promise.resolve()
+  .then(() => {
+    console.log("Promise 1");     // 3
+  })
+  .then(() => {
+    console.log("Promise 2");     // 4
+  });
+
+console.log("Script end");        // 2
+
+/*
+Output:
+Script start   ← sync
+Script end     ← sync
+Promise 1      ← microtask
+Promise 2      ← microtask (Promise chain)
+setTimeout     ← macrotask (সবার শেষে)
+*/
+```
+
+### 💡 Memory Tip
+
+> **"Micro আগে, Macro পরে"** — Promise (micro) সবসময় setTimeout (macro) এর আগে।
+
+---
+
+## ২.৬ Callback Functions
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Callback Function** হলো একটি function যেটি অন্য function-এ argument হিসেবে পাঠানো হয় এবং পরে (বা asynchronously) call করা হয়।
+
+### 💻 Code Examples
+
+```javascript
+// ১. Synchronous Callback
+function greet(name, callback) {
+  console.log(`Hello, ${name}!`);
+  callback();
+}
+
+greet("Rahim", () => {
+  console.log("Callback executed!");
+});
+
+// ২. Asynchronous Callback
+function fetchData(url, onSuccess, onError) {
+  // Simulating async operation
+  setTimeout(() => {
+    const success = true;
+    if (success) {
+      onSuccess({ data: "User data" });
+    } else {
+      onError(new Error("Fetch failed"));
+    }
+  }, 1000);
+}
+
+fetchData(
+  "https://api.example.com",
+  (result) => console.log("Success:", result),
+  (err) => console.error("Error:", err)
+);
+
+// ৩. Callback Hell (Pyramid of Doom) — সমস্যা
+getUser(userId, (user) => {
+  getPosts(user.id, (posts) => {
+    getComments(posts[0].id, (comments) => {
+      getLikes(comments[0].id, (likes) => {
+        // আরও nested... বোঝা কঠিন!
+        console.log(likes);
+      });
+    });
+  });
+});
+
+// ✅ Solution: Promises অথবা Async/Await
+```
+
+### ⚠️ Callback Hell কেন সমস্যা?
+
+- Readability কমে যায়
+- Error handling কঠিন হয়
+- Debug করা কঠিন
+- Code maintain করা কঠিন
+
+---
+
+## ২.৭ Promises
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Promise** হলো future-এ complete হবে এমন একটি asynchronous operation-এর representation। এটি callback hell-এর সমাধান।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> Online-এ বই order করলে একটি **tracking number** পান। এটাই Promise — এখনো বই পাননি, কিন্তু একটি commitment পেয়েছেন। বই আসলে (fulfilled) নিন, না আসলে (rejected) complaint করুন।
+
+### 📊 Promise States
+
+```
+                  ┌─────────────┐
+                  │   PENDING   │ ← শুরুর অবস্থা
+                  └──────┬──────┘
+              ____________│____________
+             │                        │
+             ▼                        ▼
+      ┌─────────────┐         ┌─────────────┐
+      │  FULFILLED  │         │  REJECTED   │
+      │  (success)  │         │  (failure)  │
+      └─────────────┘         └─────────────┘
+```
+
+### 💻 Promise তৈরি ও ব্যবহার
+
+```javascript
+// ১. Promise তৈরি
+const myPromise = new Promise((resolve, reject) => {
+  const success = true;
+
+  if (success) {
+    resolve("Data loaded successfully!"); // fulfilled
+  } else {
+    reject(new Error("Something went wrong!")); // rejected
+  }
+});
+
+// ২. Promise ব্যবহার
+myPromise
+  .then((result) => {
+    console.log("✅ Success:", result);
+    return result.toUpperCase(); // chaining!
+  })
+  .then((upperResult) => {
+    console.log("✅ Uppercase:", upperResult);
+  })
+  .catch((error) => {
+    console.error("❌ Error:", error.message);
+  })
+  .finally(() => {
+    console.log("🏁 Always runs (loading spinner বন্ধ)");
+  });
+
+// ৩. Practical API example
+function fetchUser(id) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (id > 0) {
+        resolve({ id, name: "Rahim", email: "rahim@example.com" });
+      } else {
+        reject(new Error("Invalid user ID"));
+      }
+    }, 1000);
+  });
+}
+
+fetchUser(1)
+  .then(user => {
+    console.log("User:", user.name);
+    return fetchUser(2); // chaining
+  })
+  .then(user2 => console.log("User2:", user2.name))
+  .catch(err => console.error(err.message));
+```
+
+### 💻 Promise Static Methods
+
+```javascript
+const p1 = Promise.resolve("First");
+const p2 = new Promise(resolve => setTimeout(() => resolve("Second"), 1000));
+const p3 = new Promise((_, reject) => setTimeout(() => reject("Error!"), 500));
+
+// ১. Promise.all — সব resolve হলে এগোয়, একটা reject হলে সব reject
+Promise.all([p1, p2])
+  .then(results => console.log(results)) // ["First", "Second"]
+  .catch(err => console.error(err));
+
+// ২. Promise.allSettled — সব complete হওয়ার পর সব result (ES2020)
+Promise.allSettled([p1, p3])
+  .then(results => results.forEach(r => console.log(r.status, r.value || r.reason)));
+// {status: "fulfilled", value: "First"}
+// {status: "rejected", reason: "Error!"}
+
+// ৩. Promise.race — যেটি আগে settle করবে সেটি
+Promise.race([p2, p3])
+  .then(result => console.log("Winner:", result))
+  .catch(err => console.error("First to fail:", err)); // p3 আগে reject
+
+// ৪. Promise.any — যেটি আগে fulfill করবে (ES2021)
+Promise.any([p3, p1])
+  .then(result => console.log("First fulfilled:", result)); // "First"
+```
+
+### 🎤 Interview-style Explanation
+
+> **প্রশ্ন:** "Promise কী? .then(), .catch(), .finally() কীভাবে কাজ করে?"
+>
+> **আদর্শ উত্তর:** "Promise হলো একটি object যা future-এ complete হবে এমন async operation represent করে। তিনটি state: pending (অপেক্ষায়), fulfilled (সফল), rejected (ব্যর্থ)। `.then()` — fulfilled হলে run হয়, একটি নতুন Promise return করে তাই chaining সম্ভব। `.catch()` — rejected হলে অথবা .then()-এ error হলে run হয়। `.finally()` — সফল বা ব্যর্থ যাই হোক, সবসময় run হয় — loading indicator বন্ধ করতে useful।"
+
+---
+
+## ২.৮ Async/Await
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Async/Await** হলো Promise-এর উপরে built একটি syntactic sugar যা asynchronous code-কে synchronous-এর মতো পড়তে ও লিখতে সাহায্য করে। ES2017 (ES8) এ আসে।
+
+### 💻 Promise vs Async/Await তুলনা
+
+```javascript
+// ❌ Promise chain (readable কিন্তু nested)
+function getUserData(userId) {
+  return fetchUser(userId)
+    .then(user => fetchPosts(user.id))
+    .then(posts => fetchComments(posts[0].id))
+    .then(comments => console.log(comments))
+    .catch(err => console.error(err));
+}
+
+// ✅ Async/Await (অনেক পরিষ্কার)
+async function getUserData(userId) {
+  try {
+    const user = await fetchUser(userId);     // wait করে
+    const posts = await fetchPosts(user.id);  // তারপর এটি
+    const comments = await fetchComments(posts[0].id);
+    console.log(comments);
+  } catch (err) {
+    console.error(err);
+  }
+}
+```
+
+### 💻 Async/Await বিস্তারিত
+
+```javascript
+// ১. async function সবসময় Promise return করে
+async function getValue() {
+  return 42;
+}
+getValue().then(v => console.log(v)); // 42 (Promise wrapped)
+
+// ২. await শুধু async function-এর ভেতরে
+async function fetchData() {
+  console.log("Fetching...");
+  const data = await new Promise(resolve =>
+    setTimeout(() => resolve("Data!"), 1000)
+  );
+  console.log("Got:", data); // 1 second পরে
+}
+
+// ৩. Error Handling
+async function riskyOperation() {
+  try {
+    const result = await someAsyncThing();
+    return result;
+  } catch (error) {
+    console.error("Caught:", error.message);
+    throw error; // re-throw যদি দরকার
+  } finally {
+    console.log("Cleanup");
+  }
+}
+
+// ৪. Parallel execution — await একটি একটি করে না!
+async function sequential() {
+  const a = await fetchA(); // 2 seconds wait
+  const b = await fetchB(); // আরও 2 seconds wait
+  // মোট: 4 seconds
+}
+
+async function parallel() {
+  const [a, b] = await Promise.all([fetchA(), fetchB()]); // একসাথে
+  // মোট: 2 seconds (যেটি বেশি সময় নেয়)
+}
+
+// ৫. for...of এর সাথে await (sequential)
+const userIds = [1, 2, 3];
+async function processAll() {
+  for (const id of userIds) {
+    const user = await fetchUser(id);
+    console.log(user.name);
+  }
+}
+
+// ৬. forEach এ await — কাজ করে না!
+async function wrong() {
+  userIds.forEach(async (id) => {
+    const user = await fetchUser(id); // ❌ await এখানে ঠিকমতো কাজ করে না
+  });
+}
+```
+
+### ⚠️ Common Mistakes
+
+```javascript
+// ❌ Top-level await — শুধু module-এ কাজ করে
+const data = await fetch("..."); // SyntaxError (non-module context)
+
+// ❌ forEach এর ভেতরে await
+arr.forEach(async item => {
+  await doSomething(item); // forEach await এর জন্য wait করে না!
+});
+// ✅ for...of বা Promise.all ব্যবহার করুন
+
+// ❌ Sequential যখন Parallel হওয়া উচিত
+const user = await fetchUser(id);
+const settings = await fetchSettings(id); // user-এর উপর নির্ভরশীল নয়!
+// ✅ Parallel করুন:
+const [user, settings] = await Promise.all([fetchUser(id), fetchSettings(id)]);
+```
+
+---
+
+## ২.৯ Fetch API
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Fetch API** হলো browser-এর built-in API যা HTTP requests করতে ব্যবহৃত হয়। `XMLHttpRequest`-এর আধুনিক বিকল্প।
+
+### 💻 Fetch Examples
+
+```javascript
+// ১. GET request
+async function getUsers() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/users");
+
+    if (!response.ok) { // HTTP error check (4xx, 5xx)
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const users = await response.json();
+    console.log(users);
+  } catch (error) {
+    console.error("Fetch failed:", error.message);
+  }
+}
+
+// ২. POST request
+async function createUser(userData) {
+  try {
+    const response = await fetch("https://api.example.com/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify(userData)
+    });
+
+    const newUser = await response.json();
+    return newUser;
+  } catch (error) {
+    throw new Error("User creation failed: " + error.message);
+  }
+}
+
+// ৩. PUT / DELETE
+async function updateUser(id, data) {
+  const response = await fetch(`/api/users/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  return response.json();
+}
+
+async function deleteUser(id) {
+  const response = await fetch(`/api/users/${id}`, { method: "DELETE" });
+  return response.ok;
+}
+```
+
+### ⚠️ Fetch-এর Gotcha
+
+```javascript
+// ❌ Network error ছাড়া fetch কখনো reject করে না!
+const response = await fetch("https://api.example.com/bad-endpoint");
+// 404, 500 — এগুলো reject করে না, response.ok = false হয়
+
+// ✅ সবসময় response.ok check করুন
+if (!response.ok) {
+  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+}
+```
+
+---
+
+## ২.১০ this keyword
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**`this`** হলো JavaScript-এর একটি special keyword যা function-এর execution context-এ current object-কে refer করে। `this`-এর value নির্ধারিত হয় function **কীভাবে call হয়েছে** তার উপর।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> "আমি কে?" — এই প্রশ্নের উত্তর নির্ভর করে কে জিজ্ঞেস করছে। classroom-এ teacher বললে "teacher", student বললে "student"। `this` এভাবেই context অনুযায়ী পরিবর্তন হয়।
+
+### 💻 this-এর বিভিন্ন Context
+
+```javascript
+// ১. Global context
+console.log(this); // Browser: window, Node.js: {}
+
+// ২. Regular Function — Global context (non-strict) বা undefined (strict)
+function regularFn() {
+  console.log(this); // Window / undefined (strict mode)
+}
+regularFn();
+
+// ৩. Method — Object যে call করছে
+const user = {
+  name: "Rahim",
+  greet() {
+    console.log(`Hello, ${this.name}`); // this = user object
+  }
+};
+user.greet(); // "Hello, Rahim"
+
+// ৪. Method বের করে call করলে this হারায়!
+const { greet } = user;
+greet(); // "Hello, undefined" (this = Window!)
+
+// ৫. Arrow Function — Lexical this (outer scope থেকে inherit)
+const obj = {
+  name: "Rahim",
+  greetArrow: () => {
+    console.log(this.name); // ❌ this = Window (outer scope)
+  },
+  greetRegular() {
+    const inner = () => {
+      console.log(this.name); // ✅ this = obj (outer regular function থেকে)
+    };
+    inner();
+  }
+};
+
+// ৬. Constructor Function
+function Person(name) {
+  this.name = name; // this = নতুন object (new দিয়ে call করলে)
+}
+const rahim = new Person("Rahim");
+console.log(rahim.name); // "Rahim"
+
+// ৭. Event Handler
+button.addEventListener("click", function() {
+  console.log(this); // this = button element
+});
+
+button.addEventListener("click", () => {
+  console.log(this); // this = Window (arrow function!)
+});
+
+// ৮. Class
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+  speak() {
+    console.log(`${this.name} makes a sound`);
+  }
+}
+```
+
+### 📊 this Summary
+
+| Context | this-এর মান |
+|---------|------------|
+| Global (browser) | `window` |
+| Global (Node.js) | `{}` (module) |
+| Regular function (non-strict) | `window` |
+| Regular function (strict) | `undefined` |
+| Method | Method owner object |
+| Arrow function | Enclosing lexical scope-এর this |
+| Constructor (`new`) | নতুন তৈরি object |
+| Event handler (regular) | Event target element |
+| `call`/`apply`/`bind` | Explicitly set করা object |
+
+---
+
+## ২.১১ bind, call, apply
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+তিনটিই `Function.prototype`-এর method যা `this`-এর value manually set করতে দেয়।
+
+### 💻 Code Examples
+
+```javascript
+const person1 = { name: "Rahim", age: 25 };
+const person2 = { name: "Karim", age: 30 };
+
+function introduce(greeting, punctuation) {
+  console.log(`${greeting}, আমি ${this.name}, বয়স ${this.age}${punctuation}`);
+}
+
+// ১. call — সঙ্গে সঙ্গে call করে, arguments আলাদা আলাদা
+introduce.call(person1, "হ্যালো", "!");
+// "হ্যালো, আমি Rahim, বয়স 25!"
+
+introduce.call(person2, "নমস্কার", "।");
+// "নমস্কার, আমি Karim, বয়স 30।"
+
+// ২. apply — সঙ্গে সঙ্গে call করে, arguments array হিসেবে
+introduce.apply(person1, ["হ্যালো", "!"]);
+// "হ্যালো, আমি Rahim, বয়স 25!"
+
+// apply-এর practical use: spread-এর আগে
+const numbers = [3, 1, 4, 1, 5, 9];
+console.log(Math.max.apply(null, numbers)); // 9
+// Modern: Math.max(...numbers)
+
+// ৩. bind — নতুন function return করে (call করে না)
+const greetRahim = introduce.bind(person1, "হ্যালো");
+// later...
+greetRahim("!"); // "হ্যালো, আমি Rahim, বয়স 25!"
+greetRahim("?"); // "হ্যালো, আমি Rahim, বয়স 25?"
+
+// Practical use of bind
+class Timer {
+  constructor() {
+    this.seconds = 0;
+  }
+  start() {
+    // bind না করলে this হারাবে
+    setInterval(this.tick.bind(this), 1000);
+  }
+  tick() {
+    this.seconds++;
+    console.log(this.seconds);
+  }
+}
+```
+
+### 📊 call vs apply vs bind
+
+| | `call` | `apply` | `bind` |
+|-|--------|---------|--------|
+| **কখন execute হয়** | তাৎক্ষণিক | তাৎক্ষণিক | পরে (returns function) |
+| **Arguments** | আলাদা আলাদা | Array | আলাদা আলাদা |
+| **Return** | Function-এর return | Function-এর return | নতুন bound function |
+| **মনে রাখার কৌশল** | **C**all = **C**omma separated | **A**pply = **A**rray | **B**ind = **B**ound later |
+
+---
+
+## ২.১২ Prototype
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+JavaScript-এ প্রতিটি object-এর একটি hidden internal property আছে — `[[Prototype]]` — যেটি অন্য একটি object-কে point করে। এই linked object-কে **prototype** বলে।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> বাবা-ছেলের সম্পর্ক। ছেলের নিজের property নেই এমন কিছু খুঁজলে বাবার কাছে যায়, বাবার কাছে না পেলে দাদার কাছে। এটাই Prototype chain।
+
+### 💻 Prototype Examples
+
+```javascript
+// ১. প্রতিটি object-এর prototype
+const arr = [1, 2, 3];
+// arr.__proto__ === Array.prototype
+// Array.prototype.__proto__ === Object.prototype
+// Object.prototype.__proto__ === null
+
+// এজন্যই arr.map(), arr.filter() কাজ করে
+// এগুলো Array.prototype-এ defined
+
+// ২. Object.create() — prototype manually set
+const animal = {
+  type: "Animal",
+  describe() {
+    return `${this.name} is a ${this.type}`;
+  }
+};
+
+const dog = Object.create(animal); // dog-এর prototype = animal
+dog.name = "Rex";
+dog.type = "Dog";
+console.log(dog.describe()); // "Rex is a Dog"
+console.log(dog.hasOwnProperty("name")); // true
+console.log(dog.hasOwnProperty("describe")); // false (prototype-এ)
+
+// ৩. Constructor Function ও prototype
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+
+// Method prototype-এ রাখা (memory efficient)
+Person.prototype.greet = function() {
+  return `আমি ${this.name}`;
+};
+
+const rahim = new Person("Rahim", 25);
+const karim = new Person("Karim", 30);
+
+console.log(rahim.greet()); // "আমি Rahim"
+console.log(karim.greet()); // "আমি Karim"
+// greet function শুধু একটি, কিন্তু দুজনেই use করছে!
+
+// ৪. Prototype check
+console.log(rahim.__proto__ === Person.prototype); // true
+console.log(rahim instanceof Person); // true
+```
+
+---
+
+## ২.১৩ Prototype Chain
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📊 Prototype Chain Visualization
+
+```
+rahim (object)
+  └── __proto__ → Person.prototype
+        ├── greet: function
+        └── __proto__ → Object.prototype
+              ├── hasOwnProperty: function
+              ├── toString: function
+              └── __proto__ → null (chain শেষ)
+```
+
+### 💻 Property Lookup
+
+```javascript
+function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.type = "Animal";
+Animal.prototype.breathe = function() {
+  return `${this.name} breathes`;
+};
+
+function Dog(name, breed) {
+  Animal.call(this, name); // parent constructor call
+  this.breed = breed;
+}
+// Dog.prototype কে Animal.prototype থেকে inherit করা
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog; // fix constructor reference
+
+Dog.prototype.bark = function() {
+  return `${this.name} says Woof!`;
+};
+
+const rex = new Dog("Rex", "Labrador");
+console.log(rex.name);       // "Rex" (own property)
+console.log(rex.breed);      // "Labrador" (own property)
+console.log(rex.bark());     // "Rex says Woof!" (Dog.prototype)
+console.log(rex.breathe());  // "Rex breathes" (Animal.prototype)
+console.log(rex.type);       // "Animal" (Animal.prototype)
+
+// Property lookup order:
+// rex → Dog.prototype → Animal.prototype → Object.prototype → null
+```
+
+### 🎤 Interview-style Explanation
+
+> **প্রশ্ন:** "Prototype Chain কী?"
+>
+> **আদর্শ উত্তর:** "Prototype Chain হলো linked objects-এর একটি chain। কোনো property বা method খোঁজার সময় JS প্রথমে object-এর নিজের properties দেখে। না পেলে `__proto__` দিয়ে prototype object-এ যায়, সেখানেও না পেলে prototype-এর prototype-এ — এভাবে `null` পর্যন্ত। এই chain traversal-ই Prototype Chain। এর ফলে methods memory-তে একবার define হয়ে সব instances share করতে পারে।"
+
+---
+
+## ২.১৪ Inheritance in JavaScript
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 JavaScript-এ Inheritance-এর উপায়
+
+```javascript
+// ১. Prototypal Inheritance (classical way)
+function Vehicle(brand) {
+  this.brand = brand;
+}
+Vehicle.prototype.start = function() {
+  return `${this.brand} started`;
+};
+
+function Car(brand, model) {
+  Vehicle.call(this, brand); // parent call
+  this.model = model;
+}
+Car.prototype = Object.create(Vehicle.prototype);
+Car.prototype.constructor = Car;
+Car.prototype.honk = function() {
+  return `${this.brand} ${this.model} goes Beep!`;
+};
+
+const myCar = new Car("Toyota", "Corolla");
+console.log(myCar.start()); // "Toyota started" (inherited)
+console.log(myCar.honk());  // "Toyota Corolla goes Beep!"
+
+// ২. ES6 Class (syntactic sugar, same prototype under hood)
+class Vehicle2 {
+  constructor(brand) {
+    this.brand = brand;
+  }
+  start() {
+    return `${this.brand} started`;
+  }
+}
+
+class Car2 extends Vehicle2 {
+  constructor(brand, model) {
+    super(brand); // parent constructor
+    this.model = model;
+  }
+  honk() {
+    return `${this.brand} ${this.model} goes Beep!`;
+  }
+}
+
+const myCar2 = new Car2("Honda", "Civic");
+console.log(myCar2.start()); // "Honda started"
+console.log(myCar2.honk());  // "Honda Civic goes Beep!"
+```
+
+---
+
+## ২.১৫ Classes
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+ES6 Class হলো Prototype-based inheritance-এর **syntactic sugar**। ভেতরে prototype chain-ই ব্যবহার করে, কিন্তু পরিষ্কার OOP syntax দেয়।
+
+### 💻 Class Features
+
+```javascript
+class BankAccount {
+  // Private field (ES2022)
+  #balance;
+  #transactionHistory = [];
+
+  // Static property
+  static bankName = "BD Bank";
+  static totalAccounts = 0;
+
+  constructor(owner, initialBalance = 0) {
+    this.owner = owner;
+    this.#balance = initialBalance;
+    BankAccount.totalAccounts++;
+  }
+
+  // Getter
+  get balance() {
+    return this.#balance;
+  }
+
+  // Setter
+  set balance(amount) {
+    if (amount < 0) throw new Error("Balance cannot be negative");
+    this.#balance = amount;
+  }
+
+  // Method
+  deposit(amount) {
+    if (amount <= 0) throw new Error("Invalid amount");
+    this.#balance += amount;
+    this.#transactionHistory.push({ type: "deposit", amount });
+    return this;  // method chaining
+  }
+
+  withdraw(amount) {
+    if (amount > this.#balance) throw new Error("Insufficient funds");
+    this.#balance -= amount;
+    this.#transactionHistory.push({ type: "withdrawal", amount });
+    return this;
+  }
+
+  getHistory() {
+    return [...this.#transactionHistory]; // copy return
+  }
+
+  // Static method
+  static compare(acc1, acc2) {
+    return acc1.balance - acc2.balance;
+  }
+
+  toString() {
+    return `${this.owner}: ৳${this.#balance}`;
+  }
+}
+
+// Inheritance
+class SavingsAccount extends BankAccount {
+  #interestRate;
+
+  constructor(owner, initialBalance, interestRate) {
+    super(owner, initialBalance); // BankAccount constructor
+    this.#interestRate = interestRate;
+  }
+
+  addInterest() {
+    const interest = this.balance * this.#interestRate;
+    this.deposit(interest);
+    return this;
+  }
+}
+
+// ব্যবহার
+const acc = new BankAccount("Rahim", 1000);
+acc.deposit(500).withdraw(200); // method chaining
+console.log(`${acc}`); // "Rahim: ৳1300"
+
+const savings = new SavingsAccount("Karim", 5000, 0.05);
+savings.addInterest(); // 5% interest যোগ
+console.log(savings.balance); // 5250
+
+console.log(BankAccount.bankName);      // "BD Bank"
+console.log(BankAccount.totalAccounts); // 2
+```
+
+---
+
+## ২.১৬ Modules
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Modules** হলো code কে আলাদা আলাদা file-এ ভাগ করার পদ্ধতি। ES6 নিয়ে এসেছে native `import`/`export` syntax।
+
+### 💻 ES6 Modules
+
+```javascript
+// ========== math.js ==========
+// Named exports
+export const PI = 3.14159;
+export function add(a, b) { return a + b; }
+export function multiply(a, b) { return a * b; }
+
+// Default export
+export default class Calculator {
+  add(a, b) { return a + b; }
+}
+
+// ========== app.js ==========
+// Named import
+import { PI, add, multiply } from "./math.js";
+console.log(PI);        // 3.14159
+console.log(add(2, 3)); // 5
+
+// Rename
+import { add as sum } from "./math.js";
+console.log(sum(2, 3)); // 5
+
+// Import all
+import * as Math from "./math.js";
+console.log(Math.PI);
+
+// Default import (যেকোনো নাম দেওয়া যায়)
+import Calc from "./math.js";
+const calc = new Calc();
+
+// Dynamic import (lazy loading)
+async function loadModule() {
+  const module = await import("./heavy-module.js");
+  module.doSomething();
+}
+```
+
+### 📊 CommonJS vs ES Modules
+
+| | CommonJS (Node.js) | ES Modules |
+|-|--------------------|-----------|
+| **Syntax** | `require()` / `module.exports` | `import` / `export` |
+| **Loading** | Synchronous | Asynchronous |
+| **Static analysis** | ❌ | ✅ (Tree shaking) |
+| **Browser** | ❌ (নেটিভ) | ✅ |
+| **Default** | Node.js | Browser + Modern Node.js |
+
+---
+
+## ২.১৭ Debouncing & Throttling
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+দুটিই function call-এর frequency কমানোর technique — performance optimization।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> **Debouncing** = Elevator button। অনেকে চাপলে শেষ চাপের পর একটু অপেক্ষা করে তারপর যায়।
+> **Throttling** = Machine gun — সর্বোচ্চ 1 টি bullet/second, যতই trigger টানুন।
+
+### 💻 Implementation
+
+```javascript
+// ১. Debounce — শেষ call-এর পর delay শেষে execute
+function debounce(fn, delay) {
+  let timeoutId;
+  return function(...args) {
+    clearTimeout(timeoutId); // আগের timer cancel
+    timeoutId = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
+}
+
+// Practical: Search bar
+const searchInput = document.querySelector("#search");
+const search = debounce((query) => {
+  console.log("API call:", query);
+  // fetchResults(query);
+}, 500);
+
+searchInput.addEventListener("input", (e) => search(e.target.value));
+// User দ্রুত type করলে API call হবে না, থামলে 500ms পরে একবার হবে
+
+// ২. Throttle — নির্দিষ্ট interval-এ execute
+function throttle(fn, limit) {
+  let inThrottle = false;
+  return function(...args) {
+    if (!inThrottle) {
+      fn.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
+  };
+}
+
+// Practical: Scroll event
+const handleScroll = throttle(() => {
+  console.log("Scroll position:", window.scrollY);
+}, 100); // সর্বোচ্চ প্রতি 100ms-এ একবার
+
+window.addEventListener("scroll", handleScroll);
+```
+
+### 📊 Debounce vs Throttle
+
+| | Debounce | Throttle |
+|-|---------|---------|
+| **Execute করে** | শেষ call-এর পর delay-এ | প্রতি interval-এ সর্বোচ্চ একবার |
+| **Use case** | Search, resize | Scroll, mousemove, button click |
+| **Pattern** | "একটু থামো, তারপর করো" | "নিয়মিত বিরতিতে করো" |
+
+---
+
+## ২.১৮ Currying
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Currying** হলো একটি function যেটি multiple arguments নেয় তাকে একটি chain of functions-এ রূপান্তর করা — প্রতিটি function একটি argument নেয়।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> `add(2, 3)` এর বদলে `add(2)(3)` — প্রথম call-এ 2 "মনে" রাখে, দ্বিতীয় call-এ 3 যোগ করে।
+
+### 💻 Currying Examples
+
+```javascript
+// Regular function
+function add(a, b, c) {
+  return a + b + c;
+}
+
+// Curried version
+function curriedAdd(a) {
+  return function(b) {
+    return function(c) {
+      return a + b + c;
+    };
+  };
+}
+// Arrow function version
+const curriedAdd2 = a => b => c => a + b + c;
+
+console.log(curriedAdd(1)(2)(3)); // 6
+console.log(curriedAdd2(1)(2)(3)); // 6
+
+// Partial application — একটি argument fix করে নতুন function
+const add5 = curriedAdd(5);
+console.log(add5(3)(2)); // 10
+console.log(add5(10)(1)); // 16
+
+// Practical: Logging
+const log = level => message => date =>
+  `[${date}] [${level}] ${message}`;
+
+const infoLog = log("INFO");
+const errorLog = log("ERROR");
+
+console.log(infoLog("Server started")("2026-05-11"));
+// "[2026-05-11] [INFO] Server started"
+console.log(errorLog("DB connection failed")("2026-05-11"));
+// "[2026-05-11] [ERROR] DB connection failed"
+
+// Generic curry utility
+function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) {
+      return fn.apply(this, args);
+    }
+    return function(...args2) {
+      return curried.apply(this, args.concat(args2));
+    };
+  };
+}
+
+const curriedMultiply = curry((a, b, c) => a * b * c);
+console.log(curriedMultiply(2)(3)(4)); // 24
+console.log(curriedMultiply(2, 3)(4)); // 24
+console.log(curriedMultiply(2)(3, 4)); // 24
+```
+
+---
+
+## ২.১৯ Memoization
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Memoization** হলো একটি optimization technique যেখানে function-এর result cache করা হয়। Same input আবার এলে calculation না করে cache থেকে result দেওয়া হয়।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> একবার ৯ × ৯ = ৮১ হিসেব করার পর মুখস্থ রাখুন — পরেরবার না ভেবেই বলুন। এটাই memoization।
+
+### 💻 Implementation
+
+```javascript
+// Basic memoize
+function memoize(fn) {
+  const cache = new Map();
+
+  return function(...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      console.log("⚡ Cache hit!");
+      return cache.get(key);
+    }
+
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+    console.log("🔄 Calculated fresh");
+    return result;
+  };
+}
+
+// Heavy computation example
+function slowFactorial(n) {
+  if (n <= 1) return 1;
+  return n * slowFactorial(n - 1);
+}
+
+const fastFactorial = memoize(slowFactorial);
+console.log(fastFactorial(10)); // 🔄 Calculated: 3628800
+console.log(fastFactorial(10)); // ⚡ Cache hit!: 3628800
+
+// Fibonacci with memoization
+const memoFib = memoize(function fib(n) {
+  if (n <= 1) return n;
+  return memoFib(n - 1) + memoFib(n - 2);
+});
+// O(2^n) → O(n) complexity!
+
+// React useMemo equivalent (conceptual)
+function expensiveCalculation(data) {
+  return data.filter(x => x > 100).map(x => x * 2);
+}
+// React-এ: const result = useMemo(() => expensiveCalculation(data), [data]);
+```
+
+---
+
+## ২.২০ PART 2 — Interview Questions & Answers
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Execution Context & Event Loop (Q1–Q10)</strong></summary>
+<br>
+
+**Q1: Execution Context কী? কত ধরনের?**
+> **A:** Execution Context হলো JS code execute হওয়ার পরিবেশ। তিন ধরন: Global EC (একটিমাত্র, program শুরুতে), Function EC (প্রতিটি function call-এ), Eval EC (এড়িয়ে চলুন)। প্রতিটিতে Variable Environment, Lexical Environment, ও this binding থাকে।
+
+**Q2: Creation Phase এবং Execution Phase কী?**
+> **A:** Creation Phase-এ: var declarations hoisted (undefined), function declarations fully hoisted, this set হয়। Execution Phase-এ: code line by line execute হয়, variable values assign হয়।
+
+**Q3: Event Loop কী? কীভাবে async code handle করে?**
+> **A:** Event Loop JS-এর concurrency model। Call Stack খালি হলে Microtask Queue সম্পূর্ণ drain করে, তারপর Macrotask Queue থেকে একটি task নেয়। এভাবে single-threaded হওয়া সত্ত্বেও non-blocking async behavior।
+
+**Q4: Microtask ও Macrotask-এর পার্থক্য?**
+> **A:** Microtask: Promise.then/catch/finally, queueMicrotask, MutationObserver। Macrotask: setTimeout, setInterval, setImmediate, I/O। Microtask সবসময় পরবর্তী Macrotask-এর আগে চলে।
+
+**Q5: নিচের output কী হবে?**
+```javascript
+console.log("A");
+setTimeout(() => console.log("B"), 0);
+Promise.resolve().then(() => console.log("C"));
+console.log("D");
+```
+> **A:** A → D → C → B। Sync (A, D) → Microtask (C) → Macrotask (B)।
+
+**Q6: Call Stack overflow কখন হয়?**
+> **A:** Recursion-এ base case না থাকলে বা অতিরিক্ত nested function calls। "Maximum call stack size exceeded" error।
+
+**Q7: setTimeout(fn, 0) মানে কি fn সঙ্গে সঙ্গে চলবে?**
+> **A:** না। 0ms delay মানে "যত তাড়াতাড়ি সম্ভব" — কিন্তু Call Stack খালি হওয়া এবং Microtask Queue drain হওয়ার পরে। Sync code সবসময় আগে।
+
+**Q8: Promise.all এবং Promise.allSettled-এর পার্থক্য?**
+> **A:** `Promise.all` — একটি reject হলে সব reject। সব fulfill হলে সব values array-এ। `Promise.allSettled` — সব complete হওয়ার পর প্রতিটির status/value অথবা reason দেয়। কোনো একটি fail হলেও বাকিগুলোর result পাওয়া যায়।
+
+**Q9: async function কী return করে?**
+> **A:** সবসময় একটি Promise। `return 42` করলে `Promise.resolve(42)` হিসেবে return হয়। Exception throw করলে `Promise.reject(error)` হয়।
+
+**Q10: Callback Hell কী? কীভাবে সমাধান করবেন?**
+> **A:** Multiple nested callbacks — "Pyramid of Doom"। সমাধান: (১) Named functions দিয়ে flatten করা, (২) Promises এবং chaining, (৩) Async/Await — সবচেয়ে পরিষ্কার।
+
+</details>
+
+<details>
+<summary><strong>🔹 this, Prototype & Classes (Q11–Q20)</strong></summary>
+<br>
+
+**Q11: this keyword কীভাবে নির্ধারিত হয়?**
+> **A:** Call site দিয়ে: Regular function = window/undefined(strict)। Method call = object। Arrow function = enclosing lexical this। Constructor (new) = নতুন object। call/apply/bind = explicitly set।
+
+**Q12: bind, call, apply-এর পার্থক্য?**
+> **A:** তিনটিই this set করে। call: `fn.call(obj, arg1, arg2)` তাৎক্ষণিক call, আলাদা args। apply: `fn.apply(obj, [arg1, arg2])` তাৎক্ষণিক, array args। bind: `fn.bind(obj)` নতুন function return করে, পরে call।
+
+**Q13: Arrow function-এ this কী?**
+> **A:** Arrow function-এর নিজের this নেই — enclosing lexical scope থেকে inherit করে। Define করার সময় surrounding context-এর this নিয়ে নেয়। তাই object method হিসেবে use করলে object-এর this পাবে না।
+
+**Q14: Prototype কী?**
+> **A:** JS-এর প্রতিটি object-এর একটি `[[Prototype]]` hidden property আছে যা অন্য object-কে point করে। Property lookup-এ নিজের কাছে না পেলে prototype-এ যায় — chain বেয়ে null পর্যন্ত।
+
+**Q15: `__proto__` এবং `prototype`-এর পার্থক্য?**
+> **A:** `__proto__` হলো প্রতিটি object-এর instance property — তার prototype-কে point করে। `prototype` হলো শুধু function object-এর property — `new` দিয়ে তৈরি instances-এর `__proto__` হয় এই `prototype`।
+
+**Q16: ES6 Class কি নতুন OOP পদ্ধতি?**
+> **A:** না — syntactic sugar। Class-এর ভেতরে prototype chain-ই ব্যবহার হয়। `typeof MyClass === "function"`। কিন্তু `class` keyword দিয়ে OOP code পরিষ্কার ও readable।
+
+**Q17: `extends` এবং `super` কীভাবে কাজ করে?**
+> **A:** `extends` prototype chain সেট করে Child prototype → Parent prototype। `super()` parent constructor call করে। `super.method()` parent method call করে। `super()` child constructor-এ `this` use করার আগে call করতে হবে।
+
+**Q18: Private class fields (#) কী?**
+> **A:** ES2022 — `#fieldName` দিয়ে private field declare করলে class-এর বাইরে থেকে access করা যায় না। `obj.#field` SyntaxError দেবে। নিজে property access restrict করার native JS পদ্ধতি।
+
+**Q19: Static methods কখন ব্যবহার করবেন?**
+> **A:** Instance-এর উপর নির্ভরশীল নয় এমন utility methods। `MyClass.method()` দিয়ে call করা যায়, `instance.method()` দিয়ে নয়। যেমন: `Array.isArray()`, `Object.keys()`, `Math.max()`।
+
+**Q20: Currying এবং Partial Application-এর পার্থক্য?**
+> **A:** Currying: `f(a, b, c)` → `f(a)(b)(c)` — সব argument একটি একটি করে। Partial Application: কিছু argument আগে fix করে নতুন function — `f(a, b, c)` → `g(b, c)` যেখানে `a` fixed।
+
+</details>
+
+<details>
+<summary><strong>🔹 Performance & Patterns (Q21–Q25)</strong></summary>
+<br>
+
+**Q21: Debounce এবং Throttle কী? কখন কোনটি ব্যবহার করবেন?**
+> **A:** Debounce: শেষ call-এর পর delay — search bar (user টাইপ থামলে API call)। Throttle: নির্দিষ্ট interval-এ একবার — scroll/resize handler। উভয়ই performance optimization।
+
+**Q22: Memoization কী? কখন কার্যকর?**
+> **A:** Function result cache করা — same input-এ পুনরায় calculate না করে cache থেকে দেওয়া। Pure function-এ কার্যকর (same input → same output)। Fibonacci, factorial — expensive recursive calculation-এ। React-এ useMemo/useCallback।
+
+**Q23: Module system কেন দরকার?**
+> **A:** Code organization, reusability, encapsulation, naming collision এড়ানো। ES Modules: static analysis সম্ভব তাই tree shaking কাজ করে (unused code bundle থেকে বাদ)।
+
+**Q24: Fetch API-এ error handling কীভাবে করবেন?**
+> **A:** Fetch শুধু network error-এ reject করে। 4xx/5xx status-এ reject করে না। সঠিক pattern: `if (!response.ok) throw new Error(...)`, তারপর try/catch বা .catch()।
+
+**Q25: Memory Leak কীভাবে হয়? কীভাবে এড়াবেন?**
+> **A:** Closure-এ unnecessary reference ধরে রাখলে, Event listener remove না করলে, global variable leak, circular reference। এড়ানো: removeEventListener, WeakMap/WeakRef ব্যবহার, unnecessary references null করা।
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 3 আসছে:** DOM & Browser APIs — DOM Manipulation, Event Handling, Event Bubbling/Capturing, Event Delegation, Local Storage, Cookies এবং আরও অনেক কিছু।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 3 দাও" লিখুন।
