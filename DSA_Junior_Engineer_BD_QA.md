@@ -21,8 +21,8 @@
 |---|------|-----------|
 | 📘 | [**PART 1** — DSA Fundamentals](#part1) | Data Structure, Algorithm, Time/Space Complexity, Big O, Recursion, Memory |
 | 📗 | [**PART 2** — Arrays & Strings](#part2) | Array, Prefix Sum, Sliding Window, Two Pointer, Kadane, Binary Search, Matrix |
-| 📙 | **PART 3** — Linked List | *(শীঘ্রই আসছে)* |
-| 📕 | **PART 4** — Stack & Queue | *(শীঘ্রই আসছে)* |
+| 📙 | [**PART 3** — Linked List](#part3) | Singly/Doubly/Circular LL, Insert/Delete, Reverse, Cycle Detection, Floyd, Merge |
+| 📕 | [**PART 4** — Stack & Queue](#part4) | Stack, Queue, Circular Queue, Deque, Priority Queue, Monotonic Stack, Expression Eval |
 | 📓 | **PART 5** — Trees & Binary Trees | *(শীঘ্রই আসছে)* |
 | 📔 | **PART 6** — Graphs | *(শীঘ্রই আসছে)* |
 | 📒 | **PART 7** — Sorting & Searching | *(শীঘ্রই আসছে)* |
@@ -2013,6 +2013,1665 @@ Hard:
 
 ---
 
+
+<details>
+<summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৩.১ Linked List কী?](#৩১-linked-list-কী)
+- [৩.২ Singly Linked List](#৩২-singly-linked-list)
+- [৩.৩ Doubly Linked List](#৩৩-doubly-linked-list)
+- [৩.৪ Circular Linked List](#৩৪-circular-linked-list)
+- [৩.৫ Insert ও Delete Operations](#৩৫-insert-ও-delete-operations)
+- [৩.৬ Reverse Linked List](#৩৬-reverse-linked-list)
+- [৩.৭ Cycle Detection — Floyd's Algorithm](#৩৭-cycle-detection--floyds-algorithm)
+- [৩.৮ Merge Linked Lists](#৩৮-merge-linked-lists)
+- [৩.৯ PART 3 — Interview Q&A](#৩৯-part-3--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৪.১ Stack](#৪১-stack)
+- [৪.২ Queue](#৪২-queue)
+- [৪.৩ Circular Queue](#৪৩-circular-queue)
+- [৪.৪ Deque (Double-Ended Queue)](#৪৪-deque-double-ended-queue)
+- [৪.৫ Priority Queue ও Heap](#৪৫-priority-queue-ও-heap)
+- [৪.৬ Monotonic Stack](#৪৬-monotonic-stack)
+- [৪.৭ Expression Evaluation](#৪৭-expression-evaluation)
+- [৪.৮ Infix to Postfix](#৪৮-infix-to-postfix)
+- [৪.৯ PART 4 — Interview Q&A](#৪৯-part-4--interview-qa)
+
+</details>
+
+
+
+<a id="part3"></a>
+
+# PART 3: Linked List (লিংকড লিস্ট)
+
+> **পড়ার নির্দেশনা:** Linked List হলো pointer/reference ভিত্তিক data structure। Interview তে Reverse, Cycle Detection, Merge — এই তিনটি প্রায় সবসময় জিজ্ঞেস করা হয়। Pointer visualization দিয়ে পড়ুন।
+
+---
+
+## ৩.১ Linked List কী?
+
+### সংজ্ঞা
+
+**Linked List** হলো linear data structure যেখানে elements (node) memory তে contiguous নয় — প্রতিটি node তার data এবং পরবর্তী node এর **reference (pointer)** ধারণ করে।
+
+```
+Array (Contiguous):
+  [10][20][30][40][50]
+   ↑   ↑   ↑   ↑   ↑
+  1000 1004 1008 1012 1016  ← memory addresses পাশাপাশি
+
+Linked List (Non-contiguous):
+  [10|→] ── [20|→] ── [30|→] ── [40|→] ── [50|None]
+  1000        3048       2016       5102       4560
+              ↑           ↑           ↑
+           যেকোনো       যেকোনো     যেকোনো
+           address       address    address
+```
+
+### Array vs Linked List
+
+| বিষয় | Array | Linked List |
+|------|-------|-------------|
+| **Memory** | Contiguous | Scattered |
+| **Access** | O(1) random | O(n) sequential |
+| **Insert (front)** | O(n) shift | O(1) |
+| **Insert (middle)** | O(n) | O(n) traverse + O(1) insert |
+| **Insert (end)** | O(1) amortized | O(n) বা O(1) with tail |
+| **Delete** | O(n) | O(n) traverse + O(1) delete |
+| **Search** | O(n) / O(log n) sorted | O(n) |
+| **Extra memory** | No | O(n) for pointers |
+| **Cache friendly** | ✅ Yes | ❌ No |
+
+### Node Structure
+
+```python
+class Node:
+    def __init__(self, data):
+        self.data = data    # data field
+        self.next = None    # pointer to next node
+
+# Node তৈরি
+n1 = Node(10)
+n2 = Node(20)
+n3 = Node(30)
+
+# Link করা
+n1.next = n2
+n2.next = n3
+# n3.next = None (already)
+
+# Structure:
+# n1(10) → n2(20) → n3(30) → None
+```
+
+---
+
+## ৩.২ Singly Linked List
+
+### সম্পূর্ণ Implementation
+
+```python
+class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+class SinglyLinkedList:
+    def __init__(self):
+        self.head = None
+        self.size = 0
+
+    # ── Traversal — O(n) ────────────────────────────
+    def display(self):
+        current = self.head
+        nodes = []
+        while current:
+            nodes.append(str(current.data))
+            current = current.next
+        print(" → ".join(nodes) + " → None")
+
+    def __len__(self):
+        return self.size
+
+    # ── Insert at Beginning — O(1) ──────────────────
+    def insert_at_head(self, data):
+        new_node = Node(data)
+        new_node.next = self.head  # নতুন node head কে point করে
+        self.head = new_node       # head সরে যায়
+        self.size += 1
+
+    # Visualization:
+    # Before: head → [20] → [30] → None
+    # After:  head → [10] → [20] → [30] → None
+
+    # ── Insert at End — O(n) ────────────────────────
+    def insert_at_tail(self, data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            self.size += 1
+            return
+
+        current = self.head
+        while current.next:     # শেষ node খুঁজি
+            current = current.next
+        current.next = new_node # শেষে যোগ
+        self.size += 1
+
+    # ── Insert at Position — O(n) ───────────────────
+    def insert_at_position(self, pos, data):
+        if pos < 0 or pos > self.size:
+            raise IndexError("Invalid position")
+
+        if pos == 0:
+            self.insert_at_head(data)
+            return
+
+        new_node = Node(data)
+        current = self.head
+        for _ in range(pos - 1):  # pos-1 এ পৌঁছাও
+            current = current.next
+
+        new_node.next = current.next
+        current.next = new_node
+        self.size += 1
+
+    # ── Delete by Value — O(n) ──────────────────────
+    def delete_by_value(self, data):
+        if not self.head:
+            return False
+
+        # Head delete
+        if self.head.data == data:
+            self.head = self.head.next
+            self.size -= 1
+            return True
+
+        current = self.head
+        while current.next:
+            if current.next.data == data:
+                current.next = current.next.next  # skip করো
+                self.size -= 1
+                return True
+            current = current.next
+        return False
+
+    # Visualization (delete 20):
+    # Before: [10] → [20] → [30] → None
+    #          ↑
+    #        current
+    # current.next (20) এর data == 20 → current.next = current.next.next
+    # After:  [10] → [30] → None
+
+    # ── Search — O(n) ───────────────────────────────
+    def search(self, data):
+        current = self.head
+        pos = 0
+        while current:
+            if current.data == data:
+                return pos
+            current = current.next
+            pos += 1
+        return -1
+
+    # ── Get by Index — O(n) ─────────────────────────
+    def get(self, index):
+        if index < 0 or index >= self.size:
+            raise IndexError("Index out of range")
+        current = self.head
+        for _ in range(index):
+            current = current.next
+        return current.data
+
+# Usage
+ll = SinglyLinkedList()
+ll.insert_at_tail(10)
+ll.insert_at_tail(20)
+ll.insert_at_tail(30)
+ll.insert_at_head(5)
+ll.display()   # 5 → 10 → 20 → 30 → None
+
+ll.delete_by_value(20)
+ll.display()   # 5 → 10 → 30 → None
+print(ll.search(30))  # 2
+```
+
+### Middle Element খোঁজা — Slow/Fast Pointer
+
+```python
+def find_middle(head):
+    """
+    Fast pointer 2 step এগোয়, Slow 1 step।
+    Fast শেষে পৌঁছালে Slow মাঝে থাকে।
+    """
+    slow = head
+    fast = head
+
+    while fast and fast.next:
+        slow = slow.next       # 1 step
+        fast = fast.next.next  # 2 step
+
+    return slow
+
+# Dry Run: 1 → 2 → 3 → 4 → 5 → None
+# Initial: slow=1, fast=1
+# Step 1:  slow=2, fast=3
+# Step 2:  slow=3, fast=5
+# fast.next = None → stop
+# Middle = 3 ✓ (odd: exact middle; even: second of two middles)
+```
+
+---
+
+## ৩.৩ Doubly Linked List
+
+### সংজ্ঞা ও Structure
+
+প্রতিটি node এ **দুটি pointer** — পরবর্তী node (next) এবং পূর্ববর্তী node (prev)।
+
+```
+None ← [10] ↔ [20] ↔ [30] ↔ [40] → None
+        ↑                           ↑
+       head                        tail
+
+Node structure:
+  ┌──────┬──────┬──────┐
+  │ prev │ data │ next │
+  └──────┴──────┴──────┘
+```
+
+```python
+class DNode:
+    def __init__(self, data):
+        self.data = data
+        self.prev = None
+        self.next = None
+
+class DoublyLinkedList:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+        self.size = 0
+
+    def insert_at_head(self, data):
+        new_node = DNode(data)
+        if not self.head:
+            self.head = self.tail = new_node
+        else:
+            new_node.next = self.head
+            self.head.prev = new_node
+            self.head = new_node
+        self.size += 1
+
+    def insert_at_tail(self, data):
+        new_node = DNode(data)
+        if not self.tail:
+            self.head = self.tail = new_node
+        else:
+            new_node.prev = self.tail
+            self.tail.next = new_node
+            self.tail = new_node
+        self.size += 1
+
+    def delete_node(self, node):
+        """O(1) — node reference জানলে directly delete"""
+        if node.prev:
+            node.prev.next = node.next
+        else:
+            self.head = node.next  # head ছিল
+
+        if node.next:
+            node.next.prev = node.prev
+        else:
+            self.tail = node.prev  # tail ছিল
+
+        self.size -= 1
+
+    def display_forward(self):
+        curr, parts = self.head, []
+        while curr:
+            parts.append(str(curr.data))
+            curr = curr.next
+        print("None ↔ " + " ↔ ".join(parts) + " ↔ None")
+
+    def display_backward(self):
+        curr, parts = self.tail, []
+        while curr:
+            parts.append(str(curr.data))
+            curr = curr.prev
+        print("None ↔ " + " ↔ ".join(parts) + " ↔ None")
+```
+
+### Singly vs Doubly
+
+| বিষয় | Singly | Doubly |
+|------|--------|--------|
+| Pointers per node | 1 (next) | 2 (prev + next) |
+| Memory | কম | বেশি |
+| Backward traversal | ❌ | ✅ |
+| Delete (given node) | O(n) — previous খুঁজতে হয় | O(1) |
+| Insert before node | O(n) | O(1) |
+| Use case | Stack, simple list | LRU Cache, Browser history |
+
+---
+
+## ৩.৪ Circular Linked List
+
+### সংজ্ঞা
+
+শেষ node এর next pointer প্রথম node (head) কে point করে — কোনো None নেই।
+
+```
+Singly Circular:
+  head → [10] → [20] → [30] → [40] ─┐
+           ↑________________________________┘
+
+Doubly Circular:
+  ┌─────────────────────────────┐
+  └→ [10] ↔ [20] ↔ [30] ↔ [40] ←┘
+```
+
+```python
+class CircularLinkedList:
+    def __init__(self):
+        self.head = None
+
+    def insert_at_end(self, data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            new_node.next = self.head  # নিজেকে point
+            return
+
+        # শেষ node খুঁজি (যার next = head)
+        current = self.head
+        while current.next != self.head:
+            current = current.next
+        current.next = new_node
+        new_node.next = self.head
+
+    def display(self):
+        if not self.head:
+            return
+        current = self.head
+        parts = []
+        while True:
+            parts.append(str(current.data))
+            current = current.next
+            if current == self.head:
+                break
+        print(" → ".join(parts) + " → (head)")
+
+    def detect_length(self):
+        if not self.head:
+            return 0
+        count = 1
+        current = self.head.next
+        while current != self.head:
+            count += 1
+            current = current.next
+        return count
+```
+
+### Circular LL এর Use Case
+
+```
+✅ Round-robin scheduling (CPU scheduling)
+✅ Circular buffer / Ring buffer
+✅ Multiplayer game — turn management
+✅ Media player — playlist loop
+```
+
+---
+
+## ৩.৫ Insert ও Delete Operations
+
+### Insert Positions এর Pointer Visualization
+
+```
+Insert 25 between 20 and 30:
+
+Before:
+  [10] → [20] → [30] → [40] → None
+          ↑
+        current (pos-1 তে)
+
+Step 1: new_node = Node(25)
+Step 2: new_node.next = current.next  → new_node → [30]
+Step 3: current.next = new_node       → [20] → [25]
+
+After:
+  [10] → [20] → [25] → [30] → [40] → None
+```
+
+```
+Delete node 30 (জানা আছে previous node 20):
+
+Before:
+  [10] → [20] → [30] → [40] → None
+          ↑       ↑
+        prev    to_delete
+
+Step: prev.next = to_delete.next  → [20] → [40]
+
+After:
+  [10] → [20] → [40] → None
+  [30] is now unreferenced → garbage collected
+```
+
+### "Delete Given Node" — Tricky Interview Pattern
+
+```python
+def delete_given_node(node):
+    """
+    Head এ access নেই, শুধু delete করার node আছে।
+    Last node হবে না এই guarantee আছে।
+    """
+    # পরের node এর data copy করো
+    node.data = node.next.data
+    # পরের node skip করো
+    node.next = node.next.next
+
+# Visualization: delete node containing 20
+# Before: [10] → [20] → [30] → [40] → None
+#                  ↑ node
+# Step 1: node.data = 30  → [10] → [30] → [30] → [40] → None
+# Step 2: node.next = [40] → [10] → [30] → [40] → None ✓
+```
+
+---
+
+## ৩.৬ Reverse Linked List
+
+### Iterative Approach — O(n) time, O(1) space
+
+```python
+def reverse_iterative(head):
+    prev = None
+    current = head
+
+    while current:
+        next_node = current.next  # ধরে রাখো
+        current.next = prev       # উল্টে দাও
+        prev = current            # এগিয়ে যাও
+        current = next_node
+
+    return prev  # নতুন head
+
+# Dry Run: 1 → 2 → 3 → 4 → None
+
+# Initial: prev=None, current=1
+#
+# Step 1: next=2, 1.next=None, prev=1, current=2
+#   None ← [1]   [2] → [3] → [4] → None
+#
+# Step 2: next=3, 2.next=1,   prev=2, current=3
+#   None ← [1] ← [2]   [3] → [4] → None
+#
+# Step 3: next=4, 3.next=2,   prev=3, current=4
+#   None ← [1] ← [2] ← [3]   [4] → None
+#
+# Step 4: next=None, 4.next=3, prev=4, current=None
+#   None ← [1] ← [2] ← [3] ← [4]
+#
+# return prev = 4 (নতুন head)
+# Final: 4 → 3 → 2 → 1 → None ✓
+```
+
+### Recursive Approach — O(n) time, O(n) space (call stack)
+
+```python
+def reverse_recursive(head):
+    # Base case
+    if not head or not head.next:
+        return head
+
+    # বাকি list reverse করো
+    new_head = reverse_recursive(head.next)
+
+    # head.next কে (এখন শেষে) head কে point করাও
+    head.next.next = head
+    head.next = None
+
+    return new_head
+
+# Trace: reverse(1 → 2 → 3 → None)
+# reverse(1):
+#   new_head = reverse(2 → 3 → None)
+#     new_head = reverse(3 → None)
+#       return 3 (base case)
+#     3.next = 2, 2.next = None → 3 → 2 → None
+#     return 3
+#   3.next = 2, 2.next = 1, 1.next = None → 3 → 2 → 1 → None
+#   return 3
+```
+
+### Reverse in Groups of K
+
+```python
+def reverse_k_group(head, k):
+    """প্রতি k টি node কে reverse করো"""
+    # k টি node আছে কিনা check
+    count = 0
+    current = head
+    while current and count < k:
+        current = current.next
+        count += 1
+
+    if count < k:
+        return head  # k এর কম বাকি, unchanged
+
+    # প্রথম k টি reverse করো
+    prev, curr = None, head
+    for _ in range(k):
+        nxt = curr.next
+        curr.next = prev
+        prev = curr
+        curr = nxt
+
+    # head এখন শেষে — বাকি অংশকে connect করো
+    head.next = reverse_k_group(curr, k)
+    return prev
+```
+
+---
+
+## ৩.৭ Cycle Detection — Floyd's Algorithm
+
+### সমস্যা
+
+Linked List এ cycle আছে কিনা detect করতে হবে। Cycle মানে — কোনো node এর next তার আগের কোনো node কে point করে।
+
+```
+Cycle সহ:
+  1 → 2 → 3 → 4 → 5
+              ↑       ↓
+              8 ← 7 ← 6
+```
+
+### Floyd's Tortoise and Hare
+
+```python
+def has_cycle(head):
+    """O(n) time, O(1) space"""
+    slow = head
+    fast = head
+
+    while fast and fast.next:
+        slow = slow.next        # 1 step (tortoise)
+        fast = fast.next.next   # 2 step (hare)
+
+        if slow == fast:        # মিলে গেলে cycle আছে
+            return True
+
+    return False  # fast None এ পৌঁছালে cycle নেই
+
+# Intuition:
+# Cycle না থাকলে fast ahead চলে শেষে None এ যাবে।
+# Cycle থাকলে fast loop এর ভেতরে ঘুরবে,
+# slow ও cycle এ ঢুকবে, ধীরে ধীরে fast তাকে ধরবে।
+# (যেমন circular track এ দ্রুত runner slower কে lap করে)
+```
+
+### Cycle এর Starting Point খোঁজা
+
+```python
+def detect_cycle_start(head):
+    """
+    Floyd's extended: cycle শুরু কোথায়?
+    """
+    slow = fast = head
+
+    # Phase 1: Meeting point খোঁজো
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            break
+    else:
+        return None  # cycle নেই
+
+    # Phase 2: Head থেকে ও meeting point থেকে
+    # same speed এ চলো — cycle start এ মিলবে
+    slow = head
+    while slow != fast:
+        slow = slow.next
+        fast = fast.next
+
+    return slow  # cycle এর শুরু
+
+# Mathematical Proof:
+# distance(head → cycle_start) = distance(meeting_point → cycle_start)
+# তাই দুই pointer একসাথে চললে cycle start এ মিলবে।
+```
+
+### Cycle Length বের করা
+
+```python
+def cycle_length(head):
+    slow = fast = head
+
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            # Meeting point থেকে আবার ঘুরে length বের করো
+            length = 1
+            current = slow.next
+            while current != slow:
+                length += 1
+                current = current.next
+            return length
+
+    return 0  # cycle নেই
+```
+
+---
+
+## ৩.৮ Merge Linked Lists
+
+### Merge Two Sorted Linked Lists
+
+```python
+def merge_sorted(l1, l2):
+    """O(m+n) time, O(1) space (iterative)"""
+    # Dummy head — edge cases সহজ করে
+    dummy = Node(0)
+    current = dummy
+
+    while l1 and l2:
+        if l1.data <= l2.data:
+            current.next = l1
+            l1 = l1.next
+        else:
+            current.next = l2
+            l2 = l2.next
+        current = current.next
+
+    # বাকি অংশ attach করো
+    current.next = l1 if l1 else l2
+
+    return dummy.next
+
+# Dry Run:
+# l1: 1 → 3 → 5
+# l2: 2 → 4 → 6
+
+# dummy → 1(l1<l2) → 2(l2<l1) → 3 → 4 → 5 → 6 → None ✓
+```
+
+### Merge K Sorted Linked Lists — Heap দিয়ে
+
+```python
+import heapq
+
+def merge_k_sorted(lists):
+    """O(N log k) — N = total nodes, k = list count"""
+    dummy = Node(0)
+    current = dummy
+    heap = []
+
+    # Initial: প্রতিটি list এর head heap এ
+    for i, node in enumerate(lists):
+        if node:
+            heapq.heappush(heap, (node.data, i, node))
+
+    while heap:
+        val, i, node = heapq.heappop(heap)
+        current.next = node
+        current = current.next
+        if node.next:
+            heapq.heappush(heap, (node.next.data, i, node.next))
+
+    return dummy.next
+```
+
+### Add Two Numbers (Linked List হিসেবে)
+
+```python
+def add_two_numbers(l1, l2):
+    """
+    দুটি number reversed linked list হিসেবে দেওয়া।
+    তাদের sum ও reversed linked list এ return করো।
+    Input: 2→4→3 (342) + 5→6→4 (465) = 807 → 7→0→8
+    """
+    dummy = Node(0)
+    current = dummy
+    carry = 0
+
+    while l1 or l2 or carry:
+        val1 = l1.data if l1 else 0
+        val2 = l2.data if l2 else 0
+
+        total = val1 + val2 + carry
+        carry = total // 10
+        digit = total % 10
+
+        current.next = Node(digit)
+        current = current.next
+
+        if l1: l1 = l1.next
+        if l2: l2 = l2.next
+
+    return dummy.next
+```
+
+---
+
+## ৩.৯ PART 3 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Linked List এবং Array এর মধ্যে কোনটি কখন ব্যবহার করবেন?**
+
+> **উত্তর:** Array: random access দরকার হলে (O(1)), size আগে থেকে জানা থাকলে, cache performance গুরুত্বপূর্ণ হলে। Linked List: frequent insert/delete at beginning দরকার হলে (O(1)), size dynamic এবং unpredictable হলে, memory fragmentation এর সমস্যা থাকলে। Real example: Browser history (doubly LL — forward/back), Undo/Redo (stack-based LL)।
+
+**Q2: Floyd's Cycle Detection Algorithm কীভাবে কাজ করে?**
+
+> **উত্তর:** দুটি pointer — slow (১ step) ও fast (২ step) একসাথে চলে। Cycle না থাকলে fast None এ পৌঁছাবে। Cycle থাকলে fast slow কে eventually overtake করবে এবং একই node এ মিলবে। কারণ: relative speed এর পার্থক্য ১ — তাই cycle এর ভেতরে fast প্রতিটি iteration এ slow থেকে ১ step এগিয়ে যায়, তাই eventually মিলবে। O(n) time, O(1) space।
+
+**Q3: Dummy head node কখন ব্যবহার করবেন?**
+
+> **উত্তর:** Linked List এর head পরিবর্তন হওয়ার সম্ভাবনা থাকলে dummy head ব্যবহার করলে edge cases সহজ হয়। যেমন: merge sorted lists, delete at head, remove nth from end। Dummy node এর data irrelevant — এটি একটি stable entry point। Return করতে হয় dummy.next।
+
+**Q4: Reverse Linked List Recursively এর space complexity কত এবং কেন?**
+
+> **উত্তর:** O(n) — কারণ n টি recursive call stack এ জমা হয়। Iterative reverse এ O(1) space কারণ শুধু ৩টি pointer (prev, current, next) লাগে। Interview তে বলুন: "Space critical হলে iterative prefer করব।"
+
+**Q5: "Delete given node without head" — কীভাবে করবেন?**
+
+> **উত্তর:** পরের node এর data কে current node এ copy করো, তারপর পরের node কে skip করো। `node.data = node.next.data; node.next = node.next.next`। Limitation: Last node এ কাজ করে না (কারণ next নেই)।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| LL এ random access | O(n) |
+| Head তে insert | O(1) |
+| Tail এ insert (without tail pointer) | O(n) |
+| Middle element খোঁজা | Slow/Fast pointer |
+| Cycle detect করতে | Floyd's algorithm |
+| Reverse LL iterative space | O(1) |
+| Reverse LL recursive space | O(n) call stack |
+| Merge 2 sorted LL | O(m+n), dummy head |
+| Doubly LL এ node delete (given node) | O(1) |
+| Circular LL traversal থামানো | current == head |
+| LRU Cache তে কোন LL? | Doubly LL + HashMap |
+| k-group reverse | Recursive + count |
+
+---
+
+> **⚠️ PART 3 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part4"></a>
+
+# PART 4: Stack & Queue (স্ট্যাক ও কিউ)
+
+> **পড়ার নির্দেশনা:** Stack ও Queue হলো দুটি fundamental abstract data types। Interview তে Monotonic Stack ও Expression Evaluation প্রায়ই জিজ্ঞেস করা হয়। Real-life analogies দিয়ে concepts বুঝুন।
+
+---
+
+## ৪.১ Stack
+
+### সংজ্ঞা
+
+**Stack** হলো LIFO (Last In, First Out) data structure। সবশেষে যা ঢুকেছে সেটি সবার আগে বের হয়।
+
+```
+Real-life Analogy — বই এর স্তুপ:
+  Push(C): [A][B][C]  ← TOP
+  Push(D): [A][B][C][D]  ← TOP
+  Pop():   [A][B][C]  ← C বের হলো না, D বের হলো!
+  Peek():  C দেখা যাচ্ছে কিন্তু তোলা হচ্ছে না
+
+Operations:
+  push(x)  → TOP এ element যোগ   — O(1)
+  pop()    → TOP থেকে remove     — O(1)
+  peek()   → TOP element দেখা    — O(1)
+  isEmpty  → খালি কিনা           — O(1)
+  size()   → element সংখ্যা      — O(1)
+```
+
+### Implementation — Array দিয়ে
+
+```python
+class ArrayStack:
+    def __init__(self, capacity=1000):
+        self._data = [None] * capacity
+        self._top = -1
+        self._capacity = capacity
+
+    def push(self, x):
+        if self._top == self._capacity - 1:
+            raise OverflowError("Stack is full")
+        self._top += 1
+        self._data[self._top] = x
+
+    def pop(self):
+        if self.is_empty():
+            raise IndexError("Stack is empty")
+        val = self._data[self._top]
+        self._data[self._top] = None
+        self._top -= 1
+        return val
+
+    def peek(self):
+        if self.is_empty():
+            raise IndexError("Stack is empty")
+        return self._data[self._top]
+
+    def is_empty(self):
+        return self._top == -1
+
+    def size(self):
+        return self._top + 1
+```
+
+### Implementation — Python List দিয়ে (সহজ)
+
+```python
+class Stack:
+    def __init__(self):
+        self._stack = []
+
+    def push(self, x):
+        self._stack.append(x)      # O(1) amortized
+
+    def pop(self):
+        if self.is_empty():
+            raise IndexError("Stack underflow")
+        return self._stack.pop()   # O(1)
+
+    def peek(self):
+        return self._stack[-1] if self._stack else None
+
+    def is_empty(self):
+        return len(self._stack) == 0
+
+    def size(self):
+        return len(self._stack)
+
+# Python built-in: list as stack
+stack = []
+stack.append(10)   # push
+stack.append(20)
+stack.append(30)
+print(stack[-1])   # peek → 30
+stack.pop()        # pop → 30
+```
+
+### Valid Parentheses — Classic Stack Problem
+
+```python
+def is_valid_parentheses(s):
+    """
+    '(', '{', '[' — opening
+    ')', '}', ']' — closing
+    সব pair সঠিকভাবে বন্ধ আছে কিনা?
+    """
+    stack = []
+    mapping = {')': '(', '}': '{', ']': '['}
+
+    for char in s:
+        if char in '({[':
+            stack.append(char)
+        elif char in ')}]':
+            if not stack or stack[-1] != mapping[char]:
+                return False
+            stack.pop()
+
+    return len(stack) == 0
+
+# Dry Run: s = "({[]})"
+# '(' → push: ['(']
+# '{' → push: ['(', '{']
+# '[' → push: ['(', '{', '[']
+# ']' → mapping[']']='[', top='[' ✓ pop: ['(', '{']
+# '}' → mapping['}']='{', top='{' ✓ pop: ['(']
+# ')' → mapping[')']=\'(\', top='(' ✓ pop: []
+# stack empty → True ✓
+```
+
+### Stack এর Real-World Use Cases
+
+```
+✅ Function call management (Call Stack)
+✅ Undo/Redo operations (text editors)
+✅ Browser back/forward navigation
+✅ Expression evaluation (infix/postfix)
+✅ DFS (Depth First Search)
+✅ Balanced parentheses check
+✅ Syntax parsing (compilers)
+✅ Backtracking algorithms
+```
+
+### Min Stack — O(1) minimum
+
+```python
+class MinStack:
+    """সব operation O(1) — minimum সবসময় track রাখে"""
+    def __init__(self):
+        self.stack = []     # (value, current_min) tuple
+    
+    def push(self, val):
+        current_min = min(val, self.stack[-1][1]) if self.stack else val
+        self.stack.append((val, current_min))
+    
+    def pop(self):
+        return self.stack.pop()[0]
+    
+    def top(self):
+        return self.stack[-1][0]
+    
+    def get_min(self):
+        return self.stack[-1][1]
+
+# Usage:
+ms = MinStack()
+ms.push(5)   # stack: [(5,5)]
+ms.push(3)   # stack: [(5,5),(3,3)]
+ms.push(7)   # stack: [(5,5),(3,3),(7,3)]
+ms.get_min() # 3 ✓
+ms.pop()     # 7 removed
+ms.get_min() # 3 ✓
+ms.pop()     # 3 removed
+ms.get_min() # 5 ✓
+```
+
+---
+
+## ৪.২ Queue
+
+### সংজ্ঞা
+
+**Queue** হলো FIFO (First In, First Out) data structure। প্রথমে যা ঢুকেছে সেটি প্রথমে বের হয়।
+
+```
+Real-life Analogy — ব্যাংকের লাইন:
+  Enqueue(A): [A]         ← REAR
+  Enqueue(B): [A][B]      ← REAR
+  Enqueue(C): [A][B][C]   ← REAR
+  Dequeue():  [B][C]      ← A বের হলো (FRONT থেকে)
+
+  FRONT ──────────────── REAR
+  [B]   →   [C]   →   (next will be here)
+  dequeue                 enqueue
+```
+
+### Implementation — collections.deque দিয়ে (Optimal)
+
+```python
+from collections import deque
+
+class Queue:
+    def __init__(self):
+        self._queue = deque()
+
+    def enqueue(self, x):
+        self._queue.append(x)       # O(1) — rear এ
+
+    def dequeue(self):
+        if self.is_empty():
+            raise IndexError("Queue is empty")
+        return self._queue.popleft()  # O(1) — front থেকে
+
+    def front(self):
+        return self._queue[0] if self._queue else None
+
+    def rear(self):
+        return self._queue[-1] if self._queue else None
+
+    def is_empty(self):
+        return len(self._queue) == 0
+
+    def size(self):
+        return len(self._queue)
+
+# ⚠️ List দিয়ে Queue বানালে popleft() O(n) — এড়িয়ে চলুন
+# deque তে append ও popleft উভয়ই O(1)
+```
+
+### Queue এর Real-World Use Cases
+
+```
+✅ BFS (Breadth First Search)
+✅ CPU Process Scheduling
+✅ Printer Queue
+✅ Message Queue (RabbitMQ, Kafka)
+✅ Web Server Request Handling
+✅ Level-order Tree Traversal
+✅ Cache Replacement (FIFO policy)
+```
+
+### BFS with Queue
+
+```python
+from collections import deque
+
+def bfs(graph, start):
+    """Graph BFS — O(V + E)"""
+    visited = set([start])
+    queue = deque([start])
+    order = []
+
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+    return order
+```
+
+---
+
+## ৪.৩ Circular Queue
+
+### সমস্যা
+
+Regular array-based queue তে dequeue করার পরে front এর আগের জায়গা waste হয়।
+
+```
+Regular Queue সমস্যা:
+  Initial:  [_][_][_][_][_]  front=0, rear=-1
+  Enqueue A: [A][_][_][_][_]  front=0, rear=0
+  Enqueue B: [A][B][_][_][_]  front=0, rear=1
+  Dequeue:   [_][B][_][_][_]  front=1, rear=1
+  Dequeue:   [_][_][_][_][_]  front=2, rear=1
+  Enqueue C: [_][_][C][_][_]  front=2, rear=2
+  ...
+  Enqueue তে rear শেষে যাবে, কিন্তু front এর আগে জায়গা খালি!
+```
+
+### Circular Queue — Modular Arithmetic
+
+```python
+class CircularQueue:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.queue = [None] * capacity
+        self.front = 0
+        self.rear = -1
+        self.size = 0
+
+    def enqueue(self, x):
+        if self.is_full():
+            raise OverflowError("Circular Queue is full")
+        self.rear = (self.rear + 1) % self.capacity  # circular!
+        self.queue[self.rear] = x
+        self.size += 1
+
+    def dequeue(self):
+        if self.is_empty():
+            raise IndexError("Circular Queue is empty")
+        val = self.queue[self.front]
+        self.queue[self.front] = None
+        self.front = (self.front + 1) % self.capacity  # circular!
+        self.size -= 1
+        return val
+
+    def is_empty(self):
+        return self.size == 0
+
+    def is_full(self):
+        return self.size == self.capacity
+
+    def peek_front(self):
+        return self.queue[self.front] if not self.is_empty() else None
+
+# Visualization: capacity=5, wraparound
+# [D][E][_][A][B][C] → front=3(A), rear=1(E)
+#  0  1  2  3  4
+# Enqueue F: rear = (1+1)%5 = 2 → [D][E][F][A][B][C]
+```
+
+---
+
+## ৪.৪ Deque (Double-Ended Queue)
+
+### সংজ্ঞা
+
+**Deque** (Double-Ended Queue) — দুই দিক থেকেই insert ও delete করা যায়।
+
+```
+         addFirst  addLast
+            ↓         ↓
+  FRONT → [A][B][C][D] ← REAR
+            ↑         ↑
+        removeFirst  removeLast
+```
+
+```python
+from collections import deque
+
+dq = deque()
+
+# Add
+dq.append(10)        # right end: [10]
+dq.append(20)        # right: [10, 20]
+dq.appendleft(5)     # left: [5, 10, 20]
+dq.appendleft(1)     # left: [1, 5, 10, 20]
+
+# Remove
+dq.pop()             # right: [1, 5, 10] (20 removed)
+dq.popleft()         # left:  [5, 10]    (1 removed)
+
+# Peek
+print(dq[0])         # 5 (front)
+print(dq[-1])        # 10 (rear)
+
+# All O(1)!
+```
+
+### Sliding Window Maximum — Deque দিয়ে O(n)
+
+```python
+def sliding_window_max(arr, k):
+    """
+    প্রতিটি k-size window এর maximum খোঁজো।
+    Brute: O(nk), Deque: O(n)
+    """
+    from collections import deque
+    dq = deque()  # indices store করে, decreasing order এ values
+    result = []
+
+    for i in range(len(arr)):
+        # Window এর বাইরে চলে গেছে এমন index বাদ দাও
+        while dq and dq[0] < i - k + 1:
+            dq.popleft()
+
+        # Smaller element বাদ দাও (তারা কখনো maximum হবে না)
+        while dq and arr[dq[-1]] < arr[i]:
+            dq.pop()
+
+        dq.append(i)
+
+        # Window complete হলে result যোগ করো
+        if i >= k - 1:
+            result.append(arr[dq[0]])
+
+    return result
+
+# Dry Run: arr=[3,1,2,5,4,2,3], k=3
+# i=0: dq=[0], no result
+# i=1: arr[1]=1 < arr[0]=3, dq=[0,1], no result
+# i=2: arr[2]=2 > arr[1]=1 → pop 1, dq=[0,2], result=[arr[0]]=3
+# i=3: arr[3]=5>arr[2]=2→pop, 5>arr[0]=3→pop, dq=[3], result=[3,5]
+# i=4: arr[4]=4<5, dq=[3,4], result=[3,5,5]
+# i=5: arr[5]=2<4, dq=[3,4,5], dq[0]=3 < 5-3+1=3? No, result=[3,5,5,5]
+# i=6: arr[6]=3>arr[5]=2→pop5, 3<arr[4]=4, dq=[3,4,6]
+#       dq[0]=3 < 6-3+1=4 → popleft, dq=[4,6], result=[3,5,5,5,4]
+# Final: [3, 5, 5, 5, 4]
+```
+
+---
+
+## ৪.৫ Priority Queue ও Heap
+
+### সংজ্ঞা
+
+**Priority Queue** হলো এমন queue যেখানে highest priority element সবার আগে dequeue হয়। সাধারণত **Binary Heap** দিয়ে implement করা হয়।
+
+```
+Min-Heap: সবচেয়ে ছোট element সবার আগে বের হয়
+Max-Heap: সবচেয়ে বড় element সবার আগে বের হয়
+
+Binary Heap properties:
+  1. Complete Binary Tree (বামদিক থেকে fill হয়)
+  2. Min-Heap: parent ≤ children সবসময়
+
+Min-Heap উদাহরণ:
+          1
+        /          3     5
+      / \   /      7   8  9  10
+```
+
+### Python heapq (Min-Heap)
+
+```python
+import heapq
+
+# Min-Heap
+heap = []
+heapq.heappush(heap, 5)
+heapq.heappush(heap, 1)
+heapq.heappush(heap, 3)
+heapq.heappush(heap, 2)
+
+print(heap[0])              # 1 — minimum, O(1) peek
+print(heapq.heappop(heap))  # 1 — O(log n)
+print(heapq.heappop(heap))  # 2
+
+# Heapify existing list — O(n)
+arr = [5, 3, 8, 1, 9, 2]
+heapq.heapify(arr)
+print(arr[0])  # 1 — minimum
+
+# Max-Heap: negate করুন
+max_heap = []
+heapq.heappush(max_heap, -5)
+heapq.heappush(max_heap, -1)
+heapq.heappush(max_heap, -3)
+print(-heapq.heappop(max_heap))  # 5 (maximum)
+
+# K largest elements
+nums = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3]
+k = 3
+print(heapq.nlargest(k, nums))   # [9, 6, 5]
+print(heapq.nsmallest(k, nums))  # [1, 1, 2]
+```
+
+### Heap Sort — O(n log n)
+
+```python
+def heap_sort(arr):
+    n = len(arr)
+
+    # Max-Heap তৈরি করো (bottom-up heapify)
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(arr, n, i)
+
+    # Root (max) সরিয়ে শেষে রাখো
+    for i in range(n - 1, 0, -1):
+        arr[0], arr[i] = arr[i], arr[0]  # root ↔ শেষ
+        heapify(arr, i, 0)               # remaining heap restore
+
+def heapify(arr, n, i):
+    largest = i
+    left = 2 * i + 1
+    right = 2 * i + 2
+
+    if left < n and arr[left] > arr[largest]:
+        largest = left
+    if right < n and arr[right] > arr[largest]:
+        largest = right
+
+    if largest != i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        heapify(arr, n, largest)
+```
+
+### K-th Largest Element
+
+```python
+def find_kth_largest(nums, k):
+    """Min-Heap of size k — O(n log k)"""
+    heap = []
+    for num in nums:
+        heapq.heappush(heap, num)
+        if len(heap) > k:
+            heapq.heappop(heap)   # ছোটটা বাদ
+    return heap[0]   # k-th largest = heap এর minimum
+
+# Intuition: k টি largest রাখি heap এ।
+# নতুন element বড় হলে → ছোটটা বের করি, নতুনটা রাখি।
+# শেষে heap তে k largest → minimum = k-th largest।
+```
+
+---
+
+## ৪.৬ Monotonic Stack
+
+### সংজ্ঞা
+
+**Monotonic Stack** হলো এমন stack যেখানে elements সবসময় increasing বা decreasing order এ থাকে।
+
+```
+Monotonic Increasing Stack:
+  [1, 3, 5, 7] — bottom থেকে top পর্যন্ত বাড়তে থাকে
+  নতুন element যোগ করার সময় ছোট elements পপ করা হয়
+
+Monotonic Decreasing Stack:
+  [7, 5, 3, 1] — top থেকে bottom পর্যন্ত বাড়তে থাকে
+```
+
+### Next Greater Element
+
+```python
+def next_greater_element(arr):
+    """
+    প্রতিটি element এর ডানে প্রথম বড় element কোনটি?
+    O(n) — প্রতিটি element একবার push, একবার pop।
+    """
+    n = len(arr)
+    result = [-1] * n
+    stack = []  # indices (monotonic decreasing values)
+
+    for i in range(n):
+        # Stack এর top যদি arr[i] এর চেয়ে ছোট হয়
+        while stack and arr[stack[-1]] < arr[i]:
+            idx = stack.pop()
+            result[idx] = arr[i]  # arr[i] হলো next greater
+        stack.append(i)
+
+    return result
+
+# Dry Run: arr = [4, 5, 2, 10, 8]
+#
+# i=0: stack=[], push 0,   stack=[0]
+# i=1: arr[0]=4 < arr[1]=5 → result[0]=5, pop; push 1, stack=[1]
+# i=2: arr[1]=5 > arr[2]=2 → push 2, stack=[1,2]
+# i=3: arr[2]=2 < 10 → result[2]=10, pop
+#       arr[1]=5 < 10 → result[1]=10, pop
+#       push 3, stack=[3]
+# i=4: arr[3]=10 > arr[4]=8 → push 4, stack=[3,4]
+# End: stack=[3,4] → result[3]=-1, result[4]=-1
+#
+# result = [5, 10, 10, -1, -1] ✓
+```
+
+### Previous Smaller Element
+
+```python
+def previous_smaller(arr):
+    """প্রতিটি element এর বামে প্রথম ছোট element"""
+    n = len(arr)
+    result = [-1] * n
+    stack = []  # monotonic increasing
+
+    for i in range(n):
+        while stack and stack[-1] >= arr[i]:
+            stack.pop()
+        result[i] = stack[-1] if stack else -1
+        stack.append(arr[i])
+
+    return result
+```
+
+### Largest Rectangle in Histogram
+
+```python
+def largest_rectangle(heights):
+    """
+    Histogram এ সবচেয়ে বড় rectangle এর area।
+    Monotonic Stack দিয়ে O(n)।
+    """
+    stack = []  # indices, increasing heights
+    max_area = 0
+    n = len(heights)
+
+    for i in range(n + 1):
+        h = heights[i] if i < n else 0  # sentinel 0
+
+        while stack and heights[stack[-1]] > h:
+            height = heights[stack.pop()]
+            width = i if not stack else i - stack[-1] - 1
+            max_area = max(max_area, height * width)
+
+        stack.append(i)
+
+    return max_area
+
+# heights = [2, 1, 5, 6, 2, 3]
+# Maximum rectangle = 10 (heights 5,6 × width 2)
+```
+
+### Monotonic Stack Pattern চেনার উপায়
+
+```
+এই keywords দেখলে Monotonic Stack ভাবুন:
+  → "Next Greater/Smaller Element"
+  → "Previous Greater/Smaller Element"
+  → "Largest Rectangle in Histogram"
+  → "Trapping Rain Water"
+  → "Daily Temperatures"
+  → "Stock Span Problem"
+```
+
+### Daily Temperatures
+
+```python
+def daily_temperatures(temperatures):
+    """কতদিন পরে temperature বাড়বে?"""
+    n = len(temperatures)
+    result = [0] * n
+    stack = []  # indices
+
+    for i in range(n):
+        while stack and temperatures[stack[-1]] < temperatures[i]:
+            idx = stack.pop()
+            result[idx] = i - idx   # দিনের পার্থক্য
+        stack.append(i)
+
+    return result
+
+# temperatures = [73,74,75,71,69,72,76,73]
+# result =       [1, 1, 4, 2, 1, 1, 0, 0]
+```
+
+---
+
+## ৪.৭ Expression Evaluation
+
+### Expression এর প্রকারভেদ
+
+```
+Infix:   A + B   (operator মাঝে — মানুষ পড়ে)
+Prefix:  + A B   (operator আগে — Polish notation)
+Postfix: A B +   (operator পরে — Reverse Polish / machine friendly)
+
+কেন Postfix ভালো?
+  → কোনো parentheses দরকার নেই
+  → Priority সমস্যা নেই
+  → Stack দিয়ে সহজে evaluate করা যায়
+```
+
+### Postfix Evaluation
+
+```python
+def evaluate_postfix(expression):
+    """
+    Postfix expression evaluate করো।
+    Input: "3 4 + 2 * 7 /"
+    Output: (3+4)*2/7 = 2
+    """
+    stack = []
+    tokens = expression.split()
+
+    for token in tokens:
+        if token.lstrip('-').isdigit():   # number
+            stack.append(int(token))
+        else:                             # operator
+            b = stack.pop()   # দ্বিতীয় operand
+            a = stack.pop()   # প্রথম operand
+            if token == '+':
+                stack.append(a + b)
+            elif token == '-':
+                stack.append(a - b)
+            elif token == '*':
+                stack.append(a * b)
+            elif token == '/':
+                stack.append(int(a / b))  # truncate toward zero
+
+    return stack[0]
+
+# Dry Run: "3 4 + 2 *"
+# token=3: stack=[3]
+# token=4: stack=[3,4]
+# token=+: b=4, a=3, push 7; stack=[7]
+# token=2: stack=[7,2]
+# token=*: b=2, a=7, push 14; stack=[14]
+# return 14 ✓ (3+4)*2 = 14
+```
+
+---
+
+## ৪.৮ Infix to Postfix
+
+### Shunting-Yard Algorithm
+
+```python
+def infix_to_postfix(expression):
+    """
+    Dijkstra's Shunting-Yard Algorithm
+    Rules:
+      1. Operand → directly output
+      2. '(' → push to stack
+      3. ')' → pop until '('
+      4. Operator → pop higher/equal priority operators, then push
+    """
+    precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
+    right_assoc = {'^'}  # right-associative operators
+
+    output = []
+    stack = []
+
+    for token in expression.split():
+        if token.lstrip('-').replace('.','').isdigit():
+            output.append(token)               # Operand
+
+        elif token == '(':
+            stack.append(token)
+
+        elif token == ')':
+            while stack and stack[-1] != '(':
+                output.append(stack.pop())
+            stack.pop()  # '(' remove
+
+        else:  # Operator
+            while (stack and stack[-1] != '('
+                   and stack[-1] in precedence
+                   and (precedence[stack[-1]] > precedence[token]
+                        or (precedence[stack[-1]] == precedence[token]
+                            and token not in right_assoc))):
+                output.append(stack.pop())
+            stack.append(token)
+
+    while stack:
+        output.append(stack.pop())
+
+    return ' '.join(output)
+
+# infix_to_postfix("3 + 4 * 2")       → "3 4 2 * +"
+# infix_to_postfix("( 3 + 4 ) * 2")   → "3 4 + 2 *"
+# infix_to_postfix("A + B * C - D")   → "A B C * + D -"
+```
+
+### Dry Run — "A + B * C"
+
+```
+Operator precedence: * > +
+
+Token  Action              Output       Stack
+A      → output            [A]          []
++      push                [A]          [+]
+B      → output            [A,B]        [+]
+*      * > + → push        [A,B]        [+,*]
+C      → output            [A,B,C]      [+,*]
+end    pop all             [A,B,C,*,+]  []
+
+Postfix: A B C * +
+Verify: A + B*C = A + (B*C) ✓
+```
+
+### Evaluate Infix Directly (Two Stacks)
+
+```python
+def evaluate_infix(expression):
+    """Values stack + Operators stack"""
+    precedence = {'+': 1, '-': 1, '*': 2, '/': 2}
+    values = []
+    ops = []
+
+    def apply_op():
+        op = ops.pop()
+        b, a = values.pop(), values.pop()
+        if op == '+': values.append(a + b)
+        elif op == '-': values.append(a - b)
+        elif op == '*': values.append(a * b)
+        elif op == '/': values.append(int(a / b))
+
+    for token in expression.split():
+        if token.lstrip('-').isdigit():
+            values.append(int(token))
+        elif token == '(':
+            ops.append(token)
+        elif token == ')':
+            while ops[-1] != '(':
+                apply_op()
+            ops.pop()
+        else:
+            while (ops and ops[-1] in precedence
+                   and precedence[ops[-1]] >= precedence[token]):
+                apply_op()
+            ops.append(token)
+
+    while ops:
+        apply_op()
+
+    return values[0]
+```
+
+---
+
+## ৪.৯ PART 4 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Stack এবং Queue এর মধ্যে মূল পার্থক্য কী? কোনটি কোথায় ব্যবহার হয়?**
+
+> **উত্তর:** Stack = LIFO। সবশেষে ঢুকেছে সেটি সবার আগে বের হয়। Use case: DFS, Function call, Undo/Redo, Expression eval। Queue = FIFO। সবার আগে ঢুকেছে সেটি সবার আগে বের হয়। Use case: BFS, Process scheduling, Print queue, Message broker। Interview tip: "DFS → Stack, BFS → Queue" এই rule মনে রাখুন।
+
+**Q2: Circular Queue কেন দরকার? Regular Queue এ সমস্যা কী?**
+
+> **উত্তর:** Array-based regular Queue তে dequeue করলে front এর আগের indices waste হয়। rear index array এর শেষে পৌঁছালে নতুন element রাখা যায় না — even though শুরুতে জায়গা আছে। Circular Queue তে modular arithmetic (`(rear + 1) % capacity`) ব্যবহার করে এই waste এড়ানো হয়। Ring Buffer, Audio streaming, Network packet buffering এ ব্যবহার হয়।
+
+**Q3: Monotonic Stack কী? কোন ধরনের problem এ কাজ করে?**
+
+> **উত্তর:** Monotonic Stack এ elements সবসময় monotonic (increasing বা decreasing) order এ থাকে। নতুন element push করার সময় monotonicity ভাঙলে উপযুক্ত elements pop করা হয়। কাজ করে: Next/Previous Greater/Smaller Element, Largest Rectangle in Histogram, Trapping Rain Water, Daily Temperatures। Brute O(n²) কে O(n) এ আনে — প্রতিটি element একবার push ও একবার pop।
+
+**Q4: Priority Queue সাধারণত কীভাবে implement করা হয়?**
+
+> **উত্তর:** Binary Heap দিয়ে। Min-Heap: parent সবসময় children এর চেয়ে ছোট বা সমান। Operations: insert O(log n), extract-min O(log n), peek-min O(1)। Python এ `heapq` module হলো min-heap। Max-heap এর জন্য values negate করুন। Use case: Dijkstra's algorithm, Task scheduling, K-th largest/smallest।
+
+**Q5: Postfix evaluation এ কেন parentheses লাগে না?**
+
+> **উত্তর:** Postfix (Reverse Polish Notation) এ operator এর position নিজেই operands এর বন্ধন নির্ধারণ করে। Stack ব্যবহার করে left-to-right scan করলে প্রতিটি operator তার ঠিক আগের দুটি operand এর উপর apply হয়। কোনো ambiguity নেই — priority বা associativity আলাদাভাবে বলতে হয় না।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| Stack এর order | LIFO |
+| Queue এর order | FIFO |
+| Stack এর push/pop | O(1) |
+| Queue enqueue/dequeue | O(1) (deque) |
+| Min Stack এর getMin | O(1) |
+| Heap peek | O(1) |
+| Heap push/pop | O(log n) |
+| Heapify n elements | O(n) |
+| Monotonic Stack problem | Next Greater Element |
+| Valid parentheses | Stack দিয়ে |
+| Sliding Window Max | Deque, O(n) |
+| Postfix eval | Single stack |
+| Infix to Postfix | Shunting-yard, operator stack |
+| DFS কোন DS | Stack |
+| BFS কোন DS | Queue |
+| K-th largest | Min-Heap size k |
+
+---
+
+> **⚠️ PART 4 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
 *হ্যান্ডবুক তৈরিতে: Senior Software Engineer, Competitive Programmer & DSA Instructor*
 *Version: 1.0 | তারিখ: মে ২০২৬*
-*মোট PART: 12 | চলমান — PART 1 ও 2 সম্পন্ন*
+*মোট PART: 12 | চলমান — PART 1–4 সম্পন্ন*
