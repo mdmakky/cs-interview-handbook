@@ -22,8 +22,8 @@
 | [PART 2](#part2) | Networking & Communication | HTTP, REST, WebSocket, JWT, CDN | ✅ |
 | [PART 3](#part3) | Database Design | SQL vs NoSQL, Sharding, Replication | ✅ |
 | [PART 4](#part4) | Caching & Performance | Redis, Rate Limiting, CDN | ✅ |
-| [PART 5](#part5) | Message Queues & Distributed Systems | Kafka, RabbitMQ, Pub/Sub | 🔜 |
-| [PART 6](#part6) | System Design Case Studies | URL Shortener, Chat App, E-commerce | 🔜 |
+| [PART 5](#part5) | Message Queues & Distributed Systems | Kafka, RabbitMQ, Pub/Sub | ✅ |
+| [PART 6](#part6) | System Design Case Studies | URL Shortener, Chat App, E-commerce | ✅ |
 | [PART 7](#part7) | Low-Level Design (LLD) | SOLID, Design Patterns, UML | 🔜 |
 | [PART 8](#part8) | Cloud & DevOps Basics | AWS, Docker, Kubernetes, CI/CD | 🔜 |
 | [PART 9](#part9) | Interview Q&A Bank | 200+ Questions with Detailed Answers | 🔜 |
@@ -58,6 +58,37 @@
 - API Gateway
 - Authentication vs Authorization
 - JWT ও Session Management
+
+</details>
+
+<details>
+<summary>📨 <strong>PART 5: Message Queues & Distributed Systems</strong> — কী কী শিখবো?</summary>
+
+- Message Queue basics ও benefits
+- Apache Kafka — Topic, Partition, Consumer Group
+- RabbitMQ — Exchange types, routing
+- Pub/Sub model vs Point-to-Point
+- Event-Driven Architecture
+- Distributed Systems fundamentals
+- Distributed Transactions — 2PC vs Saga
+- Consensus — Raft algorithm
+- Fault Tolerance — Circuit Breaker, Retry, Bulkhead
+
+</details>
+
+<details>
+<summary>🏗️ <strong>PART 6: System Design Case Studies</strong> — কী কী শিখবো?</summary>
+
+- System Design Framework (7 Steps)
+- URL Shortener (bit.ly)
+- Chat Application (WhatsApp)
+- Social Media Feed (Facebook/Twitter)
+- Online Banking System
+- Food Delivery App (Pathao Food)
+- Ride Sharing App (Pathao/Uber)
+- YouTube-like Video Platform
+- E-commerce System (Chaldal/Daraz)
+- Hospital Management System
 
 </details>
 
@@ -3857,6 +3888,2032 @@ Queue: Redis বা RabbitMQ। Worker: Celery (Python), Bull (Node.js), Sidekiq
 
 ---
 
+
+
+<a id="part5"></a>
+
+---
+
+# PART 5: Message Queues & Distributed Systems
+### 📨 Async Communication ও Distributed Architecture
+
+> **Interview টিপস:** Message Queue এবং Event-driven architecture বড় system এর backbone। "Order place হলে email, SMS, inventory update — সব কীভাবে handle করবে?" — এই প্রশ্নে Message Queue explain করতে পারলে interviewer impressed হবে।
+
+---
+
+## 5.1 Message Queue Basics
+
+### 📖 সংজ্ঞা
+Message Queue হলো **producer এবং consumer এর মধ্যে async buffer** — producer message পাঠায়, consumer নিজের সময়মতো সেটা process করে। দুজনকে একসাথে online থাকতে হয় না।
+
+### 🎯 Real-Life Analogy
+> ডাকবাক্সের কথা ভাবো। তুমি চিঠি লিখে ডাকবাক্সে ফেলে দিলে — কাজ শেষ। Postman পরে এসে নিয়ে যাবে, recipient পরে পাবে। তোমাকে recipient এর জন্য অপেক্ষা করতে হলো না।
+
+### 🔄 Message Queue Flow
+
+```
+Without Message Queue (Tight Coupling):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Order Service ──synchronous call──▶ Email Service
+             ──synchronous call──▶ SMS Service
+             ──synchronous call──▶ Inventory Service
+             ──synchronous call──▶ Analytics Service
+
+সমস্যা:
+❌ Email Service down → Order fail!
+❌ Response slow → User অপেক্ষা করে
+❌ একটা fail → সব fail (no isolation)
+❌ Scaling কঠিন
+
+With Message Queue (Loose Coupling):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Order Service ──publish "order.placed"──▶ [Message Queue]
+                                                │
+                    ┌───────────────────────────┤
+                    ▼           ▼               ▼
+             Email Service   SMS Service   Inventory Service
+             (subscribes)    (subscribes)  (subscribes)
+
+সুবিধা:
+✅ Email Service down হলেও Order complete
+✅ Order Service fast response (queue এ দিয়েই return)
+✅ প্রতিটা service independently scale
+✅ Retry logic queue এ থাকে
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Message Queue Key Concepts
+
+| Concept | মানে | উদাহরণ |
+|---------|------|---------|
+| Producer | Message পাঠানো | Order Service |
+| Consumer | Message receive করে process | Email Service |
+| Queue | Message রাখার জায়গা | Kafka Topic, RabbitMQ Queue |
+| Message | Data payload | {order_id: 123, user_id: 456} |
+| Broker | Queue manage করে | Kafka, RabbitMQ |
+| Dead Letter Queue | Failed messages এর জায়গা | Retry শেষে fail হলে |
+| Acknowledgment | Consumer process করলে confirm | Message delete হয় |
+
+---
+
+## 5.2 Apache Kafka
+
+### 📖 সংজ্ঞা
+Kafka হলো **distributed event streaming platform** — high-throughput, fault-tolerant, real-time data pipeline। LinkedIn তৈরি করেছে, Apache foundation এ।
+
+### 🏗️ Kafka Architecture
+
+```
+Kafka Core Components:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[Producer]                [Kafka Broker Cluster]              [Consumer]
+                    ┌─────────────────────────────┐
+Order Service ────▶ │  Topic: "order-events"       │ ──▶ Email Consumer
+                    │  ┌──────────────────────────┐│ ──▶ SMS Consumer
+                    │  │ Partition 0: msg1, msg4  ││ ──▶ Inventory Consumer
+                    │  │ Partition 1: msg2, msg5  ││ ──▶ Analytics Consumer
+                    │  │ Partition 2: msg3, msg6  ││
+                    │  └──────────────────────────┘│
+                    └─────────────────────────────┘
+                    
+Key Concepts:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Topic: Logical category (order-events, user-events, payment-events)
+Partition: Topic এর শার্ড — parallel processing এর জন্য
+Offset: প্রতিটা message এর sequential ID (partition এ)
+Consumer Group: একসাথে কাজ করা consumers
+Replication Factor: কতটা broker এ data copy থাকবে
+Retention: Messages কতদিন রাখবে (default 7 days)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔄 Kafka Consumer Group
+
+```
+Consumer Group Scaling:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Topic: order-events (3 partitions)
+Consumer Group: email-service (3 consumers)
+
+Partition 0 ──▶ Consumer A
+Partition 1 ──▶ Consumer B
+Partition 2 ──▶ Consumer C
+[Parallel processing — 3x throughput!]
+
+Consumer Group: analytics-service (1 consumer)
+Partition 0,1,2 ──▶ Consumer D (একাই সব)
+[আলাদা group, same messages পায় — independent!]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 💻 Kafka Code Example (Python — kafka-python)
+
+```python
+from kafka import KafkaProducer, KafkaConsumer
+import json
+
+# Producer:
+producer = KafkaProducer(
+    bootstrap_servers=['localhost:9092'],
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
+
+def on_order_placed(order):
+    # Order DB তে save করলাম
+    producer.send('order-events', {
+        'event': 'order.placed',
+        'order_id': order.id,
+        'user_id': order.user_id,
+        'total': float(order.total),
+        'timestamp': order.created_at.isoformat()
+    })
+    producer.flush()
+    return {"message": "Order placed successfully"}  # Fast response!
+
+# Consumer (Email Service):
+consumer = KafkaConsumer(
+    'order-events',
+    bootstrap_servers=['localhost:9092'],
+    group_id='email-service',
+    auto_offset_reset='earliest',
+    value_deserializer=lambda x: json.loads(x.decode('utf-8'))
+)
+
+for message in consumer:
+    event = message.value
+    if event['event'] == 'order.placed':
+        send_order_confirmation_email(event['user_id'], event['order_id'])
+        print(f"Email sent for order {event['order_id']}")
+```
+
+### 📊 Kafka Features
+
+| Feature | Description |
+|---------|-------------|
+| Throughput | Millions of messages/sec |
+| Durability | Disk এ persist, replication |
+| Replay | পুরনো messages আবার consume করতে পারো |
+| Ordering | Partition এ ordered |
+| Retention | Messages দিনের পর দিন রাখে |
+| Exactly-once | Exactly-once delivery semantics |
+| Stream processing | Kafka Streams, KSQL |
+
+### 🎤 Interview Explanation
+> "Kafka high-throughput event streaming এর জন্য। Order place হলে order-events topic এ publish করি। Email service, SMS service, analytics — সবাই subscribe করে — independently consume করে। Kafka messages disk এ store করে তাই replay possible। প্রতি partition এ ordering guarantee আছে। ১ million events/sec handle করতে পারে।"
+
+---
+
+## 5.3 RabbitMQ
+
+### 📖 সংজ্ঞা
+RabbitMQ হলো **traditional message broker** — complex routing, multiple messaging patterns support করে। AMQP protocol use করে।
+
+### 🏗️ RabbitMQ Architecture
+
+```
+RabbitMQ Core:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Producer]
+    │
+    ▼
+[Exchange] ← Routing decision এখানে
+    │
+    ├─[Binding: routing_key="email"]──▶ [Queue: email_queue] ──▶ [Email Consumer]
+    ├─[Binding: routing_key="sms"]────▶ [Queue: sms_queue]   ──▶ [SMS Consumer]
+    └─[Binding: routing_key="*"]──────▶ [Queue: all_queue]   ──▶ [Analytics Consumer]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Exchange Types
+
+| Exchange Type | Routing | Use Case |
+|--------------|---------|---------|
+| Direct | Exact routing key match | Specific queue routing |
+| Fanout | সব queues এ broadcast | Notifications to all |
+| Topic | Pattern matching (*.error, logs.#) | Log levels, categories |
+| Headers | Message headers based | Complex routing |
+
+### 💻 RabbitMQ Code (Python — pika)
+
+```python
+import pika
+import json
+
+# Publisher:
+connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+channel = connection.channel()
+
+channel.exchange_declare(exchange='order_events', exchange_type='topic')
+
+channel.basic_publish(
+    exchange='order_events',
+    routing_key='order.placed',
+    body=json.dumps({'order_id': 123, 'user_id': 456}),
+    properties=pika.BasicProperties(
+        delivery_mode=2,  # Make message persistent
+    )
+)
+
+# Consumer (Email):
+channel.queue_declare(queue='email_queue', durable=True)
+channel.queue_bind(exchange='order_events', queue='email_queue', routing_key='order.*')
+
+def callback(ch, method, properties, body):
+    event = json.loads(body)
+    send_email(event['user_id'], event['order_id'])
+    ch.basic_ack(delivery_tag=method.delivery_tag)  # Acknowledge!
+
+channel.basic_consume(queue='email_queue', on_message_callback=callback)
+channel.start_consuming()
+```
+
+### 📊 Kafka vs RabbitMQ
+
+| বিষয় | Kafka | RabbitMQ |
+|------|-------|---------|
+| Paradigm | Event streaming (log) | Message broker (queue) |
+| Throughput | Millions/sec | Thousands/sec |
+| Message retention | Days/weeks (configurable) | Consumed হলে delete |
+| Replay | ✅ Yes (offset replay) | ❌ No (consumed = gone) |
+| Ordering | Partition level | Queue level |
+| Routing | Topic + partition key | Exchange + routing key |
+| Use case | Event streaming, analytics | Task queue, RPC |
+| Complexity | Higher | Lower |
+| When to use | High volume, replay দরকার | Complex routing, lower volume |
+
+### 🎤 Interview Explanation
+> "RabbitMQ traditional task queue — background job, email send, payment processing। Complex routing দরকার হলে RabbitMQ ভালো। কিন্তু high throughput বা event replay দরকার হলে Kafka। BD junior projects এ RabbitMQ বা Celery+Redis common।"
+
+---
+
+## 5.4 Pub/Sub Model
+
+### 📖 সংজ্ঞা
+Pub/Sub (Publish-Subscribe) হলো messaging pattern যেখানে **publisher নির্দিষ্ট subscriber কে চেনে না** — topic এ publish করে, interested subscriber রা receive করে।
+
+### 🔄 Pub/Sub vs Point-to-Point
+
+```
+Point-to-Point (Queue):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Producer ──▶ [Queue] ──▶ একজন Consumer (only!)
+Message একবারই consume হয়
+Use: Task distribution
+
+Pub/Sub:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Publisher ──▶ [Topic] ──▶ Subscriber A
+                      ──▶ Subscriber B  (সবাই পায়!)
+                      ──▶ Subscriber C
+Message সব subscriber পায়
+Use: Notifications, event broadcasting
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎯 Real-World Examples
+- Google Cloud Pub/Sub
+- AWS SNS (Simple Notification Service)
+- Redis Pub/Sub
+- Kafka topics (pub/sub semantics)
+
+### 💻 Redis Pub/Sub
+
+```python
+import redis
+import threading
+
+r = redis.Redis()
+
+# Publisher:
+def publish_notification(user_id, message):
+    r.publish(f"user:{user_id}:notifications", message)
+
+# Subscriber:
+def listen_for_notifications(user_id):
+    pubsub = r.pubsub()
+    pubsub.subscribe(f"user:{user_id}:notifications")
+    for message in pubsub.listen():
+        if message['type'] == 'message':
+            print(f"Notification: {message['data']}")
+```
+
+---
+
+## 5.5 Event-Driven Architecture
+
+### 📖 সংজ্ঞা
+Event-Driven Architecture (EDA) হলো system design approach যেখানে **components events দিয়ে communicate করে** — direct API call এর বদলে।
+
+### 🏗️ Event-Driven Order System
+
+```
+E-commerce Event Flow:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+User places order
+       │
+       ▼
+[Order Service] ──publishes──▶ order.placed event
+                                      │
+              ┌───────────────────────┼──────────────────────────┐
+              ▼                       ▼                          ▼
+   [Payment Service]         [Inventory Service]      [Notification Service]
+   listens: order.placed     listens: order.placed    listens: order.placed
+   processes payment         reserves stock           sends email/SMS
+   publishes:                publishes:               publishes:
+   payment.completed         inventory.reserved       notification.sent
+          │                         │
+          ▼                         ▼
+   [Order Service]          [Order Service]
+   updates order status     updates order status
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Event-Driven বনাম Request-Driven
+
+| বিষয় | Request-Driven (REST) | Event-Driven |
+|------|----------------------|-------------|
+| Coupling | Tight (জানতে হয় কোথায় call করবে) | Loose (event publish করলেই হলো) |
+| Availability | Dependent (সব service up থাকতে হবে) | Independent |
+| Complexity | Simple | Higher (event tracking কঠিন) |
+| Debugging | Easy (call stack আছে) | Hard (distributed tracing দরকার) |
+| Scalability | Manual | Auto (consumers add করো) |
+| Use case | CRUD, synchronous flows | Complex workflows, microservices |
+
+### 🔑 Event Design Best Practices
+
+```python
+# Good Event Structure:
+{
+    "event_id": "uuid-here",           # Unique ID
+    "event_type": "order.placed",      # Namespaced type
+    "aggregate_id": "order-123",       # Which entity
+    "timestamp": "2026-05-11T10:00:00Z",
+    "version": "1.0",                  # Schema version
+    "data": {                          # Payload
+        "order_id": 123,
+        "user_id": 456,
+        "items": [...],
+        "total": 1500.00
+    },
+    "metadata": {
+        "source": "order-service",
+        "correlation_id": "req-789"    # Request tracing
+    }
+}
+```
+
+---
+
+## 5.6 Distributed Systems Basics
+
+### 📖 সংজ্ঞা
+Distributed System হলো **multiple computers (nodes) যারা একসাথে কাজ করে single system এর মতো** — user দেখতে পায় না যে এটা আলাদা machines।
+
+### 🔑 Distributed System Challenges
+
+```
+The 8 Fallacies of Distributed Computing:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Network is reliable          → Network fail করে!
+2. Latency is zero              → Latency আছেই
+3. Bandwidth is infinite        → Bandwidth limited
+4. Network is secure            → Security threat আছে
+5. Topology doesn't change      → Nodes আসে যায়
+6. One administrator            → Multiple teams
+7. Transport cost is zero       → Data transfer cost আছে
+8. Network is homogeneous       → Different hardware/OS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Key Distributed System Concepts
+
+```
+1. Clock Synchronization:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Different machines এর clock different হতে পারে
+Logical clocks (Lamport timestamps) use করে ordering
+Vector clocks: causality track করে
+
+2. Idempotency:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Same operation multiple times = same result
+Payment retry safe করতে idempotency key use করো:
+POST /payments {idempotency_key: "order-123-attempt-1"}
+Duplicate request → same response, no double charge!
+
+3. Two Generals Problem:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Unreliable network এ 100% consensus impossible
+→ "At least once", "at most once", "exactly once" trade-offs
+
+4. Split Brain:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Network partition → দুই দল নিজেকে leader ভাবে
+→ Data inconsistency
+Solution: Quorum (majority vote), Fencing
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 5.7 Distributed Transactions
+
+### 📖 সংজ্ঞা
+Distributed Transaction মানে **multiple services/databases এ একসাথে ACID guarantee করা** — সব হবে অথবা কিছুই হবে না।
+
+### 🔄 Two-Phase Commit (2PC)
+
+```
+2PC Protocol:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[Coordinator (Order Service)]
+
+Phase 1 — Prepare:
+Coordinator ──"prepare"──▶ Payment Service: "তুমি কি deduct করতে পারবে?"
+Coordinator ──"prepare"──▶ Inventory Service: "তুমি কি reserve করতে পারবে?"
+
+Payment: "Yes, ready" (lock করলো)
+Inventory: "Yes, ready" (lock করলো)
+
+Phase 2 — Commit (or Rollback):
+সবাই Yes দিলে:
+Coordinator ──"commit"──▶ Payment Service: "এখন commit করো"
+Coordinator ──"commit"──▶ Inventory Service: "এখন commit করো"
+
+কেউ No দিলে:
+Coordinator ──"rollback"──▶ সবাই
+
+সমস্যা:
+❌ Coordinator fail করলে সবাই blocked (locks hold)
+❌ Slow (multiple network round trips)
+❌ Single point of failure
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Saga Pattern (Modern Solution)
+
+```
+Saga Pattern — Choreography:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Order placed
+    │
+    ▼
+Payment Service: deduct money ✅
+    │ publishes: payment.completed
+    ▼
+Inventory Service: reserve stock ✅
+    │ publishes: inventory.reserved
+    ▼
+Shipping Service: create shipment ✅
+    │ publishes: shipment.created
+    ▼
+Order: CONFIRMED ✅
+
+Failure Scenario (Inventory fail):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Payment ✅ → Inventory ❌
+    │
+    ▼ Compensating Transaction:
+Payment Service: refund money ← Inventory publishes: inventory.failed
+
+প্রতিটা step এ forward transaction + compensating transaction define করি
+Failure হলে reverse/compensate করি
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 2PC vs Saga
+
+| বিষয় | 2PC | Saga |
+|------|-----|------|
+| Consistency | Strong (ACID) | Eventual |
+| Availability | Lower (locks) | Higher |
+| Complexity | Lower | Higher |
+| Failure handling | Coordinator rollback | Compensating transactions |
+| Performance | Slow | Fast |
+| Use case | Tightly coupled, small | Microservices, loosely coupled |
+
+---
+
+## 5.8 Consensus Basics
+
+### 📖 সংজ্ঞা
+Consensus মানে **distributed system এ সব nodes একটা value তে agree করা** — leader election, configuration management এ দরকার।
+
+### 🔑 Raft Consensus Algorithm (Simplified)
+
+```
+Raft — Leader Election:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3 nodes: A, B, C
+শুরুতে সবাই Follower
+
+Timeout হলে Candidate হয়:
+Node A: "আমি leader হতে চাই, vote দাও"
+Node B: "OK, A কে vote দিলাম"
+Node C: "OK, A কে vote দিলাম"
+
+Majority (2/3) vote পেলে Node A = Leader!
+
+Leader কাজ:
+- সব writes Leader এর কাছে যায়
+- Leader Followers এ replicate করে
+- Majority confirm করলে commit
+- Heartbeat পাঠায় (আমি alive)
+
+Leader fail করলে:
+- Heartbeat বন্ধ → Followers timeout
+- নতুন election শুরু
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎯 Consensus Tools
+- **ZooKeeper:** Distributed coordination (Kafka ব্যবহার করে)
+- **etcd:** Kubernetes configuration store (Raft use করে)
+- **Consul:** Service discovery + health checking
+
+---
+
+## 5.9 Fault Tolerance
+
+### 📖 সংজ্ঞা
+Fault Tolerance মানে **system এর কিছু অংশ fail করলেও পুরো system কাজ করতে থাকবে** — gracefully handle করবে।
+
+### 🔑 Fault Tolerance Patterns
+
+```
+1. Circuit Breaker:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+States: CLOSED → OPEN → HALF_OPEN
+
+CLOSED: Normal, requests pass through
+Failures exceed threshold → OPEN
+OPEN: Requests immediately fail (no call to failing service)
+After timeout → HALF_OPEN: Test request
+Success → CLOSED | Failure → OPEN
+
+Real code (using pybreaker):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import pybreaker
+
+payment_breaker = pybreaker.CircuitBreaker(
+    fail_max=5,      # 5 failures → OPEN
+    reset_timeout=30  # 30 seconds later → HALF_OPEN
+)
+
+@payment_breaker
+def call_payment_service(amount):
+    return requests.post("http://payment-service/pay", json={"amount": amount})
+
+# OPEN state এ call করলে: CircuitBreakerError immediately
+# User কে: "Service temporarily unavailable, please try later"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. Retry with Exponential Backoff:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+import time
+import random
+
+def call_with_retry(func, max_retries=3, base_delay=1):
+    for attempt in range(max_retries):
+        try:
+            return func()
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise
+            delay = base_delay * (2 ** attempt) + random.uniform(0, 0.5)
+            # Attempt 1: ~1s, Attempt 2: ~2s, Attempt 3: ~4s (+ jitter)
+            time.sleep(delay)
+
+3. Bulkhead Pattern:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+জাহাজের compartment এর মতো — একটা flood হলে বাকিগুলো safe
+Thread pool / connection pool per service:
+Payment: max 10 connections
+Email: max 5 connections
+→ Email service fail করলে Payment service এর connection pool safe
+
+4. Graceful Degradation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Recommendation service fail করলে:
+→ Default/popular products দেখাও (not personalized, but functional)
+Search service slow হলে:
+→ Basic search চালাও (advanced filters ছাড়া)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Fault Tolerance Metrics
+
+| Metric | মানে | Target |
+|--------|------|--------|
+| RTO | Recovery Time Objective — কত দ্রুত recover | < 1 hour |
+| RPO | Recovery Point Objective — কত data হারাতে পারি | 0 - 1 hour |
+| Error Budget | Acceptable downtime | 99.9% → 8.7h/year |
+
+---
+
+## 📋 PART 5: Quick Revision Table
+
+| Concept | এক কথায় | Key Point |
+|---------|---------|-----------|
+| Message Queue | Async buffer between producer/consumer | Decoupling |
+| Kafka | High-throughput event streaming | Replay, partition, retention |
+| RabbitMQ | Feature-rich message broker | Complex routing, AMQP |
+| Pub/Sub | One publisher, many subscribers | Topic-based |
+| Event-Driven | Events দিয়ে communicate | Loose coupling |
+| Distributed System | Many computers, one system | Fallacies apply |
+| 2PC | Two-phase commit | Strong consistency, slow |
+| Saga Pattern | Compensating transactions | Eventual consistency |
+| Circuit Breaker | Failing service protect | CLOSED/OPEN/HALF_OPEN |
+| Retry + Backoff | Transient failure handle | Exponential delay |
+| Bulkhead | Resource isolation | Thread/connection pool |
+| Graceful Degradation | Core চলবে, optional বন্ধ | UX focused |
+| Idempotency | Same operation = same result | Payment safety |
+| Consensus | Nodes agree on value | Raft, Paxos |
+| Dead Letter Queue | Failed message storage | Debugging, retry |
+
+---
+
+## 🎯 PART 5: Top 10 Interview Questions
+
+<details>
+<summary><strong>Q1: Message Queue কেন use করবে? সরাসরি API call করলে হয় না?</strong></summary>
+
+**উত্তর:**
+সরাসরি API call (synchronous) এর সমস্যা:
+- **Availability:** Email service down থাকলে order fail!
+- **Performance:** Order service email পাঠানোর জন্য অপেক্ষা করে
+- **Coupling:** Order service জানতে হয় email service এর address
+- **Scaling:** Email slow হলে order service ও slow
+
+Message Queue সমাধান করে:
+- **Decoupling:** Order service শুধু event publish করে
+- **Availability:** Email service down হলেও order সফল — queue তে থাকবে, পরে process হবে
+- **Performance:** Publish করেই return — user দেরি পায় না
+- **Retry:** Failed messages automatically retry হয়
+
+Use case: Email, SMS, notification, image processing, report generation।
+
+</details>
+
+<details>
+<summary><strong>Q2: Kafka আর RabbitMQ এর মধ্যে কোনটা choose করবে?</strong></summary>
+
+**উত্তর:**
+**Kafka choose করবো:**
+- ১ million+ events/sec throughput দরকার
+- Event replay দরকার (audit log, reprocess)
+- Multiple consumer groups same data consume করবে
+- Event sourcing, CQRS pattern
+- Real-time analytics pipeline
+
+**RabbitMQ choose করবো:**
+- Complex routing logic (topic, fanout, direct exchange)
+- Traditional task queue (background jobs)
+- Message TTL, priority queue দরকার
+- Smaller scale, simpler setup
+- RPC pattern দরকার
+
+**BD Junior context:** Celery + Redis বেশি common (simple, easy setup)। Kafka enterprise level এ।
+
+</details>
+
+<details>
+<summary><strong>Q3: Circuit Breaker কীভাবে implement করবে?</strong></summary>
+
+**উত্তর:**
+```python
+import time
+from enum import Enum
+
+class State(Enum):
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
+
+class CircuitBreaker:
+    def __init__(self, fail_max=5, reset_timeout=30):
+        self.fail_max = fail_max
+        self.reset_timeout = reset_timeout
+        self.failures = 0
+        self.state = State.CLOSED
+        self.last_failure_time = None
+    
+    def call(self, func, *args, **kwargs):
+        if self.state == State.OPEN:
+            if time.time() - self.last_failure_time > self.reset_timeout:
+                self.state = State.HALF_OPEN
+            else:
+                raise Exception("Circuit is OPEN — service unavailable")
+        
+        try:
+            result = func(*args, **kwargs)
+            self._on_success()
+            return result
+        except Exception as e:
+            self._on_failure()
+            raise
+    
+    def _on_success(self):
+        self.failures = 0
+        self.state = State.CLOSED
+    
+    def _on_failure(self):
+        self.failures += 1
+        self.last_failure_time = time.time()
+        if self.failures >= self.fail_max:
+            self.state = State.OPEN
+```
+
+Production এ Netflix Hystrix, resilience4j (Java) বা pybreaker (Python) use করি।
+
+</details>
+
+<details>
+<summary><strong>Q4: Saga pattern কীভাবে implement করবে?</strong></summary>
+
+**উত্তর:**
+**Choreography Saga (Event-based):**
+```python
+# Order Service:
+def place_order(order_data):
+    order = create_order(order_data)
+    # Publish event — কে শুনবে সেটা জানি না
+    kafka.publish("order.created", {
+        "order_id": order.id,
+        "amount": order.total
+    })
+    return order
+
+# Payment Service (listens to order.created):
+def on_order_created(event):
+    try:
+        deduct_payment(event["amount"], event["order_id"])
+        kafka.publish("payment.completed", event)
+    except InsufficientFunds:
+        kafka.publish("payment.failed", event)  # Compensate!
+
+# Order Service (listens to payment.failed):
+def on_payment_failed(event):
+    cancel_order(event["order_id"])  # Compensating transaction
+```
+
+**Orchestration Saga (Central coordinator):**
+```python
+class OrderSaga:
+    def execute(self, order_data):
+        order = self.create_order(order_data)
+        
+        try:
+            self.deduct_payment(order)
+            self.reserve_inventory(order)
+            self.create_shipment(order)
+            self.confirm_order(order)
+        except PaymentFailed:
+            self.cancel_order(order)
+        except InventoryFailed:
+            self.refund_payment(order)
+            self.cancel_order(order)
+```
+
+</details>
+
+<details>
+<summary><strong>Q5: Idempotency কীভাবে implement করবে payment এ?</strong></summary>
+
+**উত্তর:**
+```python
+import uuid
+import redis
+
+r = redis.Redis()
+
+def process_payment(idempotency_key: str, amount: float, user_id: int):
+    """
+    Idempotent payment processing
+    Same idempotency_key দিলে same result, no double charge
+    """
+    cache_key = f"payment:idempotency:{idempotency_key}"
+    
+    # Already processed check:
+    existing = r.get(cache_key)
+    if existing:
+        return json.loads(existing)  # Same result return করো
+    
+    # Process payment:
+    result = payment_gateway.charge(user_id, amount)
+    
+    # Store result with TTL (24 hours):
+    r.setex(cache_key, 86400, json.dumps(result))
+    
+    return result
+
+# Client sends unique key per operation:
+response = process_payment(
+    idempotency_key=f"order-{order_id}-payment",
+    amount=1500.00,
+    user_id=123
+)
+```
+
+Network timeout → client retry → same key → same result, no double charge!
+
+</details>
+
+<details>
+<summary><strong>Q6: Event Sourcing কী?</strong></summary>
+
+**উত্তর:**
+Event Sourcing মানে system এর state current value হিসেবে store না করে **সব events sequence হিসেবে store করা**।
+
+```
+Traditional: users table
+id=123: balance = 5000
+
+Event Sourcing: account_events table
+1. AccountCreated     {user_id: 123, initial_balance: 0}
+2. MoneyDeposited     {user_id: 123, amount: 10000}
+3. MoneyWithdrawn     {user_id: 123, amount: 3000}
+4. MoneyDeposited     {user_id: 123, amount: 1000}
+→ Replay করলে: 0 + 10000 - 3000 + 1000 = 8000 ✅
+
+সুবিধা:
+✅ Complete audit trail
+✅ Time-travel (যেকোনো সময়ের state জানা যায়)
+✅ Event replay (bug fix করে reprocess)
+✅ CQRS friendly
+
+সমস্যা:
+❌ Storage বেশি
+❌ Current state পেতে replay করতে হয় (Snapshot দিয়ে optimize)
+❌ Complexity বেশি
+```
+
+Use case: Banking, financial systems, audit-heavy applications।
+
+</details>
+
+<details>
+<summary><strong>Q7: Distributed lock কীভাবে implement করবে?</strong></summary>
+
+**উত্তর:**
+একই time এ multiple servers same operation করলে race condition হতে পারে। Distributed lock prevent করে।
+
+```python
+import redis
+import uuid
+import time
+
+r = redis.Redis()
+
+class DistributedLock:
+    def __init__(self, key, timeout=10):
+        self.key = f"lock:{key}"
+        self.timeout = timeout
+        self.token = str(uuid.uuid4())  # Unique token
+    
+    def acquire(self) -> bool:
+        # SET NX EX — atomic: শুধু key না থাকলে set করো
+        result = r.set(self.key, self.token, nx=True, ex=self.timeout)
+        return result is not None
+    
+    def release(self):
+        # Lua script — atomic check + delete
+        # শুধু আমার token হলেই delete করো (অন্য কেউ কে না!)
+        lua_script = """
+        if redis.call("get", KEYS[1]) == ARGV[1] then
+            return redis.call("del", KEYS[1])
+        else
+            return 0
+        end
+        """
+        r.eval(lua_script, 1, self.key, self.token)
+
+# Usage:
+def process_order(order_id):
+    lock = DistributedLock(f"order:{order_id}", timeout=30)
+    if lock.acquire():
+        try:
+            # Critical section — শুধু একটা server process করবে
+            do_process(order_id)
+        finally:
+            lock.release()
+    else:
+        raise Exception("Order already being processed")
+```
+
+Production এ Redlock algorithm (multiple Redis nodes) বা Zookeeper use করি।
+
+</details>
+
+<details>
+<summary><strong>Q8: Dead Letter Queue কীভাবে use করবে?</strong></summary>
+
+**উত্তর:**
+Dead Letter Queue (DLQ) হলো failed messages এর গন্তব্য — repeatedly fail করা messages এখানে যায়।
+
+```
+Normal Flow:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Queue ──▶ Consumer ──▶ Success ✅ → Message deleted
+
+Failure Flow:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Queue ──▶ Consumer ──▶ Fail → Retry 1
+                    ──▶ Fail → Retry 2
+                    ──▶ Fail → Retry 3
+                    ──▶ Still Fail → Dead Letter Queue ❌
+
+DLQ তে কী করবো:
+- Alert পাঠাও (Slack, email)
+- Manual investigation করো
+- Fix করে re-queue করো
+- Error logging এ save করো
+```
+
+AWS SQS, RabbitMQ — সব DLQ support করে। Production এ অবশ্যই DLQ configure করতে হবে।
+
+</details>
+
+<details>
+<summary><strong>Q9: Microservices এ service discovery কীভাবে কাজ করে?</strong></summary>
+
+**উত্তর:**
+Microservices এ services dynamically start/stop হয়, IP change হয়। কীভাবে খুঁজে পাবে?
+
+**Client-side discovery:**
+```
+Service A → Service Registry (Consul/Eureka): "Payment service কোথায়?"
+Registry → "192.168.1.5:8080"
+Service A → 192.168.1.5:8080 (directly)
+```
+
+**Server-side discovery:**
+```
+Service A → Load Balancer → Registry lookup → Payment Service
+Service A জানে না IP — LB জানে
+```
+
+**Kubernetes (Modern):**
+```yaml
+# Service কে domain name দিয়ে access করো:
+http://payment-service:8080  # K8s DNS resolve করে
+# কোন IP তে আছে সেটা জানার দরকার নেই!
+```
+
+Tools: Consul, Eureka (Netflix), etcd, Kubernetes built-in DNS।
+
+</details>
+
+<details>
+<summary><strong>Q10: Eventual consistency এ কীভাবে user experience ভালো রাখবে?</strong></summary>
+
+**উত্তর:**
+Eventual consistency তে user stale data দেখতে পারে — কিন্তু UX ভালো রাখার techniques:
+
+1. **Optimistic UI Update:**
+```javascript
+// Like button click:
+// Server response এর আগেই UI তে like দেখাও
+setLikeCount(prev => prev + 1);  // Immediate UI
+await api.like(postId);           // Background API call
+// API fail করলে rollback করো
+```
+
+2. **Read-your-own-writes:**
+```python
+def update_profile(user_id, data):
+    db_master.update(user_id, data)
+    # User নিজে profile দেখলে master থেকে read
+    cache.set(f"user:{user_id}:just_updated", True, ttl=5)
+
+def get_profile(user_id, requesting_user_id):
+    if requesting_user_id == user_id and cache.get(f"user:{user_id}:just_updated"):
+        return db_master.get(user_id)  # নিজের profile master থেকে
+    return db_replica.get(user_id)
+```
+
+3. **Feedback messaging:** "Your changes will be visible to others within a few seconds"
+
+4. **Versioning:** Data এর version track করো — stale detect করলে refresh করো।
+
+</details>
+
+<div align="right">
+
+[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 6 →](#part6)
+
+</div>
+
+---
+
+<a id="part6"></a>
+
+---
+
+# PART 6: System Design Case Studies
+### 🏗️ Real Systems Design করা শেখো
+
+> **Interview টিপস:** Case study questions এ interviewer দেখতে চায় তুমি কীভাবে একটা real system ধাপে ধাপে design করো। Requirements clarify করো, scale estimate করো, architecture আঁকো, bottleneck ধরো — এই flow follow করলে যেকোনো system design করতে পারবে।
+
+---
+
+## System Design Interview Framework
+
+```
+প্রতিটা Case Study তে এই 7 Steps Follow করো:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Step 1: Clarify Requirements (2-3 min)
+  → Functional requirements (কী করবে)
+  → Non-functional requirements (কত fast, কত available)
+  → Scope define করো (কোন feature এই interview এ)
+
+Step 2: Capacity Estimation (2 min)
+  → Users কত? DAU/MAU?
+  → Read:Write ratio?
+  → Storage কত?
+  → Bandwidth কত?
+
+Step 3: High-Level Design (5-10 min)
+  → Core components identify করো
+  → Architecture diagram আঁকো
+  → Data flow explain করো
+
+Step 4: Database Design (3-5 min)
+  → কোন database use করবে?
+  → Schema design করো
+  → Indexing strategy
+
+Step 5: API Design (2-3 min)
+  → Core endpoints define করো
+  → Request/Response format
+
+Step 6: Scale & Optimize (5 min)
+  → Bottleneck identify করো
+  → Cache কোথায় দেবে?
+  → Sharding/replication strategy
+  → Load balancing
+
+Step 7: Deep Dive (remaining time)
+  → Interviewer যেটা জিজ্ঞেস করে সেটা বিস্তারিত
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 6.1 URL Shortener (bit.ly / TinyURL)
+
+### 📋 Requirements
+
+**Functional:**
+- Long URL দিলে short URL তৈরি করবে (e.g., bit.ly/abc123)
+- Short URL এ গেলে original URL এ redirect করবে
+- Custom alias support (optional)
+- Expiry date support (optional)
+- Click analytics (optional)
+
+**Non-Functional:**
+- Low latency redirect (< 50ms)
+- High availability (99.99%)
+- Short code unique হতে হবে
+
+### 📊 Capacity Estimation
+
+```
+Assumptions:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Write: 100 URLs/second (new URL create)
+Read: 10,000 redirects/second (100:1 read:write ratio)
+Storage: 100 URLs/sec × 86400 sec × 365 days × 5 years
+       = ~15 billion URLs
+URL size: ~500 bytes average
+Total storage: 15B × 500B ≈ 7.5 TB
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🏗️ Architecture
+
+```
+URL Shortener Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Create URL Flow:
+[Client] ──POST /shorten {url: "https://long.url/path"}──▶
+[API Gateway] ──▶ [URL Service]
+                        │
+                 Generate short_code (Base62)
+                        │
+                 [Database] ← store {short_code, long_url, created_at, expiry}
+                        │
+                 [Cache: Redis] ← pre-cache popular URLs
+                        │
+                 Return: {short_url: "https://bit.ly/abc123"}
+
+Redirect Flow:
+[User] ──GET bit.ly/abc123──▶ [Load Balancer]
+                              ──▶ [Redirect Service]
+                                        │
+                                  Redis cache check
+                                  Cache Hit → 301/302 redirect (fast!)
+                                  Cache Miss → DB lookup → cache store → redirect
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Short Code Generation
+
+```python
+import hashlib
+import base64
+import string
+import random
+
+BASE62 = string.ascii_letters + string.digits  # 62 characters
+
+# Method 1: Random generation:
+def generate_short_code(length=7) -> str:
+    return ''.join(random.choices(BASE62, k=length))
+# 62^7 = 3.5 trillion combinations!
+
+# Method 2: Counter-based (guaranteed unique):
+# Global counter (Redis INCR) → Base62 encode
+def encode_base62(num: int) -> str:
+    result = []
+    while num:
+        result.append(BASE62[num % 62])
+        num //= 62
+    return ''.join(reversed(result))
+
+counter = redis.incr("url_counter")  # Atomic increment
+short_code = encode_base62(counter)  # e.g., 1000000 → "4c92"
+
+# Method 3: MD5 Hash (first 7 chars):
+def hash_url(url: str) -> str:
+    return hashlib.md5(url.encode()).hexdigest()[:7]
+# Risk: collision possible
+```
+
+### 🗄️ Database Design
+
+```sql
+CREATE TABLE urls (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    short_code  VARCHAR(10) UNIQUE NOT NULL,
+    long_url    TEXT NOT NULL,
+    user_id     BIGINT,              -- NULL if anonymous
+    created_at  TIMESTAMP DEFAULT NOW(),
+    expires_at  TIMESTAMP,           -- NULL = no expiry
+    click_count BIGINT DEFAULT 0
+);
+
+CREATE INDEX idx_short_code ON urls(short_code);  -- Primary lookup
+
+-- Analytics table:
+CREATE TABLE url_clicks (
+    id          BIGINT PRIMARY KEY AUTO_INCREMENT,
+    short_code  VARCHAR(10),
+    clicked_at  TIMESTAMP,
+    ip_address  VARCHAR(45),
+    user_agent  TEXT,
+    country     VARCHAR(2)
+);
+```
+
+### 🔌 API Design
+
+```
+POST /api/v1/shorten
+Request:  { "url": "https://very-long-url.com/path", "custom_alias": "mylink", "expires_in": 86400 }
+Response: { "short_url": "https://bit.ly/abc123", "short_code": "abc123", "expires_at": "..." }
+
+GET /{short_code}
+Response: 301 Redirect to long_url (or 302 for analytics tracking)
+
+GET /api/v1/analytics/{short_code}
+Response: { "clicks": 1234, "top_countries": [...], "clicks_by_day": [...] }
+
+DELETE /api/v1/urls/{short_code}
+Response: 204 No Content
+```
+
+### ⚡ Scaling Strategy
+
+```
+Bottlenecks ও Solutions:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Redirect latency:
+   Solution: Redis cache (short_code → long_url)
+   Cache TTL: 24 hours for popular URLs
+   Cache Hit Rate: 90%+ → most redirects from Redis only!
+
+2. Database write throughput:
+   Solution: Write to DB async (queue) + cache immediately
+   Popular URLs pre-cache করো (warming)
+
+3. Database read scaling:
+   Solution: Read replicas
+   Redirect service → replica reads only
+
+4. Analytics write load:
+   Solution: Kafka → analytics consumer async
+   Redirect service শুধু event publish করে, DB write করে না
+
+5. Short code uniqueness (distributed):
+   Solution: Centralized counter (Redis INCR) বা
+             Range-based allocation (Server A gets 1-1M, Server B gets 1M-2M)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 6.2 Chat Application (WhatsApp/Messenger)
+
+### 📋 Requirements
+
+**Functional:**
+- One-to-one messaging
+- Group chat (max 256 members)
+- Message delivery status (sent/delivered/read)
+- Online/offline status
+- Media files (image, video)
+- Message history
+
+**Non-Functional:**
+- Real-time delivery (< 100ms)
+- High availability (99.99%)
+- 1 billion users, 100 billion messages/day
+
+### 📊 Capacity Estimation
+
+```
+Scale:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DAU: 500M users
+Messages/day: 100B
+Messages/sec: 100B / 86400 ≈ 1.15M messages/sec!
+Average message size: 100 bytes (text)
+Storage/day: 100B × 100B = 10TB/day
+Media: separate object storage (S3)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🏗️ Architecture
+
+```
+Chat Application Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[User A App] ←──WebSocket──▶ [Chat Server A]
+[User B App] ←──WebSocket──▶ [Chat Server B]
+
+Message Flow (A → B):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. User A WebSocket → Chat Server A: {"to": "B", "msg": "Hello!"}
+2. Chat Server A → Message Queue (Kafka): message event publish
+3. Message Service → DB save: message_id, content, sender, receiver, timestamp
+4. Routing Service: "User B কোন Chat Server এ আছে?" (Redis)
+5. Chat Server B → User B WebSocket: message push
+
+Components:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Load Balancer] ──▶ [Chat Servers (WebSocket)] ──▶ [Kafka]
+                                                        │
+[Presence Service]  [User Service]              [Message Service]
+(online/offline)    (auth, profile)             (store, deliver)
+      │                   │                            │
+ [Redis]             [User DB]                  [Message DB]
+ (online map)        (PostgreSQL)               (Cassandra)
+                                                        │
+                                              [Media Storage: S3]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🗄️ Database Design
+
+```sql
+-- Users:
+CREATE TABLE users (id, username, phone, created_at);
+
+-- Messages (Cassandra — write-heavy, time-series):
+CREATE TABLE messages (
+    conversation_id UUID,
+    message_id      TIMEUUID,  -- Time-ordered UUID
+    sender_id       UUID,
+    content         TEXT,
+    media_url       TEXT,
+    message_type    VARCHAR,   -- text/image/video/audio
+    status          VARCHAR,   -- sent/delivered/read
+    created_at      TIMESTAMP,
+    PRIMARY KEY (conversation_id, message_id)
+) WITH CLUSTERING ORDER BY (message_id DESC);
+
+-- Online presence (Redis):
+HSET user:presence:123 status "online" last_seen "2026-05-11T10:00:00"
+EXPIRE user:presence:123 300  -- 5 min TTL (heartbeat refresh)
+
+-- WebSocket connection routing (Redis):
+SET user:socket:123 "chat-server-7"  -- user 123 → server 7
+```
+
+### 🔌 API Design
+
+```
+WebSocket Events:
+SEND:    { type: "message", to: "user_id", content: "Hello!", msg_id: "client-uuid" }
+RECEIVE: { type: "message", from: "user_id", content: "Hello!", msg_id: "...", ts: "..." }
+STATUS:  { type: "status", msg_id: "...", status: "delivered" }
+TYPING:  { type: "typing", in: "conversation_id" }
+
+REST API:
+GET  /api/v1/conversations                    → conversation list
+GET  /api/v1/conversations/{id}/messages      → message history (paginated)
+POST /api/v1/media/upload                     → get upload URL (S3 presigned)
+PUT  /api/v1/messages/{id}/read               → mark as read
+```
+
+### ⚡ Key Design Decisions
+
+```
+1. WebSocket vs HTTP Polling:
+   WebSocket — persistent, server can push, low latency ✅
+
+2. Message Storage — Cassandra:
+   Write-heavy (1M+ writes/sec), time-series queries, horizontal scale ✅
+   "Give me last 50 messages of conversation X" → efficient
+
+3. Offline Message Delivery:
+   User offline → message store in DB
+   User online → pull undelivered messages (or push via Notification Service)
+
+4. End-to-End Encryption:
+   Client generate key pair
+   Public key server এ store
+   Message encrypt with recipient's public key
+   Server decrypt করতে পারে না!
+
+5. Message Fan-out (Group Chat):
+   Group এ 256 members → 1 message → 256 deliveries
+   Fan-out service: Message Queue → parallel delivery workers
+```
+
+---
+
+## 6.3 Social Media Feed (Facebook/Twitter)
+
+### 📋 Requirements
+- User post create করবে (text, image, video)
+- Friends/followers এর posts feed এ দেখাবে
+- Like, comment, share
+- Real-time notifications
+
+### 🏗️ Feed Generation Architecture
+
+```
+Feed Generation — Two Approaches:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Approach 1: Pull Model (Read time generation):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+User requests feed
+→ Get all followers
+→ Get their recent posts
+→ Merge + Sort + Rank
+→ Return feed
+
+✅ Storage সহজ (no pre-computation)
+❌ Slow for users with many followers
+❌ Every request এ heavy computation
+
+Approach 2: Push Model (Write time fan-out):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+User posts
+→ Get all followers list
+→ Pre-compute feed for EACH follower
+→ Store in each follower's feed cache
+
+User requests feed → Simply read pre-computed feed!
+
+✅ Feed read fast
+❌ Celebrity post (10M followers) → 10M writes! (Fan-out explosion)
+
+Approach 3: Hybrid (Twitter/Instagram approach):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Normal users: Push model (pre-compute feed)
+Celebrities (1M+ followers): Pull model (read time merge)
+When fetching feed: pre-computed + celebrity posts merge করো
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🏗️ Full Architecture
+
+```
+Social Media System:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Client] ──▶ [API Gateway]
+                    │
+          ┌─────────┼──────────┐
+          ▼         ▼          ▼
+    [Post Service] [User]  [Feed Service]
+    [Like Service] [Service] [Notification]
+          │              │        Service
+    [Post DB:         [User DB]
+     PostgreSQL]         │
+          │          [Follow DB:
+    [Media: S3]       PostgreSQL]
+          │                │
+    [Kafka:           [Feed Cache:
+     post.created]     Redis]
+          │
+   [Fan-out Worker]
+   (reads followers → updates feed cache)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🗄️ Database Design
+
+```sql
+-- Posts:
+CREATE TABLE posts (
+    id          BIGSERIAL PRIMARY KEY,
+    user_id     BIGINT REFERENCES users(id),
+    content     TEXT,
+    media_urls  JSONB,
+    like_count  INT DEFAULT 0,
+    created_at  TIMESTAMP DEFAULT NOW()
+);
+
+-- Follows (graph-like):
+CREATE TABLE follows (
+    follower_id BIGINT,
+    followee_id BIGINT,
+    created_at  TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (follower_id, followee_id)
+);
+CREATE INDEX idx_followee ON follows(followee_id);  -- "কে আমাকে follow করে?"
+
+-- Feed (Redis Sorted Set — score=timestamp):
+ZADD feed:user:123 1715428800 "post:456"
+ZADD feed:user:123 1715432400 "post:789"
+ZREVRANGE feed:user:123 0 19  -- Latest 20 posts
+```
+
+---
+
+## 6.4 Online Banking System
+
+### 📋 Requirements
+- Account management (create, view balance)
+- Money transfer (within bank, inter-bank)
+- Transaction history
+- Card management
+- Fraud detection
+
+### 🏗️ Architecture
+
+```
+Banking System Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Mobile/Web] ──HTTPS──▶ [WAF] ──▶ [API Gateway]
+                                        │
+                              [Auth Service (JWT)]
+                                        │
+                    ┌───────────────────┼───────────────────┐
+                    ▼                   ▼                   ▼
+            [Account Service]  [Transaction Service]  [Card Service]
+                    │                   │
+            [Account DB:        [Transaction DB:
+             PostgreSQL]         PostgreSQL (ACID)]
+             (ACID critical)     (Immutable — no update/delete)
+                                        │
+                               [Kafka: transaction.completed]
+                                        │
+                    ┌──────────────────┤
+                    ▼                  ▼
+            [Fraud Detection]  [Notification Service]
+            [ML Service]       (Email, SMS, Push)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Critical Design Decisions
+
+```
+1. ACID Transactions (Double-entry bookkeeping):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BEGIN TRANSACTION;
+    -- Debit from sender:
+    UPDATE accounts SET balance = balance - 5000
+    WHERE id = 123 AND balance >= 5000;  -- Check balance atomically
+    
+    -- Credit to receiver:
+    UPDATE accounts SET balance = balance + 5000 WHERE id = 456;
+    
+    -- Audit log:
+    INSERT INTO transactions (from_id, to_id, amount, type) 
+    VALUES (123, 456, 5000, 'transfer');
+COMMIT;
+
+2. Idempotency (No double debit!):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Every transfer request has unique idempotency_key
+Duplicate request → same response, no double debit
+
+3. Optimistic Locking (Concurrent transfer):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+accounts table has version column
+UPDATE accounts SET balance = balance - 5000, version = version + 1
+WHERE id = 123 AND version = current_version;
+0 rows updated → retry (someone else updated)
+
+4. Immutable Transaction Log:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Transactions never UPDATE or DELETE
+Only INSERT — audit trail intact
+Append-only for compliance
+```
+
+---
+
+## 6.5 Food Delivery App (Pathao Food / Shohoz Food)
+
+### 📋 Requirements
+- Restaurant browse, menu view
+- Order placement
+- Real-time order tracking
+- Delivery person assignment
+- Payment
+- Rating/review
+
+### 🏗️ Architecture
+
+```
+Food Delivery Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Customer App]    [Restaurant App]    [Delivery App]
+       │                 │                  │
+       └─────────────────┴──────────────────┘
+                         │
+                   [API Gateway]
+          ┌──────────────┼───────────────┐
+          ▼              ▼               ▼
+  [Restaurant Service] [Order Service] [Delivery Service]
+  (menu, availability)  (ACID trans)   (assignment, tracking)
+          │              │               │
+  [Restaurant DB]  [Order DB]     [Location Service]
+                         │         (Redis GeoSpatial)
+                   [Kafka:         GEOADD, GEORADIUS
+                    order.placed]
+                         │
+          ┌──────────────┴──────────────┐
+          ▼                             ▼
+  [Notification Service]       [Delivery Assignment]
+  (Push, SMS)                  (nearest available driver)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Real-Time Location Tracking
+
+```python
+# Redis GeoSpatial — Delivery person location:
+import redis
+r = redis.Redis()
+
+# Delivery person location update (every 5 seconds):
+def update_location(driver_id: str, lat: float, lng: float):
+    r.geoadd("drivers:online", lng, lat, driver_id)
+    r.expire(f"driver:{driver_id}:active", 30)  # Timeout = offline
+
+# Find nearest available drivers:
+def find_nearest_drivers(restaurant_lat, restaurant_lng, radius_km=5):
+    drivers = r.georadius(
+        "drivers:online",
+        restaurant_lng, restaurant_lat,
+        radius_km, unit='km',
+        withcoord=True,
+        withdist=True,
+        sort='ASC',
+        count=10
+    )
+    return drivers
+
+# Assignment algorithm:
+def assign_driver(order, drivers):
+    for driver in drivers:
+        driver_id, distance, coords = driver
+        if is_driver_available(driver_id):
+            send_order_request(driver_id, order)
+            # Driver accepts → assigned!
+            # No response in 30 sec → next driver
+            break
+```
+
+### 🗄️ Database Design
+
+```sql
+-- Orders (State machine):
+CREATE TABLE orders (
+    id              BIGSERIAL PRIMARY KEY,
+    customer_id     BIGINT,
+    restaurant_id   BIGINT,
+    driver_id       BIGINT,
+    status          VARCHAR(20),  -- PLACED, CONFIRMED, PREPARING, PICKED_UP, DELIVERED
+    total_amount    DECIMAL(10,2),
+    delivery_address JSONB,
+    estimated_time  INT,          -- minutes
+    created_at      TIMESTAMP DEFAULT NOW(),
+    delivered_at    TIMESTAMP
+);
+
+-- Real-time tracking (time-series in InfluxDB or Cassandra):
+-- driver_id, lat, lng, timestamp
+-- Query: "last position of driver X" → fast!
+```
+
+---
+
+## 6.6 Ride Sharing App (Pathao / Uber)
+
+### 📋 Requirements
+- Rider requests ride
+- Nearest driver match করবে
+- Real-time tracking
+- Dynamic pricing (surge)
+- Payment
+
+### 🏗️ Architecture
+
+```
+Ride Sharing Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Rider App]                         [Driver App]
+     │                                    │
+     │──POST /rides/request               │──PUT /drivers/location
+     ▼                                    ▼
+[API Gateway] ──────────────────▶ [Location Service]
+     │                            (Redis GeoSpatial)
+     ▼                                    │
+[Ride Service]                            │
+     │                           [Driver Matching Service]
+     │←──── Find nearest driver ──────────┤
+     │                                    │
+     │──Notify driver (WebSocket/Push)    │
+     │                                    │
+[Ride DB]    [Pricing Service]    [ETA Service]
+(PostgreSQL) (surge calculation)  (routing engine)
+     │
+[Kafka: ride.events]
+     │
+[Analytics, Notification, Payment]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Surge Pricing Algorithm
+
+```python
+def calculate_surge_price(pickup_lat, pickup_lng, base_price):
+    """
+    Supply-Demand based surge pricing
+    """
+    radius = 2  # km
+
+    # Available drivers nearby:
+    available_drivers = redis.georadius(
+        "drivers:available", pickup_lng, pickup_lat, radius, unit='km'
+    )
+    driver_count = len(available_drivers)
+
+    # Active ride requests nearby:
+    demand = redis.get(f"demand:{pickup_lat:.2f}:{pickup_lng:.2f}") or 0
+    demand = int(demand)
+
+    # Surge calculation:
+    if driver_count == 0:
+        surge_multiplier = 3.0  # No driver → 3x
+    elif demand / max(driver_count, 1) > 2:
+        surge_multiplier = 2.0  # High demand → 2x
+    elif demand / max(driver_count, 1) > 1:
+        surge_multiplier = 1.5  # Moderate demand → 1.5x
+    else:
+        surge_multiplier = 1.0  # Normal
+
+    return base_price * surge_multiplier
+```
+
+---
+
+## 6.7 YouTube-like Video Platform
+
+### 📋 Requirements
+- Video upload
+- Video streaming (adaptive bitrate)
+- Search
+- Recommendations
+- Comments, likes
+- Subscriptions
+
+### 🏗️ Architecture
+
+```
+Video Platform Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Upload Flow:
+[Creator] ──upload raw video──▶ [Upload Service] ──▶ [S3: raw-videos/]
+                                                          │
+                                                    [Kafka: video.uploaded]
+                                                          │
+                                               [Video Processing Workers]
+                                               Transcode: 360p, 720p, 1080p, 4K
+                                               Thumbnail generate
+                                               Audio extract
+                                                          │
+                                                [S3: processed-videos/]
+                                                          │
+                                                    [CDN distribution]
+
+Watch Flow:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Viewer] ──GET /watch?v=abc123──▶ [API Gateway]
+                                        │
+                               [Video Metadata Service]
+                               (title, description, URLs)
+                                        │
+                               [CDN PoP nearest to user]
+                               Adaptive Bitrate Streaming (HLS/DASH)
+                               Good network → 1080p
+                               Slow network → auto-switch to 360p
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Key Design Points
+
+```
+1. Video Transcoding:
+   Raw upload → FFmpeg workers → Multiple resolutions
+   Distributed: Different workers handle different videos
+   Queue: Kafka/SQS for job distribution
+
+2. Adaptive Bitrate Streaming (HLS):
+   Video → chunks (2-10 second segments)
+   Player: bandwidth monitor করে quality adjust
+   .m3u8 manifest → lists all quality options
+
+3. View Count (Eventually Consistent):
+   INCR in Redis (fast, atomic)
+   Batch write to DB every 30 seconds
+   Exact count not critical (1M vs 1.001M doesn't matter)
+
+4. Search:
+   Elasticsearch: full-text on title, description, tags
+   Autocomplete: Redis Sorted Set or Elasticsearch
+   ML ranking: engagement signals (watch time, likes)
+
+5. Recommendations:
+   Collaborative filtering: similar users watched similar videos
+   Content-based: video metadata, tags
+   Offline ML pipeline → precomputed recommendations stored
+```
+
+---
+
+## 6.8 E-commerce System (Chaldal/Daraz-like)
+
+### 📋 Requirements
+- Product catalog (search, filter)
+- Shopping cart
+- Order management
+- Inventory management
+- Payment processing
+- Delivery tracking
+
+### 🏗️ Architecture
+
+```
+E-commerce Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Web/Mobile] ──▶ [CDN] (static assets)
+                 [API Gateway] (auth, routing, rate limit)
+                        │
+    ┌────────────────────┼────────────────────────────┐
+    ▼                    ▼                            ▼
+[Product Service]  [Cart Service]           [Order Service]
+[Search: ES]       [Redis session]          [Saga pattern]
+[DB: PostgreSQL]                            [DB: PostgreSQL]
+    │                                            │
+[Inventory]                              [Payment Service]
+[Service]                                [3rd party gateway]
+[Redis atomic]                                   │
+                                        [Kafka: order.placed]
+                                                 │
+                                    ┌────────────┤
+                                    ▼            ▼
+                            [Notification]  [Inventory
+                            [Service]        Reserve]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Inventory Race Condition Solution
+
+```python
+# Problem: 100 users একসাথে last item কিনতে চায়!
+# Without atomic operation → oversell!
+
+# Solution: Redis atomic decrement with check:
+def reserve_inventory(product_id: str, quantity: int) -> bool:
+    key = f"inventory:{product_id}"
+    
+    lua_script = """
+    local current = tonumber(redis.call('get', KEYS[1])) or 0
+    if current >= tonumber(ARGV[1]) then
+        redis.call('decrby', KEYS[1], ARGV[1])
+        return 1  -- success
+    else
+        return 0  -- insufficient stock
+    end
+    """
+    result = r.eval(lua_script, 1, key, quantity)
+    return bool(result)
+    # Atomic! No race condition.
+```
+
+---
+
+## 6.9 Hospital Management System
+
+### 📋 Requirements
+- Patient registration
+- Doctor appointment booking
+- Medical records management
+- Lab results
+- Prescription management
+- Billing
+
+### 🏗️ Architecture
+
+```
+Hospital System Architecture:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Patient Portal] [Doctor App] [Admin Dashboard]
+        │               │             │
+        └───────────────┴─────────────┘
+                        │
+                  [API Gateway]
+         ┌──────────────┼──────────────────────┐
+         ▼              ▼                      ▼
+ [Patient Service] [Appointment Service] [Medical Records]
+ [Registration]    [Scheduling]          [EHR Service]
+         │              │                      │
+ [Patient DB]    [Appointment DB]       [Records DB]
+ (PostgreSQL)    (PostgreSQL)           (PostgreSQL + S3 for files)
+         │
+ [Billing Service]  [Lab Service]  [Pharmacy Service]
+         │              │
+ [Payment Gateway] [Lab Results DB]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 Critical Design Decisions
+
+```
+1. HIPAA/Data Privacy (Bangladesh DPAI consideration):
+   - Patient data encrypted at rest (AES-256)
+   - TLS in transit
+   - Audit log: কে কখন কোন record দেখেছে
+   - Role-based access: Doctor শুধু তার patient দেখবে
+
+2. Appointment Slot Management:
+   - Distributed lock (Redis) — same slot double booking prevent
+   - Doctor schedule management (time-slot based)
+
+3. Medical Records:
+   - Immutable records (compliance)
+   - Version control (amendments, not deletions)
+   - Fast retrieval (indexed by patient_id, date)
+   - Large files (X-ray, MRI) → S3
+
+4. Lab Integration:
+   - HL7 FHIR standard (international healthcare data format)
+   - Lab results → automatically push to doctor dashboard
+   - Critical value alerts (immediate notification)
+```
+
+---
+
+## 📋 PART 6: Case Studies Quick Reference
+
+| System | DB Choice | Cache | Queue | Special |
+|--------|-----------|-------|-------|---------|
+| URL Shortener | PostgreSQL | Redis (redirects) | - | Base62 encoding |
+| Chat App | Cassandra | Redis (presence) | Kafka | WebSocket, fan-out |
+| Social Feed | PostgreSQL | Redis (feed) | Kafka | Hybrid fan-out |
+| Banking | PostgreSQL | Redis (session) | Kafka | ACID, idempotency |
+| Food Delivery | PostgreSQL | Redis Geo | Kafka | Location, state machine |
+| Ride Sharing | PostgreSQL | Redis Geo | Kafka | Surge pricing, matching |
+| Video Platform | PostgreSQL + S3 | CDN | SQS/Kafka | HLS, transcoding |
+| E-commerce | PostgreSQL + ES | Redis | Kafka | Inventory atomic |
+| Hospital | PostgreSQL + S3 | Redis | - | RBAC, immutable records |
+
+---
+
+## 🎯 PART 6: Top Interview Questions
+
+<details>
+<summary><strong>Q1: URL Shortener design করো (30 মিনিটে)</strong></summary>
+
+**Framework দিয়ে উত্তর:**
+1. **Requirements:** Short URL create, redirect, analytics optional
+2. **Scale:** 100 writes/sec, 10K reads/sec, 7.5TB storage 5 years
+3. **Architecture:** API → URL Service → DB + Redis Cache
+4. **DB:** PostgreSQL (short_code UNIQUE INDEX)
+5. **Short code:** Counter-based Base62 (no collision)
+6. **Cache:** Redis (short_code → long_url, TTL 24h)
+7. **Redirect:** 302 (tracking) vs 301 (client cache)
+8. **Scale:** Read replicas + Redis → 99%+ cache hit
+
+</details>
+
+<details>
+<summary><strong>Q2: WhatsApp design করার সবচেয়ে tricky part কী?</strong></summary>
+
+**উত্তর:**
+Tricky parts:
+1. **Message delivery at scale:** 1M+ msg/sec → Kafka fan-out
+2. **Offline delivery:** User offline → store, deliver when online
+3. **Group chat fan-out:** 256 members → 256 pushes
+4. **End-to-end encryption:** Server key নেই → Signal Protocol
+5. **Multi-device sync:** WhatsApp Web → same messages সব device এ
+6. **Presence (online/offline):** 500M users → Redis with TTL + heartbeat
+
+</details>
+
+<details>
+<summary><strong>Q3: Social media feed design এ Fan-out on Write আর Fan-out on Read এর পার্থক্য কী?</strong></summary>
+
+**উত্তর:**
+- **Fan-out on Write:** Post করার সময় সব followers এর feed update করো। Read fast, Write expensive। Celebrity (10M followers) → 10M Redis operations!
+
+- **Fan-out on Read:** Feed request এর সময় followers এর posts merge করো। Write সহজ, Read expensive। Millions of users এর feed generate করতে slow।
+
+- **Hybrid (Twitter/Instagram):** Regular users → write-time fan-out। Celebrities → read-time pull and merge।
+
+</details>
+
+<details>
+<summary><strong>Q4: Banking system এ double debit কীভাবে prevent করবে?</strong></summary>
+
+**উত্তর:**
+3 layer protection:
+1. **Idempotency key:** Client unique key পাঠায় → duplicate request → same response
+2. **Database unique constraint:** `UNIQUE(idempotency_key)` → DB level block
+3. **SELECT FOR UPDATE + Check:** `UPDATE accounts SET balance=balance-X WHERE id=Y AND balance>=X` → atomic check
+4. **Distributed lock:** High-value transfers এ Redis lock
+
+```sql
+-- Atomic: deduct only if sufficient balance
+UPDATE accounts 
+SET balance = balance - 5000, version = version + 1
+WHERE id = 123 AND balance >= 5000 AND version = 7;
+-- 0 rows → insufficient balance or concurrent modification
+```
+
+</details>
+
+<details>
+<summary><strong>Q5: Video streaming এ adaptive bitrate কীভাবে কাজ করে?</strong></summary>
+
+**উত্তর:**
+HLS (HTTP Live Streaming):
+1. Video → FFmpeg → multiple quality (360p, 720p, 1080p)
+2. প্রতিটা quality → 2-10 second chunks (.ts files)
+3. Manifest file (.m3u8) → lists all qualities + chunk URLs
+
+```
+#EXTM3U
+#EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=640x360
+360p/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=2400000,RESOLUTION=1280x720
+720p/playlist.m3u8
+#EXT-X-STREAM-INF:BANDWIDTH=4800000,RESOLUTION=1920x1080
+1080p/playlist.m3u8
+```
+
+Player logic:
+- Network bandwidth measure করে
+- Good bandwidth → 1080p chunk download
+- Bandwidth drops → next chunk থেকে 360p switch
+- Buffer আছে → seamless quality switch
+
+CDN এর edge servers এই chunks cache করে। User কাছের CDN থেকে পায় — low latency।
+
+</details>
+
+<div align="right">
+
+[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 7 →](#part7)
+
+</div>
+
+---
+
 *হ্যান্ডবুক তৈরিতে: Senior Software Architect, Backend Engineer & System Design Interviewer*
 *Version: 1.0 | তারিখ: মে ২০২৬*
-*মোট PART: 10 | সম্পন্ন: PART 1-4 ✅ | বাকি: PART 5-10 🔜*
+*মোট PART: 10 | সম্পন্ন: PART 1-6 ✅ | বাকি: PART 7-10 🔜*
