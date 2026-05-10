@@ -29,7 +29,7 @@
 | # | টপিক | ফাইল | অবস্থা | বিষয়বস্তু |
 |---|------|------|--------|------------|
 | 01 | 🧩 **Object-Oriented Programming (OOP)** | [OOP Guide →](./OOP_Junior_Engineer_BD_QA.md) | ✅ **Available** | Encapsulation, Inheritance, Polymorphism, Design Patterns, SOLID, Mock Interview |
-| 02 | 🗄️ **Database & SQL** | _Coming Soon_ | 🔜 **Coming Soon** | SQL Queries, Normalization, Indexing, Transactions, NoSQL |
+| 02 | 🗄️ **Database & SQL** | [Database Guide →](./Database_Junior_Engineer_BD_QA.md) | ✅ **Available** | SQL Queries, Normalization, Indexing, Transactions, NoSQL |
 | 03 | ⚡ **JavaScript** | _Coming Soon_ | 🔜 **Coming Soon** | Closures, Event Loop, Promises, ES6+, Prototype Chain |
 | 04 | ⚛️ **React** | _Coming Soon_ | 🔜 **Coming Soon** | Hooks, State Management, Virtual DOM, Performance, Testing |
 | 05 | 📊 **Data Structures & Algorithms** | _Coming Soon_ | 🔜 **Coming Soon** | Array, Linked List, Tree, Graph, Sorting, DP |
