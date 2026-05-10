@@ -24,7 +24,7 @@
 | [PART 4](#part4) | Caching & Performance | Redis, Rate Limiting, CDN | ✅ |
 | [PART 5](#part5) | Message Queues & Distributed Systems | Kafka, RabbitMQ, Pub/Sub | ✅ |
 | [PART 6](#part6) | System Design Case Studies | URL Shortener, Chat App, E-commerce | ✅ |
-| [PART 7](#part7) | Low-Level Design (LLD) | SOLID, Design Patterns, UML | 🔜 |
+| [PART 7](#part7) | Low-Level Design (LLD) | SOLID, Design Patterns, UML | ✅ |
 | [PART 8](#part8) | Cloud & DevOps Basics | AWS, Docker, Kubernetes, CI/CD | 🔜 |
 | [PART 9](#part9) | Interview Q&A Bank | 200+ Questions with Detailed Answers | 🔜 |
 | [PART 10](#part10) | Bangladeshi Interview Preparation | BD Company Patterns, Mock Interviews | 🔜 |
@@ -89,6 +89,33 @@
 - YouTube-like Video Platform
 - E-commerce System (Chaldal/Daraz)
 - Hospital Management System
+
+</details>
+
+<details>
+<summary>🧩 <strong>PART 7: Low-Level Design (LLD)</strong> — কী কী শিখবো?</summary>
+
+- SOLID Principles (SRP, OCP, LSP, ISP, DIP) — real code examples
+- Design Patterns: Singleton, Factory, Observer, Strategy, Adapter, Builder, Decorator
+- Composition over Inheritance
+- Dependency Injection
+- LLD Case Study: Parking Lot System
+- LLD Case Study: Library Management System
+
+</details>
+
+<details>
+<summary>☁️ <strong>PART 8: Cloud & DevOps Basics</strong> — কী কী শিখবো?</summary>
+
+- Cloud Computing: IaaS, PaaS, SaaS
+- AWS Core Services: EC2, S3, RDS, Lambda, VPC, CloudFront
+- Docker: Dockerfile, containers, Docker Compose
+- Kubernetes: Deployment, Service, HPA, kubectl commands
+- CI/CD Pipeline: GitHub Actions, deployment stages
+- Nginx: Reverse proxy, load balancing, SSL, rate limiting
+- Monitoring: Prometheus, Grafana, Golden Signals
+- Logging: Structured logs, ELK Stack
+- Deployment Strategies: Rolling, Blue-Green, Canary
 
 </details>
 
@@ -5916,4 +5943,2557 @@ CDN এর edge servers এই chunks cache করে। User কাছের CD
 
 *হ্যান্ডবুক তৈরিতে: Senior Software Architect, Backend Engineer & System Design Interviewer*
 *Version: 1.0 | তারিখ: মে ২০২৬*
-*মোট PART: 10 | সম্পন্ন: PART 1-6 ✅ | বাকি: PART 7-10 🔜*
+
+
+<a id="part7"></a>
+
+---
+
+# PART 7: Low-Level Design (LLD)
+### 🧩 SOLID, Design Patterns ও Object-Oriented Design
+
+> **Interview টিপস:** LLD interview এ interviewer দেখতে চায় তুমি real-world problem কে clean, maintainable code এ রূপ দিতে পারো কিনা। SOLID principles ও common Design Patterns জানলে যেকোনো LLD প্রশ্নে confident থাকবে।
+
+---
+
+## 7.1 SOLID Principles
+
+SOLID হলো 5টি object-oriented design principle যা code কে **maintainable, extensible ও testable** রাখে।
+
+---
+
+### S — Single Responsibility Principle (SRP)
+
+> **"একটা class এর শুধু একটাই কারণ থাকবে change হওয়ার।"**
+
+```python
+# ❌ BAD — একটা class এ অনেক দায়িত্ব:
+class OrderService:
+    def create_order(self, items):
+        # Order logic
+        pass
+    def send_email(self, user, order):  # ← Email responsibility!
+        smtp.send(...)
+    def generate_invoice_pdf(self, order):  # ← PDF responsibility!
+        pdf.create(...)
+    def save_to_db(self, order):  # ← DB responsibility!
+        db.save(...)
+
+# ✅ GOOD — প্রতিটা class এর একটা দায়িত্ব:
+class OrderService:
+    def __init__(self, repo, emailer, invoicer):
+        self.repo = repo
+        self.emailer = emailer
+        self.invoicer = invoicer
+
+    def create_order(self, items):
+        order = Order(items)
+        self.repo.save(order)
+        self.emailer.send_confirmation(order)
+        self.invoicer.generate(order)
+        return order
+
+class OrderRepository:
+    def save(self, order): db.save(order)
+
+class EmailService:
+    def send_confirmation(self, order): smtp.send(...)
+
+class InvoiceService:
+    def generate(self, order): pdf.create(...)
+```
+
+---
+
+### O — Open/Closed Principle (OCP)
+
+> **"Software entity open for extension, but closed for modification।"**  
+> নতুন feature যোগ করতে existing code বদলাতে হবে না — extend করবো।
+
+```python
+# ❌ BAD — নতুন payment type যোগ করতে existing code বদলাতে হয়:
+class PaymentProcessor:
+    def process(self, payment_type, amount):
+        if payment_type == "bkash":
+            bkash.charge(amount)
+        elif payment_type == "nagad":
+            nagad.charge(amount)
+        elif payment_type == "card":   # ← নতুন type → code change!
+            card.charge(amount)
+
+# ✅ GOOD — নতুন type যোগ করতে শুধু নতুন class লিখবো:
+from abc import ABC, abstractmethod
+
+class PaymentMethod(ABC):
+    @abstractmethod
+    def charge(self, amount: float) -> bool:
+        pass
+
+class BkashPayment(PaymentMethod):
+    def charge(self, amount: float) -> bool:
+        return bkash_api.charge(amount)
+
+class NagadPayment(PaymentMethod):
+    def charge(self, amount: float) -> bool:
+        return nagad_api.charge(amount)
+
+class CardPayment(PaymentMethod):   # ← New class, no existing code change!
+    def charge(self, amount: float) -> bool:
+        return card_gateway.charge(amount)
+
+class PaymentProcessor:
+    def process(self, payment: PaymentMethod, amount: float):
+        return payment.charge(amount)
+```
+
+---
+
+### L — Liskov Substitution Principle (LSP)
+
+> **"Subclass দিয়ে parent class replace করলেও program ঠিকঠাক কাজ করবে।"**
+
+```python
+# ❌ BAD — Square inherits Rectangle কিন্তু behavior ভাঙে:
+class Rectangle:
+    def set_width(self, w): self.width = w
+    def set_height(self, h): self.height = h
+    def area(self): return self.width * self.height
+
+class Square(Rectangle):
+    def set_width(self, w):
+        self.width = w
+        self.height = w   # ← Square constraint! Rectangle এর behavior ভাঙে
+    def set_height(self, h):
+        self.width = h
+        self.height = h
+
+def print_area(rect: Rectangle):
+    rect.set_width(5)
+    rect.set_height(10)
+    print(rect.area())  # Rectangle → 50 ✅, Square → 100 ❌ (LSP violated!)
+
+# ✅ GOOD — Common abstraction:
+class Shape(ABC):
+    @abstractmethod
+    def area(self) -> float: pass
+
+class Rectangle(Shape):
+    def __init__(self, w, h): self.w = w; self.h = h
+    def area(self) -> float: return self.w * self.h
+
+class Square(Shape):
+    def __init__(self, s): self.s = s
+    def area(self) -> float: return self.s * self.s
+```
+
+---
+
+### I — Interface Segregation Principle (ISP)
+
+> **"Client কে এমন methods এ depend করতে বাধ্য করবে না যা সে use করে না।"**
+
+```python
+# ❌ BAD — Fat interface:
+class Worker(ABC):
+    @abstractmethod
+    def work(self): pass
+    @abstractmethod
+    def eat(self): pass    # Robot কে এটা implement করতে হয়!
+    @abstractmethod
+    def sleep(self): pass  # Robot কে এটাও!
+
+class Robot(Worker):
+    def work(self): print("Working")
+    def eat(self): raise NotImplementedError  # ❌ Forced!
+    def sleep(self): raise NotImplementedError  # ❌ Forced!
+
+# ✅ GOOD — Segregated interfaces:
+class Workable(ABC):
+    @abstractmethod
+    def work(self): pass
+
+class Eatable(ABC):
+    @abstractmethod
+    def eat(self): pass
+
+class Human(Workable, Eatable):
+    def work(self): print("Working")
+    def eat(self): print("Eating")
+
+class Robot(Workable):       # শুধু Workable implement করে
+    def work(self): print("Working")
+```
+
+---
+
+### D — Dependency Inversion Principle (DIP)
+
+> **"High-level modules low-level modules এর উপর depend করবে না — উভয়ই abstraction এর উপর depend করবে।"**
+
+```python
+# ❌ BAD — High-level OrderService directly depends on MySQL:
+class OrderService:
+    def __init__(self):
+        self.db = MySQLDatabase()  # ← Concrete class! Swap করতে পারবো না।
+
+    def save_order(self, order):
+        self.db.execute("INSERT INTO orders ...")
+
+# ✅ GOOD — Depend on abstraction (interface):
+class OrderRepository(ABC):
+    @abstractmethod
+    def save(self, order) -> None: pass
+    @abstractmethod
+    def find_by_id(self, id: int): pass
+
+class MySQLOrderRepository(OrderRepository):
+    def save(self, order): mysql_db.execute("INSERT ...")
+    def find_by_id(self, id): return mysql_db.query("SELECT ...")
+
+class MongoOrderRepository(OrderRepository):  # Swap করলেও OrderService change নেই!
+    def save(self, order): mongo_col.insert_one(order.to_dict())
+    def find_by_id(self, id): return mongo_col.find_one({"_id": id})
+
+class OrderService:
+    def __init__(self, repo: OrderRepository):  # ← Interface inject করো
+        self.repo = repo
+
+    def create_order(self, items):
+        order = Order(items)
+        self.repo.save(order)
+        return order
+```
+
+### 📊 SOLID Quick Summary
+
+| Principle | এক কথায় | মনে রাখার উপায় |
+|-----------|---------|----------------|
+| **S**RP | একটা class, একটা কাজ | Chef শুধু রান্না করে |
+| **O**CP | Extend করো, modify করো না | পুরনো code touch না করে নতুন feature |
+| **L**SP | Subclass = Parent এর drop-in replacement | Square is-a Shape, not Rectangle |
+| **I**SP | Small, focused interfaces | Robot কে eat() implement করতে বাধ্য না |
+| **D**IP | Interface এর উপর depend করো | OrderService → Repository (interface) |
+
+---
+
+## 7.2 Design Patterns
+
+Design Patterns হলো **common software problems এর proven solutions** — প্রতিবার নতুন করে ভাবতে হয় না।
+
+### 3 Categories:
+
+| Category | উদ্দেশ্য | Patterns |
+|----------|---------|---------|
+| **Creational** | Object কীভাবে তৈরি করবো | Singleton, Factory, Builder, Prototype |
+| **Structural** | Objects কীভাবে compose করবো | Adapter, Decorator, Facade, Proxy |
+| **Behavioral** | Objects কীভাবে communicate করবে | Observer, Strategy, Command, Iterator |
+
+---
+
+## 7.3 Singleton Pattern
+
+> **"একটা class এর শুধু একটাই instance তৈরি হবে — global access point থাকবে।"**
+
+```python
+# Thread-safe Singleton (Python):
+import threading
+
+class DatabaseConnection:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:  # Thread-safe!
+                if cls._instance is None:  # Double-checked locking
+                    cls._instance = super().__new__(cls)
+                    cls._instance._connected = False
+        return cls._instance
+
+    def connect(self, host, port):
+        if not self._connected:
+            self._connection = create_connection(host, port)
+            self._connected = True
+
+    def execute(self, query):
+        return self._connection.execute(query)
+
+# Usage:
+db1 = DatabaseConnection()
+db2 = DatabaseConnection()
+print(db1 is db2)  # True — same instance!
+```
+
+**কখন use করবো:** Database connection pool, Logger, Configuration manager, Cache manager।
+
+**সতর্কতা:** Global state তৈরি করে — testing কঠিন হয়। Unit test এ mock করতে হয়।
+
+---
+
+## 7.4 Factory Pattern
+
+> **"Object creation logic আলাদা করো — client কে concrete class জানতে হবে না।"**
+
+```python
+from abc import ABC, abstractmethod
+
+# Product interface:
+class Notification(ABC):
+    @abstractmethod
+    def send(self, message: str, recipient: str) -> bool: pass
+
+# Concrete products:
+class SMSNotification(Notification):
+    def send(self, message, recipient):
+        print(f"SMS to {recipient}: {message}")
+        return sms_gateway.send(recipient, message)
+
+class EmailNotification(Notification):
+    def send(self, message, recipient):
+        print(f"Email to {recipient}: {message}")
+        return smtp.send(recipient, message)
+
+class PushNotification(Notification):
+    def send(self, message, recipient):
+        print(f"Push to {recipient}: {message}")
+        return fcm.send(recipient, message)
+
+# Factory:
+class NotificationFactory:
+    _creators = {
+        "sms": SMSNotification,
+        "email": EmailNotification,
+        "push": PushNotification,
+    }
+
+    @classmethod
+    def create(cls, notification_type: str) -> Notification:
+        creator = cls._creators.get(notification_type)
+        if not creator:
+            raise ValueError(f"Unknown notification type: {notification_type}")
+        return creator()
+
+    @classmethod
+    def register(cls, type_name: str, creator):
+        """নতুন notification type যোগ করা (OCP!)"""
+        cls._creators[type_name] = creator
+
+# Usage — client concrete class জানে না:
+def notify_user(user, message, method="email"):
+    notifier = NotificationFactory.create(method)
+    notifier.send(message, user.contact)
+```
+
+---
+
+## 7.5 Observer Pattern
+
+> **"Subject (publisher) এর state change হলে সব Observer (subscriber) automatically notify হয়।"**
+
+```python
+from abc import ABC, abstractmethod
+from typing import List
+
+# Observer interface:
+class EventObserver(ABC):
+    @abstractmethod
+    def update(self, event_type: str, data: dict) -> None: pass
+
+# Subject (Observable):
+class OrderEventPublisher:
+    def __init__(self):
+        self._observers: List[EventObserver] = []
+
+    def subscribe(self, observer: EventObserver):
+        self._observers.append(observer)
+
+    def unsubscribe(self, observer: EventObserver):
+        self._observers.remove(observer)
+
+    def notify(self, event_type: str, data: dict):
+        for observer in self._observers:
+            observer.update(event_type, data)
+
+    def place_order(self, order):
+        # Business logic:
+        saved_order = db.save(order)
+        # Notify all observers:
+        self.notify("order.placed", {
+            "order_id": saved_order.id,
+            "user_id": order.user_id,
+            "total": float(order.total)
+        })
+        return saved_order
+
+# Concrete observers:
+class EmailObserver(EventObserver):
+    def update(self, event_type, data):
+        if event_type == "order.placed":
+            email_service.send_confirmation(data["user_id"], data["order_id"])
+
+class InventoryObserver(EventObserver):
+    def update(self, event_type, data):
+        if event_type == "order.placed":
+            inventory.reserve(data["order_id"])
+
+class AnalyticsObserver(EventObserver):
+    def update(self, event_type, data):
+        analytics.track(event_type, data)
+
+# Wiring:
+publisher = OrderEventPublisher()
+publisher.subscribe(EmailObserver())
+publisher.subscribe(InventoryObserver())
+publisher.subscribe(AnalyticsObserver())
+
+# নতুন observer যোগ করতে publisher change করতে হয় না! (OCP ✅)
+```
+
+---
+
+## 7.6 Strategy Pattern
+
+> **"Algorithm family define করো, encapsulate করো এবং interchange করো — runtime এ algorithm বদলানো যাবে।"**
+
+```python
+from abc import ABC, abstractmethod
+
+# Strategy interface:
+class SortStrategy(ABC):
+    @abstractmethod
+    def sort(self, data: list) -> list: pass
+
+# Concrete strategies:
+class QuickSortStrategy(SortStrategy):
+    def sort(self, data): return quick_sort(data)
+
+class MergeSortStrategy(SortStrategy):
+    def sort(self, data): return merge_sort(data)
+
+class BubbleSortStrategy(SortStrategy):
+    def sort(self, data): return bubble_sort(data)
+
+# Context:
+class DataSorter:
+    def __init__(self, strategy: SortStrategy = None):
+        self._strategy = strategy or QuickSortStrategy()
+
+    def set_strategy(self, strategy: SortStrategy):
+        self._strategy = strategy  # Runtime এ switch!
+
+    def sort(self, data: list) -> list:
+        return self._strategy.sort(data)
+
+# Usage:
+sorter = DataSorter()
+sorter.sort([3, 1, 4, 1, 5])       # QuickSort default
+
+sorter.set_strategy(MergeSortStrategy())
+sorter.sort([3, 1, 4, 1, 5])       # Now MergeSort!
+
+# Real example — Discount strategy:
+class DiscountStrategy(ABC):
+    @abstractmethod
+    def calculate(self, price: float) -> float: pass
+
+class NoDiscount(DiscountStrategy):
+    def calculate(self, price): return price
+
+class PercentageDiscount(DiscountStrategy):
+    def __init__(self, percent): self.percent = percent
+    def calculate(self, price): return price * (1 - self.percent / 100)
+
+class FlatDiscount(DiscountStrategy):
+    def __init__(self, amount): self.amount = amount
+    def calculate(self, price): return max(0, price - self.amount)
+
+class EidSpecialDiscount(DiscountStrategy):
+    def calculate(self, price):
+        return price * 0.5 if price > 1000 else price * 0.8
+```
+
+---
+
+## 7.7 Adapter Pattern
+
+> **"Incompatible interfaces কে একসাথে কাজ করাও — existing code না বদলে।"**
+
+```python
+# Real scenario: পুরনো SMS service নতুন Notification interface এ wrap করো
+
+# Existing (legacy) SMS service — interface আলাদা:
+class LegacySMSService:
+    def sendTextMessage(self, phoneNumber: str, textContent: str):
+        print(f"Legacy SMS: {phoneNumber} → {textContent}")
+
+# নতুন standard Notification interface:
+class Notification(ABC):
+    @abstractmethod
+    def send(self, message: str, recipient: str) -> bool: pass
+
+# Adapter — legacy service কে নতুন interface এ wrap করে:
+class SMSAdapter(Notification):
+    def __init__(self, legacy_sms: LegacySMSService):
+        self._legacy = legacy_sms
+
+    def send(self, message: str, recipient: str) -> bool:
+        try:
+            # Interface translate:
+            self._legacy.sendTextMessage(recipient, message)
+            return True
+        except Exception:
+            return False
+
+# Usage — client নতুন interface use করে:
+legacy = LegacySMSService()
+adapter = SMSAdapter(legacy)
+
+# এখন adapter দিয়ে যেকোনো Notification-compatible code এ use করা যাবে:
+notify_user(adapter, "Your order is confirmed!", "+8801712345678")
+```
+
+---
+
+## 7.8 Builder Pattern
+
+> **"Complex object step-by-step তৈরি করো — same construction process different representations তৈরি করতে পারে।"**
+
+```python
+from dataclasses import dataclass, field
+from typing import List, Optional
+
+@dataclass
+class QueryBuilder:
+    """SQL Query Builder — method chaining with Builder pattern"""
+    _table: str = ""
+    _conditions: List[str] = field(default_factory=list)
+    _columns: List[str] = field(default_factory=list)
+    _limit: Optional[int] = None
+    _offset: Optional[int] = None
+    _order_by: Optional[str] = None
+
+    def select(self, *columns) -> "QueryBuilder":
+        self._columns = list(columns) if columns else ["*"]
+        return self  # Method chaining!
+
+    def from_table(self, table: str) -> "QueryBuilder":
+        self._table = table
+        return self
+
+    def where(self, condition: str) -> "QueryBuilder":
+        self._conditions.append(condition)
+        return self
+
+    def order_by(self, column: str, direction="ASC") -> "QueryBuilder":
+        self._order_by = f"{column} {direction}"
+        return self
+
+    def limit(self, n: int) -> "QueryBuilder":
+        self._limit = n
+        return self
+
+    def offset(self, n: int) -> "QueryBuilder":
+        self._offset = n
+        return self
+
+    def build(self) -> str:
+        cols = ", ".join(self._columns) if self._columns else "*"
+        query = f"SELECT {cols} FROM {self._table}"
+        if self._conditions:
+            query += " WHERE " + " AND ".join(self._conditions)
+        if self._order_by:
+            query += f" ORDER BY {self._order_by}"
+        if self._limit:
+            query += f" LIMIT {self._limit}"
+        if self._offset:
+            query += f" OFFSET {self._offset}"
+        return query
+
+# Usage — fluent, readable:
+query = (QueryBuilder()
+    .select("id", "name", "email")
+    .from_table("users")
+    .where("status = 'active'")
+    .where("age > 18")
+    .order_by("created_at", "DESC")
+    .limit(10)
+    .offset(20)
+    .build())
+
+print(query)
+# SELECT id, name, email FROM users WHERE status = 'active' AND age > 18
+#   ORDER BY created_at DESC LIMIT 10 OFFSET 20
+```
+
+---
+
+## 7.9 Decorator Pattern
+
+> **"Object এর behavior dynamically add করো — subclassing ছাড়া।"**
+
+```python
+from abc import ABC, abstractmethod
+import time
+import functools
+
+# Base interface:
+class DataService(ABC):
+    @abstractmethod
+    def get_data(self, key: str) -> dict: pass
+
+# Concrete component:
+class DatabaseDataService(DataService):
+    def get_data(self, key: str) -> dict:
+        return db.query(f"SELECT * FROM data WHERE key='{key}'")
+
+# Decorator base:
+class DataServiceDecorator(DataService):
+    def __init__(self, wrapped: DataService):
+        self._wrapped = wrapped
+
+    def get_data(self, key: str) -> dict:
+        return self._wrapped.get_data(key)
+
+# Cache decorator:
+class CachingDecorator(DataServiceDecorator):
+    def __init__(self, wrapped, cache, ttl=300):
+        super().__init__(wrapped)
+        self._cache = cache
+        self._ttl = ttl
+
+    def get_data(self, key: str) -> dict:
+        cached = self._cache.get(key)
+        if cached:
+            return cached
+        data = self._wrapped.get_data(key)
+        self._cache.set(key, data, ex=self._ttl)
+        return data
+
+# Logging decorator:
+class LoggingDecorator(DataServiceDecorator):
+    def get_data(self, key: str) -> dict:
+        start = time.time()
+        result = self._wrapped.get_data(key)
+        elapsed = (time.time() - start) * 1000
+        print(f"get_data('{key}') took {elapsed:.2f}ms")
+        return result
+
+# Compose decorators:
+service = DatabaseDataService()
+service = CachingDecorator(service, redis_client, ttl=600)
+service = LoggingDecorator(service)
+
+# সব decorator এর behavior একসাথে:
+data = service.get_data("user:123")
+# Logging → Cache check → DB query (if cache miss)
+```
+
+---
+
+## 7.10 LLD Case Study: Parking Lot System
+
+### 📋 Requirements
+- Multiple floors, multiple spots per floor
+- Spot types: Compact, Large, Motorbike
+- Vehicle types: Car, Truck, Motorbike
+- Park/Unpark vehicle
+- Calculate parking fee
+- Check availability
+
+### 🏗️ Class Design
+
+```
+Class Diagram:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ParkingLot]
+  - floors: List[ParkingFloor]
+  + park(vehicle): Ticket
+  + unpark(ticket): float (fee)
+  + get_available_count(type): int
+
+[ParkingFloor]
+  - floor_no: int
+  - spots: List[ParkingSpot]
+  + get_available_spot(vehicle_type): ParkingSpot
+
+[ParkingSpot]  ←abstract
+  - spot_id: str
+  - is_occupied: bool
+  - vehicle: Optional[Vehicle]
+  + can_fit(vehicle): bool
+  + park(vehicle): void
+  + unpark(): Vehicle
+
+[CompactSpot(ParkingSpot)] — fits Car, Motorbike
+[LargeSpot(ParkingSpot)]   — fits Car, Truck
+[BikeSpot(ParkingSpot)]    — fits Motorbike only
+
+[Vehicle]  ←abstract
+  - license_plate: str
+  - vehicle_type: VehicleType
+
+[Car(Vehicle)]
+[Truck(Vehicle)]
+[Motorbike(Vehicle)]
+
+[Ticket]
+  - ticket_id: str
+  - vehicle: Vehicle
+  - spot: ParkingSpot
+  - entry_time: datetime
+
+[FeeCalculator]  ←Strategy pattern!
+  + calculate(ticket): float
+
+[HourlyFeeCalculator(FeeCalculator)]
+[DailyFeeCalculator(FeeCalculator)]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 💻 Implementation
+
+```python
+from abc import ABC, abstractmethod
+from datetime import datetime
+from enum import Enum
+from typing import Optional, List
+import uuid
+
+class VehicleType(Enum):
+    CAR = "car"
+    TRUCK = "truck"
+    MOTORBIKE = "motorbike"
+
+class SpotType(Enum):
+    COMPACT = "compact"
+    LARGE = "large"
+    BIKE = "bike"
+
+class Vehicle(ABC):
+    def __init__(self, license_plate: str, vehicle_type: VehicleType):
+        self.license_plate = license_plate
+        self.vehicle_type = vehicle_type
+
+class Car(Vehicle):
+    def __init__(self, plate): super().__init__(plate, VehicleType.CAR)
+
+class Truck(Vehicle):
+    def __init__(self, plate): super().__init__(plate, VehicleType.TRUCK)
+
+class Motorbike(Vehicle):
+    def __init__(self, plate): super().__init__(plate, VehicleType.MOTORBIKE)
+
+
+class ParkingSpot(ABC):
+    def __init__(self, spot_id: str, spot_type: SpotType):
+        self.spot_id = spot_id
+        self.spot_type = spot_type
+        self.is_occupied = False
+        self.vehicle: Optional[Vehicle] = None
+
+    @abstractmethod
+    def can_fit(self, vehicle: Vehicle) -> bool: pass
+
+    def park(self, vehicle: Vehicle):
+        if self.is_occupied:
+            raise ValueError(f"Spot {self.spot_id} is occupied!")
+        if not self.can_fit(vehicle):
+            raise ValueError(f"Vehicle type {vehicle.vehicle_type} doesn't fit!")
+        self.vehicle = vehicle
+        self.is_occupied = True
+
+    def unpark(self) -> Vehicle:
+        if not self.is_occupied:
+            raise ValueError(f"Spot {self.spot_id} is empty!")
+        vehicle = self.vehicle
+        self.vehicle = None
+        self.is_occupied = False
+        return vehicle
+
+class CompactSpot(ParkingSpot):
+    def __init__(self, spot_id):
+        super().__init__(spot_id, SpotType.COMPACT)
+
+    def can_fit(self, vehicle: Vehicle) -> bool:
+        return vehicle.vehicle_type in [VehicleType.CAR, VehicleType.MOTORBIKE]
+
+class LargeSpot(ParkingSpot):
+    def __init__(self, spot_id):
+        super().__init__(spot_id, SpotType.LARGE)
+
+    def can_fit(self, vehicle: Vehicle) -> bool:
+        return True  # All vehicles fit
+
+class BikeSpot(ParkingSpot):
+    def __init__(self, spot_id):
+        super().__init__(spot_id, SpotType.BIKE)
+
+    def can_fit(self, vehicle: Vehicle) -> bool:
+        return vehicle.vehicle_type == VehicleType.MOTORBIKE
+
+
+class Ticket:
+    def __init__(self, vehicle: Vehicle, spot: ParkingSpot):
+        self.ticket_id = str(uuid.uuid4())[:8]
+        self.vehicle = vehicle
+        self.spot = spot
+        self.entry_time = datetime.now()
+
+
+class FeeCalculator(ABC):
+    @abstractmethod
+    def calculate(self, ticket: Ticket) -> float: pass
+
+class HourlyFeeCalculator(FeeCalculator):
+    RATES = {
+        VehicleType.CAR: 30,       # 30 taka/hour
+        VehicleType.TRUCK: 60,     # 60 taka/hour
+        VehicleType.MOTORBIKE: 15  # 15 taka/hour
+    }
+
+    def calculate(self, ticket: Ticket) -> float:
+        hours = (datetime.now() - ticket.entry_time).seconds / 3600
+        hours = max(1, round(hours))  # Minimum 1 hour
+        rate = self.RATES[ticket.vehicle.vehicle_type]
+        return hours * rate
+
+
+class ParkingFloor:
+    def __init__(self, floor_no: int, spots: List[ParkingSpot]):
+        self.floor_no = floor_no
+        self.spots = spots
+
+    def get_available_spot(self, vehicle: Vehicle) -> Optional[ParkingSpot]:
+        for spot in self.spots:
+            if not spot.is_occupied and spot.can_fit(vehicle):
+                return spot
+        return None
+
+
+class ParkingLot:
+    def __init__(self, floors: List[ParkingFloor],
+                 fee_calculator: FeeCalculator = None):
+        self.floors = floors
+        self._fee_calculator = fee_calculator or HourlyFeeCalculator()
+        self._active_tickets: dict = {}
+
+    def park(self, vehicle: Vehicle) -> Ticket:
+        for floor in self.floors:
+            spot = floor.get_available_spot(vehicle)
+            if spot:
+                spot.park(vehicle)
+                ticket = Ticket(vehicle, spot)
+                self._active_tickets[ticket.ticket_id] = ticket
+                print(f"Parked {vehicle.license_plate} at spot {spot.spot_id} — Ticket: {ticket.ticket_id}")
+                return ticket
+        raise Exception("No available spot for this vehicle type!")
+
+    def unpark(self, ticket_id: str) -> float:
+        ticket = self._active_tickets.pop(ticket_id, None)
+        if not ticket:
+            raise ValueError("Invalid ticket!")
+        ticket.spot.unpark()
+        fee = self._fee_calculator.calculate(ticket)
+        print(f"Unparked {ticket.vehicle.license_plate} — Fee: {fee} taka")
+        return fee
+
+    def get_available_count(self) -> dict:
+        counts = {"compact": 0, "large": 0, "bike": 0}
+        for floor in self.floors:
+            for spot in floor.spots:
+                if not spot.is_occupied:
+                    counts[spot.spot_type.value] += 1
+        return counts
+
+
+# Usage:
+floor1 = ParkingFloor(1, [
+    CompactSpot("F1-C1"), CompactSpot("F1-C2"),
+    LargeSpot("F1-L1"),
+    BikeSpot("F1-B1"), BikeSpot("F1-B2"),
+])
+
+lot = ParkingLot([floor1])
+
+car = Car("DHA-GA-1234")
+ticket = lot.park(car)
+print(lot.get_available_count())
+
+import time; time.sleep(1)  # Simulate time
+fee = lot.unpark(ticket.ticket_id)
+```
+
+---
+
+## 7.11 LLD Case Study: Library Management System
+
+### 📋 Requirements
+- Books, members management
+- Book issue/return
+- Fine calculation
+- Book search
+
+### 🏗️ Class Design
+
+```python
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Optional, List
+
+class BookStatus(Enum):
+    AVAILABLE = "available"
+    ISSUED = "issued"
+    RESERVED = "reserved"
+    LOST = "lost"
+
+class Book:
+    def __init__(self, isbn, title, author, total_copies=1):
+        self.isbn = isbn
+        self.title = title
+        self.author = author
+        self.total_copies = total_copies
+        self.available_copies = total_copies
+
+    def is_available(self): return self.available_copies > 0
+
+class Member:
+    MAX_BOOKS = 3
+    FINE_PER_DAY = 5  # 5 taka
+
+    def __init__(self, member_id, name, email):
+        self.member_id = member_id
+        self.name = name
+        self.email = email
+        self.issued_books: List["BookLoan"] = []
+
+    def can_borrow(self): return len(self.issued_books) < self.MAX_BOOKS
+
+class BookLoan:
+    LOAN_DAYS = 14
+
+    def __init__(self, book: Book, member: Member):
+        self.loan_id = str(uuid.uuid4())[:8]
+        self.book = book
+        self.member = member
+        self.issue_date = datetime.now()
+        self.due_date = self.issue_date + timedelta(days=self.LOAN_DAYS)
+        self.return_date: Optional[datetime] = None
+
+    def is_overdue(self): return datetime.now() > self.due_date
+
+    def calculate_fine(self) -> float:
+        if not self.is_overdue(): return 0
+        end = self.return_date or datetime.now()
+        overdue_days = (end - self.due_date).days
+        return overdue_days * Member.FINE_PER_DAY
+
+class Library:
+    def __init__(self):
+        self._books: dict = {}
+        self._members: dict = {}
+        self._loans: dict = {}
+
+    def add_book(self, book: Book):
+        self._books[book.isbn] = book
+
+    def register_member(self, member: Member):
+        self._members[member.member_id] = member
+
+    def issue_book(self, member_id: str, isbn: str) -> BookLoan:
+        member = self._members.get(member_id)
+        book = self._books.get(isbn)
+
+        if not member: raise ValueError("Member not found!")
+        if not book: raise ValueError("Book not found!")
+        if not member.can_borrow(): raise ValueError("Member has max books issued!")
+        if not book.is_available(): raise ValueError("Book not available!")
+
+        book.available_copies -= 1
+        loan = BookLoan(book, member)
+        member.issued_books.append(loan)
+        self._loans[loan.loan_id] = loan
+        return loan
+
+    def return_book(self, loan_id: str) -> float:
+        loan = self._loans.get(loan_id)
+        if not loan: raise ValueError("Invalid loan ID!")
+
+        loan.return_date = datetime.now()
+        loan.book.available_copies += 1
+        loan.member.issued_books.remove(loan)
+        fine = loan.calculate_fine()
+        return fine
+
+    def search(self, query: str) -> List[Book]:
+        q = query.lower()
+        return [
+            b for b in self._books.values()
+            if q in b.title.lower() or q in b.author.lower() or q in b.isbn
+        ]
+```
+
+---
+
+## 📋 PART 7: Quick Revision Table
+
+| Pattern | Category | মূল ধারণা | Use Case |
+|---------|----------|-----------|---------|
+| Singleton | Creational | একটাই instance | DB connection, Logger |
+| Factory | Creational | Object creation encapsulate | Notification, Payment |
+| Builder | Creational | Step-by-step object build | SQL Query, HTTP Request |
+| Adapter | Structural | Incompatible interface wrap | Legacy system integration |
+| Decorator | Structural | Behavior dynamically add | Cache, Logging, Auth |
+| Observer | Behavioral | Event broadcast | Order events, UI updates |
+| Strategy | Behavioral | Algorithm swap করো | Sorting, Discount, Payment |
+
+| SOLID | মনে রাখো |
+|-------|---------|
+| SRP | একটা class, একটা কারণ |
+| OCP | Open extend, Closed modify |
+| LSP | Subclass = Parent replacement |
+| ISP | Small interfaces |
+| DIP | Interface এর উপর depend |
+
+---
+
+## 🎯 PART 7: Top 10 Interview Questions
+
+<details>
+<summary><strong>Q1: SOLID principles বাংলায় explain করো — real example দিয়ে</strong></summary>
+
+**উত্তর:**
+
+**S — Single Responsibility:** OrderService শুধু order logic করবে। Email পাঠানো EmailService এর কাজ। এতে class ছোট থাকে, test করা সহজ।
+
+**O — Open/Closed:** নতুন payment method যোগ করতে PaymentProcessor class বদলাবো না। নতুন class লিখবো। Existing code untouched → existing tests break হবে না।
+
+**L — Liskov Substitution:** Square is-a Shape হতে পারে, কিন্তু Rectangle এর subclass হলে area calculation ভুল হয়। Subclass কে parent এর জায়গায় রাখলে behavior same থাকতে হবে।
+
+**I — Interface Segregation:** IWorker এ work(), eat(), sleep() একসাথে রাখলে Robot কে eat() implement করতে বাধ্য হবে। আলাদা রাখো।
+
+**D — Dependency Inversion:** OrderService কে MySQLRepository এর উপর depend না করে IOrderRepository (interface) এর উপর depend করাও। Test এ MockRepository inject করা যাবে।
+
+</details>
+
+<details>
+<summary><strong>Q2: Singleton pattern কীভাবে implement করবে? Thread-safe করবে কীভাবে?</strong></summary>
+
+**উত্তর:**
+```python
+import threading
+
+class Singleton:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:  # Double-checked locking
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+```
+
+Double-checked locking কেন: প্রথম `if` লক ছাড়া check করে performance এর জন্য। লকের ভেতরে দ্বিতীয়বার check করে কারণ দুটো thread একই সময়ে প্রথম check pass করতে পারে।
+
+</details>
+
+<details>
+<summary><strong>Q3: Observer আর Pub/Sub এর পার্থক্য কী?</strong></summary>
+
+**উত্তর:**
+
+| বিষয় | Observer | Pub/Sub |
+|------|---------|---------|
+| Coupling | Subject Observer কে directly জানে | Publisher subscriber কে জানে না |
+| Communication | Same process/thread | Asynchronous (message broker) |
+| Scope | Single application | Distributed systems |
+| Implementation | In-memory callbacks | Kafka, RabbitMQ, Redis |
+| Use case | UI events, order events (same service) | Microservices communication |
+
+Observer: OrderService directly EmailObserver.update() call করে।
+Pub/Sub: Kafka topic এ publish করে, subscriber আলাদা machine এ।
+
+</details>
+
+<details>
+<summary><strong>Q4: Strategy আর Factory pattern এর পার্থক্য কী?</strong></summary>
+
+**উত্তর:**
+
+**Factory:** Object কীভাবে create করবো — creation এর সমস্যা solve করে।
+```python
+payment = PaymentFactory.create("bkash")
+```
+
+**Strategy:** Object কীভাবে behave করবে — behavior এর সমস্যা solve করে।
+```python
+processor = PaymentProcessor(BkashStrategy())
+processor.pay(1000)
+processor.set_strategy(NagadStrategy())  # Runtime change!
+processor.pay(500)
+```
+
+Factory: "কোন class instantiate করবো?"
+Strategy: "কোন algorithm use করবো?"
+
+</details>
+
+<details>
+<summary><strong>Q5: Dependency Injection (DI) কী এবং SOLID এর সাথে connection কী?</strong></summary>
+
+**উত্তর:**
+Dependency Injection মানে class নিজে dependency তৈরি না করে বাইরে থেকে receive করে।
+
+```python
+# Without DI (bad):
+class OrderService:
+    def __init__(self):
+        self.repo = MySQLOrderRepository()  # Hardcoded!
+
+# With DI (good):
+class OrderService:
+    def __init__(self, repo: OrderRepository):  # Injected!
+        self.repo = repo
+
+# Wiring (composition root):
+repo = MySQLOrderRepository()
+service = OrderService(repo)
+
+# Test এ:
+mock_repo = MockOrderRepository()
+service = OrderService(mock_repo)  # Easy to test!
+```
+
+DI + SOLID connection:
+- **D** (Dependency Inversion): Interface inject করো
+- **S** (SRP): Wiring এর দায়িত্ব আলাদা (composition root)
+- **O** (OCP): Different implementation inject করে behavior change
+
+</details>
+
+<details>
+<summary><strong>Q6: Design করো — Coffee machine (Builder pattern)</strong></summary>
+
+**উত্তর:**
+```python
+class Coffee:
+    def __init__(self):
+        self.size = None
+        self.shots = 1
+        self.milk = False
+        self.sugar = 0
+        self.flavor = None
+
+class CoffeeBuilder:
+    def __init__(self): self._coffee = Coffee()
+
+    def size(self, size: str) -> "CoffeeBuilder":
+        self._coffee.size = size; return self
+
+    def shots(self, n: int) -> "CoffeeBuilder":
+        self._coffee.shots = n; return self
+
+    def with_milk(self) -> "CoffeeBuilder":
+        self._coffee.milk = True; return self
+
+    def sugar(self, teaspoons: int) -> "CoffeeBuilder":
+        self._coffee.sugar = teaspoons; return self
+
+    def flavor(self, flavor: str) -> "CoffeeBuilder":
+        self._coffee.flavor = flavor; return self
+
+    def build(self) -> Coffee:
+        if not self._coffee.size:
+            raise ValueError("Size is required!")
+        return self._coffee
+
+# Usage:
+latte = (CoffeeBuilder()
+    .size("large")
+    .shots(2)
+    .with_milk()
+    .sugar(1)
+    .flavor("vanilla")
+    .build())
+```
+
+</details>
+
+<details>
+<summary><strong>Q7: Parking lot system design করো (LLD)</strong></summary>
+
+**উত্তর (Framework):**
+
+**Classes identify করো:**
+- `ParkingLot` — top-level coordinator
+- `ParkingFloor` — floor management
+- `ParkingSpot` (abstract) + `CompactSpot`, `LargeSpot`, `BikeSpot`
+- `Vehicle` (abstract) + `Car`, `Truck`, `Motorbike`
+- `Ticket` — issue করলে ticket দেয়
+- `FeeCalculator` (Strategy) — fee calculate
+
+**Key Design Decisions:**
+1. `ParkingSpot.can_fit(vehicle)` — polymorphism
+2. `FeeCalculator` Strategy pattern — easily swap hourly/daily/monthly
+3. `ParkingLot` manages `active_tickets` map — O(1) lookup
+
+**Patterns used:** Strategy (fee), Factory (spot type), Template Method (parking spot hierarchy)
+
+</details>
+
+<details>
+<summary><strong>Q8: Decorator pattern কী? Python decorator এর সাথে কী সম্পর্ক?</strong></summary>
+
+**উত্তর:**
+Decorator Design Pattern এবং Python `@decorator` syntax আলাদা — কিন্তু same concept।
+
+**Design Pattern:** Object wrap করে behavior add করো।
+```python
+service = LoggingDecorator(CachingDecorator(DatabaseService()))
+```
+
+**Python syntax:** Function wrap করে behavior add করো।
+```python
+def cache(func):
+    cached = {}
+    def wrapper(*args):
+        if args not in cached:
+            cached[args] = func(*args)
+        return cached[args]
+    return wrapper
+
+@cache  # Equivalent to: get_user = cache(get_user)
+def get_user(user_id):
+    return db.query(user_id)
+```
+
+উভয়েই: existing code না বদলে behavior add করা। Decorator pattern এ class level, Python এ function level।
+
+</details>
+
+<details>
+<summary><strong>Q9: Composition over Inheritance — কেন?</strong></summary>
+
+**উত্তর:**
+Inheritance সমস্যা:
+- Tight coupling — parent change হলে সব child ভাঙে
+- Fragile base class problem
+- Multiple inheritance — diamond problem
+- "is-a" relationship নিশ্চিত করতে হয়
+
+Composition সুবিধা:
+```python
+# ❌ Inheritance:
+class LoggingOrderService(OrderService):
+    def create_order(self, items):
+        logger.log("Creating order")
+        return super().create_order(items)
+
+# ✅ Composition:
+class OrderService:
+    def __init__(self, repo, logger):  # Composed!
+        self.repo = repo
+        self.logger = logger
+
+    def create_order(self, items):
+        self.logger.log("Creating order")
+        return self.repo.save(Order(items))
+```
+
+Rule: "Favor composition over inheritance" — GoF Design Patterns।
+Use inheritance only for true "is-a" relationships।
+
+</details>
+
+<details>
+<summary><strong>Q10: Design করো — Notification System (multiple channels)</strong></summary>
+
+**উত্তর:**
+```python
+# Factory + Observer + Strategy combined:
+
+class NotificationChannel(ABC):
+    @abstractmethod
+    def send(self, user_id: int, message: str) -> bool: pass
+
+class EmailChannel(NotificationChannel):
+    def send(self, user_id, message):
+        email = get_user_email(user_id)
+        return smtp.send(email, message)
+
+class SMSChannel(NotificationChannel):
+    def send(self, user_id, message):
+        phone = get_user_phone(user_id)
+        return sms_api.send(phone, message)
+
+class PushChannel(NotificationChannel):
+    def send(self, user_id, message):
+        token = get_device_token(user_id)
+        return fcm.send(token, message)
+
+class NotificationService:
+    def __init__(self):
+        self._channels: List[NotificationChannel] = []
+
+    def add_channel(self, channel: NotificationChannel):
+        self._channels.append(channel)
+
+    def notify(self, user_id: int, message: str):
+        results = []
+        for channel in self._channels:
+            try:
+                results.append(channel.send(user_id, message))
+            except Exception as e:
+                logger.error(f"Channel {channel} failed: {e}")
+        return any(results)  # At least one succeeded
+
+# Usage:
+notifier = NotificationService()
+notifier.add_channel(EmailChannel())
+notifier.add_channel(SMSChannel())
+notifier.add_channel(PushChannel())
+
+notifier.notify(user_id=123, message="Your order is confirmed!")
+```
+
+</details>
+
+<div align="right">
+
+[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 8 →](#part8)
+
+</div>
+
+<a id="part8"></a>
+
+---
+
+# PART 8: Cloud & DevOps Basics
+### ☁️ AWS, Docker, Kubernetes, CI/CD
+
+> **Interview টিপস:** Junior engineer হিসেবে Cloud/DevOps এর basics জানা এখন mandatory। "তোমার project টা কীভাবে deploy করলে?" বা "Docker কী?" — এই প্রশ্নগুলো এখন common। এই PART এ practical knowledge focus করা হয়েছে।
+
+---
+
+## 8.1 Cloud Computing Basics
+
+### 📖 সংজ্ঞা
+Cloud Computing মানে **internet এর মাধ্যমে computing resources (server, storage, database, networking) on-demand ব্যবহার করা** — নিজে hardware কিনতে হয় না।
+
+### 📊 Cloud Service Models
+
+```
+Cloud Service Models:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+IaaS (Infrastructure as a Service):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+তুমি পাও: Virtual machines, storage, networking
+তুমি manage করো: OS, Runtime, App, Data
+Provider manage করে: Physical hardware, datacenter
+
+Example: AWS EC2, Google Compute Engine, Azure VMs
+Use: Custom server setup, full control দরকার হলে
+
+PaaS (Platform as a Service):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+তুমি পাও: Runtime environment (OS + runtime pre-configured)
+তুমি manage করো: App, Data
+Provider manage করে: Hardware, OS, Runtime, Middleware
+
+Example: Heroku, AWS Elastic Beanstalk, Google App Engine
+Use: Developer শুধু code deploy করতে চায়, infra চিন্তা না করে
+
+SaaS (Software as a Service):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+তুমি পাও: Ready-to-use software
+তুমি manage করো: শুধু data/config
+Provider manage করে: Everything
+
+Example: Gmail, Slack, Zoom, Salesforce
+Use: End users
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 Cloud Deployment Models
+
+| Model | মানে | Example |
+|-------|------|---------|
+| Public Cloud | বড় provider এর shared infrastructure | AWS, GCP, Azure |
+| Private Cloud | নিজস্ব datacenter এ cloud | On-premise OpenStack |
+| Hybrid Cloud | Public + Private mix | Critical data private, rest public |
+| Multi-Cloud | Multiple providers use করো | AWS + GCP একসাথে |
+
+### 📊 Cloud এর সুবিধা
+
+| Traditional (On-Premise) | Cloud |
+|--------------------------|-------|
+| Capital expense (CAPEX) | Operational expense (OPEX) |
+| Hardware কিনতে হয় | Pay-as-you-go |
+| Capacity fixed | Elastic (scale up/down) |
+| Slow provisioning (weeks) | Fast provisioning (minutes) |
+| Global reach কঠিন | Global regions instantly |
+
+---
+
+## 8.2 AWS Core Services
+
+### 🖥️ Compute
+
+```
+AWS EC2 (Elastic Compute Cloud):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Virtual server — Linux/Windows install করে নিজের app চালাও
+Instance types:
+  t3.micro   → 1 vCPU, 1GB RAM (Free tier, development)
+  t3.medium  → 2 vCPU, 4GB RAM (Small production)
+  m5.large   → 2 vCPU, 8GB RAM (General purpose)
+  c5.large   → 2 vCPU, 4GB RAM (Compute optimized)
+  r5.large   → 2 vCPU, 16GB RAM (Memory optimized)
+
+Pricing:
+  On-Demand: Per hour pay, no commitment (most expensive)
+  Reserved: 1-3 year commit → 60-70% cheaper
+  Spot: Unused capacity → 90% cheaper (can be interrupted!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AWS Lambda (Serverless):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Code upload করো, AWS run করবে — server manage করতে হয় না
+Event-driven: HTTP request, S3 upload, Cron, SQS message
+Pricing: Per invocation (first 1M free/month!)
+Timeout: Max 15 minutes
+Cold start: First invocation slow (~100ms to 1s)
+Use case: API endpoints, image resize, scheduled tasks
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🗄️ Storage
+
+```
+AWS S3 (Simple Storage Service):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Object storage — files, images, videos, backups
+Unlimited storage, 99.999999999% (11 nines) durability
+Bucket: Container (like a folder)
+Object: File + metadata
+Key: Object এর unique identifier (path)
+
+CLI commands:
+aws s3 mb s3://my-bucket                          # Bucket create
+aws s3 cp file.txt s3://my-bucket/               # Upload
+aws s3 sync ./local-folder s3://my-bucket/       # Sync folder
+aws s3 ls s3://my-bucket/                        # List objects
+aws s3 rm s3://my-bucket/file.txt                # Delete
+
+Storage classes:
+  Standard: Frequently accessed (most expensive)
+  IA (Infrequent Access): Less frequent, cheaper
+  Glacier: Archive, retrieve takes hours (cheapest)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🗃️ Database Services
+
+```
+AWS RDS (Relational Database Service):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Managed SQL database: PostgreSQL, MySQL, MariaDB, Oracle, SQL Server
+AWS handles: Backups, patches, failover, monitoring
+Multi-AZ: Standby replica in another availability zone → High availability
+Read Replicas: Read load distribute করো
+
+AWS DynamoDB:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Managed NoSQL (key-value + document)
+Serverless, automatically scales
+Single-digit millisecond latency
+Use: Session store, gaming leaderboard, shopping cart
+
+AWS ElastiCache:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Managed Redis or Memcached
+In-memory cache layer
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🌐 Networking
+
+```
+AWS VPC (Virtual Private Cloud):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+নিজের isolated network define করো
+Public Subnet: Internet access আছে (web server)
+Private Subnet: Internet access নেই (database)
+Security Group: Virtual firewall (port/IP rules)
+NAT Gateway: Private subnet থেকে internet access
+
+VPC Architecture:
+[Internet] ──▶ [Internet Gateway] ──▶ [Public Subnet: Load Balancer, Web]
+                                       [Private Subnet: App Server, DB]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+AWS CloudFront (CDN):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Global CDN — 450+ edge locations
+Static assets (S3), API responses cache করে
+DDoS protection (AWS Shield)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 AWS Services Quick Map
+
+| Need | Service |
+|------|---------|
+| Virtual server | EC2 |
+| Serverless function | Lambda |
+| File/object storage | S3 |
+| SQL database | RDS |
+| NoSQL database | DynamoDB |
+| Cache | ElastiCache |
+| Message queue | SQS, SNS |
+| Container orchestration | ECS, EKS |
+| DNS | Route 53 |
+| CDN | CloudFront |
+| Load balancer | ALB/NLB |
+| Monitoring | CloudWatch |
+| Secret management | Secrets Manager |
+
+---
+
+## 8.3 Docker
+
+### 📖 সংজ্ঞা
+Docker হলো **container platform** — application ও তার dependencies একসাথে package করে portable container বানানো যায়। "My machine এ কাজ করে" সমস্যার solution।
+
+### 🔄 Virtual Machine vs Container
+
+```
+Virtual Machine:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[App A] [App B] [App C]
+[ OS  ] [ OS  ] [ OS  ]   ← প্রতিটার নিজস্ব OS (GBs!)
+[  Hypervisor (VMware)  ]
+[    Physical Hardware   ]
+Heavy: GBs, slow to start (minutes)
+
+Container:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[App A] [App B] [App C]
+[ Lib] [ Lib] [ Lib ]     ← শুধু libraries (MBs!)
+[     Docker Engine      ]  ← Shared OS kernel
+[    Physical Hardware   ]
+Lightweight: MBs, fast start (seconds)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📦 Dockerfile
+
+```dockerfile
+# Python FastAPI App:
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Dependencies আগে copy করো (layer cache optimize)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Application code copy
+COPY . .
+
+# Non-root user (security best practice)
+RUN adduser --disabled-password appuser
+USER appuser
+
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+```dockerfile
+# Node.js App:
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+### 🔧 Docker Commands
+
+```bash
+# Image build:
+docker build -t myapp:1.0 .
+docker build -t myapp:latest -f Dockerfile.prod .
+
+# Run container:
+docker run -d -p 8000:8000 --name myapp myapp:1.0
+docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=secret postgres:15
+docker run -it ubuntu bash   # Interactive terminal
+
+# Container management:
+docker ps                    # Running containers
+docker ps -a                 # All containers
+docker stop myapp            # Stop
+docker start myapp           # Start
+docker restart myapp         # Restart
+docker rm myapp              # Delete
+docker logs myapp            # View logs
+docker logs -f myapp         # Follow logs (like tail -f)
+docker exec -it myapp bash   # Enter running container
+
+# Image management:
+docker images                # List images
+docker rmi myapp:1.0         # Delete image
+docker pull nginx:latest     # Pull from registry
+docker push myrepo/myapp:1.0 # Push to registry
+
+# Registry:
+docker tag myapp:1.0 myrepo/myapp:1.0
+docker login
+docker push myrepo/myapp:1.0
+```
+
+### 🐙 Docker Compose
+
+```yaml
+# docker-compose.yml — Multi-service app:
+version: '3.9'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:secret@db:5432/mydb
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:
+```
+
+```bash
+# Docker Compose commands:
+docker compose up -d          # Start all services (detached)
+docker compose down           # Stop and remove containers
+docker compose down -v        # Also remove volumes!
+docker compose logs web       # Service logs
+docker compose ps             # Service status
+docker compose exec web bash  # Enter service container
+docker compose build          # Rebuild images
+docker compose pull           # Pull latest images
+```
+
+---
+
+## 8.4 Kubernetes (K8s)
+
+### 📖 সংজ্ঞা
+Kubernetes হলো **container orchestration platform** — containers কে automatically deploy, scale, manage করে। Docker Compose production এ যথেষ্ট না — Kubernetes বড় scale এ দরকার।
+
+### 🏗️ Kubernetes Architecture
+
+```
+Kubernetes Cluster:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Control Plane (Master Node)]
+  ├── API Server: সব communication এর gateway
+  ├── etcd: Cluster state store (key-value)
+  ├── Scheduler: Pod কোন node এ যাবে decide করে
+  └── Controller Manager: Desired state maintain করে
+
+[Worker Nodes]
+  ├── Node 1: [Pod A] [Pod B] ← kubelet, kube-proxy
+  ├── Node 2: [Pod C] [Pod D]
+  └── Node 3: [Pod E] [Pod F]
+
+Pod: Kubernetes এর smallest deployable unit (1+ containers)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📄 Kubernetes YAML Files
+
+```yaml
+# Deployment — App replicas manage করে:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  labels:
+    app: myapp
+spec:
+  replicas: 3                  # 3 copies চালাও
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: myrepo/myapp:1.0
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: myapp-secrets
+              key: database-url
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+```
+
+```yaml
+# Service — Network access দেয়:
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+spec:
+  selector:
+    app: myapp
+  ports:
+  - port: 80
+    targetPort: 8000
+  type: ClusterIP     # Internal only
+  # type: LoadBalancer  # External (creates AWS ELB)
+  # type: NodePort      # Expose on node port
+```
+
+```yaml
+# HorizontalPodAutoscaler — Auto scaling:
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: myapp-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: myapp
+  minReplicas: 2
+  maxReplicas: 20
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70    # CPU 70% → scale up
+```
+
+### 🔧 kubectl Commands
+
+```bash
+# Apply/delete resources:
+kubectl apply -f deployment.yaml
+kubectl delete -f deployment.yaml
+
+# Pod management:
+kubectl get pods                          # List pods
+kubectl get pods -w                       # Watch (live)
+kubectl describe pod myapp-xyz-abc        # Pod details
+kubectl logs myapp-xyz-abc                # Pod logs
+kubectl logs -f myapp-xyz-abc             # Follow logs
+kubectl exec -it myapp-xyz-abc -- bash    # Enter pod
+
+# Deployment management:
+kubectl get deployments
+kubectl rollout status deployment/myapp
+kubectl rollout history deployment/myapp
+kubectl rollout undo deployment/myapp     # Rollback!
+kubectl scale deployment myapp --replicas=5
+
+# Service/Ingress:
+kubectl get services
+kubectl get ingress
+
+# ConfigMap & Secrets:
+kubectl create secret generic myapp-secrets   --from-literal=database-url="postgresql://..."
+kubectl get secrets
+kubectl describe secret myapp-secrets
+```
+
+### 🔑 Key K8s Concepts
+
+```
+ConfigMap: Non-sensitive config (env vars, config files)
+Secret: Sensitive data (passwords, API keys) — base64 encoded
+PersistentVolume (PV): Storage provisioning
+PersistentVolumeClaim (PVC): Pod storage request করে
+Ingress: HTTP routing rules (path-based, host-based)
+Namespace: Cluster এর logical partition (dev/staging/prod)
+```
+
+---
+
+## 8.5 CI/CD Pipeline
+
+### 📖 সংজ্ঞা
+- **CI (Continuous Integration):** Code push করলে automatically build + test চলে
+- **CD (Continuous Delivery):** Staging এ automatically deploy হয়
+- **CD (Continuous Deployment):** Production এ automatically deploy হয়
+
+### 🔄 CI/CD Flow
+
+```
+Developer Workflow:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+git push ──▶ GitHub/GitLab
+                  │
+                  ▼
+          [CI Pipeline Triggered]
+                  │
+         ┌────────┴────────┐
+         ▼                 ▼
+    [Unit Tests]    [Lint/Format Check]
+         │                 │
+         └────────┬────────┘
+                  ▼
+         [Build Docker Image]
+                  │
+                  ▼
+         [Integration Tests]
+                  │
+                  ▼
+         [Push to Registry]
+                  │
+                  ▼
+         [Deploy to Staging]
+                  │
+                  ▼
+         [E2E Tests on Staging]
+                  │
+                  ▼
+         [Manual Approval] ← Production এর আগে
+                  │
+                  ▼
+         [Deploy to Production]
+                  │
+                  ▼
+         [Health Check / Smoke Test]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📄 GitHub Actions Example
+
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: Run linting
+      run: |
+        ruff check .
+        black --check .
+
+    - name: Run tests
+      env:
+        DATABASE_URL: postgresql://postgres:testpass@localhost:5432/testdb
+      run: pytest --cov=app --cov-report=xml
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Log in to registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+  deploy-staging:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+    - name: Deploy to staging
+      run: |
+        kubectl set image deployment/myapp           myapp=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}           --namespace=staging
+        kubectl rollout status deployment/myapp --namespace=staging
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production    # Manual approval required
+
+    steps:
+    - name: Deploy to production
+      run: |
+        kubectl set image deployment/myapp           myapp=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}           --namespace=production
+        kubectl rollout status deployment/myapp --namespace=production
+```
+
+### 📊 CI/CD Tools
+
+| Tool | Type | Use Case |
+|------|------|---------|
+| GitHub Actions | CI/CD | GitHub repos এ integrated |
+| GitLab CI/CD | CI/CD | GitLab repos এ integrated |
+| Jenkins | CI/CD | Self-hosted, highly customizable |
+| ArgoCD | GitOps CD | Kubernetes deployment |
+| CircleCI | CI/CD | Fast, SaaS |
+
+---
+
+## 8.6 Nginx
+
+### 📖 সংজ্ঞা
+Nginx হলো **high-performance web server + reverse proxy** — static files serve করে, requests forward করে, load balance করে, SSL terminate করে।
+
+### 📄 Nginx Configuration
+
+```nginx
+# /etc/nginx/nginx.conf
+
+# HTTP → HTTPS redirect:
+server {
+    listen 80;
+    server_name example.com www.example.com;
+    return 301 https://$server_name$request_uri;
+}
+
+# Main HTTPS server:
+server {
+    listen 443 ssl http2;
+    server_name example.com www.example.com;
+
+    # SSL/TLS:
+    ssl_certificate     /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    # Security headers:
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1; mode=block";
+
+    # Static files (served directly by Nginx — fast!):
+    location /static/ {
+        alias /app/staticfiles/;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location /media/ {
+        alias /app/media/;
+        expires 30d;
+    }
+
+    # API → FastAPI backend:
+    location /api/ {
+        proxy_pass http://app:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 90s;
+    }
+
+    # Load balancing (multiple app servers):
+    upstream app_servers {
+        least_conn;                        # Least connections algorithm
+        server app1:8000 weight=3;
+        server app2:8000 weight=2;
+        server app3:8000 weight=1;
+    }
+
+    location / {
+        proxy_pass http://app_servers;
+    }
+
+    # Rate limiting:
+    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+    location /api/auth/ {
+        limit_req zone=api burst=5 nodelay;
+        proxy_pass http://app:8000;
+    }
+
+    # Gzip compression:
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript;
+    gzip_min_length 1000;
+}
+```
+
+---
+
+## 8.7 Monitoring & Logging
+
+### 📊 Monitoring Stack
+
+```
+Prometheus + Grafana (Most common stack):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Your App] ─/metrics endpoint─▶ [Prometheus] ─query─▶ [Grafana]
+                                 (scrapes every 15s)    (dashboards)
+                                      │
+                                 [AlertManager]
+                                 (Slack/Email alert when threshold crossed)
+
+App তে metrics expose করো (Python):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+
+REQUEST_COUNT = Counter('http_requests_total', 'Total HTTP requests',
+                        ['method', 'endpoint', 'status'])
+REQUEST_LATENCY = Histogram('http_request_duration_seconds',
+                            'HTTP request latency', ['endpoint'])
+ACTIVE_USERS = Gauge('active_users', 'Currently active users')
+
+@app.middleware("http")
+async def metrics_middleware(request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    duration = time.time() - start
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status=response.status_code
+    ).inc()
+    REQUEST_LATENCY.labels(endpoint=request.url.path).observe(duration)
+    return response
+
+# GET /metrics → Prometheus scrapes this
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📋 Key Metrics to Monitor
+
+```
+Golden Signals (Google SRE):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Latency:    Request কত দ্রুত serve হচ্ছে (p50, p95, p99)
+2. Traffic:    Requests per second (RPS)
+3. Errors:     Error rate (4xx, 5xx percentage)
+4. Saturation: Resource utilization (CPU, Memory, Disk)
+
+Alert rules (example):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Error rate > 1% → Alert
+- p99 latency > 1s → Alert
+- CPU > 80% for 5 minutes → Alert
+- Disk usage > 85% → Alert
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📝 Structured Logging
+
+```python
+import logging
+import json
+from datetime import datetime
+
+class JSONFormatter(logging.Formatter):
+    def format(self, record):
+        log_data = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "logger": record.name,
+            "module": record.module,
+        }
+        if hasattr(record, 'request_id'):
+            log_data['request_id'] = record.request_id
+        if record.exc_info:
+            log_data['exception'] = self.formatException(record.exc_info)
+        return json.dumps(log_data)
+
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+handler.setFormatter(JSONFormatter())
+logger.addHandler(handler)
+
+# Usage:
+logger.info("Order created", extra={"request_id": "req-123", "order_id": 456})
+# Output: {"timestamp": "2026-05-11T...", "level": "INFO",
+#          "message": "Order created", "request_id": "req-123", "order_id": 456}
+```
+
+### 📊 Logging Stack (ELK)
+
+```
+ELK Stack:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[App] ──JSON logs──▶ [Filebeat/Fluentd] ──▶ [Logstash] ──▶ [Elasticsearch]
+                     (log shipper)         (parse/transform)  (index, store)
+                                                                    │
+                                                              [Kibana]
+                                                           (search, dashboard)
+
+Cloud alternatives:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AWS: CloudWatch Logs
+GCP: Cloud Logging
+Self-hosted: Grafana Loki (lightweight, recommended)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 8.8 Deployment Strategies
+
+```
+1. Rolling Deployment (Default K8s):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Old version থেকে gradually নতুন version এ replace করো
+v1 v1 v1 v1 → v2 v1 v1 v1 → v2 v2 v1 v1 → v2 v2 v2 v2
+Zero downtime, কিন্তু briefly দুই version চলে
+
+2. Blue-Green Deployment:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Blue: Current production (v1)
+Green: New version (v2) — deploy করো, test করো
+Traffic switch: Load balancer → Blue থেকে Green এ
+Rollback: Instant! শুধু LB switch back করো
+
+3. Canary Deployment:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ছোট % traffic নতুন version এ → monitor করো → problem নেই → gradually বাড়াও
+5% → 10% → 25% → 50% → 100%
+Risk কম, real user data দিয়ে test
+
+4. Feature Flags:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Code deploy করো, feature বন্ধ রাখো
+Config দিয়ে specific users/regions এ enable করো
+Problem হলে: Config update → feature off (no deployment!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 📋 PART 8: Quick Revision Table
+
+| Topic | Key Points |
+|-------|-----------|
+| IaaS/PaaS/SaaS | EC2/Beanstalk/Gmail — control vs convenience trade-off |
+| EC2 | Virtual server, instance types, pricing models |
+| S3 | Object storage, 11 nines durability, storage classes |
+| RDS | Managed SQL, Multi-AZ, Read Replicas |
+| Lambda | Serverless, event-driven, pay per invocation |
+| VPC | Private network, public/private subnet, security group |
+| Docker | Container, Dockerfile, image vs container |
+| Docker Compose | Multi-service local development |
+| Kubernetes | Container orchestration, Deployment, Service, HPA |
+| CI/CD | Build → Test → Deploy pipeline |
+| Nginx | Reverse proxy, load balance, SSL, rate limit |
+| Prometheus/Grafana | Metrics scraping + visualization |
+| ELK/Loki | Log aggregation + search |
+| Rolling Deploy | Gradual replace, zero downtime |
+| Blue-Green | Two environments, instant rollback |
+| Canary | Gradual traffic shift, risk reduction |
+
+---
+
+## 🎯 PART 8: Top 10 Interview Questions
+
+<details>
+<summary><strong>Q1: Docker কী? VM এর চেয়ে কীভাবে আলাদা?</strong></summary>
+
+**উত্তর:**
+Docker হলো container platform। Application + dependencies একসাথে package করে — যেকোনো machine এ একই ভাবে run করে।
+
+**VM vs Container:**
+- VM: নিজস্ব OS kernel — GBs storage, minutes startup
+- Container: Host OS kernel share করে — MBs storage, seconds startup
+
+**Real benefit:**
+```
+Dev machine তে: Python 3.9, Ubuntu
+Production: Python 3.11, CentOS
+→ "Works on my machine" problem!
+
+Docker: Same image সব জায়গায় → consistent environment
+```
+
+</details>
+
+<details>
+<summary><strong>Q2: Docker image আর container এর পার্থক্য কী?</strong></summary>
+
+**উত্তর:**
+- **Image:** Read-only template (blueprint) — `Dockerfile` থেকে build হয়
+- **Container:** Image এর running instance
+
+```
+Analogy:
+Image = Class definition
+Container = Object (instance of class)
+
+একটা Image থেকে multiple containers চালানো যায়:
+docker run myapp  → Container 1
+docker run myapp  → Container 2
+docker run myapp  → Container 3
+```
+
+Image layers: Dockerfile এর প্রতিটা instruction একটা layer। Cache করে — rebuild fast।
+
+</details>
+
+<details>
+<summary><strong>Q3: Kubernetes কেন দরকার? Docker Compose দিয়ে হয় না?</strong></summary>
+
+**উত্তর:**
+Docker Compose: Single machine, development/small scale।
+Kubernetes: Multiple machines, production grade।
+
+**K8s এর extra benefits:**
+1. **Auto-healing:** Pod crash হলে automatically restart
+2. **Auto-scaling:** CPU বাড়লে pods বাড়াও (HPA)
+3. **Rolling update:** Zero downtime deployment
+4. **Service discovery:** Pods নিজেরা খুঁজে পায়
+5. **Load balancing:** Built-in
+6. **Secret management:** Secure config injection
+7. **Multi-node:** Hundreds of machines manage
+
+```
+Production scenario:
+3:00 AM — App এ sudden 10x traffic spike
+Docker Compose: Manual scale করতে হবে (তুমি ঘুমাও!)
+Kubernetes HPA: CPU 70% দেখলে → auto 5 → 20 pods → traffic handle
+```
+
+</details>
+
+<details>
+<summary><strong>Q4: CI/CD pipeline কী এবং কেন দরকার?</strong></summary>
+
+**উত্তর:**
+CI (Continuous Integration): Code push হলে auto build + test।
+CD (Continuous Delivery/Deployment): Auto staging/production deploy।
+
+**কেন দরকার:**
+- Manual deploy: Error prone, time consuming
+- "Works on my machine": Environment differences
+- Late integration: বড় merge conflict
+- Slow feedback: Bug production এ গেলে দেরিতে জানা যায়
+
+**Benefits:**
+✅ Fast feedback (push করেই জানো test pass হলো কিনা)
+✅ Consistent deploy process
+✅ Rollback সহজ (git tag → deploy)
+✅ Team parallel কাজ করতে পারে
+
+**BD company তে:** GitHub Actions (free), GitLab CI (self-host) সবচেয়ে common।
+
+</details>
+
+<details>
+<summary><strong>Q5: Blue-Green deployment কীভাবে কাজ করে?</strong></summary>
+
+**উত্তর:**
+```
+Initial state:
+Blue (v1) — Production (100% traffic)
+Green — Empty
+
+Deploy v2:
+Blue (v1) — Production (100% traffic)
+Green (v2) — Deploy করো, test করো (staging)
+
+Switch:
+Load Balancer: Blue → Green
+Green (v2) — Production (100% traffic) ✅
+Blue (v1) — Standby (rollback এর জন্য রাখো)
+
+Problem হলে:
+Load Balancer: Green → Blue (30 seconds rollback!)
+```
+
+**সুবিধা:** Zero downtime, instant rollback।
+**সমস্যা:** Double infrastructure cost (two identical environments)।
+
+</details>
+
+<details>
+<summary><strong>Q6: Nginx কীভাবে reverse proxy হিসেবে কাজ করে?</strong></summary>
+
+**উত্তর:**
+```
+Client → Nginx (Port 80/443) → Backend App (Port 8000)
+
+Nginx যা করে:
+1. SSL termination: HTTPS decrypt করে, HTTP forward করে
+2. Static files: /static/ direct serve (fast!)
+3. Load balance: Multiple backend servers এ distribute
+4. Rate limiting: DDoS/brute-force protect
+5. Caching: Response cache করে
+6. Compression: gzip করে response ছোট করে
+7. Header modification: Real IP forward করে
+
+Backend app এর সুবিধা:
+- SSL জানে না, HTTP only
+- Rate limiting জানে না, Nginx করে
+- Static files serve করে না, Nginx করে
+→ App শুধু business logic!
+```
+
+</details>
+
+<details>
+<summary><strong>Q7: Kubernetes এ Pod fail হলে কী হয়?</strong></summary>
+
+**উত্তর:**
+Kubernetes এর Controller Manager desired state maintain করে।
+
+```
+Desired state: replicas: 3
+Current state: Pod crash → 2 running
+
+Controller Manager detects: 2 ≠ 3
+Action: নতুন Pod schedule করো!
+Result: 3 running (auto-healed!)
+
+যদি Node fail করে:
+Scheduler: Pods অন্য healthy node এ reschedule করে
+
+লিভ প্রোব (livenessProbe):
+/health endpoint check করে
+Fail করলে → Container restart করো (stuck process fix)
+
+রেডিনেস প্রোব (readinessProbe):
+App ready হলেই traffic পাঠাও
+Starting up → traffic নেই → Ready → traffic starts
+```
+
+</details>
+
+<details>
+<summary><strong>Q8: Environment variables আর secrets কীভাবে manage করবে?</strong></summary>
+
+**উত্তর:**
+```
+❌ Never do:
+# Hardcode secrets in code:
+DATABASE_URL = "postgresql://admin:password123@prod-db:5432/mydb"
+# Git এ push করলে publicly accessible!
+
+✅ Local development:
+.env file (gitignore এ রাখো!)
+DATABASE_URL=postgresql://localhost:5432/mydb
+
+python-dotenv:
+from dotenv import load_dotenv
+load_dotenv()
+db_url = os.environ["DATABASE_URL"]
+
+✅ Docker:
+docker run -e DATABASE_URL="..." myapp
+# Or: --env-file .env
+
+✅ Production (Kubernetes):
+kubectl create secret generic myapp-secrets   --from-literal=db-url="postgresql://prod-db/myapp"
+
+Deployment এ reference করো (না, hardcode না):
+env:
+- name: DATABASE_URL
+  valueFrom:
+    secretKeyRef:
+      name: myapp-secrets
+      key: db-url
+
+✅ AWS:
+AWS Secrets Manager — rotate secrets, audit log
+```
+
+</details>
+
+<details>
+<summary><strong>Q9: Monitoring এ কোন metrics সবার আগে দেখবে?</strong></summary>
+
+**উত্তর:**
+Google SRE এর Golden Signals:
+
+1. **Latency (p95, p99):** 95th/99th percentile response time।
+   Alert: p99 > 1 second
+   "Average" misleading — 100 users, 1 user 10s → average okay, user experience bad
+
+2. **Error Rate:** 5xx errors / total requests × 100%।
+   Alert: > 0.1% for 2 minutes
+   
+3. **Traffic (RPS):** Requests per second।
+   Sudden spike → scale up দরকার
+   Sudden drop → app down হতে পারে!
+   
+4. **Saturation:** CPU, Memory, Disk I/O।
+   CPU > 80% sustained → scale out
+   Memory leak → memory বাড়তে থাকে
+
+Dashboard order:
+Error rate → Latency → Traffic → Saturation
+
+</details>
+
+<details>
+<summary><strong>Q10: তোমার Django/FastAPI project কীভাবে production এ deploy করবে?</strong></summary>
+
+**উত্তর (Step by Step):**
+
+```
+1. Dockerfile লেখো:
+   FROM python:3.11-slim
+   COPY requirements.txt .
+   RUN pip install -r requirements.txt
+   COPY . .
+   CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+2. GitHub Actions CI/CD setup:
+   push → test → build image → push to registry
+
+3. AWS EC2 তে:
+   - EC2 instance launch (t3.small)
+   - Security Group: 80, 443, 22 open
+   - Docker install
+   - docker pull + docker run
+   - Nginx install + configure
+   - SSL: Let's Encrypt (certbot)
+
+4. Scale করলে:
+   - EC2 Auto Scaling Group
+   - Application Load Balancer
+   - RDS for database (না docker)
+   - ElastiCache for Redis
+
+5. Alternatively (easier):
+   - AWS Elastic Beanstalk (PaaS)
+   - Heroku (most simple)
+   - Railway.app (simple + free tier)
+```
+
+</details>
+
+<div align="right">
+
+[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 9 →](#part9)
+
+</div>
+
+---
+
+*হ্যান্ডবুক তৈরিতে: Senior Software Architect, Backend Engineer & System Design Interviewer*
+*Version: 1.0 | তারিখ: মে ২০২৬*
+*মোট PART: 10 | সম্পন্ন: PART 1-8 ✅ | বাকি: PART 9-10 🔜*
