@@ -1,3 +1,6 @@
+<a id="top"></a>
+<a id="toc"></a>
+
 # 🏗️ System Design Interview Handbook
 ### বাংলাদেশের Junior Software Engineer ও Backend Developer-দের জন্য সম্পূর্ণ System Design গাইড
 
@@ -194,6 +197,8 @@
 
 ---
 
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 1.1 System Design কী? (What is System Design)
 
 ### 📖 সংজ্ঞা (Definition)
@@ -242,6 +247,8 @@ E-commerce App (Chaldal-এর মতো):
 
 ---
 
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 1.2 System Design কেন গুরুত্বপূর্ণ? (Why System Design is Important)
 
 ### 📖 গুরুত্ব
@@ -265,6 +272,8 @@ System Design ছাড়া বানানো system গুলো:
 BD তে যেসব companies interview নেয় (Brain Station 23, BJIT, Kaz, TigerIT) তারা দেখতে চায় তুমি একটা real system design করতে পারো কিনা। Fresher হলেও basic concepts জানা দরকার।
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.3 High-Level Design (HLD) vs Low-Level Design (LLD)
 
@@ -336,11 +345,19 @@ class Order:
 | When | Project শুরুতে | Feature development এ |
 
 ### ❓ Interview Questions
-1. "একটা Chat Application এর HLD describe করো"
-2. "LLD তে কোন principles follow করো?"
-3. "HLD বানানোর পর LLD কীভাবে শুরু করো?"
+
+**Q: "একটা Chat Application এর HLD describe করো"**
+> **A:** "Requirements: 1-on-1 chat, group chat, message history। HLD: Client → API Gateway → Chat Service। Real-time messaging: WebSocket connection। Storage: Messages এ Cassandra (write-heavy, time-series)। Online status: Redis। Media files: S3 + CDN। Scale: Multiple chat service instances, load balancer। Message delivery: Kafka queue — offline user হলে push notification service।"
+
+**Q: "LLD তে কোন principles follow করো?"**
+> **A:** SOLID principles — SRP (প্রতিটা class এক কাজ), OCP (extend করা যায় modify না করে), LSP (subclass parent কে replace করতে পারে), ISP (small interfaces), DIP (abstraction depend করো)। আর common Design Patterns: Repository pattern (data access), Factory (object creation), Observer (events)।
+
+**Q: "HLD বানানোর পর LLD কীভাবে শুরু করো?"**
+> **A:** HLD এ major components identify করা হয়েছে। LLD তে একটা component নিয়ে deep dive: (1) Classes ও interfaces define করো, (2) Attributes ও methods list করো, (3) Relationships আঁকো (inheritance, composition), (4) Design patterns apply করো, (5) API contracts define করো। Example: Chat Service → Message class, MessageRepository interface, MessageService, WebSocketHandler।
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.4 Scalability
 
@@ -399,6 +416,8 @@ After:  [Server 1] [Server 2] [Server 3]
 
 ---
 
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 1.5 Reliability
 
 ### 📖 সংজ্ঞা
@@ -445,6 +464,8 @@ Reliability হলো system এর **consistently correct কাজ করা�
 > **A:** Graceful degradation মানে system এর কিছু part fail করলেও বাকি টুকু কাজ চলতে থাকে — কিন্তু reduced functionality তে। Example: YouTube এ recommendation service down গেলেও video play হওয়া বন্ধ হয় না। Circuit Breaker pattern দিয়ে implement করা হয় — failed service কে bypass করে fallback response দেয়।
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.6 Availability
 
@@ -496,6 +517,8 @@ Load Balancer
 
 ---
 
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 1.7 Maintainability
 
 ### 📖 সংজ্ঞা
@@ -526,6 +549,8 @@ Maintainability হলো system **সহজে modify, debug, update করা�
 ```
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.8 Performance
 
@@ -558,6 +583,8 @@ Bottleneck হতে পারে:
 
 ---
 
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 1.9 Latency vs Throughput
 
 ### 📖 সংজ্ঞা
@@ -588,13 +615,21 @@ HDD seek time                ~10 ms
 > সাধারণত Latency কমালে Throughput কমে, আবার Throughput বাড়ালে Latency বাড়তে পারে। Batch processing এ throughput বেশি কিন্তু latency বেশি।
 
 ### ❓ Interview Questions
-1. "High latency আর low throughput — কোন scenario তে কোনটা বেশি problem?"
-2. "Database query latency কমাতে কী করবে?"
-3. "P99 latency মানে কী?"
+
+**Q: "High latency আর low throughput — কোন scenario তে কোনটা বেশি problem?"**
+> **A:** High latency বেশি problem: real-time systems — trading platform, gaming, video call। 100ms delay মানে bad UX। Low throughput বেশি problem: batch processing, data pipeline — একসাথে কম request handle করলে queue জমে যায়। Chat app এ দুটোই critical: low latency (instant feel) + high throughput (million users)।
+
+**Q: "Database query latency কমাতে কী করবে?"**
+> **A:** Step by step: (1) EXPLAIN ANALYZE দিয়ে slow query identify করো, (2) Index add করো WHERE/JOIN/ORDER BY columns এ, (3) Query optimize করো — N+1 problem fix, unnecessary columns avoid, (4) Read replica দিয়ে read load distribute করো, (5) Frequently accessed data Redis এ cache করো, (6) Connection pooling (PgBouncer), (7) Expensive queries এ pagination।
+
+**Q: "P99 latency মানে কী?"**
+> **A:** P99 (99th percentile) মানে ১০০ টা request এর মধ্যে ৯৯ টা এই সময়ের মধ্যে complete হয়। P99 = 200ms মানে ১% user এর request 200ms এর বেশি নেয়। Average misleading হতে পারে — কিছু outlier থাকলে average ভালো দেখায়। P99 real user experience দেখায়। Production monitoring এ P50, P95, P99 সব track করা উচিত।
 
 > **Memory Tip:** "Latency = Late = কতটা দেরি | Throughput = Through = কতটা পার হলো"
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.10 CAP Theorem
 
@@ -666,6 +701,8 @@ CAP Triangle:
 > **Memory Tip:** "CAP = তুমি সর্বোচ্চ দুইটা পাবে। Network partition (P) বাদ দেওয়া যায় না। তাই C বা A choose করো।"
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.11 Monolithic vs Microservices Architecture
 
@@ -756,6 +793,8 @@ Microservices বেছে নাও যখন:
 
 ---
 
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 1.12 Stateless vs Stateful Systems
 
 ### 📖 সংজ্ঞা
@@ -788,6 +827,8 @@ Microservices বেছে নাও যখন:
 > Modern web apps stateless design এ যাচ্ছে। JWT token use করে stateless authentication। Session state Redis এ store করলেও stateless server রাখা যায়।
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.13 Horizontal vs Vertical Scaling
 
@@ -844,11 +885,19 @@ Before:                After:
 > "Vertical scaling মানে একটা server কে powerful করা, horizontal মানে multiple server। Database usually vertical scale করা হয় (কারণ distributed DB জটিল), কিন্তু web application layer horizontal scale করা হয় load balancer দিয়ে। Modern cloud system এ horizontal scaling prefer করা হয় কারণ এটা fault tolerant।"
 
 ### ❓ Follow-up Questions
-1. "Database কি horizontally scale করা যায়?"
-2. "Auto-scaling কীভাবে কাজ করে?"
-3. "Kubernetes কীভাবে horizontal scaling করে?"
+
+**Q: "Database কি horizontally scale করা যায়?"**
+> **A:** হ্যাঁ, কিন্তু SQL database horizontal scaling কঠিন। Approaches: (1) Read Replicas — read distribute করো, write এখনো single master, (2) Sharding — data horizontally partition করো multiple DB তে, (3) NoSQL (Cassandra, MongoDB) built-in horizontal scaling support করে। SQL horizontally scale করতে PlanetScale বা Vitess use করা হয়।
+
+**Q: "Auto-scaling কীভাবে কাজ করে?"**
+> **A:** AWS Auto Scaling Group উদাহরণ: Target tracking policy — "CPU utilization 70% এ রাখো।" CPU > 70% → Scale out: নতুন EC2 instance launch, load balancer এ register। CPU < 30% → Scale in: instance terminate। Cooldown period রাখতে হয় — rapid add/remove থেকে বাঁচতে। Kubernetes HPA (Horizontal Pod Autoscaler) metrics server থেকে CPU/memory দেখে pod count adjust করে।
+
+**Q: "Kubernetes কীভাবে horizontal scaling করে?"**
+> **A:** `kubectl scale deployment myapp --replicas=5` — manually। Auto: HPA define করো: `targetCPUUtilizationPercentage: 70` — CPU বাড়লে Kubernetes automatically নতুন pod চালু করে। Pod scheduling: scheduler decide করে কোন node এ pod run করবে (resource availability দেখে)। Service automatically সব pods এ load distribute করে (round robin)।
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.14 PACELC Theorem
 
@@ -885,6 +934,8 @@ PACELC Decision:
 > "CAP বলে partition এর সময় C বা A choose করতে হয়। কিন্তু PACELC আরো realistic — partition না থাকলেও যদি strong consistency চাই তাহলে সব replica তে write confirm করতে হবে, latency বাড়বে। Cassandra PA/EL — availability আর low latency priority। PostgreSQL PC/EC — সবসময় consistency।"
 
 ---
+
+<div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 1.15 Consistent Hashing
 
@@ -1101,7 +1152,7 @@ Big bang migration করবো না — too risky।
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 2 →](#part2)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc) | [PART 2 →](#part2)
 
 </div>
 
@@ -1117,6 +1168,8 @@ Big bang migration করবো না — too risky।
 > **Interview টিপস:** Networking concepts system design এর backbone। Load Balancer, CDN, API Gateway — এগুলো বুঝলে তুমি যেকোনো architecture diagram explain করতে পারবে।
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.1 Client-Server Architecture
 
@@ -1151,11 +1204,19 @@ Step 8: Browser response render করলো
 | Mobile Client | Android/iOS App | API call করে |
 
 ### ❓ Interview Questions
-1. "Client-Server আর Peer-to-Peer এর পার্থক্য?"
-2. "Server কি কখনো Client হতে পারে?"
-3. "3-tier architecture কী?"
+
+**Q: "Client-Server আর Peer-to-Peer এর পার্থক্য?"**
+> **A:** Client-Server: Central server থাকে, clients সেখানে request করে। Centralized control, easier to manage, single point of failure সম্ভব। Example: web browser ↔ web server। Peer-to-Peer (P2P): কোনো central server নেই, প্রতিটা node একসাথে client ও server। Decentralized, resilient, কিন্তু security/coordination কঠিন। Example: BitTorrent, blockchain।
+
+**Q: "Server কি কখনো Client হতে পারে?"**
+> **A:** হ্যাঁ! Microservices এ এটা common। Order Service (server) payment request এ Payment Service কে call করে — এখানে Order Service হলো client। Service-to-service communication এ প্রতিটা service অন্য service এর client হতে পারে। API Gateway নিজে সব microservices এর client।
+
+**Q: "3-tier architecture কী?"**
+> **A:** ৩টি layer: (1) Presentation Tier — User interface (browser, mobile app), (2) Application/Logic Tier — Business logic, API server (Django, Spring), (3) Data Tier — Database (PostgreSQL, MySQL)। Benefits: প্রতিটা tier independently scale ও update করা যায়। Traditional 2-tier = client directly DB কে call করতো (security risk)। আধুনিক apps সব 3-tier বা N-tier।
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.2 HTTP vs HTTPS
 
@@ -1218,6 +1279,8 @@ POST /login (body: {password: "abc123"}) ← Encrypted!
 ```
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.3 REST API
 
@@ -1288,14 +1351,24 @@ GET /api/v1/products?category=electronics&sort=price&page=1&limit=20
 > "REST API হলো HTTP দিয়ে data exchange করার একটা standard approach। URL এ noun use করি (resource), HTTP method দিয়ে action বলি। Stateless মানে server প্রতিটা request কে independent treat করে — authentication token প্রতিটা request এ পাঠাতে হয়।"
 
 ### ❓ Interview Questions
-1. "REST API কে stateless বলার কারণ কী?"
-2. "PUT আর PATCH এর পার্থক্য?"
-3. "API versioning কেন করা উচিত?"
-4. "Idempotent মানে কী?"
+
+**Q: "REST API কে stateless বলার কারণ কী?"**
+> **A:** Stateless মানে server প্রতিটা request independent হিসেবে handle করে — আগের request এর কোনো context মনে রাখে না। প্রতিটা request এ সব দরকারি information থাকে (auth token, parameters)। Benefits: যেকোনো server request handle করতে পারে (easy horizontal scaling), server crash হলে client retry করতে পারে।
+
+**Q: "PUT আর PATCH এর পার্থক্য?"**
+> **A:** PUT = complete replacement — পুরো resource পাঠাও, সব fields update হয়। PATCH = partial update — শুধু changed fields পাঠাও। Example: User profile update করতে শুধু name বদলাতে চাইলে PATCH better — PUT এ সব data পাঠাতে হবে নইলে missing fields null হয়ে যাবে।
+
+**Q: "API versioning কেন করা উচিত?"**
+> **A:** Backward compatibility রক্ষার জন্য। Old clients ভাঙবে না। Strategies: URL versioning (`/api/v1/users`), Header versioning (`Accept: application/vnd.api+v2`), Query param (`?version=2`)। URL versioning সবচেয়ে common ও explicit। V1 deprecate করতে চাইলে clients কে সময় দিয়ে migrate করতে বলো।
+
+**Q: "Idempotent মানে কী?"**
+> **A:** Same request একাধিকবার করলে result same থাকে — side effect হয় না। GET, PUT, DELETE idempotent। POST idempotent নয় — ৫ বার call করলে ৫টা resource create হয়। Payment এ idempotency key use করা হয় — network retry তে duplicate charge থেকে বাঁচতে।
 
 > **Memory Tip:** "REST = Resource + HTTP Methods (CRUD operations mapped to GET/POST/PUT/PATCH/DELETE)"
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.4 GraphQL Basics
 
@@ -1343,6 +1416,8 @@ Response: { "data": { "user": { "name": "Rahim" } } }
 > "GraphQL REST এর under-fetching আর over-fetching সমস্যা solve করে। Client exactly কোন data চাই সেটা specify করতে পারে। একটাই endpoint থেকে যেকোনো data। কিন্তু simple CRUD app এ REST ই যথেষ্ট, GraphQL এর complexity নেওয়ার দরকার নেই।"
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.5 WebSocket
 
@@ -1409,6 +1484,8 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 2.6 TCP vs UDP
 
 ### 📖 সংজ্ঞা
@@ -1462,6 +1539,8 @@ Client                          Server
 > "TCP reliable কিন্তু UDP fast। HTTP, HTTPS, database connections — সব TCP use করে কারণ data loss হলে problem। কিন্তু video streaming এ UDP use করি — একটা frame miss গেলে wait করার চেয়ে পরের frame দেখানো ভালো। DNS query তে UDP — fast response দরকার, packet ছোট।"
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.7 DNS (Domain Name System)
 
@@ -1517,6 +1596,8 @@ Total time: ~100ms (first time), ~0ms (cached)
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 2.8 CDN (Content Delivery Network)
 
 ### 📖 সংজ্ঞা
@@ -1560,6 +1641,8 @@ With CDN: BD User → Singapore CDN (~20ms) vs US User → NY CDN (~5ms)
 > "CDN use করি কারণ static files (images, JS, CSS) origin server থেকে serve করলে latency বেশি হয়। CDN globally distributed servers রাখে — user এর কাছের server থেকে content serve হয়। Cloudflare, AWS CloudFront popular CDN providers। e-commerce site এ product images CDN থেকে serve করলে page load অনেক fast হয়।"
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.9 Load Balancer
 
@@ -1632,6 +1715,8 @@ Layer 7 (Application Layer):
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 2.10 Reverse Proxy
 
 ### 📖 সংজ্ঞা
@@ -1682,6 +1767,8 @@ server {
 ```
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.11 API Gateway
 
@@ -1734,6 +1821,8 @@ API Gateway Pattern:
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 2.12 Authentication vs Authorization
 
 ### 📖 সংজ্ঞা
@@ -1779,6 +1868,8 @@ Auth Flow:
 | MFA | Multiple factors | Banking |
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.13 JWT (JSON Web Token)
 
@@ -1903,6 +1994,8 @@ def verify_token(token: str) -> dict:
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 2.14 Session Management
 
 ### 📖 সংজ্ঞা
@@ -1958,6 +2051,8 @@ Set-Cookie: session_id=abc123;
 > "Session-based auth এ server session store করে — প্রতিটা request এ session ID check করে। এটা JWT এর চেয়ে revoke করা সহজ — session delete করলেই logout। কিন্তু horizontal scaling এ problem — server 1 এর session server 2 এ নেই। সমাধান: Redis shared session store।"
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.15 gRPC Basics
 
@@ -2020,6 +2115,8 @@ message UserResponse {
 > "gRPC REST এর alternative, mainly microservices internal communication এ use হয়। Protobuf binary format JSON এর চেয়ে much smaller আর faster। HTTP/2 এ চলে — multiplexing, header compression, streaming সব built-in। Public API তে REST better কারণ browser direct gRPC support করে না।"
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 2.16 OAuth 2.0 Flow
 
@@ -2382,7 +2479,7 @@ HTTP/2 এ একটা connection এ multiple request simultaneously চলে
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 3 →](#part3)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc) | [PART 3 →](#part3)
 
 </div>
 
@@ -2400,6 +2497,8 @@ HTTP/2 এ একটা connection এ multiple request simultaneously চলে
 > **Interview টিপস:** System Design interview এ database নিয়ে সবচেয়ে বেশি প্রশ্ন আসে। "কোন database use করবে এবং কেন?" — এই প্রশ্নের confident উত্তর দিতে পারলে interviewer impressed হবে।
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 3.1 SQL vs NoSQL
 
@@ -2500,6 +2599,8 @@ Fully managed, serverless, AWS ecosystem?
 
 ---
 
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 3.2 Database Scaling
 
 ### 📖 সংজ্ঞা
@@ -2538,6 +2639,8 @@ Database Scaling Options:
 ```
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 3.3 Replication
 
@@ -2578,11 +2681,19 @@ Conflict resolution দরকার
 > "Replication দুই কাজে লাগে — high availability এবং read scaling। Master-Slave তে write সব master এ, read replicas এ distribute হয়। Master fail করলে slave কে promote করি — failover। কিন্তু replication lag হতে পারে asynchronous mode এ — replica তে stale data থাকতে পারে।"
 
 ### ❓ Interview Questions
-1. "Replication lag কী এবং কীভাবে handle করবে?"
-2. "Master fail করলে কী হবে? (Failover process)"
-3. "Synchronous replication এর downside কী?"
+
+**Q: "Replication lag কী এবং কীভাবে handle করবে?"**
+> **A:** Replication lag = Master এ write হওয়ার পর Replica তে reflect হতে যে delay লাগে। কারণ: async replication, network latency, replica busy। Handle করার উপায়: (1) Critical reads master থেকে করো ("read-your-writes"), (2) Session-based routing — user নিজে write করলে সেই request master এ পাঠাও, (3) Monotonic read guarantee — একই user এর request সবসময় একই replica তে পাঠাও।
+
+**Q: "Master fail করলে কী হবে? (Failover process)"**
+> **A:** Automatic failover: (1) Health check fail করলে orchestrator (Patroni, MHA) detect করে, (2) Most up-to-date replica কে new master promote করে, (3) Other replicas নতুন master এ reconnect করে, (4) Application VIP/DNS update পায় — নতুন master কে point করে। Recovery Time Objective (RTO): কতক্ষণ লাগবে। Typically 30-60 seconds automatic failover এ।
+
+**Q: "Synchronous replication এর downside কী?"**
+> **A:** Write acknowledgment নেওয়ার আগে সব replica তে data পৌঁছাতে হবে — write latency বাড়ে। Replica slow বা unreachable হলে master ও slow হয়ে যাবে বা wait করবে। Solution: Semi-synchronous — কমপক্ষে ১টা replica acknowledge করলেই OK। Financial systems (zero data loss) এ sync replication দরকার — latency cost accept করতে হয়।
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 3.4 Sharding
 
@@ -2657,6 +2768,8 @@ Sharding এর সমস্যাগুলো:
 
 ---
 
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 3.5 Partitioning
 
 ### 📖 সংজ্ঞা
@@ -2696,6 +2809,8 @@ CREATE TABLE orders_2025_q1 PARTITION OF orders
 > "Partitioning আর Sharding সহজে confuse হয়। Partitioning একটা server এর মধ্যে — table কে ভাগ করি। Sharding multiple servers এ। Time-series data এ date-based partitioning দারুণ কাজ করে — পুরনো partition delete করা সহজ, query fast।"
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 3.6 Indexing
 
@@ -2769,12 +2884,22 @@ CREATE INDEX idx_products_fts ON products USING gin(to_tsvector('english', name)
 > "Index হলো database এর সূচিপত্র — full table scan না করে সরাসরি data খুঁজে পায়। B-Tree index most common — range queries এ efficient। কিন্তু সব column এ index দিলে write operation slow হয়। Rule of thumb: WHERE, JOIN, ORDER BY column গুলোতে index দাও।"
 
 ### ❓ Interview Questions
-1. "Index থাকলেও কখন কখন full table scan হয়?"
-2. "Composite index এর column order কেন important?"
-3. "Covering index কী?"
-4. "Index এর কারণে insert কীভাবে slow হয়?"
+
+**Q: "Index থাকলেও কখন কখন full table scan হয়?"**
+> **A:** Query optimizer full table scan বেছে নেয় যখন: (1) Result set অনেক বড় — table এর ৩০%+ rows return হলে index scan এর চেয়ে sequential scan দ্রুত, (2) Index column এ function use করলে `WHERE YEAR(created_at) = 2024` — index bypass হয়, (3) Type mismatch — `WHERE user_id = '123'` (string) কিন্তু column integer, (4) `LIKE '%keyword'` — leading wildcard index use করতে পারে না।
+
+**Q: "Composite index এর column order কেন important?"**
+> **A:** Composite index (a, b, c) এ leftmost prefix rule প্রযোজ্য। `WHERE a = 1` — index use করবে। `WHERE a = 1 AND b = 2` — index use করবে। `WHERE b = 2` একা — index use করবে না! High cardinality column আগে রাখো। Query এর WHERE clause এর most selective column প্রথমে রাখলে best performance।
+
+**Q: "Covering index কী?"**
+> **A:** Covering index মানে query execute করতে যা দরকার সব data index তেই আছে — table এ যেতে হয় না (no table heap access)। Example: `SELECT name, email FROM users WHERE age > 25` — `(age, name, email)` covering index হলে table touch না করেও result পাবে। EXPLAIN এ "Index Only Scan" দেখলে covering index কাজ করছে।
+
+**Q: "Index এর কারণে insert কীভাবে slow হয়?"**
+> **A:** প্রতিটা insert এ সব index update করতে হয়। B-Tree index এ নতুন entry insert করা → tree rebalancing হতে পারে। ১০টা index থাকলে প্রতিটা write ১০ বার index update করে। Bulk insert এ: index আগে drop করো, data load করো, তারপর index recreate করো — অনেক দ্রুত হয়।
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 3.7 Caching (Database Level)
 
@@ -2810,6 +2935,8 @@ Write: App → Redis (async) → Database later
 ```
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 3.8 Read-Heavy vs Write-Heavy Systems
 
@@ -2849,6 +2976,8 @@ Solutions:
 
 ---
 
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 3.9 Data Consistency
 
 ### 📖 সংজ্ঞা
@@ -2881,6 +3010,8 @@ Example: Facebook post — তুমি সাথে সাথে দেখো
 
 ---
 
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 3.10 Eventual Consistency
 
 ### 📖 সংজ্ঞা
@@ -2903,6 +3034,8 @@ Eventual Consistency হলো guarantee যে **সব updates propagate হ�
 > "Eventual consistency মানে হলো system strong consistency sacrifice করে high availability আর low latency পায়। Cassandra AP database — এটা eventual consistency দেয়। Social media feed এ fine — like count ১ সেকেন্ড পরে update হলে সমস্যা নেই। কিন্তু banking তে CP database দরকার — money অনেক consistent হতে হবে।"
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 3.11 ACID vs BASE
 
@@ -2946,10 +3079,18 @@ Eventual Consistency হলো guarantee যে **সব updates propagate হ�
 > "ACID guarantee হলো strong consistency — banking এ এটা দরকার। BASE হলো availability কে priority দেওয়া — eventual consistency accept করা। NoSQL databases বেশিরভাগ BASE follow করে, তাই scale করা সহজ কিন্তু strong consistency নেই। Modern systems often polyglot — banking transactions PostgreSQL (ACID), user feed Cassandra (BASE)।"
 
 ### ❓ Interview Questions
-1. "ACID এর Isolation এর different levels কী কী?"
-2. "Phantom read কী?"
-3. "Two-Phase Commit (2PC) কী?"
-4. "Saga pattern কী এবং কেন use করো?"
+
+**Q: "ACID এর Isolation এর different levels কী কী?"**
+> **A:** ৪টা level (weakest → strongest): (1) **Read Uncommitted** — dirty read possible, অন্য transaction এর uncommitted data দেখা যায়, (2) **Read Committed** — dirty read নেই কিন্তু non-repeatable read possible (PostgreSQL default), (3) **Repeatable Read** — same row দুবার read করলে same result (MySQL InnoDB default), (4) **Serializable** — strongest, transactions যেন serial এ হচ্ছে, সব anomaly বন্ধ কিন্তু slowest।
+
+**Q: "Phantom read কী?"**
+> **A:** Phantom read: same query দুবার চালালে প্রথমবারের চেয়ে বেশি/কম rows আসে — কারণ মাঝখানে অন্য transaction নতুন row insert/delete করেছে। Example: `SELECT * WHERE age > 20` → 5 rows। অন্য transaction `INSERT` করলো। আবার same query → 6 rows। Phantom! Repeatable Read এ phantom হতে পারে। Serializable isolation এ বন্ধ হয়।
+
+**Q: "Two-Phase Commit (2PC) কী?"**
+> **A:** 2PC = distributed transaction এ সব participants এর agreement নিশ্চিত করে। Phase 1 (Prepare): Coordinator সবাইকে জিজ্ঞেস করে "commit করতে পারবে?" সবাই "Yes" বললে Phase 2। Phase 2 (Commit): Coordinator সবাইকে "Commit!" বলে। যেকোনো participant "No" বললে সবাই Rollback। Problem: Coordinator fail করলে participants blocked থাকে। এজন্য modern systems Saga prefer করে।
+
+**Q: "Saga pattern কী এবং কেন use করো?"**
+> **A:** Saga = distributed transaction এর modern alternative। Long-running transaction কে ছোট ছোট local transactions এ ভাগ করো। প্রতিটা local transaction success এ পরেরটা চালু হয়। Failure এ compensating transaction চালাও (undo)। Example: Order saga — Create Order → Reserve Inventory → Process Payment → Send Notification। Payment fail → Inventory released, Order cancelled। 2PC এর চেয়ে resilient, no blocking।
 
 ---
 
@@ -3228,7 +3369,7 @@ def transfer(from_id, to_id, amount):
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 4 →](#part4)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc) | [PART 4 →](#part4)
 
 </div>
 
@@ -3244,6 +3385,8 @@ def transfer(from_id, to_id, amount):
 > **Interview টিপস:** Caching system design এর সবচেয়ে powerful tool। "System slow হচ্ছে, কী করবে?" — প্রায় সব ক্ষেত্রে answer এ cache আসবে। এটা ভালো বুঝলে interview এ অনেক এগিয়ে থাকবে।
 
 ---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 4.1 Caching কী? (What is Caching)
 
@@ -3282,6 +3425,8 @@ DB load: High                     DB load: Minimal
 ```
 
 ---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 4.2 Redis
 
@@ -3387,6 +3532,8 @@ def get_product_list(category: str) -> list:
 
 ---
 
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 4.3 Memcached Basics
 
 ### 📖 সংজ্ঞা
@@ -3410,6 +3557,8 @@ Memcached হলো **simple distributed memory caching system** — শুধ�
 > "Memcached শুধু simple string caching — Redis এর subset। আজকাল নতুন project এ Redis use করি কারণ Redis এ অনেক বেশি features আছে। Memcached পুরনো systems এ দেখি।"
 
 ---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 4.4 Cache Invalidation
 
@@ -3490,6 +3639,8 @@ Solution:
 
 ---
 
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 4.5 CDN Caching
 
 ### 📖 সংজ্ঞা
@@ -3550,6 +3701,8 @@ Cache-Control: public, max-age=31536000, immutable
 
 ---
 
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 4.6 Browser Caching
 
 ### 📖 সংজ্ঞা
@@ -3586,6 +3739,8 @@ Benefit: Bandwidth save! File transfer না হলে শুধু headers।
 ```
 
 ---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 4.7 Rate Limiting
 
@@ -3691,6 +3846,8 @@ X-RateLimit-Remaining: 0
 
 ---
 
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 4.8 Compression
 
 ### 📖 সংজ্ঞা
@@ -3736,6 +3893,8 @@ gzip_comp_level 6;
 
 ---
 
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 4.9 Lazy Loading
 
 ### 📖 সংজ্ঞা
@@ -3777,6 +3936,8 @@ GET /api/products?page=2&limit=20   ← user scroll করলে আরো ২�
 ```
 
 ---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 4.10 Performance Bottleneck Analysis
 
@@ -3852,6 +4013,8 @@ Infrastructure Optimization:
 ```
 
 ---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 4.11 Bloom Filter
 
@@ -4251,7 +4414,7 @@ Queue: Redis বা RabbitMQ। Worker: Celery (Python), Bull (Node.js), Sidekiq
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 5 →](#part5)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc) | [PART 5 →](#part5)
 
 </div>
 
@@ -4269,6 +4432,8 @@ Queue: Redis বা RabbitMQ। Worker: Celery (Python), Bull (Node.js), Sidekiq
 > **Interview টিপস:** Message Queue এবং Event-driven architecture বড় system এর backbone। "Order place হলে email, SMS, inventory update — সব কীভাবে handle করবে?" — এই প্রশ্নে Message Queue explain করতে পারলে interviewer impressed হবে।
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 5.1 Message Queue Basics
 
@@ -4324,6 +4489,8 @@ Order Service ──publish "order.placed"──▶ [Message Queue]
 | Acknowledgment | Consumer process করলে confirm | Message delete হয় |
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 5.2 Apache Kafka
 
@@ -4433,6 +4600,8 @@ for message in consumer:
 
 ---
 
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 5.3 RabbitMQ
 
 ### 📖 সংজ্ঞা
@@ -4516,6 +4685,8 @@ channel.start_consuming()
 
 ---
 
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 5.4 Pub/Sub Model
 
 ### 📖 সংজ্ঞা
@@ -4568,6 +4739,8 @@ def listen_for_notifications(user_id):
 ```
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 5.5 Event-Driven Architecture
 
@@ -4634,6 +4807,8 @@ User places order
 
 ---
 
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 5.6 Distributed Systems Basics
 
 ### 📖 সংজ্ঞা
@@ -4685,6 +4860,8 @@ Solution: Quorum (majority vote), Fencing
 ```
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 5.7 Distributed Transactions
 
@@ -4765,6 +4942,8 @@ Failure হলে reverse/compensate করি
 
 ---
 
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 5.8 Consensus Basics
 
 ### 📖 সংজ্ঞা
@@ -4803,6 +4982,8 @@ Leader fail করলে:
 - **Consul:** Service discovery + health checking
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 5.9 Fault Tolerance
 
@@ -5271,7 +5452,7 @@ def get_profile(user_id, requesting_user_id):
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 6 →](#part6)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc) | [PART 6 →](#part6)
 
 </div>
 
@@ -5287,6 +5468,8 @@ def get_profile(user_id, requesting_user_id):
 > **Interview টিপস:** Case study questions এ interviewer দেখতে চায় তুমি কীভাবে একটা real system ধাপে ধাপে design করো। Requirements clarify করো, scale estimate করো, architecture আঁকো, bottleneck ধরো — এই flow follow করলে যেকোনো system design করতে পারবে।
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## System Design Interview Framework
 
@@ -5330,6 +5513,8 @@ Step 7: Deep Dive (remaining time)
 ```
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 6.1 URL Shortener (bit.ly / TinyURL)
 
@@ -5495,6 +5680,8 @@ Bottlenecks ও Solutions:
 
 ---
 
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 6.2 Chat Application (WhatsApp/Messenger)
 
 ### 📋 Requirements
@@ -5627,6 +5814,8 @@ PUT  /api/v1/messages/{id}/read               → mark as read
 
 ---
 
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 6.3 Social Media Feed (Facebook/Twitter)
 
 ### 📋 Requirements
@@ -5728,6 +5917,8 @@ ZREVRANGE feed:user:123 0 19  -- Latest 20 posts
 
 ---
 
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 6.4 Online Banking System
 
 ### 📋 Requirements
@@ -5801,6 +5992,8 @@ Append-only for compliance
 ```
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 6.5 Food Delivery App (Pathao Food / Shohoz Food)
 
@@ -5899,6 +6092,8 @@ CREATE TABLE orders (
 
 ---
 
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 6.6 Ride Sharing App (Pathao / Uber)
 
 ### 📋 Requirements
@@ -5968,6 +6163,8 @@ def calculate_surge_price(pickup_lat, pickup_lng, base_price):
 ```
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 6.7 YouTube-like Video Platform
 
@@ -6044,6 +6241,8 @@ Watch Flow:
 
 ---
 
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 6.8 E-commerce System (Chaldal/Daraz-like)
 
 ### 📋 Requirements
@@ -6105,6 +6304,8 @@ def reserve_inventory(product_id: str, quantity: int) -> bool:
 ```
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 6.9 Hospital Management System
 
@@ -6277,7 +6478,7 @@ CDN এর edge servers এই chunks cache করে। User কাছের CD
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 7 →](#part7)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc) | [PART 7 →](#part7)
 
 </div>
 
@@ -6297,6 +6498,8 @@ CDN এর edge servers এই chunks cache করে। User কাছের CD
 > **Interview টিপস:** LLD interview এ interviewer দেখতে চায় তুমি real-world problem কে clean, maintainable code এ রূপ দিতে পারো কিনা। SOLID principles ও common Design Patterns জানলে যেকোনো LLD প্রশ্নে confident থাকবে।
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 7.1 SOLID Principles
 
@@ -6518,6 +6721,8 @@ class OrderService:
 
 ---
 
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 7.2 Design Patterns
 
 Design Patterns হলো **common software problems এর proven solutions** — প্রতিবার নতুন করে ভাবতে হয় না।
@@ -6531,6 +6736,8 @@ Design Patterns হলো **common software problems এর proven solutions** �
 | **Behavioral** | Objects কীভাবে communicate করবে | Observer, Strategy, Command, Iterator |
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 7.3 Singleton Pattern
 
@@ -6571,6 +6778,8 @@ print(db1 is db2)  # True — same instance!
 **সতর্কতা:** Global state তৈরি করে — testing কঠিন হয়। Unit test এ mock করতে হয়।
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 7.4 Factory Pattern
 
@@ -6627,6 +6836,8 @@ def notify_user(user, message, method="email"):
 ```
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 7.5 Observer Pattern
 
@@ -6693,6 +6904,8 @@ publisher.subscribe(AnalyticsObserver())
 
 ---
 
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 7.6 Strategy Pattern
 
 > **"Algorithm family define করো, encapsulate করো এবং interchange করো — runtime এ algorithm বদলানো যাবে।"**
@@ -6756,6 +6969,8 @@ class EidSpecialDiscount(DiscountStrategy):
 
 ---
 
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 7.7 Adapter Pattern
 
 > **"Incompatible interfaces কে একসাথে কাজ করাও — existing code না বদলে।"**
@@ -6795,6 +7010,8 @@ notify_user(adapter, "Your order is confirmed!", "+8801712345678")
 ```
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 7.8 Builder Pattern
 
@@ -6869,6 +7086,8 @@ print(query)
 
 ---
 
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 7.9 Decorator Pattern
 
 > **"Object এর behavior dynamically add করো — subclassing ছাড়া।"**
@@ -6931,6 +7150,8 @@ data = service.get_data("user:123")
 ```
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 7.10 LLD Case Study: Parking Lot System
 
@@ -7167,6 +7388,8 @@ fee = lot.unpark(ticket.ticket_id)
 ```
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 7.11 LLD Case Study: Library Management System
 
@@ -7604,7 +7827,7 @@ notifier.notify(user_id=123, message="Your order is confirmed!")
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 8 →](#part8)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc) | [PART 8 →](#part8)
 
 </div>
 
@@ -7618,6 +7841,8 @@ notifier.notify(user_id=123, message="Your order is confirmed!")
 > **Interview টিপস:** Junior engineer হিসেবে Cloud/DevOps এর basics জানা এখন mandatory। "তোমার project টা কীভাবে deploy করলে?" বা "Docker কী?" — এই প্রশ্নগুলো এখন common। এই PART এ practical knowledge focus করা হয়েছে।
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 8.1 Cloud Computing Basics
 
@@ -7679,6 +7904,8 @@ Use: End users
 | Global reach কঠিন | Global regions instantly |
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 8.2 AWS Core Services
 
@@ -7804,6 +8031,8 @@ DDoS protection (AWS Shield)
 | Secret management | Secrets Manager |
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 8.3 Docker
 
@@ -7971,6 +8200,8 @@ docker compose pull           # Pull latest images
 
 ---
 
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 8.4 Kubernetes (K8s)
 
 ### 📖 সংজ্ঞা
@@ -8131,6 +8362,8 @@ Namespace: Cluster এর logical partition (dev/staging/prod)
 ```
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 8.5 CI/CD Pipeline
 
@@ -8300,6 +8533,8 @@ jobs:
 
 ---
 
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 8.6 Nginx
 
 ### 📖 সংজ্ঞা
@@ -8382,6 +8617,8 @@ server {
 ```
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 8.7 Monitoring & Logging
 
@@ -8495,6 +8732,8 @@ Self-hosted: Grafana Loki (lightweight, recommended)
 ```
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 8.8 Deployment Strategies
 
@@ -8830,7 +9069,7 @@ Error rate → Latency → Traffic → Saturation
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#) | [PART 9 →](#part9)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc) | [PART 9 →](#part9)
 
 </div>
 
@@ -8850,6 +9089,8 @@ Error rate → Latency → Traffic → Saturation
 > **এই PART এর ব্যবহার:** প্রতিটা section আলাদাভাবে পড়ো। Interview এর আগে Quick Answers গুলো মুখস্থ না করে **বুঝে** পড়ো। যেকোনো প্রশ্নে নিজের ভাষায় explain করতে পারাটাই লক্ষ্য।
 
 ---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 9.1 Fundamentals — তাৎক্ষণিক উত্তর (Rapid Fire)
 
@@ -8878,6 +9119,8 @@ Error rate → Latency → Traffic → Saturation
 
 ---
 
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 9.2 Database — তাৎক্ষণিক উত্তর
 
 | # | প্রশ্ন | উত্তর |
@@ -8900,6 +9143,8 @@ Error rate → Latency → Traffic → Saturation
 
 ---
 
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 9.3 Caching — তাৎক্ষণিক উত্তর
 
 | # | প্রশ্ন | উত্তর |
@@ -8916,6 +9161,8 @@ Error rate → Latency → Traffic → Saturation
 | 45 | CDN cache কীভাবে কাজ করে? | Edge server এ content cache, user কাছ থেকে পায় |
 
 ---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 9.4 Networking — তাৎক্ষণিক উত্তর
 
@@ -8934,6 +9181,8 @@ Error rate → Latency → Traffic → Saturation
 
 ---
 
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 9.5 Distributed Systems — তাৎক্ষণিক উত্তর
 
 | # | প্রশ্ন | উত্তর |
@@ -8951,6 +9200,8 @@ Error rate → Latency → Traffic → Saturation
 
 ---
 
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 9.6 Message Queues — তাৎক্ষণিক উত্তর
 
 | # | প্রশ্ন | উত্তর |
@@ -8967,6 +9218,8 @@ Error rate → Latency → Traffic → Saturation
 | 75 | CQRS কী? | Command (write) ও Query (read) model আলাদা করা |
 
 ---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 9.7 বিস্তারিত প্রশ্নোত্তর — System Design Core
 
@@ -10166,6 +10419,8 @@ scheduler.cancel(task)  # Cancel before it runs
 
 ---
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 10.1 Bangladesh Tech Job Market Overview
 
 ### 🏢 Company Categories
@@ -10248,6 +10503,8 @@ Round 3: HR
 
 ---
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 10.2 BD Company Common Questions
 
 ### 🔥 সবচেয়ে বেশি জিজ্ঞাসিত প্রশ্ন
@@ -10319,6 +10576,8 @@ Spring Boot/Java:
 
 ---
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 10.3 তোমার Project কীভাবে Explain করবে
 
 ### 🎯 STAR Method + System Design Angle
@@ -10353,6 +10612,8 @@ R - Result (কী হলো — metrics!)
 > **Result:** 50+ restaurant, 200+ daily orders handle করছে। Average response time 150ms।"
 
 ---
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 10.4 System Design Interview — BD Company Framework
 
@@ -10432,6 +10693,8 @@ Scale করার দরকার হলে:
 
 ---
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 10.5 Common Rejection Reasons ও Solution
 
 ### ❌ কেন Reject হচ্ছো
@@ -10497,6 +10760,8 @@ Solution:
 ```
 
 ---
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 10.6 Mock Interview: Full Session (Bengali)
 
@@ -10646,6 +10911,8 @@ Solution:
 
 ---
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 10.7 Salary Negotiation — BD Context
 
 ```
@@ -10682,6 +10949,8 @@ Negotiation tactics:
 ```
 
 ---
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 10.8 Interview Preparation Roadmap
 
@@ -10749,6 +11018,8 @@ Interview শেষে:
 
 ---
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## 10.9 Resume Tips — BD Engineer
 
 ### 📄 Resume Structure
@@ -10810,22 +11081,34 @@ Project README structure:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # Project Name
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## About
 One line description
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## Tech Stack
 Python, Django, PostgreSQL, Redis
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## Features
 - User auth with JWT
 - Product catalog with search
 - Real-time notifications
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## Architecture
 [Simple diagram or description]
 
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## Setup
 git clone, pip install -r requirements.txt, python manage.py runserver
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## API Docs
 Swagger UI available at /api/docs/
@@ -10833,6 +11116,8 @@ Swagger UI available at /api/docs/
 ```
 
 ---
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## 10.10 Remote/International Opportunity
 
@@ -11056,7 +11341,7 @@ data দিয়ে discuss করলে better outcome আসে।"
 
 <div align="right">
 
-[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#)
+[⬆ উপরে যাও](#top) | [📚 সূচিপত্র](#toc)
 
 </div>
 

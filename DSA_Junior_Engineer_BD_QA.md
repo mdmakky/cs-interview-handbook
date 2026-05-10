@@ -204,6 +204,8 @@
 
 # PART 1: DSA Fundamentals (মূল ধারণাসমূহ)
 
+> **📍 এই PART এর Sections:** [১.১ Data Structure কী?](#১১-data-structure-কী) · [১.২ Algorithm কী?](#১২-algorithm-কী) · [১.৩ কেন গুরুত্বপূর্ণ?](#১৩-dsa-কেন-গুরুত্বপূর্ণ) · [১.৪ Time Complexity](#১৪-time-complexity)
+
 > **পড়ার নির্দেশনা:** এই PART টি DSA এর একদম গোড়ার ধারণাগুলো নিয়ে। Interview তে এগুলো সরাসরি জিজ্ঞেস করা হয়। প্রতিটি topic এর definition, analogy, এবং interview-style উত্তর মুখস্থ না করে বুঝে পড়ুন।
 
 ---
@@ -985,9 +987,13 @@ infinite()
 
 # PART 2: Arrays & Strings (অ্যারে ও স্ট্রিং)
 
+> **📍 এই PART এর Sections:** [২.১ Array Basics](#২১-array-basics) · [২.২ Static vs Dynamic](#২২-static-vs-dynamic-array) · [২.৩ String Operations](#২৩-string-operations) · [২.৪ Prefix Sum](#২৪-prefix-sum)
+
 > **পড়ার নির্দেশনা:** Array এবং String হলো সবচেয়ে fundamental data structures। Interview তে প্রায় সব coding problem এর ভিত্তি এখানেই। Sliding Window, Two Pointer, Prefix Sum — এই patterns শিখলে ৪০-৫০% interview problems সমাধান করা যায়।
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ২.১ Array Basics
 
@@ -1085,6 +1091,8 @@ print(wrong)  # [[1, 0, 0], [1, 0, 0], [1, 0, 0]] — সব row change!
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ২.২ Static vs Dynamic Array
 
 ### Static Array
@@ -1153,6 +1161,8 @@ Per insertion = O(n)/n = O(1) amortized
 | Languages | C arrays | Python list, C++ vector |
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ২.৩ String Operations
 
@@ -1240,6 +1250,8 @@ def is_palindrome_v2(s):
 ```
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ২.৪ Prefix Sum
 
@@ -1467,6 +1479,8 @@ def min_window(s, t):
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ২.৬ Two Pointer
 
 ### ধারণা
@@ -1602,6 +1616,8 @@ def three_sum(nums):
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ২.৭ Kadane's Algorithm
 
 ### সমস্যা: Maximum Subarray Sum
@@ -1717,6 +1733,8 @@ def max_circular_subarray(arr):
 ```
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ২.৮ Binary Search
 
@@ -1870,6 +1888,8 @@ def binary_search_template(lo, hi):
 ```
 
 ---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ২.৯ Matrix Operations
 
@@ -2057,6 +2077,8 @@ def shortest_path(grid, start, end):
 
 ---
 
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ২.১০ PART 2 — Interview Q&A
 
 ### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
@@ -2179,9 +2201,13 @@ Hard:
 
 # PART 3: Linked List (লিংকড লিস্ট)
 
+> **📍 এই PART এর Sections:** [৩.১ Linked List কী?](#৩১-linked-list-কী) · [৩.২ Singly Linked List](#৩২-singly-linked-list) · [৩.৩ Doubly Linked List](#৩৩-doubly-linked-list) · [৩.৪ Circular Linked List](#৩৪-circular-linked-list)
+
 > **পড়ার নির্দেশনা:** Linked List হলো pointer/reference ভিত্তিক data structure। Interview তে Reverse, Cycle Detection, Merge — এই তিনটি প্রায় সবসময় জিজ্ঞেস করা হয়। Pointer visualization দিয়ে পড়ুন।
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৩.১ Linked List কী?
 
@@ -2490,6 +2516,8 @@ class DoublyLinkedList:
 
 ---
 
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৩.৪ Circular Linked List
 
 ### সংজ্ঞা
@@ -2558,6 +2586,8 @@ class CircularLinkedList:
 ```
 
 ---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৩.৫ Insert ও Delete Operations
 
@@ -2711,6 +2741,8 @@ def reverse_k_group(head, k):
 
 ---
 
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৩.৭ Cycle Detection — Floyd's Algorithm
 
 ### সমস্যা
@@ -2803,6 +2835,8 @@ def cycle_length(head):
 
 ---
 
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৩.৮ Merge Linked Lists
 
 ### Merge Two Sorted Linked Lists
@@ -2893,6 +2927,8 @@ def add_two_numbers(l1, l2):
 
 ---
 
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৩.৯ PART 3 — Interview Q&A
 
 ### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
@@ -2946,9 +2982,13 @@ def add_two_numbers(l1, l2):
 
 # PART 4: Stack & Queue (স্ট্যাক ও কিউ)
 
+> **📍 এই PART এর Sections:** [৪.১ Stack](#৪১-stack) · [৪.২ Queue](#৪২-queue) · [৪.৩ Circular Queue](#৪৩-circular-queue) · [৪.৪ Deque](#৪৪-deque-double-ended-queue)
+
 > **পড়ার নির্দেশনা:** Stack ও Queue হলো দুটি fundamental abstract data types। Interview তে Monotonic Stack ও Expression Evaluation প্রায়ই জিজ্ঞেস করা হয়। Real-life analogies দিয়ে concepts বুঝুন।
 
 ---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৪.১ Stack
 
@@ -3119,6 +3159,8 @@ ms.get_min() # 5 ✓
 
 ---
 
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৪.২ Queue
 
 ### সংজ্ঞা
@@ -3206,6 +3248,8 @@ def bfs(graph, start):
 ```
 
 ---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৪.৩ Circular Queue
 
@@ -3746,6 +3790,8 @@ def evaluate_infix(expression):
 
 ---
 
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৪.৯ PART 4 — Interview Q&A
 
 ### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
@@ -3805,9 +3851,13 @@ def evaluate_infix(expression):
 
 # PART 5: Trees & Binary Trees (ট্রি ও বাইনারি ট্রি)
 
+> **📍 এই PART এর Sections:** [৫.১ Tree কী?](#৫১-tree-কী) · [৫.২ Binary Tree](#৫২-binary-tree) · [৫.৩ BST](#৫৩-binary-search-tree-bst) · [৫.৪ Tree Traversal](#৫৪-tree-traversal)
+
 > **পড়ার নির্দেশনা:** Tree হলো DSA এর সবচেয়ে গুরুত্বপূর্ণ non-linear structure। Traversal, BST, Height, Diameter — এগুলো interview তে বারবার আসে। Recursion দিয়ে ভাবতে শিখুন।
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৫.১ Tree কী?
 
@@ -3844,6 +3894,8 @@ Perfect BT:  সব internal nodes এ 2 child; সব leaves same depth এ
 ```
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৫.২ Binary Tree
 
@@ -4056,6 +4108,8 @@ def inorder_iterative(root):
 
 ---
 
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৫.৫ BFS — Level-Order Traversal
 
 ```python
@@ -4114,6 +4168,8 @@ def right_side_view(root):
 ```
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৫.৬ Height, Depth ও Diameter
 
@@ -4214,6 +4270,8 @@ def lca(root, p, q):
 
 ---
 
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৫.৭ Balanced Tree ও AVL
 
 ### কেন Balanced দরকার?
@@ -4250,6 +4308,8 @@ Python তে সাধারণত:
 ```
 
 ---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৫.৮ Segment Tree
 
@@ -4417,6 +4477,8 @@ class Trie:
 
 ---
 
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৫.১০ PART 5 — Interview Q&A
 
 ### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
@@ -4474,9 +4536,13 @@ class Trie:
 
 # PART 6: Graphs (গ্রাফ)
 
+> **📍 এই PART এর Sections:** [৬.১ Graph কী?](#৬১-graph-কী) · [৬.২ Graph Representation](#৬২-graph-representation) · [৬.৩ BFS](#৬৩-bfs) · [৬.৪ DFS](#৬৪-dfs)
+
 > **পড়ার নির্দেশনা:** Graph হলো DSA এর সবচেয়ে versatile structure। BFS/DFS দিয়ে শুরু করুন, তারপর Shortest Path ও Topological Sort। Interview তে Cycle Detection ও Dijkstra প্রায়ই আসে।
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৬.১ Graph কী?
 
@@ -4517,6 +4583,8 @@ Special terms:
 ```
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৬.২ Graph Representation
 
@@ -4583,6 +4651,8 @@ edges = [(0, 1, 5), (0, 2, 3), (1, 3, 2), (2, 3, 7)]
 ```
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৬.৩ BFS
 
@@ -4786,6 +4856,8 @@ def has_cycle_directed(graph, n):
 
 ---
 
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৬.৬ Topological Sort
 
 ### সংজ্ঞা
@@ -4865,6 +4937,8 @@ def topological_sort_dfs(graph, n):
 ```
 
 ---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৬.৭ Shortest Path — Dijkstra
 
@@ -4989,6 +5063,8 @@ BFS              Unweighted     O(V+E)       Unweighted shortest path
 
 ---
 
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৬.৯ Union-Find (Disjoint Set)
 
 ### সংজ্ঞা
@@ -5080,6 +5156,8 @@ def kruskal_mst(n, edges):
 
 ---
 
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৬.১০ PART 6 — Interview Q&A
 
 ### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
@@ -5139,9 +5217,13 @@ def kruskal_mst(n, edges):
 
 # PART 7: Sorting & Searching (সর্টিং ও সার্চিং)
 
+> **📍 এই PART এর Sections:** [৭.১ Sorting Overview](#৭১-sorting-overview) · [৭.২ Bubble Sort](#৭২-bubble-sort) · [৭.৩ Selection Sort](#৭৩-selection-sort) · [৭.৪ Insertion Sort](#৭৪-insertion-sort)
+
 > **পড়ার নির্দেশনা:** Sorting হলো DSA interview এর bread and butter। প্রতিটি algorithm এর time/space complexity, stable কিনা, এবং কখন কোনটি ব্যবহার করবেন — এগুলো মুখস্থ রাখুন। Binary Search এর variants interview তে বারবার আসে।
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৭.১ Sorting Overview
 
@@ -5175,6 +5257,8 @@ Stability required:           Merge Sort, Insertion Sort, Timsort
 ```
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৭.২ Bubble Sort
 
@@ -5317,6 +5401,8 @@ def merge_count_helper(left, right):
 
 ---
 
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৭.৬ Quick Sort
 
 ```python
@@ -5366,6 +5452,8 @@ def partition_random(arr, low, high):
 
 ---
 
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৭.৭ Heap Sort
 
 ```python
@@ -5401,6 +5489,8 @@ def heapify(arr, n, i):
 ```
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৭.৮ Counting Sort ও Radix Sort
 
@@ -5479,6 +5569,8 @@ def counting_sort_by_digit(arr, exp):
 ```
 
 ---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৭.৯ Binary Search Variants
 
@@ -5594,6 +5686,8 @@ def search_rotated(nums, target):
 
 ---
 
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৭.১০ PART 7 — Interview Q&A
 
 ### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
@@ -5651,9 +5745,13 @@ def search_rotated(nums, target):
 
 # PART 8: Dynamic Programming & Greedy (ডায়নামিক প্রোগ্রামিং ও গ্রিডি)
 
+> **📍 এই PART এর Sections:** [৮.১ DP কী?](#৮১-dynamic-programming-কী) · [৮.২ Memoization](#৮২-memoization-top-down) · [৮.৩ Tabulation](#৮৩-tabulation-bottom-up) · [৮.৪ Fibonacci ও Classic DP](#৮৪-fibonacci-ও-classic-dp)
+
 > **পড়ার নির্দেশনা:** DP হলো interview এর সবচেয়ে কঠিন topic। Pattern চেনা শিখুন — "optimal substructure" ও "overlapping subproblems" থাকলে DP। Greedy তে locally optimal choice globally optimal হয় কিনা সেটা prove করতে হয়।
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৮.১ Dynamic Programming কী?
 
@@ -5678,6 +5776,8 @@ DP vs Divide & Conquer:
 ```
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৮.২ Memoization (Top-Down)
 
@@ -5762,6 +5862,8 @@ Interview: উভয়টি জানুন। Space optimize করতে ব
 ```
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৮.৪ Fibonacci ও Classic DP
 
@@ -5909,6 +6011,8 @@ def lis_binary_search(nums):
 
 ---
 
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৮.৭ 0/1 Knapsack
 
 ### সংজ্ঞা
@@ -5951,6 +6055,8 @@ def knapsack_optimized(weights, values, W):
 ```
 
 ---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৮.৮ Coin Change
 
@@ -6139,6 +6245,8 @@ def can_complete_circuit(gas, cost):
 
 ---
 
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৮.১০ PART 8 — Interview Q&A
 
 ### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
@@ -6198,9 +6306,13 @@ def can_complete_circuit(gas, cost):
 
 # PART 9: Advanced DSA (উন্নত ডেটা স্ট্রাকচার ও অ্যালগরিদম)
 
+> **📍 এই PART এর Sections:** [৯.১ Hash Map](#৯১-hash-map-ও-hash-table) · [৯.২ Hash Patterns](#৯২-hash-map-patterns) · [৯.৩ Bit Manipulation](#৯৩-bit-manipulation) · [৯.৪ Bit Problems](#৯৪-bit-manipulation-problems)
+
 > **পড়ার নির্দেশনা:** এই PART এ Hash Map patterns, Bit Manipulation, Backtracking ও String Algorithms আছে। Hash Map ও Bit tricks interview তে প্রায়ই আসে। Backtracking সব permutation/combination/subset problem এ কাজ করে।
 
 ---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৯.১ Hash Map ও Hash Table
 
@@ -6250,6 +6362,8 @@ lru = OrderedDict()
 ```
 
 ---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৯.২ Hash Map Patterns
 
@@ -6412,6 +6526,8 @@ a ^= b; b ^= a; a ^= b   # a=3, b=5
 
 ---
 
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৯.৪ Bit Manipulation Problems
 
 ### Single Number (XOR trick)
@@ -6458,6 +6574,8 @@ def count_bits_all(n):
 ```
 
 ---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৯.৫ Backtracking
 
@@ -6550,6 +6668,8 @@ def solve_n_queens(n):
 
 ---
 
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৯.৬ Divide & Conquer
 
 ### সংজ্ঞা
@@ -6603,6 +6723,8 @@ def max_crossing(arr, low, mid, high):
 ```
 
 ---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
 ## ৯.৭ String Algorithms — KMP
 
@@ -6702,6 +6824,8 @@ def rabin_karp(text, pattern):
 
 ---
 
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
 ## ৯.৯ PART 9 — Interview Q&A
 
 ### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
@@ -6758,6 +6882,8 @@ def rabin_karp(text, pattern):
 <a id="part10"></a>
 
 # PART 10: Coding Interview Q&A (টপ ইন্টারভিউ প্রশ্নোত্তর)
+
+> **📍 এই PART এর Sections:** [১০.১ Array & String Q&A](#১০১-array--string-top-qa) · [১০.২ Linked List Q&A](#১০২-linked-list-top-qa) · [১০.৩ Stack & Queue Q&A](#১০৩-stack--queue-top-qa) · [১০.৪ Tree & Graph Q&A](#১০৪-tree--graph-top-qa)
 
 > **পড়ার নির্দেশনা:** এই PART এ সবচেয়ে বেশি জিজ্ঞেস করা DSA interview questions একসাথে। প্রতিটি topic এর top problems ও complexity quick reference।
 
@@ -7020,6 +7146,8 @@ Need all-pairs shortest path?      → Floyd-Warshall
 <a id="part11"></a>
 
 # PART 11: Problem Solving Strategy (সমস্যা সমাধানের কৌশল)
+
+> **📍 এই PART এর Sections:** [১১.১ UMPIRE Method](#১১১-umpire-method) · [১১.২ 14 Core Patterns](#১১২-14-core-problem-patterns) · [১১.৩ Pattern Recognition](#১১৩-pattern-recognition-guide) · [১১.৪ Interview Dos & Donts](#১১৪-interview-dos--donts)
 
 > **পড়ার নির্দেশনা:** Technical skill এর পাশাপাশি interview এ approach ও communication দেখা হয়। এই PART এ systematic problem solving framework শিখুন যা যেকোনো নতুন problem এ apply করা যাবে।
 
@@ -7331,6 +7459,8 @@ Advanced (৬ মাস+):
 <a id="part12"></a>
 
 # PART 12: Bangladeshi Interview Prep (বাংলাদেশি ইন্টারভিউ প্রস্তুতি)
+
+> **📍 এই PART এর Sections:** [১২.১ BD Top Companies](#১২১-বাংলাদেশের-top-tech-companies) · [১২.২ Company Interview Pattern](#১২২-company-wise-interview-pattern) · [১২.৩ HR Q&A](#১২৩-hr-interview-qa-বাংলায়) · [১২.৪ Salary Negotiation](#১২৪-salary-negotiation)
 
 > **পড়ার নির্দেশনা:** বাংলাদেশের tech industry র নিজস্ব culture ও interview pattern আছে। এই PART এ BD specific tips, HR questions, salary negotiation ও final study plan আছে।
 
