@@ -6,7 +6,7 @@
 ![Language](https://img.shields.io/badge/Language-বাংলা-green?style=for-the-badge)
 ![Target](https://img.shields.io/badge/Target-Junior%20SWE-blue?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
-![Handbooks](https://img.shields.io/badge/Handbooks-3%20Available-blue?style=for-the-badge)
+![Handbooks](https://img.shields.io/badge/Handbooks-4%20Available-blue?style=for-the-badge)
 ![Contributions](https://img.shields.io/badge/Contributions-Welcome-orange?style=for-the-badge)
 
 </div>
@@ -34,7 +34,7 @@
 | 03 | ⚡ **JavaScript** | _Coming Soon_ | 🔜 **Coming Soon** | Closures, Event Loop, Promises, ES6+, Prototype Chain |
 | 04 | ⚛️ **React** | _Coming Soon_ | 🔜 **Coming Soon** | Hooks, State Management, Virtual DOM, Performance, Testing |
 | 05 | 📊 **Data Structures & Algorithms** | [DSA Guide →](./DSA_Junior_Engineer_BD_QA.md) | ✅ **Available** | Array, Linked List, Stack, Queue, Tree, Graph, Sorting, DP, Backtracking, Bit Manipulation |
-| 06 | 🏗️ **System Design** | _Coming Soon_ | 🔜 **Coming Soon** | Scalability, Load Balancing, Caching, Microservices |
+| 06 | 🏗️ **System Design** | [System Design Guide →](./SystemDesign_Junior_Engineer_BD_QA.md) | ✅ **Available** | Scalability, CAP Theorem, Load Balancing, CDN, REST, JWT, Caching, Microservices |
 | 07 | 💻 **Operating System** | _Coming Soon_ | 🔜 **Coming Soon** | Process, Thread, Deadlock, Memory Management, Scheduling |
 | 08 | 🌐 **Computer Networks** | _Coming Soon_ | 🔜 **Coming Soon** | TCP/IP, HTTP/HTTPS, DNS, REST API, WebSocket |
 | 09 | 🔀 **Git & Version Control** | _Coming Soon_ | 🔜 **Coming Soon** | Branch Strategy, Merge vs Rebase, CI/CD, GitHub Flow |
@@ -114,6 +114,6 @@ Example:
 
 **শুভকামনা তোমার Interview এ! 💪**
 
-_Last Updated: May 10, 2026 | Available Handbooks: OOP ✅ | Database ✅ | DSA ✅_
+_Last Updated: May 11, 2026 | Available Handbooks: OOP ✅ | Database ✅ | DSA ✅ | System Design ✅_
 
 </div>
