@@ -25,7 +25,7 @@
 | [PART 5](#part5) | Message Queues & Distributed Systems | Kafka, RabbitMQ, Pub/Sub | ✅ |
 | [PART 6](#part6) | System Design Case Studies | URL Shortener, Chat App, E-commerce | ✅ |
 | [PART 7](#part7) | Low-Level Design (LLD) | SOLID, Design Patterns, UML | ✅ |
-| [PART 8](#part8) | Cloud & DevOps Basics | AWS, Docker, Kubernetes, CI/CD | 🔜 |
+| [PART 8](#part8) | Cloud & DevOps Basics | AWS, Docker, Kubernetes, CI/CD | ✅ |
 | [PART 9](#part9) | Interview Q&A Bank | 200+ Questions with Detailed Answers | ✅ |
 | [PART 10](#part10) | Bangladeshi Interview Preparation | BD Company Patterns, Mock Interviews | ✅ |
 
@@ -62,6 +62,37 @@
 </details>
 
 <details>
+<summary>🗄️ <strong>PART 3: Database Design in System Design</strong> — কী কী শিখবো?</summary>
+
+- SQL vs NoSQL — কোনটা কখন
+- Database Scaling (Vertical, Read Replicas, Sharding)
+- Replication — Master-Slave, Synchronous vs Asynchronous
+- Sharding — Range, Hash, Directory, Geographic
+- Indexing — B-Tree, Composite, Full-text
+- Caching Patterns — Cache-Aside, Write-Through
+- Read-Heavy vs Write-Heavy systems
+- Data Consistency — Strong vs Eventual
+- ACID vs BASE
+
+</details>
+
+<details>
+<summary>⚡ <strong>PART 4: Caching & Performance Optimization</strong> — কী কী শিখবো?</summary>
+
+- Caching কী এবং cache tiers
+- Redis — Data structures, implementation, use cases
+- Memcached vs Redis
+- Cache Invalidation — TTL, Event-based, Versioning
+- Cache problems — Stampede, Penetration, Avalanche
+- CDN Caching — Cache-Control headers
+- Browser Caching — ETag, Cache Busting
+- Rate Limiting — Token Bucket, Fixed Window, Sliding Window
+- Compression — gzip, Brotli
+- Lazy Loading — Images, ORM, API Pagination
+
+</details>
+
+<details>
 <summary>📨 <strong>PART 5: Message Queues & Distributed Systems</strong> — কী কী শিখবো?</summary>
 
 - Message Queue basics ও benefits
@@ -93,34 +124,6 @@
 </details>
 
 <details>
-<summary>❓ <strong>PART 9: System Design Interview Q&A Bank</strong> — কী কী শিখবো?</summary>
-
-- Rapid Fire 75 প্রশ্নোত্তর (Fundamentals, DB, Cache, Network, Distributed, MQ)
-- Architecture Q&A: Capacity estimation, HA, DB choice, API design
-- Microservices challenges, DB migration, real-time features
-- Scenario-based: Black Friday incident, Security breach, Payment, File upload, Search
-- LLD coding: Rate Limiter, LRU Cache, Task Scheduler
-- Rapid 50 Q&A: Webhook, OAuth, Security, DevOps, Data Engineering
-
-</details>
-
-<details>
-<summary>🇧🇩 <strong>PART 10: Bangladeshi Interview Preparation</strong> — কী কী শিখবো?</summary>
-
-- BD Tech Job Market Overview (Product vs Service vs Startup)
-- BD Company Common Interview Questions
-- Project explanation using STAR + System Design angle
-- Mock Interview: Full session (Bengali conversation)
-- Common rejection reasons ও solutions
-- Salary negotiation (BD rates, tactics)
-- 30-Day Sprint roadmap
-- Resume Tips, GitHub Profile
-- Remote/International opportunities
-- Career path: BD → International
-
-</details>
-
-<details>
 <summary>🧩 <strong>PART 7: Low-Level Design (LLD)</strong> — কী কী শিখবো?</summary>
 
 - SOLID Principles (SRP, OCP, LSP, ISP, DIP) — real code examples
@@ -148,33 +151,30 @@
 </details>
 
 <details>
-<summary>🗄️ <strong>PART 3: Database Design in System Design</strong> — কী কী শিখবো?</summary>
+<summary>❓ <strong>PART 9: System Design Interview Q&A Bank</strong> — কী কী শিখবো?</summary>
 
-- SQL vs NoSQL — কোনটা কখন
-- Database Scaling (Vertical, Read Replicas, Sharding)
-- Replication — Master-Slave, Synchronous vs Asynchronous
-- Sharding — Range, Hash, Directory, Geographic
-- Indexing — B-Tree, Composite, Full-text
-- Caching Patterns — Cache-Aside, Write-Through
-- Read-Heavy vs Write-Heavy systems
-- Data Consistency — Strong vs Eventual
-- ACID vs BASE
+- Rapid Fire 75 প্রশ্নোত্তর (Fundamentals, DB, Cache, Network, Distributed, MQ)
+- Architecture Q&A: Capacity estimation, HA, DB choice, API design
+- Microservices challenges, DB migration, real-time features
+- Scenario-based: Black Friday incident, Security breach, Payment, File upload, Search
+- LLD coding: Rate Limiter, LRU Cache, Task Scheduler
+- Rapid 50 Q&A: Webhook, OAuth, Security, DevOps, Data Engineering
 
 </details>
 
 <details>
-<summary>⚡ <strong>PART 4: Caching & Performance Optimization</strong> — কী কী শিখবো?</summary>
+<summary>🇧🇩 <strong>PART 10: Bangladeshi Interview Preparation</strong> — কী কী শিখবো?</summary>
 
-- Caching কী এবং cache tiers
-- Redis — Data structures, implementation, use cases
-- Memcached vs Redis
-- Cache Invalidation — TTL, Event-based, Versioning
-- Cache problems — Stampede, Penetration, Avalanche
-- CDN Caching — Cache-Control headers
-- Browser Caching — ETag, Cache Busting
-- Rate Limiting — Token Bucket, Fixed Window, Sliding Window
-- Compression — gzip, Brotli
-- Lazy Loading — Images, ORM, API Pagination
+- BD Tech Job Market Overview (Product vs Service vs Startup)
+- BD Company Common Interview Questions
+- Project explanation using STAR + System Design angle
+- Mock Interview: Full session (Bengali conversation)
+- Common rejection reasons ও solutions
+- Salary negotiation (BD rates, tactics)
+- 30-Day Sprint roadmap
+- Resume Tips, GitHub Profile
+- Remote/International opportunities
+- Career path: BD → International
 
 </details>
 
@@ -188,6 +188,9 @@
 ### 🏗️ System Design এর মূল ভিত্তি
 
 > **Interview টিপস:** System Design interview তে প্রথমেই interviewer দেখতে চায় তুমি একটা problem কে কতটা structured ভাবে ভাবতে পারো। Definition জানার চেয়ে বেশি জরুরি হলো real-world analogy দিয়ে explain করতে পারা।
+
+> **📍 এই PART এর Sections:**
+> [1.1 System Design কী?](#11-system-design-কী) · [1.2 কেন গুরুত্বপূর্ণ?](#12-system-design-কেন-গুরুত্বপূর্ণ) · [1.3 HLD vs LLD](#13-high-level-design-hld-vs-low-level-design-lld) · [1.4 Scalability](#14-scalability) · [1.5 Reliability](#15-reliability) · [1.6 Availability](#16-availability) · [1.7 Maintainability](#17-maintainability) · [1.8 Performance](#18-performance) · [1.9 Latency vs Throughput](#19-latency-vs-throughput) · [1.10 CAP Theorem](#110-cap-theorem) · [1.11 Monolith vs Microservices](#111-monolithic-vs-microservices-architecture) · [1.12 Stateless vs Stateful](#112-stateless-vs-stateful-systems) · [1.13 Horizontal vs Vertical Scaling](#113-horizontal-vs-vertical-scaling) · [⚡ Quick Revision](#-part-1-quick-revision-table) · [🎯 Interview Qs](#-part-1-top-10-interview-questions-with-answers)
 
 ---
 
@@ -227,9 +230,15 @@ E-commerce App (Chaldal-এর মতো):
 - Single point of failure না ধরা
 
 ### ❓ Follow-up Questions
-1. "System Design আর Software Architecture এর পার্থক্য কী?"
-2. "তুমি কি কোনো real project এ System Design করেছো?"
-3. "High-Level Design আর Low-Level Design কখন করো?"
+
+**Q: "System Design আর Software Architecture এর পার্থক্য কী?"**
+> **A:** Software Architecture হলো broader concept — technology choice, patterns, principles। System Design হলো specific system এর জন্য architecture apply করা — কীভাবে scale হবে, কোথায় data থাকবে, components কীভাবে communicate করবে। Architecture = "কী দিয়ে বানাবো", System Design = "কীভাবে বানাবো।"
+
+**Q: "তুমি কি কোনো real project এ System Design করেছো?"**
+> **A:** হ্যাঁ বলো। যদি না-ও করে থাকো, বলো: "University project এ আমি database schema, API design, caching layer plan করেছিলাম — সেটাও একটা system design exercise ছিল।" তারপর concrete example দাও।
+
+**Q: "High-Level Design আর Low-Level Design কখন করো?"**
+> **A:** HLD আগে — overall architecture, major components, data flow। LLD পরে — specific class design, API contracts, database schema, algorithm choice। Interview তে senior level এ HLD জিজ্ঞেস হয়; junior তে LLD বেশি।
 
 ---
 
@@ -378,9 +387,15 @@ After:  [Server 1] [Server 2] [Server 3]
 - Database কে scalability bottleneck হিসেবে না দেখা
 
 ### ❓ Follow-up Questions
-1. "তোমার project এ কীভাবে scalability handle করেছিলে?"
-2. "Database কীভাবে scale করবে?"
-3. "Auto-scaling কী?"
+
+**Q: "তোমার project এ কীভাবে scalability handle করেছিলে?"**
+> **A:** Specific হও। "আমার project এ প্রথমে single server এ সব ছিল। User বাড়লে database slow হতো। Redis cache add করলাম — frequently accessed data cache করলাম। Read load কমলো ৬০%। Future plan: read replica add করবো।" যদি project ছোট হয়, বলো কী করতাম।
+
+**Q: "Database কীভাবে scale করবে?"**
+> **A:** "প্রথমে vertical scaling (bigger machine)। তারপর read replica — read traffic replica তে পাঠাবো। Write heavy হলে sharding — data horizontally distribute করবো। আর সবার আগে caching — 80% read database পর্যন্ত না পৌঁছালে scale অনেক সহজ হয়।"
+
+**Q: "Auto-scaling কী?"**
+> **A:** Auto-scaling মানে traffic অনুযায়ী automatically server instance বাড়ানো/কমানো। AWS Auto Scaling Group — CPU 70% এর বেশি হলে নতুন EC2 instance চালু করে, traffic কমলে terminate করে। Cost-effective: বেশি traffic = বেশি server, কম traffic = কম cost।
 
 ---
 
@@ -419,9 +434,15 @@ Reliability হলো system এর **consistently correct কাজ করা�
 | Error Rate | মোট request এর কত % fail হয় |
 
 ### ❓ Interview Questions
-1. "তোমার system এ data loss হলে কী করবে?"
-2. "Single point of failure কী এবং কীভাবে avoid করবে?"
-3. "Graceful degradation কী?"
+
+**Q: "তোমার system এ data loss হলে কী করবে?"**
+> **A:** "Prevention first — regular backups (daily full, hourly incremental), replication (data multiple place এ)। তারপর Recovery Point Objective (RPO) define করা — কতটুকু data loss acceptable? RPO 1 hour মানে ১ ঘণ্টার data হারিয়ে যাওয়া OK। Database transaction log দিয়ে point-in-time recovery করা যায়। S3 এ backup রাখলে durability 99.999999999%।"
+
+**Q: "Single point of failure কী এবং কীভাবে avoid করবে?"**
+> **A:** Single Point of Failure (SPOF) = এমন component যেটা fail করলে পুরো system down। Example: একটাই database server। Solution: Redundancy — database replication, multiple load balancer (Active-Passive), multiple app server। AWS Multi-AZ deployment automatically failover করে।
+
+**Q: "Graceful degradation কী?"**
+> **A:** Graceful degradation মানে system এর কিছু part fail করলেও বাকি টুকু কাজ চলতে থাকে — কিন্তু reduced functionality তে। Example: YouTube এ recommendation service down গেলেও video play হওয়া বন্ধ হয় না। Circuit Breaker pattern দিয়ে implement করা হয় — failed service কে bypass করে fallback response দেয়।
 
 ---
 
@@ -463,9 +484,15 @@ Load Balancer
 ```
 
 ### ❓ Interview Questions
-1. "99.9% vs 99.99% availability এর পার্থক্য কী practically?"
-2. "Planned downtime কীভাবে manage করবে?"
-3. "Availability আর Reliability কি একই?"
+
+**Q: "99.9% vs 99.99% availability এর পার্থক্য কী practically?"**
+> **A:** 99.9% = বছরে ~8.76 ঘণ্টা downtime। 99.99% = বছরে ~52 মিনিট। পার্থক্য মাত্র 0.09% কিন্তু impact বিশাল। Bank বা payment system এ প্রতি মিনিটের downtime = লক্ষাধিক টাকা loss। তাই 99.99% achieve করতে redundancy, automatic failover, zero-downtime deployment দরকার — significantly বেশি cost।
+
+**Q: "Planned downtime কীভাবে manage করবে?"**
+> **A:** "Blue-Green deployment use করবো — new version (Green) deploy করবো পুরানো (Blue) চলতে থাকা অবস্থায়। Traffic switch হবে instantly, zero downtime। Database migration এর জন্য: additive changes আগে (নতুন column add), application deploy, তারপর old column remove। Maintenance window রাখবো রাত ২-৪ টায় যখন traffic সবচেয়ে কম।"
+
+**Q: "Availability আর Reliability কি একই?"**
+> **A:** না, আলাদা। Availability = system কতটুকু সময় accessible (uptime %)। Reliability = system কতটুকু correctly কাজ করে। Example: একটা system 99.9% up থাকতে পারে কিন্তু মাঝে মাঝে wrong data দিতে পারে — high availability কিন্তু low reliability। দুটোই দরকার, কিন্তু concept আলাদা।
 
 ---
 
@@ -626,9 +653,15 @@ CAP Triangle:
 - CP আর AP এর trade-off বুঝতে না পারা
 
 ### ❓ Follow-up Questions
-1. "Cassandra কেন AP choose করলো?"
-2. "Banking system এ CAP এর কোন combination use করবে?"
-3. "PACELC Theorem কী? (CAP এর extension)"
+
+**Q: "Cassandra কেন AP choose করলো?"**
+> **A:** Cassandra design করা হয়েছে write-heavy, always-available systems এর জন্য (originally Facebook inbox)। Network partition এ Cassandra availability choose করে — কিছু node unreachable হলেও write/read continue করে। Consistency পরে sync হয় (eventual consistency)। এটা analytics, time-series data, user activity logs এর জন্য perfect — কিছুটা stale data OK।
+
+**Q: "Banking system এ CAP এর কোন combination use করবে?"**
+> **A:** CP — Consistency + Partition Tolerance। Bank এ inconsistent data মানে বিপর্যয়। ১০০০ টাকা transfer হলে দুই account এই consistent হতে হবে। Network partition এ bank system temporarily unavailable হবে (timeout/error দেবে) কিন্তু inconsistent data দেবে না। PostgreSQL with strong consistency, 2PC transactions।
+
+**Q: "PACELC Theorem কী? (CAP এর extension)"**
+> **A:** PACELC = Partition → Availability vs Consistency; Else → Latency vs Consistency। CAP শুধু partition এর সময়ের tradeoff বলে। PACELC বলে: partition না থাকলেও tradeoff আছে — Latency vs Consistency। Example: strong consistency চাইলে সব replica তে write confirm করতে হবে — latency বাড়বে। Cassandra: PA/EL (partition এ Available, else Latency prefer করে)।
 
 > **Memory Tip:** "CAP = তুমি সর্বোচ্চ দুইটা পাবে। Network partition (P) বাদ দেওয়া যায় না। তাই C বা A choose করো।"
 
@@ -814,6 +847,98 @@ Before:                After:
 1. "Database কি horizontally scale করা যায়?"
 2. "Auto-scaling কীভাবে কাজ করে?"
 3. "Kubernetes কীভাবে horizontal scaling করে?"
+
+---
+
+## 1.14 PACELC Theorem
+
+### 📖 সংজ্ঞা
+PACELC = **P**artition → **A**vailability vs **C**onsistency; **E**lse → **L**atency vs **C**onsistency
+
+CAP theorem এর limitation: এটা শুধু network partition এর সময়ের কথা বলে। PACELC বলে — partition না থাকলেও tradeoff আছে: **Latency vs Consistency**।
+
+```
+PACELC Decision:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                   System
+                    │
+           Network Partition?
+          /                    \
+        Yes                     No (Normal operation)
+         │                          │
+   Availability    vs    Consistency    Latency    vs    Consistency
+         │                │                │                │
+   (PA)                (PC)            (EL)             (EC)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+| System      | Partition choice | Else choice | Classification |
+|-------------|-----------------|-------------|----------------|
+| DynamoDB    | Availability    | Latency     | PA/EL          |
+| Cassandra   | Availability    | Latency     | PA/EL          |
+| PostgreSQL  | Consistency     | Consistency | PC/EC          |
+| MongoDB     | Consistency     | Latency     | PC/EL          |
+| Zookeeper   | Consistency     | Consistency | PC/EC          |
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎤 Interview Explanation
+> "CAP বলে partition এর সময় C বা A choose করতে হয়। কিন্তু PACELC আরো realistic — partition না থাকলেও যদি strong consistency চাই তাহলে সব replica তে write confirm করতে হবে, latency বাড়বে। Cassandra PA/EL — availability আর low latency priority। PostgreSQL PC/EC — সবসময় consistency।"
+
+---
+
+## 1.15 Consistent Hashing
+
+### 📖 সংজ্ঞা
+Consistent Hashing হলো একটি technique যা distributed system এ **data কোন server এ থাকবে সেটা efficiently decide করে** — server add/remove করলে minimum data movement হয়।
+
+### 🎯 সমস্যা (ছাড়া Consistent Hashing)
+```
+সাধারণ modular hashing: server = hash(key) % N
+Problem: N (server count) বদলালে প্রায় সব data relocate হয়!
+
+3 servers: key "user123" → hash % 3 = 2 → Server 2
+4 servers add করলে: hash % 4 = 3 → Server 3 (relocated!)
+এটা catastrophic — সব cache miss, DB overload।
+```
+
+### 🔄 Consistent Hashing কীভাবে কাজ করে
+```
+Hash Ring (0 to 2^32):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           0
+          /  \
+    Server A   Server B
+       │           │
+   (position    (position
+    on ring)    on ring)
+          \  /
+          Server C
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 1: Servers হাশ করে ring এ place করা হয়
+Step 2: Data key হাশ করে ring এ place করা হয়
+Step 3: Clockwise direction এ পরবর্তী server টাই data owner
+
+Server add হলে: শুধু adjacent data move হয় (1/N fraction)
+Server remove হলে: শুধু ঐ server এর data redistribute হয়
+
+Virtual Nodes: একটা physical server → multiple virtual positions
+→ better load distribution
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎯 Real-World Usage
+```
+✅ Uses:
+- Redis Cluster (data sharding)
+- Cassandra (partition key → node)
+- CDN (request → nearest cache server)
+- Load Balancing (consistent user → server mapping)
+- Distributed caching (Memcached clusters)
+```
+
+### 🎤 Interview Explanation
+> "Consistent Hashing solve করে distributed system এ dynamic server addition/removal এর সমস্যা। Regular modular hashing এ server বাড়ালে প্রায় সব data move করতে হয়। Consistent Hashing এ শুধু ১/N fraction data move হয়। Hash ring এ servers আর data দুটোই hash করা হয় — clockwise next server data owner।"
 
 ---
 
@@ -1380,9 +1505,15 @@ Total time: ~100ms (first time), ~0ms (cached)
 > ফোনবুকের মতো — তুমি "Rahim" এর নাম জানো, DNS তোমাকে তার phone number (IP) বলে দেয়।
 
 ### ❓ Interview Questions
-1. "DNS caching কীভাবে কাজ করে? TTL কী?"
-2. "DNS কি কখনো security threat হতে পারে? (DNS Spoofing)"
-3. "www.domain.com আর domain.com এর DNS কীভাবে আলাদা configure করে?"
+
+**Q: "DNS caching কীভাবে কাজ করে? TTL কী?"**
+> **A:** DNS resolution slow — তাই cache করা হয়। Browser এ DNS cache থাকে, OS এ থাকে, ISP এর DNS server এ থাকে। TTL (Time-To-Live) = DNS record কতক্ষণ cache এ থাকবে (seconds এ)। TTL 3600 = 1 ঘণ্টা। TTL শেষে fresh lookup। Server IP change করলে TTL কম রাখো আগে — তা না হলে পুরানো IP cache এ থাকবে।
+
+**Q: "DNS কি কখনো security threat হতে পারে? (DNS Spoofing)"**
+> **A:** হ্যাঁ। DNS Spoofing (DNS Cache Poisoning) — attacker fake DNS record inject করে। তোমার bank.com lookup করলে attacker এর fake server এ redirect করে। Solution: DNSSEC (DNS Security Extensions) — cryptographic signature দিয়ে DNS records verify করে। HTTPS + certificate pinning ও protect করে।
+
+**Q: "www.domain.com আর domain.com এর DNS কীভাবে আলাদা configure করে?"**
+> **A:** domain.com (apex/root domain) → A record বা ALIAS record। www.domain.com → CNAME record pointing to domain.com। Apex domain CNAME support করে না (RFC restriction) — তাই ALIAS বা ANAME use করতে হয়। AWS Route 53 এ Alias record দিয়ে apex domain কে Load Balancer বা CloudFront এ point করা যায়।
 
 ---
 
@@ -1489,9 +1620,15 @@ Layer 7 (Application Layer):
 > "Load Balancer traffic distribute করে multiple servers এ। Round Robin সবচেয়ে simple — একটার পর একটা। কিন্তু servers যদি আলাদা powerful হয় তাহলে Weighted Round Robin। Sticky session দরকার হলে IP Hash। Layer 7 load balancer content দেখে route করে — /api requests আলাদা server এ, /static images আলাদা server এ।"
 
 ### ❓ Interview Questions
-1. "Load Balancer নিজেই fail করলে কী হবে? (Single point of failure?)"
-2. "Health check কীভাবে কাজ করে?"
-3. "Sticky session কী এবং কেন দরকার?"
+
+**Q: "Load Balancer নিজেই fail করলে কী হবে? (Single point of failure?)"**
+> **A:** Load balancer নিজেই SPOF হতে পারে। Solution: Active-Passive LB pair — primary LB fail করলে secondary automatically take over (Floating IP / Virtual IP দিয়ে)। AWS এ ALB/NLB managed service — AWS নিজে redundancy handle করে। Nginx এ Keepalived দিয়ে Active-Passive setup করা যায়।
+
+**Q: "Health check কীভাবে কাজ করে?"**
+> **A:** Load Balancer প্রতিটা backend server কে periodically HTTP request পাঠায় (e.g., GET /health)। Server 200 OK দিলে healthy, timeout বা 5xx দিলে unhealthy — traffic সেই server এ পাঠানো বন্ধ। AWS ALB default: 30 seconds interval, 3 failed checks → unhealthy। Health check endpoint টা lightweight হওয়া উচিত — DB connection আর memory check করে।
+
+**Q: "Sticky session কী এবং কেন দরকার?"**
+> **A:** Sticky session (Session Affinity) মানে একই user এর request সবসময় একই server এ যায়। কেন দরকার: যদি session server memory তে store করা হয় (stateful)। Problem: ঐ server fail করলে session হারিয়ে যায়। Better solution: session Redis এ store করো — stateless app servers, যেকোনো server session serve করতে পারে। Sticky session এড়িয়ে চলাই ভালো।
 
 ---
 
@@ -1819,6 +1956,124 @@ Set-Cookie: session_id=abc123;
 
 ### 🎤 Interview Explanation
 > "Session-based auth এ server session store করে — প্রতিটা request এ session ID check করে। এটা JWT এর চেয়ে revoke করা সহজ — session delete করলেই logout। কিন্তু horizontal scaling এ problem — server 1 এর session server 2 এ নেই। সমাধান: Redis shared session store।"
+
+---
+
+## 2.15 gRPC Basics
+
+### 📖 সংজ্ঞা
+gRPC (Google Remote Procedure Call) হলো একটি high-performance RPC framework যা **Protocol Buffers (protobuf)** use করে — JSON এর চেয়ে ৫-৭x faster।
+
+```
+REST vs gRPC তুলনা:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Feature          REST              gRPC
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Protocol         HTTP/1.1          HTTP/2
+Data Format      JSON (text)       Protobuf (binary)
+Performance      Moderate          High (5-7x faster)
+Contract         OpenAPI/Swagger   .proto file (strict)
+Streaming        Limited           Built-in (bi-directional)
+Browser Support  ✅ Native         ❌ Needs grpc-web
+Code Gen         Manual/Swagger    Auto from .proto
+Best For         Public APIs       Internal microservices
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 💻 .proto file Example
+```protobuf
+// user.proto
+syntax = "proto3";
+
+service UserService {
+  rpc GetUser (UserRequest) returns (UserResponse);
+  rpc ListUsers (Empty) returns (stream UserResponse);  // server streaming
+}
+
+message UserRequest {
+  int32 id = 1;
+}
+
+message UserResponse {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+}
+```
+
+### 🎯 কখন gRPC?
+```
+✅ Use gRPC when:
+- Microservices internal communication
+- High-performance needed (payment processing, real-time data)
+- Strict API contract needed
+- Bi-directional streaming (live data feeds)
+
+✅ Use REST when:
+- Public API (browser, mobile, third-party)
+- Simple CRUD operations
+- Team unfamiliar with protobuf
+- Human-readable payload দরকার
+```
+
+### 🎤 Interview Explanation
+> "gRPC REST এর alternative, mainly microservices internal communication এ use হয়। Protobuf binary format JSON এর চেয়ে much smaller আর faster। HTTP/2 এ চলে — multiplexing, header compression, streaming সব built-in। Public API তে REST better কারণ browser direct gRPC support করে না।"
+
+---
+
+## 2.16 OAuth 2.0 Flow
+
+### 📖 সংজ্ঞা
+OAuth 2.0 হলো **authorization** protocol — "Google দিয়ে login করো" বা "Facebook এ sign in" এটাই OAuth।
+
+```
+OAuth 2.0 Authorization Code Flow:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+User → App → Authorization Server (Google/Facebook)
+       ↑            │
+       │    (Login + Consent screen)
+       │            │
+       └────────────┘
+       Authorization Code
+            │
+            ↓
+     App → Auth Server
+           (code + client_secret)
+                │
+                ↓
+           Access Token + Refresh Token
+                │
+                ↓
+     App → Resource Server (Google API)
+           (Access Token in header)
+                │
+                ↓
+           User Data returned
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🔑 OAuth 2.0 Key Concepts
+```
+Roles:
+- Resource Owner: User (তুমি)
+- Client: তোমার App
+- Authorization Server: Google/Facebook (token দেয়)
+- Resource Server: Google API (protected data)
+
+Grant Types:
+- Authorization Code: Web apps (most secure)
+- PKCE: Mobile/SPA (no client secret)
+- Client Credentials: Server-to-server (no user)
+- Implicit: Deprecated (legacy browser apps)
+
+Tokens:
+- Access Token: Short-lived (1 hour), API access
+- Refresh Token: Long-lived (30 days), নতুন access token নিতে
+- ID Token: OpenID Connect (user identity)
+```
+
+### 🎤 Interview Explanation
+> "OAuth 2.0 authorization এর জন্য — authentication না। 'Google দিয়ে login' এ আসলে Google আমাদের app কে user এর data access করার permission দেয়। Authorization Code Flow most secure — client_secret কখনো browser এ expose হয় না। Access token short-lived রাখা উচিত, refresh token দিয়ে নতুন token নেওয়া যায়।"
 
 ---
 
@@ -3595,6 +3850,65 @@ Infrastructure Optimization:
 ✅ CDN
 ✅ Proper server sizing
 ```
+
+---
+
+## 4.11 Bloom Filter
+
+### 📖 সংজ্ঞা
+Bloom Filter হলো একটি **probabilistic data structure** যা check করে "এই element কি আগে দেখা হয়েছে?" — খুব কম memory তে, O(1) time এ।
+
+```
+How it works:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. একটা bit array (সব 0 দিয়ে শুরু)
+2. k টা hash function
+
+INSERT "hello":
+  hash1("hello") = 3 → bit[3] = 1
+  hash2("hello") = 7 → bit[7] = 1
+  hash3("hello") = 11 → bit[11] = 1
+
+CHECK "world":
+  hash1("world") = 3 → bit[3] = 1 ✓
+  hash2("world") = 5 → bit[5] = 0 ✗ → DEFINITELY NOT IN SET
+
+CHECK "hello":
+  All bits set → PROBABLY IN SET
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Result types:
+✅ "Definitely NOT in set" → 100% accurate (no false negatives)
+⚠️ "Probably in set" → might be false positive
+❌ Never deletes (standard bloom filter)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 🎯 Real-World Uses in System Design
+```
+1. Cache Penetration prevention:
+   Problem: Non-existent key বারবার DB hit করে
+   Solution: Bloom filter এ valid keys store করো
+   → Bloom filter "not in set" বললে DB এই যাবে না
+
+2. Username uniqueness check:
+   Registration এ "username taken?" → Bloom filter check
+   → DB query আগে filter করো
+
+3. Malicious URL detection:
+   Google Safe Browsing uses Bloom filter
+   → Billions of URLs, tiny memory footprint
+
+4. Duplicate request detection:
+   Payment system এ same request twice process হওয়া আটকাও
+
+5. Cassandra, HBase, LevelDB:
+   SSTable lookup এ bloom filter use করে
+   → Disk read avoid করে for non-existent keys
+```
+
+### 🎤 Interview Explanation
+> "Bloom Filter একটা space-efficient probabilistic structure। 'এই element আগে দেখেছি কিনা' প্রশ্নের উত্তর দেয় খুব কম memory তে। False positive হতে পারে — 'হয়তো আছে' বলতে পারে ভুলভাবে। কিন্তু false negative কখনো হয় না — 'নেই' বললে সত্যিই নেই। Cache penetration solve করতে, DB lookup optimize করতে use হয়।"
 
 ---
 
@@ -9846,6 +10160,9 @@ scheduler.cancel(task)  # Cancel before it runs
 ### 🇧🇩 BD Company Patterns, Mock Interviews ও Career Advice
 
 > **এই PART এর উদ্দেশ্য:** Bangladesh এর tech job market এ সফলভাবে interview দেওয়ার জন্য specific preparation। BD company গুলোর প্রশ্নের pattern, common mistakes, project কীভাবে explain করবে — সব এখানে।
+
+> **📍 এই PART এর Sections:**
+> [10.1 BD Job Market](#101-bangladesh-tech-job-market-overview) · [10.2 BD Company Questions](#102-bd-company-common-questions) · [10.3 Project Explain (STAR)](#103-তোমার-project-কীভাবে-explain-করবে) · [10.4 System Design Framework (BD)](#104-system-design-interview--bd-company-framework) · [10.5 Rejection Reasons](#105-common-rejection-reasons-ও-solution) · [10.6 Mock Interview](#106-mock-interview-full-session-bengali) · [10.7 Salary Negotiation](#107-salary-negotiation--bd-context) · [10.8 30-Day Roadmap](#108-interview-preparation-roadmap) · [10.9 Resume Tips](#109-resume-tips--bd-engineer) · [10.10 Remote/International](#1010-remoteinternational-opportunity) · [✅ Final Checklist](#-part-10-final-checklist-before-interview) · [🎯 Interview Q&A (Q149-Q152)](#-part-10-interview-questions-about-bd-context)
 
 ---
 
