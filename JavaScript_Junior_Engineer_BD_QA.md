@@ -6112,3 +6112,929 @@ async function fetchWithState(url) {
 > **🚀 PART 6 আসছে:** Object-Oriented JavaScript — Objects, Constructor Functions, Prototypes, Classes, Encapsulation, Inheritance, Polymorphism, Abstraction, SOLID Principles।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 6 দাও" লিখুন।
+
+
+---
+
+<a id="part6"></a>
+
+# PART 6 — Object-Oriented JavaScript
+
+> **📍 এই PART-এর Sections:** [৬.১ Objects](#৬১-objects) · [৬.২ Constructor Functions](#৬২-constructor-functions) · [৬.৩ Prototype](#৬৩-prototype) · [৬.৪ Prototype Chain](#৬৪-prototype-chain) · [৬.৫ ES6 Classes](#৬৫-es6-classes) · [৬.৬ Encapsulation](#৬৬-encapsulation) · [৬.৭ Inheritance](#৬৭-inheritance) · [৬.৮ Polymorphism](#৬৮-polymorphism) · [৬.৯ Abstraction](#৬৯-abstraction) · [৬.১০ SOLID Principles](#৬১০-solid-principles-in-javascript) · [৬.১১ Interview Q&A](#৬১১-part-6--interview-questions--answers)
+
+---
+
+## ৬.১ Objects
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+JavaScript-এ **Object** হলো key-value pairs-এর collection। Function সহ যেকোনো কিছু object হতে পারে। JS-এ প্রায় সব কিছুই (Array, Function, Date) আসলে object।
+
+### 💻 Object তৈরির পদ্ধতি
+
+```javascript
+// ১. Object Literal (সবচেয়ে সাধারণ)
+const person = {
+  name: "Rahim",
+  age: 25,
+  city: "Dhaka",
+  greet() {
+    return `আমি ${this.name}, ${this.city} থেকে`;
+  }
+};
+
+// ২. Object.create()
+const personProto = {
+  greet() { return `Hello, I am ${this.name}`; }
+};
+const john = Object.create(personProto);
+john.name = "John";
+console.log(john.greet()); // "Hello, I am John"
+
+// ৩. Constructor Function (৬.২-এ বিস্তারিত)
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+const p = new Person("Rahim", 25);
+
+// ৪. Class (৬.৫-এ বিস্তারিত)
+class Animal { constructor(name) { this.name = name; } }
+
+// Object properties
+const car = {
+  brand: "Toyota",
+  model: "Corolla",
+  year: 2022,
+  isRunning: false,
+  start() { this.isRunning = true; console.log("Started!"); },
+  stop() { this.isRunning = false; console.log("Stopped!"); }
+};
+
+// Property access
+console.log(car.brand);         // dot notation
+console.log(car["model"]);      // bracket notation (dynamic key-এ দরকার)
+const key = "year";
+console.log(car[key]);          // dynamic key — bracket required
+
+// Property check
+"brand" in car;                 // true (prototype-ও check করে)
+car.hasOwnProperty("brand");    // true (own property শুধু)
+Object.hasOwn(car, "brand");    // true (modern, ES2022)
+
+// Property enumerate
+Object.keys(car);               // ["brand", "model", "year", "isRunning", "start", "stop"]
+Object.values(car);
+Object.entries(car);
+
+// Property descriptor
+Object.defineProperty(car, "id", {
+  value: "CAR-001",
+  writable: false,    // পরিবর্তন করা যাবে না
+  enumerable: false,  // Object.keys-এ আসবে না
+  configurable: false // delete করা যাবে না
+});
+```
+
+---
+
+## ৬.২ Constructor Functions
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Constructor Function** হলো `new` keyword দিয়ে object তৈরির function। ES6 Classes-এর আগের পদ্ধতি। এখনো জানা দরকার কারণ JS-এর prototype-ভিত্তিক inheritance বোঝার জন্য।
+
+### 💻 Constructor Function বিস্তারিত
+
+```javascript
+// Convention: PascalCase নাম
+function Person(name, age, city) {
+  // new দিয়ে call করলে:
+  // ১. নতুন empty object তৈরি হয়
+  // ২. this সেই object-কে point করে
+  // ৩. Person.prototype লিংক হয়
+  // ৪. object return হয় (implicit)
+
+  this.name = name;
+  this.age = age;
+  this.city = city;
+  // ❌ Method এখানে রাখলে প্রতিটি instance-এ copy হয় (memory waste)
+}
+
+// Methods prototype-এ রাখুন — সব instances share করে
+Person.prototype.greet = function() {
+  return `আমি ${this.name}, ${this.age} বছর, ${this.city}`;
+};
+
+Person.prototype.birthday = function() {
+  this.age++;
+  return `${this.name}-এর বয়স এখন ${this.age}`;
+};
+
+// Static method
+Person.create = function(name, age) {
+  return new Person(name, age, "Unknown");
+};
+
+// Instance তৈরি
+const rahim = new Person("Rahim", 25, "Dhaka");
+const karim = new Person("Karim", 30, "Chittagong");
+
+console.log(rahim.greet()); // "আমি Rahim, 25 বছর, Dhaka"
+console.log(rahim instanceof Person); // true
+
+// ⚠️ new ছাড়া call করলে this = global (বা undefined strict mode-এ)
+const wrong = Person("Oops", 20, "X"); // this হবে window/global!
+
+// Guard against missing new:
+function SafePerson(name) {
+  if (!(this instanceof SafePerson)) {
+    return new SafePerson(name);
+  }
+  this.name = name;
+}
+```
+
+### 💻 `new` keyword কী করে?
+
+```javascript
+// new Person("Rahim", 25) এর equivalent:
+function myNew(Constructor, ...args) {
+  // ১. নতুন object তৈরি — prototype link
+  const obj = Object.create(Constructor.prototype);
+  // ২. Constructor চালানো — this = obj
+  const result = Constructor.apply(obj, args);
+  // ৩. Constructor object return করলে সেটা, নইলে obj
+  return result instanceof Object ? result : obj;
+}
+
+const p = myNew(Person, "Rahim", 25, "Dhaka");
+console.log(p.greet()); // কাজ করবে!
+```
+
+---
+
+## ৬.৩ Prototype
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+JavaScript-এ প্রতিটি object-এর একটি **prototype** আছে — এটি আরেকটি object যা থেকে properties ও methods inherit করা হয়। এটিই JS-এর inheritance-এর মূল mechanism।
+
+### 💻 Prototype বিস্তারিত
+
+```javascript
+function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.speak = function() {
+  return `${this.name} makes a sound`;
+};
+Animal.prototype.type = "Animal";
+
+const dog = new Animal("Rex");
+
+// Prototype chain
+console.log(dog.__proto__ === Animal.prototype); // true
+console.log(Animal.prototype.__proto__ === Object.prototype); // true
+console.log(Object.prototype.__proto__); // null (chain শেষ)
+
+// Property lookup
+dog.speak();   // dog নিজে নেই → Animal.prototype-এ খোঁজে → পায়
+dog.toString(); // নিজে নেই → Animal.prototype-এ নেই → Object.prototype-এ পায়
+
+// hasOwnProperty
+console.log(dog.hasOwnProperty("name"));  // true (own)
+console.log(dog.hasOwnProperty("speak")); // false (prototype-এ)
+
+// Prototype-এ method যোগ করা (existing objects-এও কাজ করে)
+Animal.prototype.breathe = function() {
+  return `${this.name} is breathing`;
+};
+console.log(dog.breathe()); // কাজ করবে — dog তৈরির পরেও!
+
+// Built-in prototypes extend (⚠️ Production-এ করবেন না)
+Array.prototype.sum = function() {
+  return this.reduce((acc, n) => acc + n, 0);
+};
+[1, 2, 3].sum(); // 6 — কিন্তু এটি bad practice!
+
+// Object.getPrototypeOf — modern way
+console.log(Object.getPrototypeOf(dog) === Animal.prototype); // true
+```
+
+---
+
+## ৬.৪ Prototype Chain
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Chain visualization
+
+```
+dog (instance)
+  └── __proto__ → Animal.prototype
+                  ├── speak()
+                  ├── type: "Animal"
+                  └── __proto__ → Object.prototype
+                                  ├── toString()
+                                  ├── hasOwnProperty()
+                                  ├── valueOf()
+                                  └── __proto__ → null (chain শেষ)
+
+Property lookup: dog.speak()
+  1. dog নিজে "speak" আছে? → না
+  2. Animal.prototype-এ আছে? → হ্যাঁ → পাওয়া গেছে ✓
+
+Property lookup: dog.toString()
+  1. dog নিজে? → না
+  2. Animal.prototype-এ? → না
+  3. Object.prototype-এ? → হ্যাঁ → পাওয়া গেছে ✓
+
+Property lookup: dog.nonExistent
+  1. dog? → না  2. Animal.prototype? → না  3. Object.prototype? → না
+  4. null → undefined return
+```
+
+### 💻 Prototype Chain Inheritance (Pre-Class)
+
+```javascript
+// Animal → Dog → GoldenRetriever
+
+function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.eat = function() { return `${this.name} is eating`; };
+
+function Dog(name, breed) {
+  Animal.call(this, name); // parent constructor call
+  this.breed = breed;
+}
+// Prototype chain সেটআপ
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog; // constructor fix
+
+Dog.prototype.bark = function() { return `${this.name}: Woof!`; };
+
+const rex = new Dog("Rex", "Labrador");
+console.log(rex.eat());  // "Rex is eating" (Animal থেকে)
+console.log(rex.bark()); // "Rex: Woof!" (Dog থেকে)
+console.log(rex instanceof Dog);    // true
+console.log(rex instanceof Animal); // true
+```
+
+---
+
+## ৬.৫ ES6 Classes
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+ES6 **Class** হলো prototype-based inheritance-এর **syntactic sugar** — ভেতরে কিন্তু prototype-ই ব্যবহার হয়। Code আরও পরিষ্কার ও readable।
+
+### 💻 Class সম্পূর্ণ Features
+
+```javascript
+class Animal {
+  // Class field (ES2022)
+  #sound = "..."; // private field
+  static count = 0; // static field
+
+  constructor(name, age) {
+    this.name = name;
+    this.age = age;
+    Animal.count++;
+  }
+
+  // Instance method
+  speak() {
+    return `${this.name} says ${this.#sound}`;
+  }
+
+  // Getter
+  get info() {
+    return `${this.name} (${this.age} বছর)`;
+  }
+
+  // Setter
+  set info(value) {
+    [this.name, this.age] = value.split(",");
+  }
+
+  // Static method — instance ছাড়া call করা যায়
+  static create(name) {
+    return new Animal(name, 0);
+  }
+
+  static getCount() {
+    return `মোট ${Animal.count}টি animal তৈরি হয়েছে`;
+  }
+
+  // toString override
+  toString() {
+    return `Animal(${this.name})`;
+  }
+}
+
+const cat = new Animal("Tom", 3);
+console.log(cat.speak());          // "Tom says ..."
+console.log(cat.info);             // "Tom (3 বছর)"
+cat.info = "Jerry,2";
+console.log(cat.name, cat.age);    // "Jerry" "2"
+console.log(Animal.count);         // 1
+console.log(Animal.getCount());    // "মোট 1টি animal তৈরি হয়েছে"
+console.log(Animal.create("Max")); // Animal { name: "Max", age: 0 }
+
+// Class expression
+const MyClass = class {
+  constructor(val) { this.val = val; }
+};
+```
+
+---
+
+## ৬.৬ Encapsulation
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Encapsulation** — data এবং methods একসাথে রাখা এবং internal implementation বাইরে থেকে লুকানো। শুধু প্রয়োজনীয় interface বাইরে expose করা।
+
+### 💻 Private Fields ও Methods
+
+```javascript
+class BankAccount {
+  // Private fields — # prefix
+  #balance;
+  #owner;
+  #transactions = [];
+
+  constructor(owner, initialBalance) {
+    this.#owner = owner;
+    this.#balance = initialBalance;
+    this.#log("Account created", initialBalance);
+  }
+
+  // Private method
+  #log(action, amount) {
+    this.#transactions.push({
+      action,
+      amount,
+      date: new Date().toISOString(),
+      balance: this.#balance
+    });
+  }
+
+  // Public interface
+  deposit(amount) {
+    if (amount <= 0) throw new Error("Deposit must be positive");
+    this.#balance += amount;
+    this.#log("Deposit", amount);
+    return this;
+  }
+
+  withdraw(amount) {
+    if (amount <= 0) throw new Error("Amount must be positive");
+    if (amount > this.#balance) throw new Error("Insufficient funds");
+    this.#balance -= amount;
+    this.#log("Withdrawal", amount);
+    return this;
+  }
+
+  get balance() { return this.#balance; } // read-only
+  get owner() { return this.#owner; }
+
+  getStatement() {
+    return this.#transactions.map(t =>
+      `${t.date}: ${t.action} ${t.amount} → Balance: ${t.balance}`
+    ).join("
+");
+  }
+}
+
+const account = new BankAccount("Rahim", 10000);
+account.deposit(5000).withdraw(2000); // chaining
+
+console.log(account.balance); // 13000
+// account.#balance = 99999;  // SyntaxError! Private field
+console.log(account.getStatement());
+```
+
+---
+
+## ৬.৭ Inheritance
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Inheritance** — parent class-এর properties ও methods child class-এ পাওয়া। `extends` এবং `super` keyword ব্যবহার করা হয়।
+
+### 💻 Class Inheritance
+
+```javascript
+class Shape {
+  #color;
+
+  constructor(color) {
+    this.#color = color;
+  }
+
+  get color() { return this.#color; }
+
+  area() {
+    throw new Error("area() অবশ্যই implement করতে হবে");
+  }
+
+  toString() {
+    return `${this.constructor.name} [color: ${this.#color}, area: ${this.area()}]`;
+  }
+}
+
+class Circle extends Shape {
+  #radius;
+
+  constructor(radius, color) {
+    super(color); // parent constructor — প্রথমে call করতে হবে
+    this.#radius = radius;
+  }
+
+  get radius() { return this.#radius; }
+
+  area() {
+    return Math.PI * this.#radius ** 2;
+  }
+
+  circumference() {
+    return 2 * Math.PI * this.#radius;
+  }
+}
+
+class Rectangle extends Shape {
+  #width;
+  #height;
+
+  constructor(width, height, color) {
+    super(color);
+    this.#width = width;
+    this.#height = height;
+  }
+
+  area() {
+    return this.#width * this.#height;
+  }
+
+  perimeter() {
+    return 2 * (this.#width + this.#height);
+  }
+}
+
+class Square extends Rectangle {
+  constructor(side, color) {
+    super(side, side, color); // Rectangle-এর constructor
+  }
+}
+
+const c = new Circle(5, "red");
+const r = new Rectangle(4, 6, "blue");
+const s = new Square(4, "green");
+
+console.log(c.area());        // 78.539...
+console.log(c.toString());    // "Circle [color: red, area: 78.539...]"
+console.log(r.perimeter());   // 20
+console.log(s.area());        // 16
+
+console.log(c instanceof Circle);    // true
+console.log(c instanceof Shape);     // true
+console.log(s instanceof Square);    // true
+console.log(s instanceof Rectangle); // true
+console.log(s instanceof Shape);     // true
+
+// super — method call
+class Animal {
+  speak() { return `${this.name} makes a sound`; }
+}
+
+class Dog extends Animal {
+  speak() {
+    const base = super.speak(); // parent method call
+    return `${base} — specifically: Woof!`;
+  }
+}
+
+const d = new Dog();
+d.name = "Rex";
+console.log(d.speak()); // "Rex makes a sound — specifically: Woof!"
+```
+
+---
+
+## ৬.৮ Polymorphism
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Polymorphism** — একই interface (method name) different classes-এ different আচরণ করা। Method overriding-এর মাধ্যমে implement হয়।
+
+### 💻 Polymorphism in Practice
+
+```javascript
+class Notification {
+  constructor(message, recipient) {
+    this.message = message;
+    this.recipient = recipient;
+  }
+
+  // Template method — subclass override করবে
+  send() {
+    throw new Error("send() implement করতে হবে");
+  }
+
+  // Common logic
+  validate() {
+    if (!this.message) throw new Error("Message খালি হতে পারবে না");
+    if (!this.recipient) throw new Error("Recipient দরকার");
+    return true;
+  }
+}
+
+class EmailNotification extends Notification {
+  send() {
+    this.validate();
+    console.log(`Email → ${this.recipient}: "${this.message}"`);
+    return { type: "email", status: "sent" };
+  }
+}
+
+class SMSNotification extends Notification {
+  send() {
+    this.validate();
+    console.log(`SMS → ${this.recipient}: "${this.message}"`);
+    return { type: "sms", status: "sent" };
+  }
+}
+
+class PushNotification extends Notification {
+  send() {
+    this.validate();
+    console.log(`Push → Device ${this.recipient}: "${this.message}"`);
+    return { type: "push", status: "sent" };
+  }
+}
+
+// Polymorphic usage — same interface, different behavior
+const notifications = [
+  new EmailNotification("Welcome!", "rahim@bd.com"),
+  new SMSNotification("OTP: 123456", "01712345678"),
+  new PushNotification("নতুন message এসেছে", "device-token-abc")
+];
+
+// প্রতিটি আলাদাভাবে জানি না, সবাই .send() বলি
+const results = notifications.map(n => n.send());
+// সবার আলাদা আচরণ কিন্তু একই call
+
+// ব্যবহারিক সুবিধা: নতুন notification type যোগ করতে
+// শুধু নতুন class তৈরি করলেই হবে, এই loop পরিবর্তন লাগবে না
+```
+
+---
+
+## ৬.৯ Abstraction
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Abstraction** — complexity লুকিয়ে শুধু প্রয়োজনীয় details দেখানো। User জানে "কী করে" কিন্তু "কীভাবে করে" জানার দরকার নেই।
+
+### 💻 Abstraction — Abstract Class Pattern
+
+```javascript
+// JS-এ native abstract class নেই, pattern দিয়ে implement করি
+class Database {
+  constructor() {
+    if (new.target === Database) {
+      throw new Error("Database abstract class — directly instantiate করা যাবে না");
+    }
+  }
+
+  // Abstract methods
+  connect() { throw new Error("connect() implement করতে হবে"); }
+  disconnect() { throw new Error("disconnect() implement করতে হবে"); }
+  query(sql) { throw new Error("query() implement করতে হবে"); }
+
+  // Concrete method (shared logic)
+  async execute(sql) {
+    await this.connect();
+    try {
+      return await this.query(sql);
+    } finally {
+      await this.disconnect();
+    }
+  }
+}
+
+class MySQLDatabase extends Database {
+  constructor(config) {
+    super();
+    this.config = config;
+    this.connection = null;
+  }
+
+  async connect() {
+    this.connection = await createMySQLConnection(this.config);
+    console.log("MySQL connected");
+  }
+
+  async disconnect() {
+    await this.connection?.close();
+    console.log("MySQL disconnected");
+  }
+
+  async query(sql) {
+    return this.connection.execute(sql);
+  }
+}
+
+class MongoDatabase extends Database {
+  async connect() { /* MongoDB connection */ }
+  async disconnect() { /* MongoDB disconnect */ }
+  async query(query) { /* MongoDB query */ }
+}
+
+// Abstraction in use — user শুধু execute() জানে
+const db = new MySQLDatabase({ host: "localhost", db: "myapp" });
+const users = await db.execute("SELECT * FROM users");
+// connect/disconnect details লুকানো
+
+// new Database(); // Error: abstract class!
+```
+
+---
+
+## ৬.১০ SOLID Principles in JavaScript
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 SOLID কী?
+
+| Letter | Principle |
+|--------|-----------|
+| **S** | Single Responsibility |
+| **O** | Open/Closed |
+| **L** | Liskov Substitution |
+| **I** | Interface Segregation |
+| **D** | Dependency Inversion |
+
+### 💻 S — Single Responsibility Principle
+
+```javascript
+// ❌ এক class অনেক কাজ করছে
+class UserManager {
+  createUser(data) { /* DB save */ }
+  validateUser(data) { /* validation */ }
+  sendWelcomeEmail(user) { /* email */ }
+  generateReport(users) { /* report */ }
+  logActivity(action) { /* logging */ }
+}
+
+// ✅ প্রতিটি class একটি কাজ
+class UserRepository {
+  async create(data) { /* DB save */ }
+  async findById(id) { /* DB query */ }
+}
+
+class UserValidator {
+  validate(data) { /* validation logic */ }
+}
+
+class EmailService {
+  sendWelcome(user) { /* email */ }
+}
+
+class UserService {
+  constructor(repo, validator, emailService) {
+    this.repo = repo;
+    this.validator = validator;
+    this.emailService = emailService;
+  }
+
+  async registerUser(data) {
+    this.validator.validate(data);
+    const user = await this.repo.create(data);
+    this.emailService.sendWelcome(user);
+    return user;
+  }
+}
+```
+
+### 💻 O — Open/Closed Principle
+
+```javascript
+// ❌ নতুন payment type যোগ করতে এই class পরিবর্তন লাগে
+class PaymentProcessor {
+  process(type, amount) {
+    if (type === "credit") { /* credit */ }
+    else if (type === "paypal") { /* paypal */ }
+    else if (type === "bkash") { /* bkash */ } // নতুন যোগ করতে class পরিবর্তন!
+  }
+}
+
+// ✅ Extension-এর জন্য open, modification-এর জন্য closed
+class PaymentMethod {
+  process(amount) { throw new Error("implement করুন"); }
+}
+
+class CreditCardPayment extends PaymentMethod {
+  process(amount) { console.log(`Credit card: ${amount}`); }
+}
+
+class BkashPayment extends PaymentMethod {
+  process(amount) { console.log(`bKash: ${amount}`); }
+}
+
+class PaymentProcessor2 {
+  process(paymentMethod, amount) {
+    paymentMethod.process(amount); // নতুন type = শুধু নতুন class
+  }
+}
+// NagadPayment যোগ করতে PaymentProcessor2 পরিবর্তন লাগবে না!
+```
+
+### 💻 L — Liskov Substitution Principle
+
+```javascript
+// Parent যেখানে কাজ করে, child সেখানেও কাজ করতে হবে
+class Bird {
+  fly() { return `${this.name} is flying`; }
+}
+
+// ❌ Penguin fly করতে পারে না — LSP violation
+class Penguin extends Bird {
+  fly() { throw new Error("Penguins cannot fly!"); }
+}
+
+// ✅ Better design
+class Bird2 {
+  move() { return `${this.name} is moving`; }
+}
+class FlyingBird extends Bird2 {
+  fly() { return `${this.name} is flying`; }
+}
+class SwimmingBird extends Bird2 {
+  swim() { return `${this.name} is swimming`; }
+}
+class Eagle extends FlyingBird { }
+class Penguin2 extends SwimmingBird { }
+```
+
+### 💻 D — Dependency Inversion Principle
+
+```javascript
+// ❌ High-level module directly depends on low-level
+class OrderService {
+  constructor() {
+    this.db = new MySQLDatabase(); // concrete class-এ depend
+    this.email = new GmailService(); // concrete class
+  }
+}
+
+// ✅ Depend on abstractions (interfaces/abstract classes)
+class OrderService2 {
+  constructor(database, emailService) { // inject করা হয়
+    this.db = database;         // যেকোনো DB
+    this.email = emailService;  // যেকোনো email service
+  }
+
+  async createOrder(data) {
+    const order = await this.db.save(data);
+    await this.email.send(order.userEmail, "Order confirmed");
+    return order;
+  }
+}
+
+// Test-এ mock inject করা সহজ
+const mockDb = { save: async (d) => ({ ...d, id: 1 }) };
+const mockEmail = { send: async () => true };
+const service = new OrderService2(mockDb, mockEmail);
+```
+
+---
+
+## ৬.১১ PART 6 — Interview Questions & Answers
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 OOP Core Concepts (Q1–Q12)</strong></summary>
+<br>
+
+**Q1: JavaScript কি সত্যিকারের OOP language?**
+> **A:** JavaScript prototype-based OOP language — class-based (Java, C++) নয়। ES6 Classes হলো prototype-এর syntactic sugar। তবে OOP-এর চারটি pillar (Encapsulation, Inheritance, Polymorphism, Abstraction) সবই JS-এ implement করা যায়।
+
+**Q2: Prototype এবং Prototype Chain কী?**
+> **A:** প্রতিটি JS object-এর একটি `[[Prototype]]` (internal link) আছে — আরেকটি object। Property না পেলে prototype-এ খোঁজে, সেখানে না পেলে prototype-এর prototype-এ — `null` পর্যন্ত। এটি Prototype Chain। Class inheritance ভেতরে এটিই ব্যবহার করে।
+
+**Q3: `__proto__` এবং `prototype`-এর পার্থক্য?**
+> **A:** `__proto__` — প্রতিটি object instance-এর internal prototype link (deprecated, `Object.getPrototypeOf()` ব্যবহার করুন)। `prototype` — শুধু functions-এর property, `new` দিয়ে তৈরি instances-এর `__proto__` হয়।
+
+**Q4: Class কি ES6-এ নতুন OOP add করেছে?**
+> **A:** না। Class সম্পূর্ণ syntactic sugar — ভেতরে prototype-based inheritance-ই ব্যবহার হয়। `typeof MyClass === "function"` — class আসলে function। পার্থক্য শুধু syntax এবং কিছু behavior (strict mode, hoisting নেই)।
+
+**Q5: `super` কীভাবে কাজ করে?**
+> **A:** Constructor-এ `super()` — parent constructor call। Method-এ `super.method()` — parent method call। Child class constructor-এ `this` access করার আগে `super()` call বাধ্যতামূলক। Static method-এ `super.staticMethod()` — parent static।
+
+**Q6: Private class field (`#`) কীভাবে কাজ করে?**
+> **A:** ES2022-এর feature। `#fieldName` — class বাইরে access করা যায় না (সত্যিকারের private)। Symbol বা closure-ভিত্তিক privacy-এর চেয়ে জোরালো। `instance.#field` — SyntaxError। Subclass-ও access করতে পারে না।
+
+**Q7: Encapsulation কেন দরকার?**
+> **A:** Internal implementation hide করে — বাইরের code শুধু public interface দেখে। ভেতরে পরিবর্তন করলে বাইরের code ভাঙে না। Invariants রক্ষা করা যায় (balance negative হতে দেওয়া যাবে না)। Code maintainable ও secure হয়।
+
+**Q8: Inheritance vs Composition — কোনটি ভালো?**
+> **A:** "Composition over Inheritance" — software engineering principle। Inheritance: tight coupling, deep hierarchy সমস্যা। Composition: object-এ অন্য object-এর instance রাখা — flexible। JS-এ mixins, higher-order functions দিয়ে composition সহজ। Simple hierarchy-তে inheritance, complex behavior-এ composition।
+
+**Q9: Polymorphism কীভাবে JS-এ implement হয়?**
+> **A:** Method overriding — child class parent-এর method redefine করে। Duck typing — object-এর type না জেনে method call করা (`if (obj.fly)`)। `instanceof` বা `typeof` check ছাড়াই same interface-এ different types কাজ করে।
+
+**Q10: `new.target` কী?**
+> **A:** Constructor/function-এ `new.target` — `new` দিয়ে call হলে constructor reference, নইলে `undefined`। Abstract class implement করতে: `if (new.target === AbstractClass) throw Error()`।
+
+**Q11: Mixin pattern কী?**
+> **A:** JS-এ multiple inheritance নেই। Mixin: একটি object-এর methods অন্য class-এ copy করা।
+```javascript
+const Serializable = (Base) => class extends Base {
+  serialize() { return JSON.stringify(this); }
+};
+const Validatable = (Base) => class extends Base {
+  validate() { /* ... */ }
+};
+class User extends Serializable(Validatable(Entity)) { }
+```
+
+**Q12: Static method কখন ব্যবহার করবেন?**
+> **A:** Instance-এর state দরকার নেই এমন utility/factory methods-এ। `Math.max()`, `Array.from()`, `Object.keys()` সব static। Factory: `User.create()`, `Date.now()`, utility: `MathHelper.clamp()`।
+
+</details>
+
+<details>
+<summary><strong>🔹 Advanced OOP (Q13–Q20)</strong></summary>
+<br>
+
+**Q13: Constructor function এবং Class-এর পার্থক্য?**
+> **A:** Class: strict mode enforced, hoisting নেই (TDZ), `new` বাধ্যতামূলক, cleaner syntax, private fields support। Constructor function: hoisted, `new` ছাড়া call করা যায় (কিন্তু bug), prototype manually setup করতে হয়। ভেতরে একই — prototype-based।
+
+**Q14: Getter/Setter কখন ব্যবহার করবেন?**
+> **A:** Computed property (একাধিক field থেকে), validation (setter-এ check), lazy calculation (প্রথমবার access-এ compute, cache করা), backward compatibility (property → method transition)। `get fullName()` — `firstName + " " + lastName`।
+
+**Q15: Object.create() এবং `new`-এর পার্থক্য?**
+> **A:** `new Constructor()` — constructor function চলে। `Object.create(proto)` — constructor ছাড়া proto-র সাথে link করা object। `Object.create(null)` — prototype-হীন pure object (JSON-like)।
+
+**Q16: SOLID কেন জানা দরকার?**
+> **A:** SOLID মানা মানে maintainable, testable, extensible code। S: change করলে একটি জায়গায় affect। O: নতুন feature = নতুন class, পুরনো code অপরিবর্তিত। L: subtypes replace করা যায়। I:불필요한 dependency নেই। D: testing সহজ (mock inject)।
+
+**Q17: Prototype-এ method রাখা vs constructor-এ রাখার পার্থক্য?**
+> **A:** Constructor-এ: প্রতিটি instance-এ আলাদা copy — memory expensive। Prototype-এ: সব instances share করে — memory efficient। ১০০০ instance হলে prototype-এ method = ১টি copy, constructor-এ = ১০০০ copy।
+
+**Q18: `instanceof` কীভাবে কাজ করে?**
+> **A:** Prototype chain-এ খোঁজে। `a instanceof B` — `a.__proto__ === B.prototype` বা তার chain-এ? `Symbol.hasInstance` override করে customize করা যায়।
+
+**Q19: Method chaining (Fluent Interface) কীভাবে implement করবেন?**
+> **A:** প্রতিটি method `this` return করলে chain করা যায়:
+```javascript
+account.deposit(1000).withdraw(500).transfer(200);
+```
+Builder pattern-এ দরকারি।
+
+**Q20: `Object.freeze()` দিয়ে কি সত্যিকারের immutable object তৈরি করা যায়?**
+> **A:** Shallow freeze শুধু — top-level properties freeze হয়। Nested object freeze হয় না। Deep freeze-এর জন্য recursive:
+```javascript
+function deepFreeze(obj) {
+  Object.getOwnPropertyNames(obj).forEach(name => {
+    const val = obj[name];
+    if (typeof val === "object" && val !== null) deepFreeze(val);
+  });
+  return Object.freeze(obj);
+}
+```
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 7 আসছে:** JavaScript in Frontend Development — SPA basics, Virtual DOM, React fundamentals, Component architecture, State management, API integration, Routing।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 7 দাও" লিখুন।
