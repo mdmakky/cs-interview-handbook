@@ -1,16 +1,131 @@
+<a id="top"></a>
+
 # 🎯 OOP Interview Preparation Handbook
-## বাংলাদেশের Junior Software Engineer ইন্টারভিউয়ের জন্য সম্পূর্ণ গাইড
-
-**লেখক:** Senior Software Engineer & Technical Interviewer  
-**লক্ষ্য:** বাংলাদেশের শীর্ষ সফটওয়্যার কোম্পানিতে Junior SWE পদে চাকরি পাওয়া  
-**ভাষা:** বাংলা (Technical terms ইংরেজিতে)
-
 ---
 
 > **💡 হ্যান্ডবুক ব্যবহারের নিয়ম:**  
 > প্রতিটি টপিক মনোযোগ দিয়ে পড়ুন। Code examples নিজে লিখুন। Interview questions নিজে উত্তর দেওয়ার চেষ্টা করুন তারপর model answer দেখুন।
 
 ---
+
+<a id="toc"></a>
+
+## 📋 সূচিপত্র — Table of Contents
+
+> **💡 নিচের যেকোনো PART এ সরাসরি ক্লিক করুন। প্রতিটি PART এর শেষে [⬆ শীর্ষে ফিরুন](#top) বাটন আছে।**
+
+| | PART | বিষয়বস্তু |
+|:-:|------|------------|
+| 📘 | [**PART 1** — OOP Fundamentals](#part1) | Class, Object, Encapsulation, Abstraction, Inheritance, Polymorphism |
+| 📗 | [**PART 2** — Advanced OOP](#part2) | SOLID, Interface, Virtual Functions, Binding, Diamond Problem |
+| 📙 | [**PART 3** — Interview Q&A (৫০টি)](#part3) | Theoretical Questions, Common Mistakes, Follow-up Patterns |
+| 📕 | [**PART 4** — Coding Problems](#part4) | Student, Bank, Employee, Library Management Systems |
+| 📓 | [**PART 5** — Language-Specific OOP](#part5) | Java, C++, Python, C# — তুলনা ও Interview Traps |
+| 📔 | [**PART 6** — Advanced Topics](#part6) | Memory, Garbage Collection, Design Patterns (GoF), MVC |
+| 📒 | [**PART 7** — BD Interview Prep](#part7) | Mock Interview, Company Patterns, Checklist, Rapid-fire |
+
+<details>
+<summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [১.১ OOP কী?](#১১-object-oriented-programming-oop-কী)
+- [১.২ Class এবং Object](#১২-class-এবং-object)
+- [১.৩ Constructor ও Destructor](#১৩-constructor-এবং-destructor)
+- [১.৪ Access Modifiers](#১৪-access-modifiers-অ্যাক্সেস-মডিফায়ার)
+- [১.৫ Encapsulation](#১৫-encapsulation-এনক্যাপসুলেশন)
+- [১.৬ Abstraction](#১৬-abstraction-অ্যাবস্ট্রাকশন)
+- [১.৭ Inheritance](#১৭-inheritance-ইনহেরিটেন্স)
+- [১.৮ Polymorphism](#১৮-polymorphism-পলিমরফিজম)
+- [১.৯ Overloading vs Overriding](#১৯-method-overloading-vs-method-overriding)
+- [১.১০ Interview Q&A](#১১০-part-1--interview-questions--answers)
+
+</details>
+
+<details>
+<summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [২.১ Static vs Dynamic Binding](#২১-static-binding-vs-dynamic-binding)
+- [২.২ Interface](#২২-interface-ইন্টারফেস)
+- [২.৩ Abstract Class vs Interface](#২৩-abstract-class-vs-interface)
+- [২.৪ Virtual Function ও Pure Virtual Function](#২৪-virtual-function-এবং-pure-virtual-function)
+- [২.৫ Copy Constructor ও Deep/Shallow Copy](#২৫-copy-constructor-এবং-deep-vs-shallow-copy)
+- [২.৬ Diamond Problem](#২৬-diamond-problem-ডায়মন্ড-সমস্যা)
+- [২.৭ SOLID Principles](#২৭-solid-principles)
+- [২.৮ Dependency Injection](#২৮-dependency-injection-di)
+- [২.৯ Coupling ও Cohesion](#২৯-coupling-এবং-cohesion)
+- [২.১০ Interview Q&A](#২১০-part-2--interview-questions--answers)
+
+</details>
+
+<details>
+<summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৩.১ ৫০টি Theoretical Q&A](#৩১-theoretical-interview-questions-৫০টি-বিস্তারিত-প্রশ্নোত্তর)
+- [৩.২ Common Interview Mistakes](#৩২-common-interview-mistakes-এবং-কীভাবে-এড়াবেন)
+- [৩.৩ Follow-up Question Patterns](#৩৩-follow-up-question-patterns-common-sequences)
+
+</details>
+
+<details>
+<summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৪.১ Student Management System](#৪১-student-management-system)
+- [৪.২ Bank Management System](#৪২-bank-management-system)
+- [৪.৩ Employee Management System](#৪৩-employee-management-system)
+- [৪.৪ Library Management System](#৪৪-library-management-system)
+- [৪.৫ Coding Interview কৌশল](#৪৫-coding-problem--interview-কৌশল-সব-system-এর-জন্য)
+
+</details>
+
+<details>
+<summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৫.১ Java OOP](#৫১-java-oop--বিস্তারিত)
+- [৫.২ C++ OOP](#৫২-c-oop--java-এর-সাথে-তুলনা)
+- [৫.৩ Python OOP](#৫৩-python-oop--বৈশিষ্ট্য-ও-interview-traps)
+- [৫.৪ C# OOP](#৫৪-c-oop--java-এর-সাথে-তুলনা)
+- [৫.৫ Language তুলনা Table](#৫৫-language-তুলনা--quick-reference-table)
+- [৫.৬ BD Interview Language Questions](#৫৬-bangladeshi-interview-তে-language-specific-প্রশ্ন)
+
+</details>
+
+<details>
+<summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৬.১ Memory Management — Stack vs Heap](#৬১-memory-management--stack-vs-heap)
+- [৬.২ Garbage Collection](#৬২-garbage-collection--java)
+- [৬.৩ Design Patterns (GoF)](#৬৩-design-patterns--gang-of-four-gof)
+- [৬.৪ MVC Architecture](#৬৪-mvc-architecture--oop-দিয়ে)
+- [৬.৫ Object Cloning](#৬৫-object-cloning--shallow-vs-deep-copy-revisited)
+- [৬.৬ Exception Handling ও OOP](#৬৬-exception-handling-ও-oop)
+- [৬.৭ Advanced Interview Questions](#৬৭-advanced-oop-interview-questions)
+
+</details>
+
+<details>
+<summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৭.১ BD Company Interview Structure](#৭১-bangladeshi-tech-company--interview-structure)
+- [৭.২ Fresher Viva — Common Q&A](#৭২-fresher-viba--সবচেয়ে-বেশি-জিজ্ঞেস-করা-প্রশ্ন-ও-আদর্শ-উত্তর)
+- [৭.৩ Project Explanation Strategy](#৭৩-project-explanation--oop-দিয়ে-কীভাবে-বলবেন)
+- [৭.৪ Complete Mock Interview](#৭৪-complete-mock-interview--পূর্ণ-কথোপকথন)
+- [৭.৫ Interview ভুল এড়ানো](#৭৫-সাধারণ-interview-ভুল--এড়িয়ে-চলুন)
+- [৭.৬ 30-মিনিটের Checklist](#৭৬-30-মিনিটের-interview-preparation-checklist)
+- [৭.৭ এক লাইনের সংজ্ঞা](#৭৭-oop-concept--এক-লাইনের-স্মরণীয়-সংজ্ঞা)
+- [৭.৮ Rapid-Fire (৫০টি Q&A)](#৭৮-final-rapid-fire--৫০টি-quick-qa)
+- [৭.৯ Revision Plan](#৭৯-হ্যান্ডবুক-ব্যবহার-গাইড--revision-plan)
+
+</details>
+
+---
+
+<a id="part1"></a>
 
 # PART 1: OOP Fundamentals (মূল ধারণাসমূহ)
 
@@ -1697,7 +1812,11 @@ A: Virtual table (vtable) এর মাধ্যমে runtime এ সঠিক 
 
 > **⚠️ PART 1 সম্পন্ন হয়েছে।**
 
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
 ---
+
+<a id="part2"></a>
 
 # PART 2: Advanced OOP (উন্নত ধারণাসমূহ)
 
@@ -3280,7 +3399,11 @@ A: না। Java তে `final` method override করা যায় না�
 
 > **⚠️ PART 2 সম্পন্ন হয়েছে।**
 
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
 ---
+
+<a id="part3"></a>
 
 # PART 3: Interview Questions — সম্পূর্ণ প্রশ্নোত্তর ভান্ডার
 
@@ -4915,7 +5038,11 @@ Q: "SOLID বলুন" → follow-up → "LSP violation এর উদাহর�
 
 > **⚠️ PART 3 সম্পন্ন হয়েছে।**
 
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
 ---
+
+<a id="part4"></a>
 
 # PART 4: Coding Interview Problems — সম্পূর্ণ সমাধান
 
@@ -6612,7 +6739,11 @@ Step 5: Follow-up handle করুন
 > **⚠️ PART 4 সম্পন্ন হয়েছে।**  
 > পরবর্তী PART এর জন্য বলুন: **"PART 5 লিখুন"**
 
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
 ---
+
+<a id="part5"></a>
 
 # PART 5: Language-Specific OOP — Java, C++, Python, C\#
 
@@ -7767,7 +7898,11 @@ void printArea(const Circle& c) {
 > **⚠️ PART 5 সম্পন্ন হয়েছে।**  
 > পরবর্তী PART এর জন্য বলুন: **"PART 6 লিখুন"**
 
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
 ---
+
+<a id="part6"></a>
 
 # PART 6: Advanced OOP Topics — Memory, Design Patterns, GC, Architecture
 
@@ -9179,7 +9314,11 @@ class ExceptionDemo {
 > **⚠️ PART 6 সম্পন্ন হয়েছে।**  
 > পরবর্তী PART এর জন্য বলুন: **"PART 7 লিখুন"**
 
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
 ---
+
+<a id="part7"></a>
 
 # PART 7: Bangladeshi Interview Preparation — Mock Interview ও Confidence Guide
 
