@@ -26,8 +26,8 @@
 | [PART 6](#part6) | System Design Case Studies | URL Shortener, Chat App, E-commerce | ✅ |
 | [PART 7](#part7) | Low-Level Design (LLD) | SOLID, Design Patterns, UML | ✅ |
 | [PART 8](#part8) | Cloud & DevOps Basics | AWS, Docker, Kubernetes, CI/CD | 🔜 |
-| [PART 9](#part9) | Interview Q&A Bank | 200+ Questions with Detailed Answers | 🔜 |
-| [PART 10](#part10) | Bangladeshi Interview Preparation | BD Company Patterns, Mock Interviews | 🔜 |
+| [PART 9](#part9) | Interview Q&A Bank | 200+ Questions with Detailed Answers | ✅ |
+| [PART 10](#part10) | Bangladeshi Interview Preparation | BD Company Patterns, Mock Interviews | ✅ |
 
 ---
 
@@ -89,6 +89,34 @@
 - YouTube-like Video Platform
 - E-commerce System (Chaldal/Daraz)
 - Hospital Management System
+
+</details>
+
+<details>
+<summary>❓ <strong>PART 9: System Design Interview Q&A Bank</strong> — কী কী শিখবো?</summary>
+
+- Rapid Fire 75 প্রশ্নোত্তর (Fundamentals, DB, Cache, Network, Distributed, MQ)
+- Architecture Q&A: Capacity estimation, HA, DB choice, API design
+- Microservices challenges, DB migration, real-time features
+- Scenario-based: Black Friday incident, Security breach, Payment, File upload, Search
+- LLD coding: Rate Limiter, LRU Cache, Task Scheduler
+- Rapid 50 Q&A: Webhook, OAuth, Security, DevOps, Data Engineering
+
+</details>
+
+<details>
+<summary>🇧🇩 <strong>PART 10: Bangladeshi Interview Preparation</strong> — কী কী শিখবো?</summary>
+
+- BD Tech Job Market Overview (Product vs Service vs Startup)
+- BD Company Common Interview Questions
+- Project explanation using STAR + System Design angle
+- Mock Interview: Full session (Bengali conversation)
+- Common rejection reasons ও solutions
+- Salary negotiation (BD rates, tactics)
+- 30-Day Sprint roadmap
+- Resume Tips, GitHub Profile
+- Remote/International opportunities
+- Career path: BD → International
 
 </details>
 
@@ -8496,4 +8524,2258 @@ Error rate → Latency → Traffic → Saturation
 
 *হ্যান্ডবুক তৈরিতে: Senior Software Architect, Backend Engineer & System Design Interviewer*
 *Version: 1.0 | তারিখ: মে ২০২৬*
-*মোট PART: 10 | সম্পন্ন: PART 1-8 ✅ | বাকি: PART 9-10 🔜*
+
+
+<a id="part9"></a>
+
+---
+
+# PART 9: System Design Interview Q&A Bank
+### ❓ 150+ প্রশ্ন ও বিস্তারিত উত্তর
+
+> **এই PART এর ব্যবহার:** প্রতিটা section আলাদাভাবে পড়ো। Interview এর আগে Quick Answers গুলো মুখস্থ না করে **বুঝে** পড়ো। যেকোনো প্রশ্নে নিজের ভাষায় explain করতে পারাটাই লক্ষ্য।
+
+---
+
+## 9.1 Fundamentals — তাৎক্ষণিক উত্তর (Rapid Fire)
+
+| # | প্রশ্ন | উত্তর |
+|---|--------|-------|
+| 1 | Latency কী? | Request পাঠানো থেকে Response পাওয়া পর্যন্ত সময় |
+| 2 | Throughput কী? | একটা নির্দিষ্ট সময়ে কতটা কাজ হলো (requests/sec) |
+| 3 | Availability মানে কী? | System কতটা সময় চালু থাকে (99.9%, 99.99%) |
+| 4 | Reliability কী? | System তার কাজ সঠিকভাবে করে কিনা |
+| 5 | Scalability কী? | Load বাড়লে system handle করতে পারে কিনা |
+| 6 | Horizontal scaling কী? | বেশি server যোগ করা (scale out) |
+| 7 | Vertical scaling কী? | এক server এর resource বাড়ানো (scale up) |
+| 8 | CAP theorem কী? | Distributed system এ C, A, P একসাথে তিনটা পাওয়া যায় না |
+| 9 | ACID কী? | Atomicity, Consistency, Isolation, Durability |
+| 10 | BASE কী? | Basically Available, Soft state, Eventual consistency |
+| 11 | Stateless service কী? | প্রতি request independent, server state রাখে না |
+| 12 | Stateful service কী? | Server client এর state মনে রাখে |
+| 13 | Load balancer কী করে? | Requests multiple servers এ distribute করে |
+| 14 | Reverse proxy কী? | Client এর হয়ে server এর সামনে থাকে |
+| 15 | CDN কী? | Globally distributed cache — content কাছ থেকে serve |
+| 16 | DNS কী করে? | Domain name → IP address resolve করে |
+| 17 | HTTP vs HTTPS? | HTTPS = HTTP + TLS encryption |
+| 18 | REST vs GraphQL? | REST fixed endpoints, GraphQL client নিজে data specify করে |
+| 19 | WebSocket কেন দরকার? | Real-time bidirectional communication (chat, live updates) |
+| 20 | gRPC কী? | Protocol Buffers + HTTP/2 — microservices fast communication |
+
+---
+
+## 9.2 Database — তাৎক্ষণিক উত্তর
+
+| # | প্রশ্ন | উত্তর |
+|---|--------|-------|
+| 21 | SQL vs NoSQL কখন? | SQL: structured, ACID; NoSQL: flexible schema, scale |
+| 22 | Database index কী? | Query fast করে — extra data structure |
+| 23 | Primary key vs unique key? | Primary: NULL নয়, একটাই; Unique: NULL হতে পারে, multiple |
+| 24 | Foreign key কী? | দুই table এর মধ্যে relationship enforce করে |
+| 25 | Database normalization কী? | Redundancy কমানো, integrity বাড়ানো |
+| 26 | Denormalization কেন করি? | Read performance বাড়াতে (joins কমানো) |
+| 27 | Database replication কী? | Data copy রাখা — read scaling, high availability |
+| 28 | Master-Slave replication? | Master = write, Slaves = read replicas |
+| 29 | Database sharding কী? | Data horizontally partition করা multiple DBs এ |
+| 30 | Consistent hashing কী? | Sharding/caching এ nodes add/remove করলে কম data move |
+| 31 | OLTP vs OLAP? | OLTP: transactions; OLAP: analytics/reporting |
+| 32 | N+1 query problem? | List এর প্রতি item এর জন্য আলাদা query — use eager loading |
+| 33 | Database connection pool? | Pre-created connections reuse করা — overhead কমে |
+| 34 | Optimistic vs pessimistic locking? | Optimistic: conflict এ retry; Pessimistic: আগেই lock |
+| 35 | Read replica lag কী? | Master write → Replica apply হতে সময় লাগে |
+
+---
+
+## 9.3 Caching — তাৎক্ষণিক উত্তর
+
+| # | প্রশ্ন | উত্তর |
+|---|--------|-------|
+| 36 | Cache hit vs miss? | Hit: cache এ পেয়েছি; Miss: DB থেকে আনতে হলো |
+| 37 | Cache eviction policy? | LRU, LFU, FIFO — কোন item cache থেকে বের করবো |
+| 38 | LRU কী? | Least Recently Used — সবচেয়ে বেশি পুরনো access |
+| 39 | Cache-aside pattern? | App cache check করে, miss হলে DB → cache store |
+| 40 | Write-through cache? | Write করলেই cache + DB একসাথে update |
+| 41 | Write-behind cache? | Write cache এ, async DB write |
+| 42 | Cache stampede কী? | Cache expire → সবাই একসাথে DB hit — সমাধান: mutex lock |
+| 43 | TTL কী? | Time-To-Live — cache কতক্ষণ valid থাকবে |
+| 44 | Redis vs Memcached? | Redis: data structures, persistence; Memcached: simple, fast |
+| 45 | CDN cache কীভাবে কাজ করে? | Edge server এ content cache, user কাছ থেকে পায় |
+
+---
+
+## 9.4 Networking — তাৎক্ষণিক উত্তর
+
+| # | প্রশ্ন | উত্তর |
+|---|--------|-------|
+| 46 | TCP vs UDP? | TCP: reliable, ordered; UDP: fast, no guarantee |
+| 47 | HTTP/2 এর সুবিধা? | Multiplexing, header compression, server push |
+| 48 | HTTP/3 কী? | QUIC protocol (UDP based) — faster connection |
+| 49 | SSL/TLS handshake? | Key exchange → session key → encrypted communication |
+| 50 | API Gateway কী করে? | Auth, rate limit, routing, logging — single entry point |
+| 51 | Rate limiting কী? | Client এর request number limit করা |
+| 52 | Token bucket algorithm? | Tokens জমা হয়, request এ consume হয় |
+| 53 | Circuit breaker states? | CLOSED → OPEN → HALF_OPEN |
+| 54 | mTLS কী? | Client + Server উভয়ই certificate verify করে |
+| 55 | Service mesh কী? | Microservices communication, security, observability layer |
+
+---
+
+## 9.5 Distributed Systems — তাৎক্ষণিক উত্তর
+
+| # | প্রশ্ন | উত্তর |
+|---|--------|-------|
+| 56 | Consensus algorithm কী? | Distributed nodes এ agreement — Raft, Paxos |
+| 57 | Leader election কী? | Distributed system এ একটা node leader হওয়া |
+| 58 | Split brain problem? | Network partition → দুই partition নিজেকে leader ভাবে |
+| 59 | Quorum কী? | Majority (N/2+1) nodes এর agreement দরকার |
+| 60 | Idempotency কেন দরকার? | Retry safe করতে — same operation বারবার = same result |
+| 61 | Exactly-once delivery? | Message exactly একবার process হবে (কঠিন!) |
+| 62 | At-least-once delivery? | Message অন্তত একবার — duplicate possible |
+| 63 | At-most-once delivery? | Message সর্বোচ্চ একবার — loss possible |
+| 64 | Vector clock কী? | Causality track করে distributed events এ |
+| 65 | Two Generals Problem? | Unreliable network এ 100% coordination impossible |
+
+---
+
+## 9.6 Message Queues — তাৎক্ষণিক উত্তর
+
+| # | প্রশ্ন | উত্তর |
+|---|--------|-------|
+| 66 | Kafka vs RabbitMQ কখন? | Kafka: high throughput, replay; RabbitMQ: complex routing |
+| 67 | Kafka partition কী? | Topic এর parallel processing unit |
+| 68 | Kafka consumer group? | Partition ভাগ করে parallel consume করে |
+| 69 | Kafka offset কী? | Partition এ message এর sequential ID |
+| 70 | Dead letter queue কী? | Failed messages এর storage — debug, retry |
+| 71 | Pub/Sub vs Point-to-Point? | Pub/Sub: সবাই পায়; P2P: একজন পায় |
+| 72 | Saga pattern কেন? | Distributed transaction eventual consistency দিয়ে |
+| 73 | 2PC এর সমস্যা? | Coordinator fail → blocking, single point of failure |
+| 74 | Event sourcing কী? | State না রেখে events রাখো, replay করে state বের করো |
+| 75 | CQRS কী? | Command (write) ও Query (read) model আলাদা করা |
+
+---
+
+## 9.7 বিস্তারিত প্রশ্নোত্তর — System Design Core
+
+<details>
+<summary><strong>Q76: তুমি কীভাবে একটা system এর capacity estimate করো?</strong></summary>
+
+**উত্তর — Estimation Framework:**
+
+```
+Step 1: Users
+  DAU (Daily Active Users): 1M
+  Peak concurrent: DAU × 10% = 100K
+
+Step 2: Traffic
+  Read:Write ratio estimate করো (e.g., 100:1)
+  Reads/sec: 100K × 10 actions × 100/(100+1) ≈ 99K/sec
+  Writes/sec: 100K × 10 actions × 1/101 ≈ 1K/sec
+
+Step 3: Storage
+  Per record size × records/day × retention days
+  e.g., 100 bytes × 1M writes/day × 365 days = 36.5 GB/year
+
+Step 4: Bandwidth
+  Reads/sec × avg response size
+  99K/sec × 1KB = 99 MB/sec ≈ 100 MB/sec
+
+Step 5: Servers
+  Single server handle: ~1K-10K req/sec (depends on work)
+  Needed: 99K / 5K = ~20 app servers
+```
+
+**মনে রাখো:** Exact না হলেও চলে। Order of magnitude (10x) ঠিক থাকলেই design decision নিতে পারবে।
+
+</details>
+
+<details>
+<summary><strong>Q77: High availability কীভাবে achieve করবে?</strong></summary>
+
+**উত্তর:**
+
+```
+High Availability = Eliminating Single Points of Failure
+
+Layer by layer:
+
+1. Application Layer:
+   Multiple instances + Load Balancer
+   Auto-restart (Kubernetes self-healing)
+   Health checks
+
+2. Database Layer:
+   Master-Slave replication
+   Multi-AZ deployment (AWS RDS)
+   Automatic failover
+
+3. Cache Layer:
+   Redis Sentinel or Redis Cluster
+   Multiple cache nodes
+
+4. Network:
+   Multiple ISP connections
+   DNS failover (Route 53 health checks)
+   Multi-region (Active-Active বা Active-Passive)
+
+5. Data Center:
+   Multiple Availability Zones
+   Geographically distributed
+
+Availability calculation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+99% → 3.65 days downtime/year
+99.9% → 8.77 hours/year
+99.99% → 52.6 minutes/year
+99.999% → 5.26 minutes/year (five nines)
+
+Series: A_total = A1 × A2 × A3 (worse)
+Parallel: A_total = 1 - (1-A1)(1-A2) (better!)
+```
+
+</details>
+
+<details>
+<summary><strong>Q78: Database choose করার criteria কী?</strong></summary>
+
+**উত্তর:**
+
+```
+Decision Framework:
+
+1. Data structure কী?
+   Structured, relations আছে → SQL (PostgreSQL)
+   Document (JSON-like) → MongoDB
+   Key-Value → Redis, DynamoDB
+   Wide-column, time-series → Cassandra
+   Graph data → Neo4j
+   Search → Elasticsearch
+
+2. Consistency requirement?
+   Strong consistency (finance, inventory) → SQL with ACID
+   Eventual consistency okay → NoSQL
+
+3. Scale requirement?
+   Moderate (millions) → PostgreSQL with replicas
+   Massive (billions) → Cassandra, DynamoDB, BigTable
+
+4. Query pattern?
+   Complex joins, ad-hoc queries → SQL
+   Simple key lookups, high write → NoSQL
+   Full-text search → Elasticsearch
+
+5. Write vs Read heavy?
+   Read heavy (10:1+) → Replicas, caching
+   Write heavy → Sharding, Cassandra, write-optimized
+
+Real answer pattern:
+"এই system এ user profiles SQL তে রাখবো কারণ structured, relations আছে।
+Posts/feeds NoSQL (Cassandra) তে কারণ write-heavy, time-series।
+Search Elasticsearch এ। Cache Redis এ।"
+```
+
+</details>
+
+<details>
+<summary><strong>Q79: API design করার best practices কী?</strong></summary>
+
+**উত্তর:**
+
+```
+RESTful API Best Practices:
+
+1. Nouns, not verbs (resource-based):
+   ✅ GET /users/123
+   ❌ GET /getUser?id=123
+
+2. HTTP methods properly:
+   GET    → Read (safe, idempotent)
+   POST   → Create (not idempotent)
+   PUT    → Full update (idempotent)
+   PATCH  → Partial update
+   DELETE → Delete (idempotent)
+
+3. Proper HTTP status codes:
+   200 OK, 201 Created, 204 No Content
+   400 Bad Request, 401 Unauthorized, 403 Forbidden
+   404 Not Found, 409 Conflict, 422 Unprocessable
+   500 Internal Server Error
+
+4. Versioning:
+   URL: /api/v1/users (most common)
+   Header: Accept: application/vnd.myapi.v1+json
+
+5. Pagination:
+   Cursor: GET /posts?after=abc123&limit=20 (recommended)
+   Offset: GET /posts?page=2&per_page=20
+
+6. Error response format:
+   {
+     "error": {
+       "code": "VALIDATION_ERROR",
+       "message": "Email is required",
+       "field": "email"
+     }
+   }
+
+7. Filtering, sorting:
+   GET /products?category=phone&sort=price&order=asc
+
+8. Rate limit headers:
+   X-RateLimit-Limit: 100
+   X-RateLimit-Remaining: 45
+   X-RateLimit-Reset: 1715428800
+```
+
+</details>
+
+<details>
+<summary><strong>Q80: Microservices এ সবচেয়ে বড় চ্যালেঞ্জ কী?</strong></summary>
+
+**উত্তর:**
+
+```
+Top Microservices Challenges:
+
+1. Distributed System Complexity:
+   Network failure, partial failure handle করতে হবে
+   Circuit breaker, retry, timeout implement করো
+
+2. Data Management:
+   প্রতি service নিজের DB — cross-service transactions কঠিন
+   Saga pattern দিয়ে solve করো
+
+3. Service Discovery:
+   Dynamic IPs — কোথায় আছে কে জানবে?
+   Kubernetes DNS, Consul, Eureka
+
+4. Distributed Tracing:
+   একটা request ১০টা service হয়ে গেলে debug কঠিন
+   Jaeger, Zipkin, OpenTelemetry
+
+5. Testing Complexity:
+   Integration tests, contract tests, E2E tests কঠিন
+   Consumer-driven contract testing (Pact)
+
+6. Operational Overhead:
+   ১০টা service = ১০টা deployment, monitoring, logs
+   Service mesh (Istio), centralized logging
+
+7. Security:
+   প্রতি service-to-service call secure করতে হবে
+   mTLS, API Gateway, JWT propagation
+
+মনে রাখো: Microservices = distributed system এর সব complexity + domain complexity।
+শুরুতে Monolith, তারপর extract করো।
+```
+
+</details>
+
+---
+
+## 9.8 Architecture — বিস্তারিত প্রশ্নোত্তর
+
+<details>
+<summary><strong>Q81: Load balancer এর algorithms কী কী?</strong></summary>
+
+**উত্তর:**
+
+```
+Load Balancing Algorithms:
+
+1. Round Robin (Default):
+   Server 1 → Server 2 → Server 3 → Server 1 → ...
+   সুবিধা: Simple
+   সমস্যা: Server capacity different হলে সমস্যা
+
+2. Weighted Round Robin:
+   Server 1 (weight=3): 3 requests
+   Server 2 (weight=1): 1 request
+   Powerful server বেশি traffic পায়
+
+3. Least Connections:
+   Currently সবচেয়ে কম connection আছে যে server এ পাঠাও
+   Long-lived connections এর জন্য ভালো (WebSocket)
+
+4. IP Hash (Sticky Sessions):
+   Client IP → same server always
+   Session affinity দরকার হলে (stateful apps)
+
+5. Least Response Time:
+   সবচেয়ে কম latency + কম connections → সেই server
+
+6. Random:
+   Random server choose করো
+   Surprisingly well, simple
+
+Nginx Config:
+upstream backend {
+    least_conn;
+    server app1:8000 weight=3;
+    server app2:8000 weight=1;
+    server app3:8000 backup;  # Only when others fail
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Q82: Database sharding strategy কীভাবে choose করবে?</strong></summary>
+
+**উত্তর:**
+
+```
+Sharding Strategies:
+
+1. Range-based Sharding:
+   user_id 1-1M → Shard 1
+   user_id 1M-2M → Shard 2
+   সুবিধা: Range queries fast
+   সমস্যা: Hot shard (নতুন users সব Shard 2 এ)
+
+2. Hash-based Sharding:
+   shard = hash(user_id) % num_shards
+   সুবিধা: Even distribution
+   সমস্যা: Range queries কঠিন, resharding hard
+
+3. Consistent Hashing:
+   Hash ring — nodes add/remove করলে কম data migrate
+   সুবিধা: Resharding সহজ
+   Use: Cassandra, DynamoDB
+
+4. Directory-based Sharding:
+   Lookup table: user 123 → Shard 3
+   সুবিধা: Flexible
+   সমস্যা: Lookup table = single point of failure
+
+Shard key choose করার rules:
+✅ High cardinality (অনেক different values)
+✅ Even distribution
+✅ Most common query এর জন্য
+❌ Avoid monotonically increasing (auto-increment) → hot shard
+
+E.g., Instagram: media_id হিসেবে shard (না user_id — celebrity problem!)
+```
+
+</details>
+
+<details>
+<summary><strong>Q83: কীভাবে system এর bottleneck identify করবে?</strong></summary>
+
+**উত্তর:**
+
+```
+Bottleneck Identification Process:
+
+1. Metrics collect করো (প্রথমে):
+   - CPU, Memory, Disk I/O, Network
+   - Request latency (p50, p95, p99)
+   - Error rate
+   - DB query times
+   - Cache hit rate
+
+2. Profiling:
+   Application profiler চালাও — কোন function slow?
+   Python: cProfile, py-spy
+   Database: EXPLAIN ANALYZE
+   
+3. Common bottlenecks:
+
+   Database:
+   - Slow queries → EXPLAIN, index add করো
+   - Connection pool exhausted → pool size বাড়াও
+   - N+1 queries → eager loading
+   - Missing index → CREATE INDEX
+
+   Application:
+   - Synchronous I/O blocking → async করো
+   - Inefficient algorithm → optimize
+   - Memory leak → heap dump
+
+   Network:
+   - Large payload → compression, pagination
+   - Too many requests → batch, GraphQL
+
+   Cache:
+   - Low hit rate → TTL, warming strategy check
+   - Cache stampede → mutex, background refresh
+
+4. Fix → measure → confirm improvement (data driven!)
+```
+
+</details>
+
+<details>
+<summary><strong>Q84: Data consistency কীভাবে handle করবে distributed system এ?</strong></summary>
+
+**উত্তর:**
+
+```
+Consistency Levels (Cassandra example):
+
+ONE:    একটা replica থেকে read/write confirm → Fast, not consistent
+QUORUM: Majority (N/2+1) → Balance
+ALL:    সব replicas → Slowest, most consistent
+
+Strategies:
+
+1. Strong Consistency (banking):
+   - Single region, single DB (ACID)
+   - Synchronous replication
+   - Read from master only
+   Cost: Higher latency, lower availability
+
+2. Eventual Consistency (social media):
+   - Async replication
+   - Read from replicas okay
+   - User might see stale data briefly
+   Cost: Stale reads possible
+
+3. Read-your-own-writes:
+   User নিজের write সবসময় দেখবে
+   User last write এর timestamp store করো
+   Read: "replica timestamp >= user's write timestamp?" → Yes → read replica; No → master
+
+4. Monotonic Reads:
+   User একবার data দেখলে পরে আরও পুরনো দেখবে না
+   Same user → same replica route করো (sticky session)
+
+5. Causal Consistency:
+   Causally related operations order maintain করে
+   Vector clocks দিয়ে implement
+```
+
+</details>
+
+<details>
+<summary><strong>Q85: Real-time feature implement করবে কীভাবে?</strong></summary>
+
+**উত্তর:**
+
+```
+Real-time Options (best to worst):
+
+1. WebSocket (Best for true real-time):
+   Persistent bidirectional connection
+   Server → Client push করতে পারে
+   Use: Chat, live notifications, collaborative editing, live sports scores
+   
+   Client:
+   const ws = new WebSocket('wss://api.example.com/ws');
+   ws.onmessage = (event) => updateUI(JSON.parse(event.data));
+   
+   Scale করার challenge:
+   WebSocket = stateful connection
+   LB: IP hash বা sticky session
+   Cross-server messaging: Redis Pub/Sub
+
+2. Server-Sent Events (SSE):
+   Unidirectional (Server → Client only)
+   HTTP long-lived connection
+   Auto-reconnect built-in
+   Use: Live feed, notifications (no need to send data to server)
+   
+   fetch('/events').then(response => {
+     const reader = response.body.getReader();
+     ...
+   })
+
+3. Long Polling:
+   Client request → Server holds until event
+   Simple, works everywhere
+   Higher latency than WebSocket
+   Use: When WebSocket not available
+
+4. Short Polling (Worst):
+   Client polls every N seconds
+   Wasteful, high latency
+   Use: Only last resort
+```
+
+</details>
+
+---
+
+## 9.9 Tricky Questions — সতর্কভাবে পড়ো
+
+<details>
+<summary><strong>Q86: "আমাদের system এ কোনো single point of failure নেই" — এটা কি সত্যি হতে পারে?</strong></summary>
+
+**উত্তর:**
+না, practically সত্যি হতে পারে না। কিছু hidden SPOFs সবসময় থাকে:
+
+1. **DNS provider:** DNS provider down হলে domain resolve হবে না
+2. **BGP routing:** Internet routing protocol
+3. **Power grid:** Physical datacenter এর বিদ্যুৎ
+4. **Human error:** ভুল config deploy, rm -rf /
+5. **Third-party APIs:** Payment gateway, SMS provider
+
+Engineering goal হলো SPOF minimize করা এবং failure এর impact কমানো। "No SPOF" বলা naive। "We've mitigated major SPOFs and can tolerate failures" বলা correct।
+
+</details>
+
+<details>
+<summary><strong>Q87: Cache এবং Database এর মধ্যে data inconsistency কীভাবে handle করবে?</strong></summary>
+
+**উত্তর:**
+```
+Problem scenarios:
+1. Cache hit — stale data (DB update হয়েছে, cache পুরনো)
+2. Cache miss — DB read, cache store — কিন্তু এর মধ্যে DB আবার update!
+
+Solutions:
+
+1. TTL (Simple, most common):
+   Cache এ TTL দাও (5 min, 1 hour)
+   Stale data থাকবে কিন্তু eventually fresh হবে
+   Trade-off: Stale window = TTL
+
+2. Write-through (Strong consistency):
+   DB update → Cache update একসাথে (transaction)
+   Cache always fresh
+   Problem: Write latency বাড়ে
+
+3. Cache Invalidation on Write:
+   DB update হলে cache delete করো (না update)
+   Next read: Cache miss → DB fetch → cache store
+   Problem: Thundering herd (সবাই একসাথে cache miss)
+
+4. Event-driven invalidation:
+   DB update → Kafka event → Cache invalidation service
+   Eventually consistent but decoupled
+
+5. Versioning:
+   Cache key এ version রাখো
+   update করলে version bump → old cache miss naturally expire
+   
+Best practice: TTL + Cache invalidation on critical updates
+```
+
+</details>
+
+<details>
+<summary><strong>Q88: 10 million concurrent users support করবে কীভাবে?</strong></summary>
+
+**উত্তর:**
+```
+এই প্রশ্নে interviewer দেখতে চায় তুমি layer by layer ভাবতে পারো কিনা।
+
+Layer 1 — DNS & CDN:
+  Anycast DNS → nearest DNS server
+  CloudFront/Akamai → 450+ edge locations
+  Static assets CDN এ → origin server এ request কম
+
+Layer 2 — Load Balancing:
+  Multiple LB (active-active)
+  AWS ALB: 100K+ req/sec handle করতে পারে
+
+Layer 3 — Application:
+  Stateless services → horizontal scale করো
+  Auto-scaling (K8s HPA, AWS ASG)
+  Each server: 10K concurrent connections
+  10M concurrent → 1000 servers (possible!)
+
+Layer 4 — Caching:
+  Redis Cluster: 10M req/sec handle করে
+  Cache hit rate 95%+ → DB তে শুধু 5% যায়
+
+Layer 5 — Database:
+  Read replicas (5M concurrent reads → 10 replicas)
+  Sharding (writes distribute)
+  Connection pool (PgBouncer)
+  DB: 10K connections max → pool + replicas
+
+Layer 6 — Async Processing:
+  Non-critical → Queue (Kafka)
+  Background workers
+
+এই architecture করলে 10M concurrent users handle possible।
+Cost? Millions of dollars/month — তাই Netflix, Twitter এর কথা।
+```
+
+</details>
+
+<details>
+<summary><strong>Q89: কোন situation এ Microservices avoid করবে?</strong></summary>
+
+**উত্তর:**
+Microservices সবসময় ভালো না। Avoid করবে:
+
+1. **Small team (< 10 engineers):** Microservices এর overhead বড় team এর জন্য। ছোট team এ monolith দিয়ে faster ship করা যায়।
+
+2. **Early-stage product:** Requirements এখনো clear না — service boundaries ভুল হবে। Martin Fowler: "Don't start with microservices"
+
+3. **Simple domain:** Simple CRUD app এ microservices overkill।
+
+4. **Tight coupling:** Services যদি সবসময় একসাথে deploy করতে হয় → effectively distributed monolith।
+
+5. **No DevOps maturity:** CI/CD, monitoring, container orchestration ছাড়া microservices chaos।
+
+**Sam Newman (Microservices author):** "Microservices শুধু তখন নাও যখন monolith থেকে independently deploy করার need সত্যিই আছে।"
+
+**BD context:** Junior এ monolith শিখো ভালো করে। Microservices এর কথা interview এ বলার আগে tradeoffs জানো।
+
+</details>
+
+<details>
+<summary><strong>Q90: কীভাবে database migration করবে zero downtime এ?</strong></summary>
+
+**উত্তর:**
+```
+Zero-Downtime Database Migration Strategies:
+
+Scenario: users table এ phone column যোগ করো
+
+❌ Bad approach:
+ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+# Table lock! Downtime!
+
+✅ Expand-Contract Pattern:
+
+Phase 1 — Expand (backward compatible):
+  ALTER TABLE users ADD COLUMN phone VARCHAR(20);
+  # Small migration, fast
+  # New code: phone লিখে কিন্তু পুরনো code না থাকলেও চলে
+
+Phase 2 — Migrate data:
+  Background job:
+  UPDATE users SET phone = '...' WHERE phone IS NULL LIMIT 1000;
+  # Batch করে করো, slow but non-blocking
+
+Phase 3 — Switch:
+  New code deploy — phone read করে
+  Old code already removed
+
+Phase 4 — Contract (cleanup):
+  ALTER TABLE users ALTER COLUMN phone SET NOT NULL;
+  # এখন সব data আছে, safe
+
+Other techniques:
+- Ghost (MySQL): Shadow table create, sync, rename — zero downtime
+- pg_repack (PostgreSQL): Table rewrite without locks
+- Blue-green database: Two identical DBs, switch
+```
+
+</details>
+
+---
+
+## 9.10 Scenario-Based Questions
+
+<details>
+<summary><strong>Q91: তোমার e-commerce site Black Friday তে crash করলো — কী করবে?</strong></summary>
+
+**উত্তর (Incident Response):**
+
+```
+Immediate Actions (first 5 minutes):
+1. Incident declare করো — #incident Slack channel
+2. Status page update করো (users জানুক)
+3. Rollback করো — শেষ deploy কি cause করলো?
+4. Traffic shed করো — rate limiting aggressive করো
+5. Cache warm করো — DB load কমাও
+
+Investigation:
+1. Dashboards দেখো: CPU, Memory, Error rate, DB connections
+2. Logs search করো: error patterns
+3. Recent changes কী? (git log --oneline -20)
+
+Common Black Friday fixes:
+- DB connection pool exhausted → pool size বাড়াও
+- Cache cold → pre-warm করো
+- Auto-scaling slow → proactively scale করো
+
+Post-incident:
+1. RCA (Root Cause Analysis) লেখো
+2. Action items: monitoring, runbook, capacity planning
+3. Chaos engineering — আগে থেকে test করো
+
+Prevention:
+- Load testing (k6, Locust) আগে করো
+- Read replicas ready রাখো
+- Database connection pool properly sized
+- Pre-scale সব বড় event এর আগে
+```
+
+</details>
+
+<details>
+<summary><strong>Q92: তোমার system এ data leak হয়েছে — কী করবে?</strong></summary>
+
+**উত্তর:**
+```
+Security Incident Response:
+
+Immediate (first hour):
+1. Contain: Breach কীভাবে হলো সেই access বন্ধ করো
+   - Compromised credentials → rotate immediately
+   - Vulnerable endpoint → disable/patch
+   - Infected server → isolate (network অন্য server থেকে আলাদা করো)
+
+2. Assess: কতটুকু data, কোন data, কতজন affected?
+
+3. Preserve evidence: Logs archive করো (delete করো না!)
+
+24 hours:
+4. Legal/Compliance notify করো
+5. Management inform করো
+6. GDPR/PDPA: 72 hours এর মধ্যে authorities notify করতে হতে পারে
+
+Communication:
+7. Affected users কে notify করো honestly
+   কী হয়েছে, কোন data affected, তারা কী করতে পারে
+
+Recovery:
+8. Password reset force করো affected users এর
+9. Audit other systems for similar vulnerabilities
+10. Penetration testing করো
+
+Prevention (post-incident):
+- Security audit
+- Dependency updates (vulnerable libraries)
+- Secrets rotation
+- WAF, IDS/IPS
+- Security training for team
+```
+
+</details>
+
+<details>
+<summary><strong>Q93: Payment gateway কীভাবে integrate করবে safely?</strong></summary>
+
+**উত্তর:**
+```python
+# Safe payment integration pattern:
+
+class PaymentService:
+    def __init__(self, gateway_client):
+        self.gateway = gateway_client
+
+    def initiate_payment(self, order_id: int, amount: float,
+                         user_id: int, idempotency_key: str) -> dict:
+        """
+        Safety checklist:
+        1. Idempotency key (no double charge)
+        2. Amount validation (server-side!)
+        3. HTTPS only
+        4. Webhook verification
+        5. Audit logging
+        """
+        # Server-side amount calculation (never trust client!):
+        order = Order.get(order_id)
+        if abs(order.total - amount) > 0.01:  # Floating point tolerance
+            raise ValueError("Amount mismatch!")
+
+        # Idempotency:
+        existing = PaymentAttempt.find(idempotency_key)
+        if existing:
+            return existing.result
+
+        # Create payment record BEFORE calling gateway:
+        attempt = PaymentAttempt.create(
+            order_id=order_id,
+            amount=amount,
+            idempotency_key=idempotency_key,
+            status="pending"
+        )
+
+        try:
+            result = self.gateway.charge(
+                amount=int(amount * 100),  # Smallest currency unit (paisa)
+                currency="BDT",
+                metadata={"order_id": order_id, "user_id": user_id}
+            )
+            attempt.update(status="completed", gateway_ref=result.id)
+            return {"status": "success", "transaction_id": result.id}
+        except GatewayError as e:
+            attempt.update(status="failed", error=str(e))
+            raise
+
+# Webhook handler (verify signature!):
+def handle_payment_webhook(request):
+    signature = request.headers.get("X-Gateway-Signature")
+    if not verify_hmac(request.body, signature, WEBHOOK_SECRET):
+        return 401  # Reject fake webhooks!
+    
+    event = json.loads(request.body)
+    if event["type"] == "payment.success":
+        order = Order.get(event["metadata"]["order_id"])
+        order.mark_paid(transaction_id=event["id"])
+```
+
+</details>
+
+<details>
+<summary><strong>Q94: কীভাবে file upload feature design করবে?</strong></summary>
+
+**উত্তর:**
+```
+Direct Upload Flow (small files < 5MB):
+User → App Server → S3
+Simple কিন্তু App Server bandwidth waste
+
+Presigned URL Flow (recommended):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Client: POST /api/files/upload-url {filename, content_type}
+2. Server: S3 presigned URL generate (15 min expiry)
+   import boto3
+   s3 = boto3.client('s3')
+   url = s3.generate_presigned_url(
+       'put_object',
+       Params={'Bucket': 'myapp', 'Key': f'uploads/{uuid}/{filename}',
+               'ContentType': content_type},
+       ExpiresIn=900
+   )
+3. Server: Return {upload_url, file_key}
+4. Client: PUT upload_url (directly to S3!)
+5. Client: POST /api/files/confirm {file_key}
+6. Server: Verify file exists in S3 → update DB record
+
+Large file upload (Multipart):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+S3 Multipart Upload API:
+- File → chunks (5MB minimum each)
+- Parallel upload → faster!
+- Resume on failure
+
+Security checklist:
+✅ File type validation (magic bytes, not just extension)
+✅ File size limit
+✅ Virus scan (ClamAV, AWS GuardDuty)
+✅ Private S3 bucket (presigned URL only)
+✅ Filename sanitization (path traversal attack)
+✅ Content-Type validation
+```
+
+</details>
+
+<details>
+<summary><strong>Q95: Search feature কীভাবে design করবে?</strong></summary>
+
+**উত্তর:**
+```
+Search Architecture Levels:
+
+Level 1 — Simple (< 100K records):
+  SQL LIKE/ILIKE query:
+  SELECT * FROM products WHERE name ILIKE '%phone%';
+  সমস্যা: Slow (full table scan), no relevance ranking
+
+Level 2 — Full-text search (< 10M records):
+  PostgreSQL full-text search:
+  CREATE INDEX idx_search ON products USING gin(to_tsvector('english', name || ' ' || description));
+  SELECT * FROM products WHERE to_tsvector('english', name) @@ plainto_tsquery('english', 'smartphone');
+  Better! But ranking limited.
+
+Level 3 — Elasticsearch (scalable):
+  Inverted index → blazing fast full-text search
+  Relevance scoring (BM25 algorithm)
+  Faceting (category, price range, ratings)
+  Autocomplete (edge n-gram tokenizer)
+  Typo tolerance (fuzzy search)
+
+  Sync strategy:
+  DB write → Kafka → ES consumer → index
+
+Level 4 — ML-based search:
+  Vector embeddings (semantic search)
+  "red dress" → also finds "crimson gown" (semantics!)
+  Tools: Elasticsearch kNN, Pinecone, Weaviate
+
+Autocomplete specifically:
+  Redis Sorted Set: fast prefix search
+  ZADD autocomplete 0 "samsung galaxy"
+  ZRANGEBYLEX autocomplete "[sams" "[sams\xff" LIMIT 0 5
+```
+
+</details>
+
+---
+
+## 9.11 LLD — বিস্তারিত প্রশ্নোত্তর
+
+<details>
+<summary><strong>Q96: Design করো — Rate Limiter (Token Bucket)</strong></summary>
+
+**উত্তর:**
+```python
+import time
+import threading
+from typing import Dict
+
+class TokenBucketRateLimiter:
+    """
+    Token Bucket Algorithm:
+    - Bucket capacity = max_requests per window
+    - Tokens fill at rate = capacity / window_seconds
+    - Request আসলে token consume করে
+    - Token না থাকলে reject
+    """
+    def __init__(self, capacity: int, refill_rate: float):
+        self.capacity = capacity           # max tokens
+        self.refill_rate = refill_rate     # tokens per second
+        self._buckets: Dict[str, dict] = {}
+        self._lock = threading.Lock()
+
+    def _get_bucket(self, client_id: str) -> dict:
+        if client_id not in self._buckets:
+            self._buckets[client_id] = {
+                'tokens': self.capacity,
+                'last_refill': time.time()
+            }
+        return self._buckets[client_id]
+
+    def _refill(self, bucket: dict):
+        now = time.time()
+        elapsed = now - bucket['last_refill']
+        new_tokens = elapsed * self.refill_rate
+        bucket['tokens'] = min(self.capacity, bucket['tokens'] + new_tokens)
+        bucket['last_refill'] = now
+
+    def is_allowed(self, client_id: str) -> bool:
+        with self._lock:
+            bucket = self._get_bucket(client_id)
+            self._refill(bucket)
+            if bucket['tokens'] >= 1:
+                bucket['tokens'] -= 1
+                return True
+            return False
+
+# Redis-based (distributed, production-ready):
+class RedisRateLimiter:
+    def __init__(self, redis_client, capacity: int, window: int):
+        self.redis = redis_client
+        self.capacity = capacity
+        self.window = window
+
+    def is_allowed(self, client_id: str) -> bool:
+        key = f"ratelimit:{client_id}"
+        pipeline = self.redis.pipeline()
+        now = time.time()
+        window_start = now - self.window
+        pipeline.zremrangebyscore(key, 0, window_start)
+        pipeline.zadd(key, {str(now): now})
+        pipeline.zcard(key)
+        pipeline.expire(key, self.window)
+        results = pipeline.execute()
+        count = results[2]
+        return count <= self.capacity
+```
+
+</details>
+
+<details>
+<summary><strong>Q97: Design করো — LRU Cache</strong></summary>
+
+**উত্তর:**
+```python
+from collections import OrderedDict
+from typing import Optional, TypeVar
+
+K = TypeVar('K')
+V = TypeVar('V')
+
+class LRUCache:
+    """
+    LRU (Least Recently Used) Cache:
+    - Get: O(1)
+    - Put: O(1)
+    - Evict least recently used when capacity exceeded
+    
+    Implementation: HashMap + Doubly Linked List
+    Python shortcut: OrderedDict (maintains insertion order)
+    """
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self._cache: OrderedDict = OrderedDict()
+
+    def get(self, key) -> Optional[any]:
+        if key not in self._cache:
+            return None
+        # Move to end (most recently used):
+        self._cache.move_to_end(key)
+        return self._cache[key]
+
+    def put(self, key, value) -> None:
+        if key in self._cache:
+            self._cache.move_to_end(key)
+        self._cache[key] = value
+        if len(self._cache) > self.capacity:
+            # Remove first (least recently used):
+            self._cache.popitem(last=False)
+
+# Manual implementation (interview করলে এটা বেশি impress করে):
+class Node:
+    def __init__(self, key=None, value=None):
+        self.key = key
+        self.value = value
+        self.prev = None
+        self.next = None
+
+class LRUCacheManual:
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.cache = {}
+        # Dummy head and tail:
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
+
+    def _remove(self, node: Node):
+        node.prev.next = node.next
+        node.next.prev = node.prev
+
+    def _add_to_front(self, node: Node):
+        node.next = self.head.next
+        node.prev = self.head
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key) -> int:
+        if key not in self.cache:
+            return -1
+        node = self.cache[key]
+        self._remove(node)
+        self._add_to_front(node)
+        return node.value
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cache:
+            self._remove(self.cache[key])
+        node = Node(key, value)
+        self._add_to_front(node)
+        self.cache[key] = node
+        if len(self.cache) > self.capacity:
+            lru = self.tail.prev
+            self._remove(lru)
+            del self.cache[lru.key]
+```
+
+</details>
+
+<details>
+<summary><strong>Q98: Design করো — Task Scheduler</strong></summary>
+
+**উত্তর:**
+```python
+import heapq
+import threading
+import time
+from typing import Callable
+from datetime import datetime
+
+class Task:
+    def __init__(self, run_at: float, func: Callable, args=(), interval=None):
+        self.run_at = run_at
+        self.func = func
+        self.args = args
+        self.interval = interval  # For recurring tasks
+        self.cancelled = False
+
+    def __lt__(self, other):
+        return self.run_at < other.run_at
+
+class TaskScheduler:
+    """
+    Priority queue (min-heap) based task scheduler.
+    Supports: one-time and recurring tasks, cancellation.
+    """
+    def __init__(self):
+        self._queue: list = []
+        self._lock = threading.Lock()
+        self._condition = threading.Condition(self._lock)
+        self._running = False
+        self._thread = None
+
+    def schedule(self, func: Callable, delay: float, *args,
+                 interval: float = None) -> Task:
+        """Schedule a task after `delay` seconds."""
+        task = Task(
+            run_at=time.time() + delay,
+            func=func,
+            args=args,
+            interval=interval
+        )
+        with self._condition:
+            heapq.heappush(self._queue, task)
+            self._condition.notify()
+        return task
+
+    def cancel(self, task: Task):
+        task.cancelled = True
+
+    def start(self):
+        self._running = True
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._running = False
+        with self._condition:
+            self._condition.notify()
+
+    def _run(self):
+        while self._running:
+            with self._condition:
+                while self._queue and self._queue[0].cancelled:
+                    heapq.heappop(self._queue)
+
+                if not self._queue:
+                    self._condition.wait()
+                    continue
+
+                task = self._queue[0]
+                wait = task.run_at - time.time()
+                if wait > 0:
+                    self._condition.wait(timeout=wait)
+                    continue
+
+                heapq.heappop(self._queue)
+
+            if not task.cancelled:
+                try:
+                    task.func(*task.args)
+                except Exception as e:
+                    print(f"Task error: {e}")
+
+                if task.interval and not task.cancelled:
+                    task.run_at = time.time() + task.interval
+                    with self._condition:
+                        heapq.heappush(self._queue, task)
+
+# Usage:
+scheduler = TaskScheduler()
+scheduler.start()
+
+task = scheduler.schedule(print, 5, "Hello after 5 seconds")
+recurring = scheduler.schedule(print, 0, "Every 10s", interval=10)
+scheduler.cancel(task)  # Cancel before it runs
+```
+
+</details>
+
+---
+
+## 9.12 Quick 50 — Rapid Fire Round
+
+> এই প্রশ্নগুলো interview এর শেষে rapid fire তে আসতে পারে। ১-২ বাক্যে উত্তর দাও।
+
+| # | প্রশ্ন | সংক্ষিপ্ত উত্তর |
+|---|--------|----------------|
+| 99 | Webhook কী? | Server-to-Server HTTP callback — event হলে notify |
+| 100 | OAuth 2.0 কী? | Third-party authorization framework (Google login) |
+| 101 | JWT এর structure? | Header.Payload.Signature (Base64 encoded) |
+| 102 | JWT কোথায় store করবে? | HttpOnly cookie (না localStorage — XSS!) |
+| 103 | CSRF attack কী? | User এর browser দিয়ে unauthorized request |
+| 104 | XSS attack কী? | Malicious script inject করে user browser এ run |
+| 105 | SQL Injection কী? | Malicious SQL input দিয়ে DB manipulate |
+| 106 | Parameterized query কী? | SQL Injection prevent করে |
+| 107 | CORS কী? | Browser security — cross-origin request policy |
+| 108 | Idempotent HTTP method? | GET, PUT, DELETE (same result বারবার করলেও) |
+| 109 | Content negotiation? | Client Accept header → server format choose |
+| 110 | API versioning best practice? | URL path versioning (/v1/, /v2/) |
+| 111 | Pagination কেন? | Large dataset → client কে সব দেওয়া unnecessary |
+| 112 | Cursor vs offset pagination? | Cursor: consistent; Offset: page skip এ inconsistent |
+| 113 | GraphQL N+1 solution? | DataLoader (batch + cache) |
+| 114 | gRPC কখন REST এর বদলে? | Internal microservices, low latency, streaming |
+| 115 | Service registry কী? | Services নিজেদের register করে, অন্যরা lookup করে |
+| 116 | Health check endpoint কেন? | LB/K8s unhealthy pod বাদ দেয় |
+| 117 | Graceful shutdown কী? | In-flight requests শেষ করে তারপর stop |
+| 118 | Chaos engineering কী? | Intentionally failures inject করে resilience test |
+| 119 | Observability কী? | Logs + Metrics + Traces — system বোঝার ability |
+| 120 | Distributed tracing কী? | Request multiple services এর মধ্য দিয়ে track |
+| 121 | OpenTelemetry কী? | Observability data standard (traces, metrics, logs) |
+| 122 | SLO কী? | Service Level Objective — target (99.9% uptime) |
+| 123 | SLA কী? | Service Level Agreement — customer এর সাথে contract |
+| 124 | SLI কী? | Service Level Indicator — actual measurement |
+| 125 | Error budget কী? | 1 - SLO = কতটা downtime allow |
+| 126 | Immutable infrastructure? | Server patch না করে নতুন replace করো |
+| 127 | GitOps কী? | Git = single source of truth for infrastructure |
+| 128 | Infrastructure as Code? | Terraform, Ansible — infra code হিসেবে |
+| 129 | Blue/Green deploy সুবিধা? | Instant rollback, zero downtime |
+| 130 | Canary deploy কেন? | Real traffic দিয়ে gradually test |
+| 131 | Feature flag কী? | Code deploy করে feature control করো runtime এ |
+| 132 | A/B testing কীভাবে? | User group ভাগ → different version → measure |
+| 133 | Shadow traffic কী? | Production traffic copy করে new service এ test |
+| 134 | Data warehouse কী? | OLAP — analytics, reporting, historical data |
+| 135 | Data lake কী? | Raw data সব format এ store — S3 |
+| 136 | ETL কী? | Extract, Transform, Load — data pipeline |
+| 137 | MapReduce কী? | Distributed data processing (Hadoop) |
+| 138 | Spark কী? | Fast in-memory distributed processing |
+| 139 | Time series DB কী? | Metrics/IoT data — InfluxDB, TimescaleDB |
+| 140 | Vector DB কী? | Embeddings store — ML/AI search (Pinecone) |
+| 141 | OLTP vs OLAP? | OLTP: transactions; OLAP: analytics |
+| 142 | Columnar storage? | Analytics query fast — column by column read |
+| 143 | Write-ahead log (WAL)? | DB recovery — crash হলে WAL replay করে |
+| 144 | B-tree index কী? | Balanced tree — range queries efficient |
+| 145 | Hash index কী? | Exact match fast — range queries না |
+| 146 | Composite index কী? | Multiple columns — order matters! |
+| 147 | Covering index কী? | Query এর সব column index এ — table access নেই |
+| 148 | Partial index কী? | Subset of rows index করে — smaller, faster |
+
+---
+
+## 📋 PART 9: Quick Summary
+
+**Rapid Fire categories:**
+- **Fundamentals (Q1-20):** Latency, Throughput, CAP, ACID, Stateless/Stateful
+- **Database (Q21-35):** SQL/NoSQL, Index, Sharding, Replication
+- **Cache (Q36-45):** Hit/Miss, LRU, Patterns, TTL, Redis vs Memcached
+- **Network (Q46-55):** TCP/UDP, HTTP/2, Rate Limiting, Circuit Breaker
+- **Distributed (Q56-65):** Consensus, Idempotency, Delivery guarantees
+- **MQ (Q66-75):** Kafka, Saga, CQRS, Event Sourcing
+
+**Architecture Q&A (Q76-95):**
+- Capacity estimation, HA strategies, DB selection, API design
+- Microservices challenges, DB migration, real-time features
+- Black Friday incident, security breach, payment, file upload, search
+
+**LLD (Q96-98):**
+- Rate Limiter (Token Bucket + Redis Sliding Window)
+- LRU Cache (OrderedDict + Manual LinkedList)
+- Task Scheduler (min-heap + threading)
+
+**Rapid 50 (Q99-148):**
+- Webhook, OAuth, JWT, Security, REST, Observability, DevOps, Data Engineering
+
+<a id="part10"></a>
+
+---
+
+# PART 10: Bangladeshi Interview Preparation
+### 🇧🇩 BD Company Patterns, Mock Interviews ও Career Advice
+
+> **এই PART এর উদ্দেশ্য:** Bangladesh এর tech job market এ সফলভাবে interview দেওয়ার জন্য specific preparation। BD company গুলোর প্রশ্নের pattern, common mistakes, project কীভাবে explain করবে — সব এখানে।
+
+---
+
+## 10.1 Bangladesh Tech Job Market Overview
+
+### 🏢 Company Categories
+
+```
+Category 1: Product Companies (Highest Paying)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Pathao, Shajgoj, Shohoz, Chaldal, 10 Minute School,
+bKash (tech), Nagad (tech), SSL Wireless, Brain Station 23
+
+Interview focus:
+✅ System Design (senior level)
+✅ DSA (medium difficulty)
+✅ Project discussion (depth)
+✅ Problem solving approach
+Salary: 50K - 3L+ BDT/month
+
+Category 2: Service/Software Companies
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BJIT, Enosis, Kaz Software, TigerIT, Optimizely BD,
+Cefalo, FieldBuzz, Therap BD, DataSoft, Augmedix
+
+Interview focus:
+✅ Specific tech stack (Java, .NET, PHP etc.)
+✅ Framework knowledge (Spring Boot, Laravel)
+✅ Basic DSA
+✅ Communication skills (often English)
+Salary: 30K - 1.5L BDT/month
+
+Category 3: Startup/SME
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Early-stage startups, local software houses
+
+Interview focus:
+✅ Can you build it? (practical skills)
+✅ Framework familiarity
+✅ Willingness to learn
+Salary: 15K - 60K BDT/month (equity possible in startups)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📊 BD Junior Engineer Interview Round Structure
+
+```
+Typical Process (Product Company):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Round 1: Online Assessment (1-2 hours)
+  HackerRank/LeetCode style
+  2-3 coding problems (Easy-Medium)
+  MCQ (language basics, OS, DB)
+
+Round 2: Technical Phone Screen (45-60 min)
+  Resume/project discussion
+  Basic DSA (1 problem)
+  Tech stack questions
+
+Round 3: Technical Interview (60-90 min)
+  DSA (1-2 medium problems)
+  System Design (basic)
+  Project deep-dive
+
+Round 4: HR Interview (30-45 min)
+  Salary negotiation
+  Culture fit
+  Notice period
+
+Typical Process (Service Company):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Round 1: Written Test (1-2 hours)
+  Coding + MCQ + SQL
+
+Round 2: Technical Interview
+  Framework/language questions
+  Simple coding problem
+  Previous project discussion
+
+Round 3: HR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 10.2 BD Company Common Questions
+
+### 🔥 সবচেয়ে বেশি জিজ্ঞাসিত প্রশ্ন
+
+```
+Technical (BD context):
+
+1. "তোমার শেষ project টা বলো।"
+   → STAR method + System Design angle
+
+2. "তুমি কোন framework use করো?"
+   → Django/FastAPI/Spring/Laravel — depth দেখায়
+
+3. "REST API কী? একটা design করো।"
+   → Endpoints, HTTP methods, status codes
+
+4. "Database design করো — e-commerce system।"
+   → Tables, relationships, indexes
+
+5. "Git workflow কী follow করো?"
+   → Feature branch, PR, code review
+
+6. "সবচেয়ে কঠিন bug কোনটা fix করেছো?"
+   → Problem-solving approach দেখায়
+
+7. "আমাদের product কীভাবে improve করবে?"
+   → Company জানো কিনা, product sense
+
+8. "Microservices vs Monolith — কোনটা recommend করবে আমাদের জন্য?"
+   → Context-aware answer, tradeoffs
+
+9. "তুমি কীভাবে code quality maintain করো?"
+   → Testing, code review, SOLID, linting
+
+10. "5 বছর পর তুমি কোথায় থাকতে চাও?"
+    → Career goals, growth mindset
+```
+
+### 📊 Stack-Specific Questions (BD Popular Stacks)
+
+```
+Django/Python (most common in BD):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Django ORM vs raw SQL কখন?
+- Django signals কী?
+- Celery কীভাবে use করো?
+- DRF serializer, viewset explain করো
+- Django caching (cache_page, low-level cache)
+- Database migration best practices
+- settings.py environment management
+
+Laravel/PHP:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Eloquent ORM relationships
+- Laravel Queue, Jobs
+- Service Container, Dependency Injection
+- Middleware কীভাবে কাজ করে?
+- API resource, form request validation
+
+Spring Boot/Java:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Spring IoC container কী?
+- @Transactional কীভাবে কাজ করে?
+- JPA/Hibernate lazy vs eager loading
+- Spring Security JWT implementation
+- Bean lifecycle
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 10.3 তোমার Project কীভাবে Explain করবে
+
+### 🎯 STAR Method + System Design Angle
+
+```
+Structure:
+S - Situation (Context)
+T - Task (কী করতে হবে)
+A - Action (তুমি কী করলে — technical depth!)
+R - Result (কী হলো — metrics!)
+```
+
+### 📝 Example: "আমার শেষ project হলো একটা food delivery app"
+
+**❌ Bad answer:**
+> "আমি Django দিয়ে একটা food delivery app বানিয়েছি যেখানে users order দিতে পারে এবং delivery track করতে পারে।"
+
+**✅ Good answer (System Design angle):**
+
+> "আমি একটা food delivery platform বানিয়েছি — Chaldal এর মতো কিন্তু local restaurants এর জন্য।
+>
+> **Architecture:** Django REST Framework backend, PostgreSQL database, Redis cache, Celery + RabbitMQ for async tasks।
+>
+> **Key technical decisions:**
+> - Order placement এ database transaction use করেছি — inventory আর payment atomic হওয়া দরকার ছিল
+> - Real-time order tracking এর জন্য WebSocket implement করেছি Django Channels দিয়ে
+> - Restaurant menu এর data frequently read হয়, rarely change হয় — তাই Redis এ cache করেছি, 30 min TTL দিয়ে
+> - Email/SMS notification async Celery task এ — order placement block না করে
+>
+> **Challenge ছিল:** Same item একসাথে অনেকজন order করলে oversell হওয়ার সমস্যা। Redis atomic DECR command দিয়ে solve করলাম।
+>
+> **Result:** 50+ restaurant, 200+ daily orders handle করছে। Average response time 150ms।"
+
+---
+
+## 10.4 System Design Interview — BD Company Framework
+
+### 🎯 Junior Engineer এর জন্য System Design Approach
+
+```
+BD Junior Interview System Design Reality:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+সত্যি কথা: BD তে junior level এ full system design (Google level)
+জিজ্ঞেস করা হয় না। কিন্তু basics জানলে এগিয়ে থাকবে।
+
+জিজ্ঞেস করা হয়:
+✅ "তোমার project এর database design করো"
+✅ "এই feature টা কীভাবে implement করবে?"
+✅ "Scale করার দরকার হলে কী করবে?"
+✅ "কেন এই technology choose করলে?"
+
+যা জিজ্ঞেস করা হয় না (junior):
+❌ "Design Twitter for 100M users"
+❌ "Distributed consensus algorithm explain করো"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### 📝 System Design Answer Template (BD Junior Level)
+
+**প্রশ্ন:** "তোমার food delivery app এর database design করো।"
+
+**Template Response:**
+
+```sql
+"আমি প্রথমে entities identify করবো:
+- Users (customers, restaurant owners, delivery people)
+- Restaurants
+- Menu Items
+- Orders
+- Order Items
+- Deliveries
+
+Core Tables:
+
+users:
+  id, name, email, phone, role (customer/restaurant/delivery), 
+  created_at, is_active
+
+restaurants:
+  id, owner_id (FK users), name, address, lat, lng,
+  is_open, opening_time, closing_time, rating
+
+menu_items:
+  id, restaurant_id (FK restaurants), name, description,
+  price, category, image_url, is_available, stock_count
+
+orders:
+  id, customer_id (FK users), restaurant_id (FK restaurants),
+  status (PENDING/CONFIRMED/PREPARING/PICKED_UP/DELIVERED/CANCELLED),
+  total_amount, delivery_address, created_at, delivered_at
+
+order_items:
+  id, order_id (FK orders), menu_item_id (FK menu_items),
+  quantity, unit_price, subtotal
+
+deliveries:
+  id, order_id (FK orders), driver_id (FK users),
+  pickup_lat, pickup_lng, dropoff_lat, dropoff_lng,
+  status, assigned_at, delivered_at
+
+Important indexes:
+  orders(customer_id), orders(restaurant_id), orders(status)
+  menu_items(restaurant_id)
+  deliveries(driver_id)
+
+Scale করার দরকার হলে:
+  menu_items → Redis cache করবো (frequently read)
+  orders → Read replica add করবো
+  Location tracking → Redis GeoSpatial"
+```
+
+---
+
+## 10.5 Common Rejection Reasons ও Solution
+
+### ❌ কেন Reject হচ্ছো
+
+```
+Rejection Reason 1: "Technically not strong enough"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signs:
+- DSA problem solve করতে পারোনি
+- Framework basics জানো না
+- Project explain করতে গেলে shallow
+
+Solution:
+- LeetCode Easy: 50+ problems solve করো (Array, String, HashMap)
+- Medium: 30+ problems (Sliding window, Two pointer, BFS/DFS)
+- Framework এর core concepts depth এ পড়ো
+- Build করো — theory না, practice
+
+Rejection Reason 2: "Couldn't explain their own project"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signs:
+- "এটা tutorial থেকে করেছিলাম"
+- কেন এই approach নিলে জানো না
+- Challenge কী ছিল বলতে পারো না
+
+Solution:
+- প্রতিটা technical decision জানো কেন নিয়েছো
+- Project এ problems কী ছিল, কীভাবে solve করলে
+- "আমি improve করতাম এইভাবে..." বলতে পারো
+
+Rejection Reason 3: "Communication skills poor"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signs:
+- চুপচাপ বসে থাকো, interviewer কে engage করো না
+- "হ্যাঁ", "না" short answers
+- Think aloud করো না
+
+Solution:
+- Interview একটা conversation — engage করো
+- "আমি এভাবে ভাবছি..." বলো
+- Clarifying questions করো
+- Mock interview practice করো (বন্ধুর সাথে, Pramp)
+
+Rejection Reason 4: "Overconfident / Arrogant"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Signs:
+- "এটা তো সহজ" বলো
+- Interviewer এর feedback নিতে পারো না
+- সব জানো ভাব দেখাও
+
+Solution:
+- না জানলে honest থাকো: "এটা আমার পরিষ্কার না, কিন্তু আমি approach করবো..."
+- Interviewer এর hint নাও কৃতজ্ঞতার সাথে
+- Curiosity দেখাও
+
+Rejection Reason 5: "Salary expectation mismatch"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Solution:
+- Market rate জানো (LinkedIn, BdJobs, বন্ধুদের কাছ থেকে)
+- Range দাও: "50K-70K range এ আশা করছি"
+- Benefits ও negotiate করো (remote, training, equity)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 10.6 Mock Interview: Full Session (Bengali)
+
+### 🎭 Interviewer ও Candidate এর Conversation
+
+**Company:** Product company (Pathao-level)
+**Position:** Junior Backend Engineer
+**Duration:** 60 minutes
+
+---
+
+**Interviewer:** "নিজের সম্পর্কে বলো।"
+
+**Candidate:**
+> "আমি রাফি, CSE থেকে পাস করেছি এই বছর। আমি mainly Python/Django তে কাজ করি। University শেষ বছরে একটা online marketplace বানিয়েছিলাম team এ। Professionally ৬ মাস একটা startup এ কাজ করেছি যেখানে REST API build করেছিলাম। আমি backend system design এ interested — scalable system কীভাবে বানাতে হয় সেটা শিখছি।"
+
+---
+
+**Interviewer:** "তোমার marketplace project টা বলো। Technical details দিয়ে।"
+
+**Candidate:**
+> "আমাদের project ছিল university students দের জন্য second-hand items বেচাকেনার platform — Facebook Marketplace এর মতো কিন্তু university-specific।
+>
+> Stack: Django backend, PostgreSQL, Redis, Celery, deployed on a VPS with Nginx।
+>
+> Core features:
+> - Product listing with image upload
+> - Search with filters (category, price range, university)
+> - Real-time chat between buyer and seller — Django Channels দিয়ে WebSocket
+> - Notification system — Celery task এ async
+>
+> সবচেয়ে interesting challenge ছিল image storage। শুরুতে server এর local disk এ রাখতাম — scale করলে problem হতো। পরে Cloudinary integrate করলাম — upload direct Cloudinary এ, আমাদের DB তে শুধু URL।
+>
+> Performance এ দেখলাম product listing query slow — products table এ 10K+ rows, category filter এ index ছিল না। EXPLAIN ANALYZE চালিয়ে দেখলাম full table scan। category column এ index add করার পর query time 800ms থেকে 15ms এ নামলো।"
+
+---
+
+**Interviewer:** "ভালো। এখন ধরো এই platform 1 lakh users এ scale করতে হবে। কী করবে?"
+
+**Candidate:**
+> "ভালো প্রশ্ন। আমি layer by layer ভাববো।
+>
+> **Database:**
+> প্রথমে বর্তমান bottleneck কোথায় সেটা measure করবো। Likely database।
+> - Read replica add করবো — product browsing, search সব replica থেকে
+> - Write (listing create, message send) master এ
+> - Popular products Redis এ cache করবো
+>
+> **Application:**
+> - Multiple Django instances run করবো Nginx load balancer দিয়ে
+> - Stateless করবো — session Redis এ (না server memory)
+>
+> **Search:**
+> 1 lakh products এ SQL LIKE query slow হবে।
+> Elasticsearch integrate করবো — fuzzy search, category filtering fast।
+>
+> **Images:**
+> CloudFront বা Cloudinary এর CDN — images globally fast।
+>
+> **Async:**
+> Celery workers scale করবো horizontally — notification, email processing।
+>
+> একটা প্রশ্ন করি — এই 1 lakh users simultaneous নাকি total registered?"
+
+---
+
+**Interviewer:** "Good question! Simultaneous।"
+
+**Candidate:**
+> "তাহলে আরেকটু aggressive হতে হবে।
+>
+> 1 lakh simultaneous users মানে roughly 10K-50K requests/second (depending on actions)।
+>
+> একটা Django instance এ ~500 req/sec handle করা যায় (sync workers)।
+> Async (uvicorn + FastAPI বা Django Channels) → 5K+ req/sec।
+>
+> 20-30 টা application server instance লাগবে।
+> Load balancer: AWS ALB বা Nginx upstream।
+>
+> Database connections: 20 servers × 10 connections = 200। PgBouncer দিয়ে connection pool করবো।
+>
+> Cache: Redis এর hit rate 80%+ আশা করবো — তাহলে DB এ শুধু 20% request।"
+
+---
+
+**Interviewer:** "তুমি Redis উল্লেখ করলে। Redis কীভাবে use করবে specifically?"
+
+**Candidate:**
+> "কয়েকটা use case:
+>
+> **1. Product cache (Cache-aside pattern):**
+> ```python
+> def get_product(product_id):
+>     key = f'product:{product_id}'
+>     cached = redis.get(key)
+>     if cached:
+>         return json.loads(cached)
+>     product = Product.objects.get(id=product_id)
+>     redis.setex(key, 1800, json.dumps(product.to_dict()))  # 30 min TTL
+>     return product.to_dict()
+> ```
+>
+> **2. Search result cache:**
+> Query string key — same search → cache
+>
+> **3. Session storage:**
+> `SESSION_ENGINE = 'django.contrib.sessions.backends.cache'`
+>
+> **4. Rate limiting:**
+> Login attempt limit — `INCR + EXPIRE`
+>
+> Cache invalidation: Product update হলে `redis.delete(f'product:{id}')` করবো।"
+
+---
+
+**Interviewer:** "একটা coding problem। Array তে two sum — target এর সাথে মিলিয়ে দুটো number এর index দাও।"
+
+**Candidate:**
+> "এটা HashMap দিয়ে O(n) এ করা যায়।
+> ```python
+> def two_sum(nums, target):
+>     seen = {}  # value → index
+>     for i, num in enumerate(nums):
+>         complement = target - num
+>         if complement in seen:
+>             return [seen[complement], i]
+>         seen[num] = i
+>     return []
+> ```
+> প্রতিটা element এ complement খুঁজি। পেলে return করি।
+> Time: O(n), Space: O(n)।
+>
+> Brute force O(n²) হতো — nested loop।"
+
+---
+
+**Interviewer:** "Perfect। HR round এর আগে কোনো প্রশ্ন?"
+
+**Candidate (Smart questions):**
+> ১. "Team structure কী? Backend team এ কতজন? আমি কার সাথে কাজ করবো?
+>
+> ২. Junior engineers দের জন্য mentorship বা learning budget আছে?
+>
+> ৩. আপনাদের tech stack এ কি আগামী ১ বছরে কোনো বড় migration পরিকল্পনা আছে?
+>
+> ৪. Code review process কীভাবে করো?"
+
+---
+
+## 10.7 Salary Negotiation — BD Context
+
+```
+BD Salary Ranges (2026, approximate):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Freshers (0-1 year):
+  Service company:  15K - 35K BDT
+  Product company:  30K - 60K BDT
+  Foreign company:  50K - 1L BDT (remote)
+
+Junior (1-2 years):
+  Service company:  30K - 60K BDT
+  Product company:  50K - 1L BDT
+  Foreign company:  80K - 2L BDT
+
+Mid-level (2-4 years):
+  Product company:  80K - 2L BDT
+  Remote (Upwork/Toptal): $2K - $5K/month
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Negotiation tactics:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Research করো আগে: LinkedIn, BdJobs, বন্ধুদের কাছ থেকে
+2. Range দাও: "60K-80K" (না exact number)
+3. Counter করো: "আপনাদের offer টা আমার expectation এর থেকে কম।
+   আমি 70K তে comfortable হবো।"
+4. Benefits negotiate করো যদি salary flex না হয়:
+   - Remote/hybrid work
+   - Training budget
+   - Extra annual leave
+   - Medical allowance
+5. Never accept spot offer: "পরিবারের সাথে আলোচনা করে জানাবো"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 10.8 Interview Preparation Roadmap
+
+### 📅 30-Day Sprint (Job ready)
+
+```
+Week 1: Foundation Solidify
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Day 1-2:  DSA — Array, String, HashMap problems (10 each)
+Day 3-4:  Database — SQL practice, query optimization
+Day 5-6:  Your tech stack deep dive (Django internals / Spring)
+Day 7:    Build something small — deploy করো
+
+Week 2: System Design Basics
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Day 8-9:  PART 1-2 এই handbook review করো
+Day 10-11: PART 3-4 (DB Design + Caching)
+Day 12:   Project — add caching to your existing project
+Day 13-14: REST API design practice, build APIs
+
+Week 3: Applied & Interview Practice
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Day 15-16: DSA — Two pointer, Sliding window
+Day 17-18: Design Patterns (Singleton, Factory, Observer)
+Day 19:   Prepare project explanation (STAR method)
+Day 20-21: Mock interviews (বন্ধুর সাথে)
+
+Week 4: Application & Polish
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Day 22-23: Apply to 10+ companies (LinkedIn, BdJobs, company sites)
+Day 24-25: Resume review, GitHub clean করো
+Day 26-27: Interview এর আগের দিন — PART 9 rapid fire পড়ো
+Day 28-30: First round interviews, feedback collect করো
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### ✅ Interview Day Checklist
+
+```
+আগের রাতে:
+□ Company সম্পর্কে পড়ো (product, team, tech blog)
+□ PART 9 rapid fire review করো
+□ তোমার project এর technical decisions মনে করো
+□ ঘুমাও ভালো করে!
+
+সকালে:
+□ পরিষ্কার পোশাক (smart casual)
+□ Resume copy print করো (physical interview হলে)
+□ Laptop charge করো (online interview)
+□ Camera, mic test করো
+□ 10 minutes আগে join করো
+
+Interview শুরুতে:
+□ "আমি কি screen share করতে পারি?" (coding করলে)
+□ Think aloud করো
+□ সমস্যা না বুঝলে জিজ্ঞেস করো
+□ Engaging থাকো
+
+Interview শেষে:
+□ Smart questions করো
+□ ধন্যবাদ দাও
+□ "আমি কখন expect করতে পারি?" জিজ্ঞেস করো
+□ Recruiter কে email করো (24 ঘণ্টার মধ্যে)
+```
+
+---
+
+## 10.9 Resume Tips — BD Engineer
+
+### 📄 Resume Structure
+
+```
+✅ Good Resume (1 page, junior):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[Name] | Email | Phone | LinkedIn | GitHub | Portfolio
+
+EDUCATION
+CSE, University of Dhaka | CGPA: 3.5/4.0 | 2024
+
+SKILLS
+Languages: Python, JavaScript, SQL
+Frameworks: Django, FastAPI, React
+Databases: PostgreSQL, MySQL, Redis
+Tools: Docker, Git, Nginx, AWS (EC2, S3, RDS)
+
+EXPERIENCE
+Software Engineer Intern | XYZ Startup | Jan-Jun 2024
+• Built REST APIs (Django DRF) for 5K+ daily users
+• Reduced API response time by 40% using Redis caching
+• Integrated bKash payment gateway
+• Participated in daily standups, code reviews
+
+PROJECTS
+Food Delivery Platform | github.com/username/project
+• Django + PostgreSQL + Redis + Celery + WebSocket
+• 50+ restaurants, 200+ daily orders
+• Implemented real-time tracking, async notifications
+• Deployed on VPS with Nginx, SSL
+
+E-commerce API | github.com/username/ecommerce
+• JWT authentication, Product catalog, Cart, Payment
+• Elasticsearch integration for product search
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ Common Resume Mistakes:
+- "Responsible for developing..." → "Built, Reduced, Implemented"
+- CGPA নেই (2.5+ হলে রাখো)
+- GitHub এ empty repositories
+- "Team player, hardworking" clichés
+- Spelling mistakes
+- 3+ pages (junior এ max 1 page!)
+- Fancy templates (ATS parsing fails!)
+```
+
+### 🔗 GitHub Profile Tips
+
+```
+Good GitHub Profile:
+✅ Profile README.md আছে (pinned repo এর মতো)
+✅ Projects এ README আছে — setup instructions
+✅ Regular commits (activity graph দেখা যায়)
+✅ Pinned repositories: best 6 projects
+✅ Code quality ভালো (না tutorial copy-paste)
+
+Project README structure:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Project Name
+
+## About
+One line description
+
+## Tech Stack
+Python, Django, PostgreSQL, Redis
+
+## Features
+- User auth with JWT
+- Product catalog with search
+- Real-time notifications
+
+## Architecture
+[Simple diagram or description]
+
+## Setup
+git clone, pip install -r requirements.txt, python manage.py runserver
+
+## API Docs
+Swagger UI available at /api/docs/
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 10.10 Remote/International Opportunity
+
+### 🌍 BD থেকে Remote Job
+
+```
+Platforms:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Upwork: Freelance, client বেছে নাও
+Toptal: Top 3% developers, higher rates
+Remote.co, We Work Remotely, RemoteOK
+LinkedIn (remote filter)
+AngelList (startup jobs)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Requirements for remote:
+✅ Strong English communication
+✅ Portfolio (GitHub + deployed projects)
+✅ DSA skills (HackerRank, LeetCode)
+✅ Good internet (backup plan রাখো)
+✅ Quiet workspace
+
+Pay rates (Bangladesh):
+$30-60/hr (Upwork, 2+ years experience)
+$3K-8K/month (full-time remote, 3+ years)
+```
+
+### 🎯 BD → International Career Path
+
+```
+Year 1-2: Build foundation
+  Strong in one stack (Python/Node/Java)
+  Deployed real projects
+  Basic DSA (LeetCode Easy-Medium)
+  Open source contribution শুরু
+
+Year 2-3: Remote freelance
+  Upwork profile build করো
+  First few projects (কম rate এ, review এর জন্য)
+  Network করো (LinkedIn, Twitter/X)
+
+Year 3-5: Full-time remote
+  Foreign company (Europe/USA) remote position
+  System Design শেখো depth এ
+  Specialization বেছে নাও
+
+Year 5+: Senior / Lead
+  Tech lead, architect level
+  Mentoring, architecture decisions
+  Option: Abroad relocate বা BD তে থেকে remote
+```
+
+---
+
+## 📋 PART 10: Final Checklist Before Interview
+
+### ✅ Technical Readiness
+
+```
+□ তোমার project এর প্রতিটা technical decision explain করতে পারো
+□ Framework core concepts জানো (না just syntax)
+□ Basic DSA: Array, HashMap, String — 30+ LeetCode Easy done
+□ SQL: JOIN, GROUP BY, subquery, index — write করতে পারো
+□ REST API design করতে পারো (endpoints, methods, status codes)
+□ Basic system design: Database design, caching, scaling awareness
+□ Git: branch, merge, rebase — command line comfortable
+□ Docker: basic Dockerfile লিখতে পারো, container run করতে পারো
+```
+
+### ✅ Soft Skills Readiness
+
+```
+□ নিজের introduction 2 min এ ready (rehearse করেছো)
+□ Project explanation 3-5 min (STAR method)
+□ "কেন এই company?" — genuine answer ready
+□ "weakness কী?" — honest কিন্তু growth mindset দিয়ে
+□ Smart questions for interviewer — 3-4 টা ready
+□ Salary range research করা হয়েছে
+□ Mock interview দিয়েছো (কমপক্ষে একবার)
+```
+
+### 🎯 BD Junior Engineer Success Formula
+
+```
+Technical Skills (40%):
+  ✅ DSA basics (LeetCode Easy + some Medium)
+  ✅ Core framework (Django/Spring/Laravel — deep knowledge)
+  ✅ Database (SQL fluency + design)
+  ✅ REST API design
+
+Projects (30%):
+  ✅ 2-3 real projects (GitHub এ)
+  ✅ Technical depth দেখাতে পারো
+  ✅ Deployed somewhere (না just localhost)
+
+Communication (20%):
+  ✅ Think aloud করো
+  ✅ Honest থাকো না জানলে
+  ✅ Engaging conversation
+
+Attitude (10%):
+  ✅ Curious learner
+  ✅ Collaborative
+  ✅ Growth mindset
+
+"The best time to prepare was yesterday.
+The second best time is now. শুরু করো।"
+```
+
+---
+
+## 🎯 PART 10: Interview Questions About BD Context
+
+<details>
+<summary><strong>Q149: "তুমি কেন এই company তে join করতে চাও?" — কীভাবে উত্তর দেবে?</strong></summary>
+
+**Template:**
+```
+Structure: Research + Alignment + Contribution
+
+❌ Bad: "কারণ ভালো salary দেন।"
+❌ Bad: "কারণ বড় company।"
+
+✅ Good (Pathao এর example):
+"Pathao আমাকে attract করে কারণ আপনারা Bangladesh এর
+largest tech-first mobility company। আমি দেখেছি আপনারা
+recently Super App strategy এ যাচ্ছেন — food, parcel,
+ride একই platform এ। এটা technically interesting —
+multiple domains integrate করা, high scalability।
+
+আমার food delivery project এ আমি real-time tracking
+আর order management করেছি — আপনাদের similar challenges
+তে contribute করতে পারবো।
+
+আর আপনাদের engineering blog এ যে system design posts
+আছে — সেটা দেখে বুঝলাম technical depth আছে এখানে।
+এই environment এ শিখতে পারবো।"
+```
+
+</details>
+
+<details>
+<summary><strong>Q150: "তোমার weakness কী?" — honest কিন্তু smart উত্তর</strong></summary>
+
+**Template: Real weakness + Growth action**
+
+```
+❌ Bad: "আমি too much hardworking।" (cliché, dishonest)
+❌ Bad: "আমার কোনো weakness নেই।" (arrogant)
+
+✅ Good (junior engineer context):
+"আমি public speaking এ দুর্বল ছিলাম — team এ idea
+present করতে uncomfortable feel করতাম।
+
+এটা handle করার জন্য আমি University এ debate club
+join করেছিলাম, আর আমাদের dev team এর weekly
+show-and-tell session এ voluntarily present করি।
+এখনো perfect না, কিন্তু আগের চেয়ে অনেক ভালো।
+
+Technical weakness হিসেবে — distributed systems এর
+depth এ এখনো কম। তাই এই area তে actively পড়ছি
+(এই handbook এর reference!), ছোট projects এ apply
+করার চেষ্টা করছি।"
+```
+
+</details>
+
+<details>
+<summary><strong>Q151: "তুমি কোথায় দেখতে চাও নিজেকে ৩ বছর পর?"</strong></summary>
+
+**Template: Realistic + Company-aligned + Growth focused**
+
+```
+❌ Bad: "আপনাদের CTO হতে চাই।" (unrealistic)
+❌ Bad: "জানি না।" (no direction)
+
+✅ Good:
+"৩ বছরে আমি একজন confident mid-level engineer
+হতে চাই যে independently complex features design
+করতে পারে।
+
+Specifically:
+- System design এ strong — শুধু implement না, design করতে পারা
+- একটা area তে depth (আমার interest distributed systems এ)
+- Junior engineers কে mentor করার capability
+
+আপনাদের company তে আমি real-scale problems handle
+করার সুযোগ পাবো — এটাই আমার growth accelerate করবে।"
+```
+
+</details>
+
+<details>
+<summary><strong>Q152: তুমি team conflict কীভাবে handle করো?</strong></summary>
+
+**Template: Specific example + Resolution + Learning**
+
+```
+✅ Good:
+"University project এ আমাদের team এ technical
+disagreement হয়েছিল। আমি REST API করতে চাইছিলাম,
+আরেকজন GraphQL চাইছিল।
+
+আমার approach:
+1. উভয়ের arguments শুনলাম properly
+2. আমাদের project context এ weigh করলাম:
+   - Team এর GraphQL experience কম
+   - Timeline tight
+   - Simple CRUD operations
+3. Data-driven decision: REST বেশি appropriate
+4. কিন্তু GraphQL এর কোনো feature interesting
+   ছিল → hybrid approach নিলাম
+
+Result: দুজনেই comfortable ছিল। Project on time শেষ।
+
+শিখলাম: Technical argument personal না করলে,
+data দিয়ে discuss করলে better outcome আসে।"
+```
+
+</details>
+
+<div align="right">
+
+[⬆ উপরে যাও](#) | [📚 সূচিপত্র](#)
+
+</div>
+
+---
+
+## 🎊 Handbook Complete!
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎉 তুমি পুরো System Design Interview Handbook পড়েছো!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+10 টি PART এ তুমি শিখেছো:
+
+PART 1: System Design Fundamentals — Scalability, CAP, Reliability
+PART 2: Networking & Communication — HTTP, REST, WebSocket, CDN
+PART 3: Database Design — SQL/NoSQL, Sharding, Replication
+PART 4: Caching & Performance — Redis, Cache patterns, Rate Limiting
+PART 5: Message Queues — Kafka, RabbitMQ, Saga, Circuit Breaker
+PART 6: Case Studies — 9 টি real system design করা
+PART 7: LLD — SOLID, Design Patterns, Parking Lot, Library System
+PART 8: Cloud & DevOps — AWS, Docker, K8s, CI/CD, Nginx
+PART 9: 150+ Q&A Bank — Rapid fire, Architecture, Tricky, LLD
+PART 10: BD Interview Prep — Mock interview, Resume, Salary, Career
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"Knowledge without action is wasted.
+এখনই apply করো — code লেখো, project বানাও, interview দাও।"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Star ⭐ করো: github.com/mdmakky/cs-interview-handbook
+Share করো বন্ধুদের সাথে!
+```
+
+---
+
+*হ্যান্ডবুক তৈরিতে: Senior Software Architect, Backend Engineer & System Design Interviewer*
+*Version: 1.0 | তারিখ: মে ২০২৬*
+*মোট PART: 10 | সম্পন্ন: PART 1-10 ✅ | 🎊 Handbook Complete!*
