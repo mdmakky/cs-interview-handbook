@@ -5275,3 +5275,840 @@ async function safeImport(path) {
 > **🚀 PART 5 আসছে:** Asynchronous JavaScript — Synchronous vs Async, setTimeout, setInterval, Callback Hell, Promise Chaining, Promise.all, Async/Await Internals, Error Handling, Real API Calls।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 5 দাও" লিখুন।
+
+
+---
+
+<a id="part5"></a>
+
+# PART 5 — Asynchronous JavaScript
+
+> **📍 এই PART-এর Sections:** [৫.১ Sync vs Async](#৫১-synchronous-vs-asynchronous) · [৫.২ setTimeout ও setInterval](#৫২-settimeout-ও-setinterval) · [৫.৩ Callback Hell](#৫৩-callback-hell) · [৫.৪ Promise](#৫৪-promise) · [৫.৫ Promise Chaining](#৫৫-promise-chaining) · [৫.৬ Promise Combinators](#৫৬-promise-combinators) · [৫.৭ Async/Await](#৫৭-asyncawait) · [৫.৮ Error Handling](#৫৮-error-handling) · [৫.৯ Real API Calls](#৫৯-real-api-calls) · [৫.১০ AbortController](#৫১০-abortcontroller) · [৫.১১ Interview Q&A](#৫১১-part-5--interview-questions--answers)
+
+---
+
+## ৫.১ Synchronous vs Asynchronous
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Synchronous (Sync):** এক লাইন শেষ হলে পরের লাইন। কোনো কাজ দীর্ঘ সময় নিলে বাকি সব wait করে (blocking)।
+
+**Asynchronous (Async):** দীর্ঘ কাজ শুরু করে দিয়ে বাকি code চালাতে থাকে। কাজ শেষ হলে callback/Promise-এর মাধ্যমে জানায় (non-blocking)।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> **Sync:** রেস্তোরাঁয় এক গ্রাহকের order নেওয়া → রান্না → পরিবেশন → তারপর পরের গ্রাহক।
+> **Async:** সব গ্রাহকের order নেওয়া → রান্না চলতে থাকুক → যার রান্না হয় তাকে পরিবেশন।
+
+### 💻 Sync vs Async — Comparison
+
+```javascript
+// Synchronous — blocking
+console.log("১");
+console.log("২");          // ২ সবার আগে print হবে না
+console.log("৩");
+// Output: ১, ২, ৩ (order guaranteed)
+
+// Asynchronous — non-blocking
+console.log("শুরু");
+setTimeout(() => console.log("Async কাজ"), 1000); // 1 second পরে
+console.log("শেষ");
+// Output: শুরু → শেষ → Async কাজ
+// "শেষ" "Async কাজ"-এর আগে print হয়!
+
+// JavaScript single-threaded কিন্তু async কাজ browser/Node API handle করে
+// Event Loop async operations manage করে
+```
+
+---
+
+## ৫.২ setTimeout ও setInterval
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 setTimeout
+
+```javascript
+// setTimeout — নির্দিষ্ট সময় পরে একবার চালায়
+const timerId = setTimeout(function() {
+  console.log("2 সেকেন্ড পরে!");
+}, 2000);
+
+// Cancel করা
+clearTimeout(timerId);
+
+// Arrow function + argument
+setTimeout((name, city) => {
+  console.log(`${name} থেকে ${city}`);
+}, 1000, "Rahim", "Dhaka");
+
+// 0ms delay — event loop-এর পরে চলে
+setTimeout(() => console.log("Event loop পরে"), 0);
+console.log("এটা আগে");
+// Output: "এটা আগে" → "Event loop পরে"
+
+// Recursive setTimeout (setInterval-এর alternative)
+function repeatTask() {
+  doWork();
+  setTimeout(repeatTask, 1000); // কাজ শেষ হওয়ার পরে 1s
+}
+// setInterval-এর চেয়ে ভালো — কাজ শেষ হওয়ার পরে পরবর্তী schedule হয়
+```
+
+### 💻 setInterval
+
+```javascript
+// setInterval — নির্দিষ্ট সময় পরপর চালায়
+let count = 0;
+const intervalId = setInterval(() => {
+  count++;
+  console.log(`Count: ${count}`);
+  if (count >= 5) {
+    clearInterval(intervalId); // বন্ধ করা
+  }
+}, 1000);
+
+// Clock example
+function updateClock() {
+  const now = new Date();
+  document.querySelector("#clock").textContent =
+    `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+}
+const clockInterval = setInterval(updateClock, 1000);
+updateClock(); // প্রথমেই একবার চালানো
+
+// ⚠️ setInterval vs setTimeout (recursive)
+// setInterval: task start থেকে count — task দীর্ঘ হলে overlap সম্ভব
+// setTimeout recursive: task শেষ থেকে count — overlap নেই
+```
+
+---
+
+## ৫.৩ Callback Hell
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Callback Hell** (বা Pyramid of Doom) — multiple async operations যখন nested callbacks-এ লেখা হয়, code গভীর হতে থাকে এবং পড়া ও maintain করা কঠিন হয়।
+
+```javascript
+// ❌ Callback Hell — ধাপে ধাপে user data fetch
+getUserId(function(userId) {
+  getUser(userId, function(user) {
+    getOrders(user.id, function(orders) {
+      getOrderDetails(orders[0].id, function(details) {
+        getShippingInfo(details.shippingId, function(shipping) {
+          console.log(shipping);
+          // আরও nested হতে পারে...
+        }, function(err) { handleError(err); });
+      }, function(err) { handleError(err); });
+    }, function(err) { handleError(err); });
+  }, function(err) { handleError(err); });
+}, function(err) { handleError(err); });
+// 😵 পড়া কঠিন, error handling repetitive, maintain nightmare
+
+// ✅ Solution 1: Named functions (partial fix)
+function onUserId(userId) { getUser(userId, onUser, handleError); }
+function onUser(user) { getOrders(user.id, onOrders, handleError); }
+function onOrders(orders) { getOrderDetails(orders[0].id, onDetails, handleError); }
+
+// ✅ Solution 2: Promises (better)
+getUserId()
+  .then(userId => getUser(userId))
+  .then(user => getOrders(user.id))
+  .then(orders => getOrderDetails(orders[0].id))
+  .then(details => getShippingInfo(details.shippingId))
+  .then(shipping => console.log(shipping))
+  .catch(handleError); // একটি error handler সবার জন্য!
+
+// ✅ Solution 3: Async/Await (best)
+async function getShipping() {
+  try {
+    const userId = await getUserId();
+    const user = await getUser(userId);
+    const orders = await getOrders(user.id);
+    const details = await getOrderDetails(orders[0].id);
+    const shipping = await getShippingInfo(details.shippingId);
+    console.log(shipping);
+  } catch (err) {
+    handleError(err);
+  }
+}
+```
+
+---
+
+## ৫.৪ Promise
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Promise** হলো async operation-এর eventual result represent করা object। তিনটি state:
+- **Pending** — চলছে
+- **Fulfilled** — সফল হয়েছে (resolve)
+- **Rejected** — ব্যর্থ হয়েছে (reject)
+
+### 💻 Promise তৈরি ও ব্যবহার
+
+```javascript
+// ১. Promise তৈরি
+const myPromise = new Promise((resolve, reject) => {
+  // Async কাজ করুন
+  const success = true;
+  if (success) {
+    resolve("কাজ সফল হয়েছে!");  // fulfill
+  } else {
+    reject(new Error("কাজ ব্যর্থ হয়েছে!"));  // reject
+  }
+});
+
+// ২. Promise consume
+myPromise
+  .then(result => console.log(result))     // "কাজ সফল হয়েছে!"
+  .catch(error => console.error(error))    // rejection handle
+  .finally(() => console.log("সর্বদা চলবে")); // সবসময়
+
+// ৩. Practical: setTimeout-কে Promise-এ wrap
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function runAfterDelay() {
+  console.log("শুরু");
+  await delay(2000); // 2 সেকেন্ড wait
+  console.log("2 সেকেন্ড পরে");
+}
+
+// ৪. API call Promise
+function fetchUserData(id) {
+  return new Promise((resolve, reject) => {
+    fetch(`https://jsonplaceholder.typicode.com/users/${id}`)
+      .then(response => {
+        if (!response.ok) {
+          reject(new Error(`HTTP Error: ${response.status}`));
+          return;
+        }
+        return response.json();
+      })
+      .then(data => resolve(data))
+      .catch(err => reject(err));
+  });
+}
+
+// ৫. Promise states visualization
+// Promise তৈরির সময়: pending
+// resolve() call হলে: fulfilled → .then() চলে
+// reject() call হলে: rejected → .catch() চলে
+// একবার settled হলে আর state পরিবর্তন হয় না
+
+// ৬. Promise.resolve / Promise.reject (shorthand)
+Promise.resolve("immediate value").then(console.log); // "immediate value"
+Promise.reject(new Error("immediate error")).catch(console.error);
+```
+
+---
+
+## ৫.৫ Promise Chaining
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Chaining বিস্তারিত
+
+```javascript
+// প্রতিটি .then() একটি নতুন Promise return করে
+fetch("/api/user/1")
+  .then(response => {
+    console.log("Response received");
+    return response.json();           // json parsing — Promise return
+  })
+  .then(userData => {
+    console.log("User:", userData.name);
+    return fetch(`/api/posts?userId=${userData.id}`); // নতুন fetch
+  })
+  .then(response => response.json())
+  .then(posts => {
+    console.log("Posts count:", posts.length);
+    return posts.filter(p => p.published);
+  })
+  .then(publishedPosts => {
+    // আর কোনো async কাজ নেই
+    renderPosts(publishedPosts);
+  })
+  .catch(error => {
+    // যেকোনো step-এ error → এখানে আসবে
+    console.error("কোথাও সমস্যা:", error.message);
+  })
+  .finally(() => {
+    hideLoadingSpinner(); // সব সময় — success বা error
+  });
+
+// ⚠️ Common mistake: return না করা
+fetch("/api/user")
+  .then(response => {
+    response.json(); // ❌ return নেই!
+    // পরের .then() undefined পাবে
+  })
+  .then(data => console.log(data)); // undefined!
+
+// ✅ সঠিক:
+fetch("/api/user")
+  .then(response => response.json()) // return implicit with arrow fn
+  .then(data => console.log(data));  // data পাবে
+```
+
+---
+
+## ৫.৬ Promise Combinators
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Promise.all
+
+```javascript
+// সব Promises একসাথে চালায়, সব fulfilled হলে resolve
+const p1 = fetch("/api/users").then(r => r.json());
+const p2 = fetch("/api/products").then(r => r.json());
+const p3 = fetch("/api/orders").then(r => r.json());
+
+try {
+  const [users, products, orders] = await Promise.all([p1, p2, p3]);
+  // তিনটি API call parallel-এ — সময় সাশ্রয়!
+  console.log(users.length, products.length, orders.length);
+} catch (error) {
+  // যেকোনো একটি reject হলে সাথে সাথে reject (fail-fast)
+  console.error("একটি request ব্যর্থ:", error.message);
+}
+
+// Sequential vs Parallel comparison:
+// Sequential: 3 × 1s = 3s
+const u = await fetch("/api/users").then(r => r.json());
+const p = await fetch("/api/products").then(r => r.json());
+
+// Parallel: max(1s, 1s, 1s) = 1s
+const [u2, p2_] = await Promise.all([
+  fetch("/api/users").then(r => r.json()),
+  fetch("/api/products").then(r => r.json())
+]);
+```
+
+### 💻 Promise.allSettled
+
+```javascript
+// সব Promises-এর result পায়, fail হলেও (ES2020)
+const results = await Promise.allSettled([
+  fetch("/api/critical").then(r => r.json()),
+  fetch("/api/optional").then(r => r.json()), // এটি fail হলেও চলবে
+  fetch("/api/extra").then(r => r.json())
+]);
+
+results.forEach(result => {
+  if (result.status === "fulfilled") {
+    console.log("সফল:", result.value);
+  } else {
+    console.log("ব্যর্থ:", result.reason.message);
+  }
+});
+// কোনো reject হলেও সব results পাওয়া যায়
+```
+
+### 💻 Promise.race ও Promise.any
+
+```javascript
+// Promise.race — প্রথমটি settle হলে resolve/reject
+const fastest = await Promise.race([
+  fetch("/api/server-1").then(r => r.json()),
+  fetch("/api/server-2").then(r => r.json()),
+  new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000))
+]);
+// সবচেয়ে দ্রুত response বা timeout
+
+// Promise.any — প্রথম fulfilled resolve করে (ES2021)
+try {
+  const result = await Promise.any([
+    fetch("/api/cdn-1").then(r => r.json()), // ব্যর্থ হতে পারে
+    fetch("/api/cdn-2").then(r => r.json()), // ব্যর্থ হতে পারে
+    fetch("/api/cdn-3").then(r => r.json())  // এটি সফল হলেই হলো
+  ]);
+  // যেকোনো একটি সফল হলে result পাওয়া যায়
+} catch (err) {
+  // AggregateError — সবগুলো ব্যর্থ হলে
+  console.error("সবগুলো ব্যর্থ");
+}
+```
+
+### 📊 Promise Combinators তুলনা
+
+| Method | কখন Resolve | কখন Reject | Use Case |
+|--------|------------|-----------|----------|
+| `Promise.all` | সব fulfilled | যেকোনো একটি reject | সব দরকার |
+| `Promise.allSettled` | সব settle | কখনো না | সব results দরকার |
+| `Promise.race` | প্রথমটি settle | প্রথমটি reject | Fastest wins |
+| `Promise.any` | প্রথম fulfilled | সব reject (AggregateError) | যেকোনো একটি হলেই |
+
+---
+
+## ৫.৭ Async/Await
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Async/Await** — ES2017। Promise-এর syntactic sugar — async code-কে synchronous-এর মতো লেখা যায়। `async function` সবসময় Promise return করে।
+
+### 💻 Async/Await বিস্তারিত
+
+```javascript
+// ১. Basic async/await
+async function getUserData(id) {
+  const response = await fetch(`/api/users/${id}`); // Promise-এর জন্য wait
+  const data = await response.json();               // JSON parsing wait
+  return data; // automatically Promise.resolve(data)-তে wrap হয়
+}
+
+// Call করা
+getUserData(1).then(data => console.log(data));
+// অথবা:
+const data = await getUserData(1); // async context-এ
+
+// ২. async function সবসময় Promise return করে
+async function getValue() {
+  return 42;
+}
+getValue() instanceof Promise; // true
+getValue().then(v => console.log(v)); // 42
+
+// ৩. Await একটি expression
+async function example() {
+  const num = await Promise.resolve(10);  // 10
+  const str = await "hello";              // "hello" (non-Promise, wrap হয়)
+  const doubled = await (num * 2);        // 20
+
+  // Inline calculation
+  const result = await fetch("/api")
+    .then(r => r.json())
+    .then(d => d.value * 2);
+
+  return result;
+}
+
+// ৪. Sequential vs Parallel in async/await
+// Sequential (ধীর)
+async function sequential() {
+  const user = await fetchUser();       // wait করে
+  const posts = await fetchPosts();     // তারপর wait
+  // মোট: user time + posts time
+}
+
+// Parallel (দ্রুত)
+async function parallel() {
+  const [user, posts] = await Promise.all([
+    fetchUser(),   // একসাথে শুরু
+    fetchPosts()   // একসাথে শুরু
+  ]);
+  // মোট: max(user time, posts time)
+}
+
+// ৫. Await in loops
+async function processItems(ids) {
+  // ❌ Sequential (each awaits previous)
+  for (const id of ids) {
+    const item = await fetchItem(id);
+    processItem(item);
+  }
+
+  // ✅ Parallel
+  const items = await Promise.all(ids.map(id => fetchItem(id)));
+  items.forEach(processItem);
+}
+
+// ৬. Top-level await (ES2022, ES Modules)
+// const data = await fetch("/api").then(r => r.json());
+// browser modules এবং Node.js-এ সরাসরি ব্যবহার করা যায়
+```
+
+---
+
+## ৫.৮ Error Handling
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 try/catch/finally with Async/Await
+
+```javascript
+async function fetchUserProfile(userId) {
+  try {
+    const response = await fetch(`/api/users/${userId}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+    }
+
+    const user = await response.json();
+    return user;
+
+  } catch (error) {
+    if (error.name === "TypeError") {
+      // Network error (offline, DNS failure)
+      console.error("Network error:", error.message);
+    } else if (error.message.includes("HTTP Error")) {
+      // HTTP error (404, 500 etc.)
+      console.error("Server error:", error.message);
+    } else {
+      // Other errors (JSON parse, etc.)
+      console.error("Unexpected error:", error.message);
+    }
+    throw error; // re-throw — caller-ও জানুক
+  } finally {
+    hideLoadingSpinner(); // সবসময় চলে
+  }
+}
+
+// ২. Custom Error classes
+class ApiError extends Error {
+  constructor(message, statusCode, endpoint) {
+    super(message);
+    this.name = "ApiError";
+    this.statusCode = statusCode;
+    this.endpoint = endpoint;
+  }
+}
+
+class ValidationError extends Error {
+  constructor(message, fields) {
+    super(message);
+    this.name = "ValidationError";
+    this.fields = fields;
+  }
+}
+
+// throw করা
+throw new ApiError("Not Found", 404, "/api/users/999");
+throw new ValidationError("Invalid form", { email: "সঠিক ইমেইল দিন" });
+
+// ধরা
+try {
+  await fetchUserProfile(999);
+} catch (error) {
+  if (error instanceof ApiError) {
+    if (error.statusCode === 404) showNotFound();
+    if (error.statusCode === 401) redirectToLogin();
+  } else if (error instanceof ValidationError) {
+    showFieldErrors(error.fields);
+  } else {
+    showGenericError();
+  }
+}
+
+// ৩. Unhandled Promise rejection catch
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("Unhandled rejection:", event.reason);
+  event.preventDefault(); // browser error থামানো
+});
+
+// Node.js-এ
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled rejection:", reason);
+});
+
+// ৪. Safe async wrapper — every call-এ try/catch না লিখতে
+async function safeAsync(fn, ...args) {
+  try {
+    const result = await fn(...args);
+    return [result, null];
+  } catch (error) {
+    return [null, error];
+  }
+}
+
+const [user, error] = await safeAsync(fetchUserProfile, 1);
+if (error) {
+  handleError(error);
+} else {
+  renderUser(user);
+}
+```
+
+---
+
+## ৫.৯ Real API Calls
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Fetch API — Complete Guide
+
+```javascript
+// ১. GET request
+async function getUsers() {
+  const response = await fetch("https://jsonplaceholder.typicode.com/users");
+  if (!response.ok) throw new Error(`Error: ${response.status}`);
+  return response.json();
+}
+
+// ২. POST request
+async function createUser(userData) {
+  const response = await fetch("https://jsonplaceholder.typicode.com/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${getToken()}`
+    },
+    body: JSON.stringify(userData)
+  });
+  if (!response.ok) throw new Error(`Error: ${response.status}`);
+  return response.json();
+}
+
+// ৩. PUT / PATCH
+async function updateUser(id, changes) {
+  const response = await fetch(`/api/users/${id}`, {
+    method: "PATCH", // PATCH: partial update, PUT: full replace
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(changes)
+  });
+  return response.json();
+}
+
+// ৪. DELETE
+async function deleteUser(id) {
+  const response = await fetch(`/api/users/${id}`, { method: "DELETE" });
+  return response.ok;
+}
+
+// ৫. API Service class
+class ApiService {
+  constructor(baseUrl, token = null) {
+    this.baseUrl = baseUrl;
+    this.token = token;
+  }
+
+  getHeaders(extra = {}) {
+    const headers = { "Content-Type": "application/json", ...extra };
+    if (this.token) headers["Authorization"] = `Bearer ${this.token}`;
+    return headers;
+  }
+
+  async request(endpoint, options = {}) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const config = { headers: this.getHeaders(), ...options };
+
+    const response = await fetch(url, config);
+
+    if (response.status === 401) {
+      this.token = await refreshToken();
+      return this.request(endpoint, options); // retry
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new ApiError(
+        errorData.message || `HTTP ${response.status}`,
+        response.status,
+        endpoint
+      );
+    }
+
+    if (response.status === 204) return null; // No content
+    return response.json();
+  }
+
+  get(endpoint) { return this.request(endpoint); }
+  post(endpoint, data) {
+    return this.request(endpoint, { method: "POST", body: JSON.stringify(data) });
+  }
+  patch(endpoint, data) {
+    return this.request(endpoint, { method: "PATCH", body: JSON.stringify(data) });
+  }
+  delete(endpoint) { return this.request(endpoint, { method: "DELETE" }); }
+}
+
+const api = new ApiService("https://api.example.com", userToken);
+const users = await api.get("/users");
+const newUser = await api.post("/users", { name: "Rahim", email: "rahim@bd.com" });
+```
+
+---
+
+## ৫.১০ AbortController
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Request Cancel করা
+
+```javascript
+// ১. Basic AbortController
+const controller = new AbortController();
+const signal = controller.signal;
+
+// Fetch request চালু
+const fetchPromise = fetch("/api/large-data", { signal });
+
+// 5 সেকেন্ড পরে cancel
+const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+try {
+  const response = await fetchPromise;
+  clearTimeout(timeoutId);
+  return response.json();
+} catch (error) {
+  if (error.name === "AbortError") {
+    console.log("Request cancelled");
+  } else {
+    throw error;
+  }
+}
+
+// ২. Practical: Search input — debounce + cancel
+let searchController = null;
+
+async function searchUsers(query) {
+  // আগের request cancel
+  if (searchController) searchController.abort();
+  searchController = new AbortController();
+
+  try {
+    const response = await fetch(`/api/search?q=${query}`, {
+      signal: searchController.signal
+    });
+    const results = await response.json();
+    displayResults(results);
+  } catch (error) {
+    if (error.name !== "AbortError") {
+      showError(error.message);
+    }
+  }
+}
+
+document.querySelector("#search").addEventListener("input", (e) => {
+  searchUsers(e.target.value);
+});
+
+// ৩. Timeout utility
+async function fetchWithTimeout(url, timeout = 5000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    if (error.name === "AbortError") throw new Error("Request timeout");
+    throw error;
+  }
+}
+```
+
+---
+
+## ৫.১১ PART 5 — Interview Questions & Answers
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Core Async Concepts (Q1–Q12)</strong></summary>
+<br>
+
+**Q1: JavaScript কি সত্যিই single-threaded? তাহলে async কীভাবে কাজ করে?**
+> **A:** হ্যাঁ, JavaScript single-threaded — একসময়ে একটি কাজ। কিন্তু browser/Node.js-এর Web APIs (fetch, setTimeout, DOM events) আলাদা thread-এ কাজ করে। শেষ হলে callback queue-তে রাখে। Event Loop call stack খালি হলে সেই callback তুলে চালায়। তাই JS non-blocking async কাজ করতে পারে।
+
+**Q2: Callback, Promise, এবং Async/Await-এর পার্থক্য?**
+> **A:** Callback: function argument হিসেবে — callback hell, error handling কঠিন। Promise: chainable `.then()/.catch()` — আরও পরিষ্কার, central error handling। Async/Await: Promise-এর syntactic sugar — synchronous-এর মতো লেখা, সবচেয়ে readable। সব তিনটিই async handle করে, শুধু syntax আলাদা।
+
+**Q3: Promise-এর তিনটি state কী?**
+> **A:** ১. **Pending** — শুরু হয়েছে, এখনো শেষ হয়নি। ২. **Fulfilled** — সফল (`resolve()` call হয়েছে)। ৩. **Rejected** — ব্যর্থ (`reject()` call হয়েছে)। Fulfilled/Rejected = Settled। একবার settle হলে আর state পরিবর্তন হয় না।
+
+**Q4: async function সবসময় কী return করে?**
+> **A:** সবসময় **Promise** return করে। `return 42` করলে `Promise.resolve(42)`, exception throw করলে `Promise.reject(error)`। `await asyncFn()` দিয়ে unwrap করা যায়।
+
+**Q5: Promise.all এবং Promise.allSettled-এর পার্থক্য?**
+> **A:** `Promise.all` — যেকোনো একটি reject হলে সাথে সাথে reject (fail-fast)। `Promise.allSettled` — সব settle হওয়া পর্যন্ত wait, প্রতিটির `{status, value/reason}` দেয়। কিছু optional হলে বা সব results দরকার হলে `allSettled`।
+
+**Q6: await ছাড়া async function call করলে কী হয়?**
+> **A:** Promise return করে, resolve হওয়া value পাওয়া যায় না। `const data = fetchData()` — data হলো Promise object, actual data নয়। `.then()` বা `await` দিয়ে unwrap করতে হবে।
+
+**Q7: Microtask queue কী? Callback queue থেকে পার্থক্য?**
+> **A:** Microtask queue (Promise callbacks, `queueMicrotask`) Callback queue-এর চেয়ে **বেশি priority** পায়। Event loop: call stack খালি → microtask queue সম্পূর্ণ খালি → তারপর callback queue থেকে একটি। তাই Promise `.then()` setTimeout-এর আগে চলে।
+
+**Q8: try/catch কি Async/Await error ধরতে পারে?**
+> **A:** হ্যাঁ — `await` expression-এ try/catch সরাসরি কাজ করে। `await`-এ rejected Promise হলে exception throw হয়। `.catch()` ছাড়া Promise chain-এ `.catch()` বা outer try/catch দরকার।
+
+**Q9: `setTimeout(fn, 0)` — কী করে?**
+> **A:** 0ms delay মানে সাথে সাথে নয় — call stack খালি হওয়ার পরে, callback queue থেকে। Synchronous code সব শেষ হওয়ার পরে চলে। Use case: expensive computation-কে defer করা, DOM update হতে দেওয়া তারপর কাজ করা।
+
+**Q10: setInterval এবং recursive setTimeout-এর পার্থক্য কী?**
+> **A:** `setInterval` — কাজ শুরু থেকে interval count। কাজ 1.5s নিলেও 1s পরে পরের কাজ শুরু — overlap সম্ভব। Recursive `setTimeout` — কাজ শেষ হওয়ার পরে পরের timer শুরু — overlap নেই, consistent gap। Long-running tasks-এ setTimeout recursive পছন্দনীয়।
+
+**Q11: AbortController কেন দরকার?**
+> **A:** Component unmount হলে বা user নতুন search করলে পুরনো pending request cancel করা। Memory leak এবং stale data রোধ করে। Timeout implement করতে (`abort()` নির্দিষ্ট সময় পরে)।
+
+**Q12: Promise chaining-এ `return` না করলে কী হয়?**
+> **A:** পরের `.then()` `undefined` পায়। `.then()` implicitly `Promise.resolve(undefined)` return করে। সবসময় `.then()` callback-এ value `return` করতে হবে পরের chain-এ পাঠাতে হলে।
+
+</details>
+
+<details>
+<summary><strong>🔹 Practical & Tricky (Q13–Q20)</strong></summary>
+<br>
+
+**Q13: নিচের code-এর output কী?**
+```javascript
+console.log("A");
+setTimeout(() => console.log("B"), 0);
+Promise.resolve().then(() => console.log("C"));
+console.log("D");
+```
+> **A:** `A → D → C → B`। A, D synchronous (call stack)। C Promise microtask (call stack খালির পরে, macrotask আগে)। B setTimeout macrotask (সবার শেষে)।
+
+**Q14: API call-এ loading/error state কীভাবে manage করবেন?**
+> **A:**
+```javascript
+async function fetchWithState(url) {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    setData(data);
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false); // সবসময় loading বন্ধ
+  }
+}
+```
+
+**Q15: Parallel API calls-এ একটি fail করলেও বাকিগুলোর result রাখতে চাই — কীভাবে?**
+> **A:** `Promise.allSettled()` ব্যবহার করুন। প্রতিটি result-এর `status === "fulfilled"` check করে value নিন, `"rejected"` হলে fallback।
+
+**Q16: async/await কি synchronous কোডের মতো? Block করে?**
+> **A:** না। `await` শুধু সেই async function-কে pause করে — call stack block করে না। অন্য code, event handler, timer চলতে পারে। `await` হলো non-blocking pause।
+
+**Q17: Fetch API কি সব HTTP error (404, 500)-এ reject করে?**
+> **A:** না — fetch শুধু network failure-এ reject করে। HTTP 404, 500 — fulfilled হয় (response পাওয়া যায়)। তাই `response.ok` বা `response.status` check করতে হয়।
+
+**Q18: Promise constructor-এ synchronous কোড থাকলে কখন চলে?**
+> **A:** সাথে সাথে, synchronously। `new Promise((resolve, reject) => { /* এখানে sync code */ })` — executor তাৎক্ষণিক চলে। শুধু `.then()` callback asynchronous।
+
+**Q19: `async function` ছাড়া top-level `await` কাজ করে কি?**
+> **A:** ES modules (`.mjs` বা `type="module"` script)-এ top-level await কাজ করে (ES2022)। Regular scripts-এ async function-এর ভেতরে থাকতে হবে।
+
+**Q20: একটি Promise কি দুইবার resolve করা যায়?**
+> **A:** না। একবার resolve বা reject হলে state স্থায়ী। পরবর্তী `resolve()` বা `reject()` call ignored। এই "immutability" Promise-এর গুরুত্বপূর্ণ property।
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 6 আসছে:** Object-Oriented JavaScript — Objects, Constructor Functions, Prototypes, Classes, Encapsulation, Inheritance, Polymorphism, Abstraction, SOLID Principles।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 6 দাও" লিখুন।
