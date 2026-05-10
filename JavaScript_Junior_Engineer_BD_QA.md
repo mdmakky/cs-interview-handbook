@@ -4300,3 +4300,978 @@ input.setCustomValidity(""); // error clear
 > **🚀 PART 4 আসছে:** ES6+ Features — Destructuring, Spread/Rest, Optional Chaining, Nullish Coalescing, Map, Set, WeakMap, WeakSet, Array Methods, Dynamic Import এবং আরও।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 4 দাও" লিখুন।
+
+
+---
+
+<a id="part4"></a>
+
+# PART 4 — ES6+ Features
+
+> **📍 এই PART-এর Sections:** [৪.১ Destructuring](#৪১-destructuring) · [৪.২ Spread Operator](#৪২-spread-operator) · [৪.৩ Rest Operator](#৪৩-rest-operator) · [৪.৪ Optional Chaining](#৪৪-optional-chaining) · [৪.৫ Nullish Coalescing](#৪৫-nullish-coalescing) · [৪.৬ Map](#৪৬-map) · [৪.৭ Set](#৪৭-set) · [৪.৮ WeakMap ও WeakSet](#৪৮-weakmap-ও-weakset) · [৪.৯ Array Methods](#৪৯-array-methods) · [৪.১০ Object Methods](#৪১০-object-methods) · [৪.১১ Iterators ও Generators](#৪১১-iterators-ও-generators) · [৪.১২ Dynamic Import](#৪১২-dynamic-import) · [৪.১৩ Interview Q&A](#৪১৩-part-4--interview-questions--answers)
+
+---
+
+## ৪.১ Destructuring
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Destructuring** হলো Array বা Object থেকে values বের করে আলাদা variables-এ assign করার সংক্ষিপ্ত পদ্ধতি। ES6-এর অন্যতম গুরুত্বপূর্ণ feature।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> মনে করুন একটি গিফট বাক্সে তিনটি জিনিস আছে। আগে একটা একটা করে বের করতে হতো। Destructuring দিয়ে এক লাইনে তিনটিই বের করা যায়।
+
+### 💻 Array Destructuring
+
+```javascript
+// পুরনো পদ্ধতি
+const colors = ["red", "green", "blue"];
+const first = colors[0];
+const second = colors[1];
+
+// ✅ Array Destructuring
+const [red, green, blue] = colors;
+console.log(red);   // "red"
+console.log(green); // "green"
+
+// ১. Skip করা
+const [, , third] = colors;
+console.log(third); // "blue"
+
+// ২. Default values
+const [a = "default", b = "fallback"] = ["hello"];
+console.log(a); // "hello"
+console.log(b); // "fallback"
+
+// ৩. Rest with destructuring
+const [head, ...tail] = [1, 2, 3, 4, 5];
+console.log(head); // 1
+console.log(tail); // [2, 3, 4, 5]
+
+// ৪. Swap variables (elegant!)
+let x = 1, y = 2;
+[x, y] = [y, x];
+console.log(x, y); // 2, 1
+
+// ৫. Function return
+function getCoords() {
+  return [23.8103, 90.4125]; // Dhaka coordinates
+}
+const [lat, lng] = getCoords();
+
+// ৬. Nested array
+const matrix = [[1, 2], [3, 4]];
+const [[a1, a2], [b1, b2]] = matrix;
+console.log(a1, b2); // 1, 4
+```
+
+### 💻 Object Destructuring
+
+```javascript
+const user = {
+  name: "Rahim",
+  age: 25,
+  city: "Dhaka",
+  role: "Developer",
+  address: {
+    street: "Mirpur",
+    zip: "1216"
+  }
+};
+
+// Basic
+const { name, age, city } = user;
+console.log(name, age); // "Rahim" 25
+
+// ১. Rename করা
+const { name: userName, age: userAge } = user;
+console.log(userName); // "Rahim"
+
+// ২. Default values
+const { name: n, salary = 50000 } = user;
+console.log(salary); // 50000 (না থাকলে default)
+
+// ৩. Nested destructuring
+const { address: { street, zip } } = user;
+console.log(street); // "Mirpur"
+
+// ৪. Rest
+const { name: nm, ...rest } = user;
+console.log(rest); // { age: 25, city: "Dhaka", role: "Developer", address: {...} }
+
+// ৫. Function parameter destructuring
+function greetUser({ name, age, city = "Unknown" }) {
+  return `${name} (${age}) থেকে ${city}`;
+}
+console.log(greetUser(user)); // "Rahim (25) থেকে Dhaka"
+
+// ৬. API response handling
+async function fetchUser(id) {
+  const response = await fetch(`/api/users/${id}`);
+  const { data: { user: { name, email } }, status } = await response.json();
+  // deeply nested একবারে
+}
+
+// ৭. Array of objects
+const users = [
+  { id: 1, name: "Rahim" },
+  { id: 2, name: "Karim" }
+];
+const [{ name: first }, { name: second }] = users;
+console.log(first, second); // "Rahim" "Karim"
+```
+
+### ⚠️ Common Mistakes
+
+```javascript
+// ❌ undefined থেকে destructure করা
+const { name } = undefined; // TypeError!
+// ✅ Default value দিন
+const { name } = user || {};
+// বা optional chaining:
+const name = user?.name;
+
+// ❌ Rename আর default একসাথে
+const { name: n = "Guest" } = {}; // ✅ এটা valid!
+// syntax: { key: newName = defaultValue }
+
+// ❌ Nested destructuring-এ intermediate undefined
+const { address: { street } } = { name: "Rahim" }; // TypeError! address undefined
+// ✅
+const { address: { street } = {} } = { name: "Rahim" };
+```
+
+---
+
+## ৪.২ Spread Operator
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Spread Operator (`...`)** iterable (array, string, object) কে individual elements-এ ছড়িয়ে দেয়।
+
+### 💻 Spread Examples
+
+```javascript
+// ১. Array copy ও merge
+const arr1 = [1, 2, 3];
+const arr2 = [4, 5, 6];
+
+const copy = [...arr1];          // shallow copy
+const merged = [...arr1, ...arr2]; // [1, 2, 3, 4, 5, 6]
+const withExtra = [0, ...arr1, ...arr2, 7]; // [0, 1, 2, 3, 4, 5, 6, 7]
+
+// ২. Object copy ও merge
+const defaults = { theme: "light", lang: "en", fontSize: 14 };
+const userPrefs = { theme: "dark", fontSize: 16 };
+
+const merged2 = { ...defaults, ...userPrefs };
+// { theme: "dark", lang: "en", fontSize: 16 }
+// ⚠️ পরেরটি আগেরটি override করে
+
+// ৩. Function arguments
+function sum(a, b, c) { return a + b + c; }
+const nums = [1, 2, 3];
+console.log(sum(...nums)); // 6 (apply এর modern alternative)
+
+// Math.max
+console.log(Math.max(...[3, 1, 4, 1, 5, 9])); // 9
+
+// ৪. String spread
+const chars = [..."Hello"]; // ["H", "e", "l", "l", "o"]
+const unique = [...new Set("hello")]; // ["h", "e", "l", "o"]
+
+// ৫. DOM NodeList to Array
+const elements = [...document.querySelectorAll(".item")];
+elements.map(el => el.style.color = "red"); // এখন map করা যাবে
+
+// ৬. Immutable state update (React pattern)
+const state = { user: "Rahim", count: 0 };
+const newState = { ...state, count: state.count + 1 };
+// { user: "Rahim", count: 1 } — original অপরিবর্তিত
+
+// ৭. Remove a property immutably
+const { role, ...withoutRole } = user;
+// withoutRole-এ role নেই
+```
+
+### ⚠️ Shallow Copy — সতর্কতা
+
+```javascript
+const original = { name: "Rahim", address: { city: "Dhaka" } };
+const copy = { ...original };
+
+copy.name = "Karim";          // OK — primitive, independent
+copy.address.city = "Ctg";    // ❌ original.address.city ও বদলে গেছে!
+
+// কারণ: address একটি nested object — reference copy হয়েছে
+// Deep copy এর জন্য structuredClone() বা JSON.parse(JSON.stringify())
+```
+
+---
+
+## ৪.৩ Rest Operator
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Rest Operator (`...`)** — spread-এর বিপরীত। বাকি সব elements-কে একটি array-এ collect করে। Syntax একই (`...`) কিন্তু context আলাদা।
+
+```javascript
+// ১. Function parameters
+function sum(first, second, ...rest) {
+  console.log(first);  // 1
+  console.log(second); // 2
+  console.log(rest);   // [3, 4, 5]
+  return first + second + rest.reduce((a, b) => a + b, 0);
+}
+sum(1, 2, 3, 4, 5); // 15
+
+// ২. Destructuring rest
+const [head, ...tail] = [1, 2, 3, 4];
+// head = 1, tail = [2, 3, 4]
+
+const { name, ...others } = { name: "Rahim", age: 25, city: "Dhaka" };
+// name = "Rahim", others = { age: 25, city: "Dhaka" }
+
+// ৩. Rest must be last
+function wrong(first, ...rest, last) {} // SyntaxError!
+function correct(first, ...rest) {
+  const last = rest[rest.length - 1]; // workaround
+}
+```
+
+### 📊 Spread vs Rest
+
+| | Spread (`...`) | Rest (`...`) |
+|--|---------------|-------------|
+| **কী করে** | ছড়িয়ে দেয় | একসাথে করে |
+| **Context** | Function call, array/object literal | Function params, destructuring |
+| **দিক** | One → Many | Many → One |
+| **Example** | `fn(...arr)` | `fn(...args)` |
+
+---
+
+## ৪.৪ Optional Chaining
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Optional Chaining (`?.`)** — ES2020। Nested object-এর property access-এ intermediate value `null` বা `undefined` হলে error না দিয়ে `undefined` return করে।
+
+### 💻 Optional Chaining Examples
+
+```javascript
+const user = {
+  name: "Rahim",
+  address: {
+    city: "Dhaka",
+    zip: "1216"
+  },
+  getFullName() {
+    return `${this.name} Ahmed`;
+  }
+};
+
+// ❌ পুরনো পদ্ধতি — verbose
+const city = user && user.address && user.address.city;
+const zip = user && user.address && user.address.zip;
+
+// ✅ Optional Chaining
+console.log(user?.address?.city);        // "Dhaka"
+console.log(user?.phone?.number);        // undefined (error নেই!)
+console.log(user?.address?.country?.code); // undefined
+
+// Method call
+console.log(user?.getFullName?.());      // "Rahim Ahmed"
+console.log(user?.nonExistentMethod?.()); // undefined
+
+// Array access
+const users = [{ name: "Rahim" }];
+console.log(users?.[0]?.name);           // "Rahim"
+console.log(users?.[5]?.name);           // undefined
+
+// With Nullish Coalescing
+const city2 = user?.address?.city ?? "Unknown City";
+console.log(city2); // "Dhaka"
+
+const phone = user?.phone?.number ?? "No phone";
+console.log(phone); // "No phone"
+
+// API response handling
+async function getUser(id) {
+  const response = await fetch(`/api/users/${id}`);
+  const data = await response.json();
+  // Safe deeply nested access
+  return data?.user?.profile?.avatar ?? "/default-avatar.png";
+}
+```
+
+---
+
+## ৪.৫ Nullish Coalescing
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Nullish Coalescing (`??`)** — ES2020। বাম দিক `null` বা `undefined` হলে ডান দিক return করে। `||` থেকে পার্থক্য: `0`, `""`, `false` এগুলো falsy কিন্তু nullish নয়।
+
+```javascript
+// || vs ?? তুলনা
+console.log(0 || "default");    // "default" (0 falsy)
+console.log(0 ?? "default");    // 0 (0 nullish নয়!)
+
+console.log("" || "default");   // "default" ("" falsy)
+console.log("" ?? "default");   // "" ("" nullish নয়!)
+
+console.log(false || "default"); // "default"
+console.log(false ?? "default"); // false
+
+console.log(null || "default");  // "default"
+console.log(null ?? "default");  // "default"
+
+console.log(undefined || "default"); // "default"
+console.log(undefined ?? "default"); // "default"
+
+// Practical use cases
+function getUserSettings(settings) {
+  return {
+    fontSize: settings.fontSize ?? 16,  // 0 হলেও রাখা যাবে
+    darkMode: settings.darkMode ?? false, // false হলেও রাখা যাবে
+    username: settings.username ?? "Guest"
+  };
+}
+
+getUserSettings({ fontSize: 0, darkMode: false });
+// { fontSize: 0, darkMode: false, username: "Guest" }
+// ✅ fontSize: 0 এবং darkMode: false সঠিকভাবে রাখা হয়েছে
+
+// ??= — Logical Nullish Assignment (ES2021)
+let config = { port: null };
+config.port ??= 3000;  // null ছিল, তাই 3000 assign
+config.port ??= 8080;  // 3000 আছে (not null), তাই change হয়নি
+console.log(config.port); // 3000
+```
+
+---
+
+## ৪.৬ Map
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Map** হলো key-value pairs-এর collection যেখানে key যেকোনো type হতে পারে (object, function, primitive)। Regular object-এর key শুধু string বা Symbol।
+
+### 💻 Map API
+
+```javascript
+// ১. Map তৈরি
+const map = new Map();
+
+// set — key-value যোগ
+map.set("name", "Rahim");
+map.set(1, "Number key");
+map.set(true, "Boolean key");
+const objKey = { id: 1 };
+map.set(objKey, "Object as key!"); // Object key — regular object-এ সম্ভব নয়
+
+// get
+console.log(map.get("name"));   // "Rahim"
+console.log(map.get(1));        // "Number key"
+console.log(map.get(objKey));   // "Object as key!"
+console.log(map.get("missing")); // undefined
+
+// has, delete, size
+console.log(map.has("name"));  // true
+map.delete("name");
+console.log(map.size);         // 3
+
+// ২. Iteration
+const scores = new Map([
+  ["Rahim", 95],
+  ["Karim", 87],
+  ["Jamal", 92]
+]);
+
+for (const [name, score] of scores) {
+  console.log(`${name}: ${score}`);
+}
+
+scores.forEach((score, name) => {
+  console.log(`${name}: ${score}`);
+});
+
+console.log([...scores.keys()]);   // ["Rahim", "Karim", "Jamal"]
+console.log([...scores.values()]); // [95, 87, 92]
+console.log([...scores.entries()]); // [["Rahim", 95], ...]
+
+// ৩. Map থেকে Array এবং Object
+const arr = [...scores]; // [["Rahim", 95], ["Karim", 87], ...]
+const obj = Object.fromEntries(scores); // { Rahim: 95, Karim: 87, ... }
+
+// Object থেকে Map
+const config = { host: "localhost", port: 3000 };
+const configMap = new Map(Object.entries(config));
+```
+
+### 📊 Map vs Object
+
+| | Map | Object |
+|--|-----|--------|
+| **Key type** | যেকোনো type | String বা Symbol |
+| **Order** | Insertion order ✅ | ES2015+ string keys ordered |
+| **Size** | `.size` | `Object.keys(obj).length` |
+| **Iteration** | Direct iterable | `for...in` বা methods |
+| **Performance** | frequent add/delete-এ ভালো | Simple lookups-এ ভালো |
+| **JSON** | ❌ সরাসরি নয় | ✅ |
+
+---
+
+## ৪.৭ Set
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Set** হলো **unique values-এর** collection। Duplicate automatically বাদ পড়ে।
+
+### 💻 Set API
+
+```javascript
+// ১. Set তৈরি
+const set = new Set([1, 2, 3, 2, 1, 3]);
+console.log(set); // Set {1, 2, 3} — duplicates বাদ
+
+set.add(4);
+set.add(2);      // duplicate — ignored
+set.delete(1);
+console.log(set.has(3));  // true
+console.log(set.size);    // 3
+
+// ২. Array এর duplicate সরানো (সবচেয়ে popular use)
+const numbers = [1, 2, 2, 3, 3, 4, 5, 5];
+const unique = [...new Set(numbers)];
+console.log(unique); // [1, 2, 3, 4, 5]
+
+// String থেকে unique chars
+const uniqueChars = [...new Set("programming")];
+// ["p", "r", "o", "g", "a", "m", "i", "n"]
+
+// ৩. Iteration
+const fruits = new Set(["Apple", "Banana", "Mango"]);
+for (const fruit of fruits) {
+  console.log(fruit);
+}
+fruits.forEach(fruit => console.log(fruit));
+
+// ৪. Set operations (JS-এ built-in নেই, manually করতে হয়)
+const setA = new Set([1, 2, 3, 4]);
+const setB = new Set([3, 4, 5, 6]);
+
+// Union (একত্রিত)
+const union = new Set([...setA, ...setB]); // {1, 2, 3, 4, 5, 6}
+
+// Intersection (সাধারণ)
+const intersection = new Set([...setA].filter(x => setB.has(x))); // {3, 4}
+
+// Difference (A-তে আছে B-তে নেই)
+const difference = new Set([...setA].filter(x => !setB.has(x))); // {1, 2}
+
+// ৫. Object uniqueness (reference-based, কাজ করে না!)
+const objSet = new Set();
+objSet.add({ id: 1 });
+objSet.add({ id: 1 }); // আলাদা reference — দুটোই যোগ হবে!
+console.log(objSet.size); // 2 (expected 1, but 2!)
+```
+
+---
+
+## ৪.৮ WeakMap ও WeakSet
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**WeakMap** ও **WeakSet** হলো Map ও Set-এর special versions যেখানে key/value শুধু object হতে পারে এবং **garbage collection** prevent করে না।
+
+```javascript
+// WeakMap — key হতে হবে object, GC prevent করে না
+const weakMap = new WeakMap();
+
+let user = { name: "Rahim" };
+weakMap.set(user, { sessionData: "abc123" });
+console.log(weakMap.get(user)); // { sessionData: "abc123" }
+
+user = null; // object reference মুছে দিলে
+// GC weakMap entry পরিষ্কার করবে — memory leak নেই!
+
+// Practical: Private data
+const _private = new WeakMap();
+class Person {
+  constructor(name, age) {
+    _private.set(this, { age }); // private data
+    this.name = name;
+  }
+  getAge() {
+    return _private.get(this).age;
+  }
+}
+
+const p = new Person("Rahim", 25);
+console.log(p.getAge()); // 25
+console.log(p.age);      // undefined (private!)
+
+// WeakSet — unique objects, GC-friendly
+const weakSet = new WeakSet();
+let obj = { id: 1 };
+weakSet.add(obj);
+console.log(weakSet.has(obj)); // true
+obj = null; // auto-cleaned
+
+// Practical: Tracking visited objects
+const visited = new WeakSet();
+function process(obj) {
+  if (visited.has(obj)) return; // circular reference রোধ
+  visited.add(obj);
+  // process...
+}
+```
+
+### 📊 Map/Set vs WeakMap/WeakSet
+
+| | Map/Set | WeakMap/WeakSet |
+|--|---------|----------------|
+| **Key type** | যেকোনো | Object only |
+| **GC** | Prevent করে | Prevent করে না |
+| **Iterable** | ✅ | ❌ |
+| **Size** | `.size` | ❌ |
+| **Use case** | General | Private data, caching |
+
+---
+
+## ৪.৯ Array Methods
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Transformation Methods
+
+```javascript
+const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const users = [
+  { name: "Rahim", age: 25, score: 85 },
+  { name: "Karim", age: 30, score: 92 },
+  { name: "Jamal", age: 22, score: 78 },
+  { name: "Nadia", age: 28, score: 96 }
+];
+
+// ১. map — প্রতিটি element transform করে নতুন array
+const doubled = numbers.map(n => n * 2);
+// [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+
+const names = users.map(u => u.name);
+// ["Rahim", "Karim", "Jamal", "Nadia"]
+
+const userCards = users.map(({ name, score }) => ({
+  display: `${name}: ${score}%`,
+  passed: score >= 80
+}));
+
+// ২. filter — condition সত্য এমন elements
+const evens = numbers.filter(n => n % 2 === 0); // [2, 4, 6, 8, 10]
+const passing = users.filter(u => u.score >= 80); // Rahim, Karim, Nadia
+
+// ৩. reduce — array → single value
+const sum = numbers.reduce((acc, n) => acc + n, 0); // 55
+const max = numbers.reduce((max, n) => n > max ? n : max, -Infinity); // 10
+
+// Object তৈরি
+const scoreMap = users.reduce((map, user) => {
+  map[user.name] = user.score;
+  return map;
+}, {});
+// { Rahim: 85, Karim: 92, Jamal: 78, Nadia: 96 }
+
+// ৪. find / findIndex
+const highScorer = users.find(u => u.score > 90); // Karim
+const idx = users.findIndex(u => u.name === "Jamal"); // 2
+
+// ৫. some / every
+const anyPass = users.some(u => u.score > 90);   // true (Karim, Nadia)
+const allPass = users.every(u => u.score > 75);  // true (সবার > 75)
+
+// ৬. flat / flatMap (ES2019)
+const nested = [[1, 2], [3, [4, 5]]];
+console.log(nested.flat());    // [1, 2, 3, [4, 5]]
+console.log(nested.flat(2));   // [1, 2, 3, 4, 5]
+console.log(nested.flat(Infinity)); // সব flatten
+
+const sentences = ["Hello World", "Foo Bar"];
+const words = sentences.flatMap(s => s.split(" "));
+// ["Hello", "World", "Foo", "Bar"]
+
+// ৭. sort — মনে রাখুন: mutates original!
+const nums = [10, 1, 20, 2, 5];
+nums.sort((a, b) => a - b); // ascending: [1, 2, 5, 10, 20]
+nums.sort((a, b) => b - a); // descending: [20, 10, 5, 2, 1]
+
+// Object sort
+users.sort((a, b) => b.score - a.score); // score descending
+
+// sort না করতে চাইলে copy
+const sorted = [...numbers].sort((a, b) => b - a);
+
+// ৮. Array.from
+Array.from({ length: 5 }, (_, i) => i + 1); // [1, 2, 3, 4, 5]
+Array.from("Hello"); // ["H", "e", "l", "l", "o"]
+Array.from(new Set([1, 2, 2, 3])); // [1, 2, 3]
+
+// ৯. at() — negative index (ES2022)
+const arr = [1, 2, 3, 4, 5];
+console.log(arr.at(-1));  // 5 (last)
+console.log(arr.at(-2));  // 4 (second last)
+
+// ১০. includes / indexOf
+console.log([1, 2, 3].includes(2));    // true
+console.log([1, 2, NaN].includes(NaN)); // true (indexOf-এ false!)
+console.log([1, 2, 3].indexOf(2));     // 1
+
+// ১১. Method chaining
+const result = users
+  .filter(u => u.age >= 25)
+  .sort((a, b) => b.score - a.score)
+  .map(u => `${u.name}: ${u.score}`)
+  .join(", ");
+// "Nadia: 96, Karim: 92, Rahim: 85"
+```
+
+### 📊 Array Methods Quick Reference
+
+| Method | কী করে | Mutates? | Return |
+|--------|---------|----------|--------|
+| `map` | Transform | ❌ | নতুন array |
+| `filter` | Filter | ❌ | নতুন array |
+| `reduce` | Accumulate | ❌ | Single value |
+| `find` | প্রথম match | ❌ | Element বা undefined |
+| `findIndex` | প্রথম match index | ❌ | Index বা -1 |
+| `some` | কোনো একটি match? | ❌ | Boolean |
+| `every` | সব match? | ❌ | Boolean |
+| `flat` | Flatten | ❌ | নতুন array |
+| `flatMap` | map + flat | ❌ | নতুন array |
+| `sort` | Sort | ✅ | Same array |
+| `reverse` | Reverse | ✅ | Same array |
+| `push/pop` | Add/remove শেষে | ✅ | Length/element |
+| `shift/unshift` | Add/remove শুরুতে | ✅ | Element/length |
+| `splice` | Insert/remove যেখানে | ✅ | Removed elements |
+| `slice` | Portion copy | ❌ | নতুন array |
+| `includes` | আছে কিনা? | ❌ | Boolean |
+| `indexOf` | প্রথম index | ❌ | Index বা -1 |
+| `join` | Array → String | ❌ | String |
+| `concat` | Merge | ❌ | নতুন array |
+| `fill` | Fill with value | ✅ | Same array |
+
+---
+
+## ৪.১০ Object Methods
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 ES6+ Object Methods
+
+```javascript
+const user = { name: "Rahim", age: 25, city: "Dhaka" };
+
+// ১. Object.keys / values / entries
+console.log(Object.keys(user));    // ["name", "age", "city"]
+console.log(Object.values(user));  // ["Rahim", 25, "Dhaka"]
+console.log(Object.entries(user)); // [["name","Rahim"],["age",25],["city","Dhaka"]]
+
+// Iteration
+Object.entries(user).forEach(([key, value]) => {
+  console.log(`${key}: ${value}`);
+});
+
+// ২. Object.assign — shallow merge
+const defaults = { theme: "light", lang: "en" };
+const config = Object.assign({}, defaults, { theme: "dark" });
+// { theme: "dark", lang: "en" }
+// Modern alternative: spread { ...defaults, ...overrides }
+
+// ৩. Object.freeze — immutable object
+const constants = Object.freeze({ PI: 3.14159, E: 2.71828 });
+constants.PI = 3; // silently ignored (strict mode-এ TypeError)
+constants.new = "value"; // ignored
+console.log(constants.PI); // 3.14159 (unchanged)
+
+// ৪. Object.fromEntries — entries থেকে object (ES2019)
+const entries = [["name", "Rahim"], ["age", 25]];
+const obj = Object.fromEntries(entries);
+// { name: "Rahim", age: 25 }
+
+// Map → Object
+const map = new Map([["a", 1], ["b", 2]]);
+const fromMap = Object.fromEntries(map); // { a: 1, b: 2 }
+
+// Query string parse
+const params = new URLSearchParams("name=Rahim&age=25");
+const paramsObj = Object.fromEntries(params); // { name: "Rahim", age: "25" }
+
+// ৫. Object.create
+const proto = {
+  greet() { return `Hello, ${this.name}`; }
+};
+const person = Object.create(proto);
+person.name = "Rahim";
+console.log(person.greet()); // "Hello, Rahim"
+
+// ৬. Computed property names
+const key = "dynamic";
+const obj2 = {
+  [key]: "value",              // dynamic key
+  [`${key}Count`]: 5,         // template literal key
+  ["method" + "Name"]() {}    // computed method name
+};
+console.log(obj2.dynamic);     // "value"
+console.log(obj2.dynamicCount); // 5
+
+// ৭. Shorthand property
+const name = "Rahim";
+const age = 25;
+const user2 = { name, age }; // { name: "Rahim", age: 25 }
+
+// ৮. Property shorthand methods
+const calculator = {
+  value: 0,
+  add(n) { this.value += n; return this; }, // shorthand
+  multiply(n) { this.value *= n; return this; },
+  result() { return this.value; }
+};
+console.log(calculator.add(5).multiply(3).result()); // 15
+
+// ৯. Object.hasOwn (ES2022 — hasOwnProperty alternative)
+console.log(Object.hasOwn(user, "name")); // true
+console.log(Object.hasOwn(user, "toString")); // false (prototype)
+```
+
+---
+
+## ৪.১১ Iterators ও Generators
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 Iterator Protocol
+
+```javascript
+// Iterator — next() method আছে যা {value, done} return করে
+function makeRangeIterator(start, end) {
+  let current = start;
+  return {
+    next() {
+      if (current <= end) {
+        return { value: current++, done: false };
+      }
+      return { value: undefined, done: true };
+    },
+    [Symbol.iterator]() { return this; } // iterable করে
+  };
+}
+
+const range = makeRangeIterator(1, 5);
+console.log(range.next()); // { value: 1, done: false }
+console.log(range.next()); // { value: 2, done: false }
+
+for (const num of makeRangeIterator(1, 5)) {
+  console.log(num); // 1, 2, 3, 4, 5
+}
+```
+
+### 💻 Generators (function*)
+
+```javascript
+// Generator — yield দিয়ে একটা একটা value produce করে
+function* numberGenerator(start = 1) {
+  while (true) {
+    yield start++; // একটা value দিয়ে pause
+  }
+}
+
+const gen = numberGenerator();
+console.log(gen.next()); // { value: 1, done: false }
+console.log(gen.next()); // { value: 2, done: false }
+console.log(gen.next()); // { value: 3, done: false }
+
+// Finite generator
+function* fibonacci() {
+  let [a, b] = [0, 1];
+  while (true) {
+    yield a;
+    [a, b] = [b, a + b];
+  }
+}
+
+const fib = fibonacci();
+const first10 = Array.from({ length: 10 }, () => fib.next().value);
+console.log(first10); // [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+
+// Practical: Pagination
+function* paginate(data, pageSize) {
+  for (let i = 0; i < data.length; i += pageSize) {
+    yield data.slice(i, i + pageSize);
+  }
+}
+
+const allUsers = Array.from({ length: 25 }, (_, i) => `User ${i + 1}`);
+const pages = paginate(allUsers, 10);
+console.log(pages.next().value); // ["User 1", ..., "User 10"]
+console.log(pages.next().value); // ["User 11", ..., "User 20"]
+console.log(pages.next().value); // ["User 21", ..., "User 25"]
+```
+
+---
+
+## ৪.১২ Dynamic Import
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Dynamic Import (`import()`)** — ES2020। Module-কে runtime-এ, on-demand load করা। Static import-এর বিপরীতে lazy loading সম্ভব।
+
+```javascript
+// Static import (always loads)
+import { heavyFunction } from "./heavy-module.js";
+
+// Dynamic import (on-demand)
+async function loadHeavyModule() {
+  const module = await import("./heavy-module.js");
+  module.heavyFunction();
+}
+
+// Conditional loading
+async function loadChart(type) {
+  if (type === "bar") {
+    const { BarChart } = await import("./bar-chart.js");
+    return new BarChart();
+  } else {
+    const { LineChart } = await import("./line-chart.js");
+    return new LineChart();
+  }
+}
+
+// User action-এ load
+document.querySelector("#load-btn").addEventListener("click", async () => {
+  const { default: Modal } = await import("./modal.js");
+  new Modal().show();
+});
+
+// Code splitting (React-এ)
+// const LazyComponent = React.lazy(() => import("./HeavyComponent"));
+
+// Error handling
+async function safeImport(path) {
+  try {
+    const module = await import(path);
+    return module;
+  } catch (err) {
+    console.error(`Module ${path} load failed:`, err);
+    return null;
+  }
+}
+```
+
+---
+
+## ৪.১৩ PART 4 — Interview Questions & Answers
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Destructuring, Spread, Rest (Q1–Q10)</strong></summary>
+<br>
+
+**Q1: Destructuring কী? Array ও Object destructuring-এর পার্থক্য?**
+> **A:** Destructuring হলো Array বা Object থেকে values extract করে variables-এ assign করার সংক্ষিপ্ত syntax। Array destructuring position-based `[a, b] = arr`। Object destructuring name-based `{ name, age } = obj`। Object-এ rename করা যায় `{ name: n }`, default value দেওয়া যায় `{ age = 18 }`।
+
+**Q2: Spread এবং Rest operator-এর পার্থক্য?**
+> **A:** দুটিতেই `...` — কিন্তু context আলাদা। Spread: iterable কে ছড়িয়ে দেয় — `fn(...arr)`, `[...arr1, ...arr2]`। Rest: বাকি সব একত্র করে — `function(a, ...rest)`, `const [head, ...tail] = arr`। Spread = one → many, Rest = many → one।
+
+**Q3: `||` এবং `??` (Nullish Coalescing)-এর পার্থক্য?**
+> **A:** `||` — বাম দিক falsy (false, 0, "", null, undefined, NaN) হলে ডান দিক। `??` — শুধু null বা undefined হলে ডান দিক। `0 || 5 = 5` কিন্তু `0 ?? 5 = 0`। API response-এ 0 বা "" valid value হলে `??` ব্যবহার করুন।
+
+**Q4: Optional Chaining (?.) কী? কখন দরকার?**
+> **A:** Nested property access-এ intermediate null/undefined হলে TypeError না দিয়ে undefined return করে। `user?.address?.city` — address না থাকলে error নেই। Method call: `obj?.method?.()`, Array: `arr?.[0]`. Deep API response navigate করতে এবং optional properties-এ essential।
+
+**Q5: Object-এ spread করলে কী হয়? Deep vs Shallow copy?**
+> **A:** `{...obj}` shallow copy করে — top-level primitive values নতুন copy পায়, nested objects শুধু reference copy হয়। Nested object পরিবর্তন করলে original-ও পরিবর্তিত হয়। Deep copy-র জন্য `structuredClone()` বা `JSON.parse(JSON.stringify())`।
+
+**Q6: Array-এর duplicate remove করবেন কীভাবে?**
+> **A:** `[...new Set(arr)]` — সবচেয়ে সহজ। `arr.filter((v, i, a) => a.indexOf(v) === i)` — traditional। Object array-এ: `arr.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i)` — property-based।
+
+**Q7: Array sort কীভাবে কাজ করে? ভুল কোথায়?**
+> **A:** Default sort টা numbers-কে string হিসেবে sort করে — `[10, 1, 20].sort()` = `[1, 10, 20]`। Number sort-এর জন্য: `arr.sort((a, b) => a - b)` ascending। sort original array mutate করে — copy করতে `[...arr].sort()` বা `arr.toSorted()` (ES2023)।
+
+**Q8: map, filter, reduce-এর মধ্যে পার্থক্য?**
+> **A:** `map` — প্রতিটি element transform, same length array। `filter` — condition true elements, subset array। `reduce` — সব elements একত্র করে single value (sum, object, nested array)। তিনটিই non-mutating, নতুন array/value return করে।
+
+**Q9: Map এবং Object-এর পার্থক্য? কখন Map ব্যবহার করবেন?**
+> **A:** Map: যেকোনো type key (object, function), insertion order guaranteed, `.size` property, directly iterable, frequent add/delete-এ performant। Object: string/Symbol key, JSON serializable। Object-কে key হিসেবে ব্যবহার করতে, dynamic keys অনেক হলে, বা iteration performance দরকার হলে Map।
+
+**Q10: Set-এ Object-এর uniqueness কীভাবে কাজ করে?**
+> **A:** Set reference equality ব্যবহার করে। `new Set([{id:1}, {id:1}])` size 2 হবে কারণ দুটি আলাদা object reference। Primitive values (`1, "a", true`) strict equality দিয়ে unique check হয়।
+
+</details>
+
+<details>
+<summary><strong>🔹 Advanced ES6+ (Q11–Q20)</strong></summary>
+<br>
+
+**Q11: WeakMap এবং WeakSet কেন দরকার? কখন ব্যবহার করবেন?**
+> **A:** WeakMap/WeakSet-এর key/value object-গুলো Garbage Collection prevent করে না। Object reference চলে গেলে auto-cleanup হয় — memory leak এড়ানো যায়। Use case: private class data, DOM element-এর metadata সংরক্ষণ (element remove হলে auto-clean), circular structure handling।
+
+**Q12: Generator function কী? সাধারণ function থেকে কীভাবে আলাদা?**
+> **A:** Generator (`function*`) `yield` দিয়ে value দিতে পারে এবং pause হতে পারে। `.next()` call করলে পরবর্তী yield পর্যন্ত চলে। Regular function একবার চলে সম্পূর্ণ return করে। Use case: infinite sequences (Fibonacci), lazy evaluation, pagination, async flow control।
+
+**Q13: Dynamic import কেন ব্যবহার করবেন?**
+> **A:** Lazy loading — module শুধু দরকারের সময় load করা। Bundle size কমায় (code splitting)। Conditional loading — কোন module দরকার runtime-এ decide করা। Initial page load দ্রুত হয়।
+
+**Q14: Array-এর `flat()` এবং `flatMap()` কী?**
+> **A:** `flat(depth)` — nested array flatten করে। Default depth 1, `flat(Infinity)` সম্পূর্ণ flatten। `flatMap(fn)` — প্রতিটি element-এ map করে তারপর এক level flatten — `map().flat()` এর shortcut কিন্তু efficient।
+
+**Q15: `Object.freeze()` এবং `const`-এর পার্থক্য?**
+> **A:** `const` — variable re-assignment রোধ করে, কিন্তু object mutate করা যায়। `Object.freeze()` — object-এর properties পরিবর্তন রোধ করে (shallow — nested objects freeze হয় না)। `const` + `Object.freeze()` একসাথে দিলে সম্পূর্ণ immutable (top level)।
+
+**Q16: Computed property names কী?**
+> **A:** Object-এ dynamic key ব্যবহার: `{ [varName]: value }`, `{ [\`prefix_${id}\`]: data }`। Runtime-এ key নির্ধারণ করতে হলে useful। Redux action creators, API response normalization-এ ব্যবহার।
+
+**Q17: `Array.from()` কী? কখন ব্যবহার করবেন?**
+> **A:** Array-like (NodeList, arguments) বা iterable (Set, Map, String) থেকে real Array তৈরি করে। দ্বিতীয় argument: map function। `Array.from({length: 5}, (_, i) => i)` = `[0,1,2,3,4]`। `Array.from(document.querySelectorAll("li"))` — NodeList → Array।
+
+**Q18: Symbol কী? কখন ব্যবহার করবেন?**
+> **A:** ES6-এর unique primitive। প্রতিটি Symbol() unique — `Symbol("id") !== Symbol("id")`। Object key হিসেবে collision-free unique keys। Well-known Symbols: `Symbol.iterator` (iterable করতে), `Symbol.toPrimitive` (type conversion customize)। Library/framework-এ internal properties hide করতে।
+
+**Q19: Optional Chaining কি undefined এবং null উভয়-এ কাজ করে?**
+> **A:** হ্যাঁ — `?.` শুধু `null` বা `undefined`-এ short-circuit করে। `0`, `false`, `""` (falsy কিন্তু nullish নয়) — short-circuit করে না। `0?.toString()` = `"0"` (0 valid value)।
+
+**Q20: Destructuring-এ default value কখন কাজ করে?**
+> **A:** শুধু `undefined`-এ। `null`-এ কাজ করে না! `const { a = 5 } = { a: undefined }` → `a = 5`. `const { a = 5 } = { a: null }` → `a = null`। এই behavior `??` operator-এর মতোই।
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 5 আসছে:** Asynchronous JavaScript — Synchronous vs Async, setTimeout, setInterval, Callback Hell, Promise Chaining, Promise.all, Async/Await Internals, Error Handling, Real API Calls।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 5 দাও" লিখুন।
