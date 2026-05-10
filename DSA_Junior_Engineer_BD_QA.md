@@ -25,8 +25,8 @@
 | 📕 | [**PART 4** — Stack & Queue](#part4) | Stack, Queue, Circular Queue, Deque, Priority Queue, Monotonic Stack, Expression Eval |
 | 📓 | [**PART 5** — Trees & Binary Trees](#part5) | Tree, Binary Tree, BST, Traversal, BFS/DFS, AVL, Segment Tree, Tries |
 | 📔 | [**PART 6** — Graphs](#part6) | Graph Representation, BFS, DFS, Dijkstra, Bellman-Ford, Floyd, Topological Sort, Union-Find |
-| 📒 | **PART 7** — Sorting & Searching | *(শীঘ্রই আসছে)* |
-| 📃 | **PART 8** — Dynamic Programming & Greedy | *(শীঘ্রই আসছে)* |
+| 📒 | [**PART 7** — Sorting & Searching](#part7) | Bubble, Selection, Insertion, Merge, Quick, Heap Sort, Counting, Radix, Binary Search Variants |
+| 📃 | [**PART 8** — Dynamic Programming & Greedy](#part8) | Memoization, Tabulation, LCS, LIS, Knapsack, Coin Change, Greedy, Interval Scheduling |
 | 📄 | **PART 9** — Advanced DSA | *(শীঘ্রই আসছে)* |
 | 🗒️ | **PART 10** — Coding Interview Q&A | *(শীঘ্রই আসছে)* |
 | 🗓️ | **PART 11** — Problem Solving Strategy | *(শীঘ্রই আসছে)* |
@@ -102,6 +102,42 @@
 - [৬.৮ Bellman-Ford ও Floyd-Warshall](#৬৮-bellman-ford-ও-floyd-warshall)
 - [৬.৯ Union-Find (Disjoint Set)](#৬৯-union-find-disjoint-set)
 - [৬.১০ PART 6 — Interview Q&A](#৬১০-part-6--interview-qa)
+
+</details>
+
+---
+
+<details>
+<summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৭.১ Sorting Overview](#৭১-sorting-overview)
+- [৭.২ Bubble Sort](#৭২-bubble-sort)
+- [৭.৩ Selection Sort](#৭৩-selection-sort)
+- [৭.৪ Insertion Sort](#৭৪-insertion-sort)
+- [৭.৫ Merge Sort](#৭৫-merge-sort)
+- [৭.৬ Quick Sort](#৭৬-quick-sort)
+- [৭.৭ Heap Sort](#৭৭-heap-sort)
+- [৭.৮ Counting Sort ও Radix Sort](#৭৮-counting-sort-ও-radix-sort)
+- [৭.৯ Binary Search Variants](#৭৯-binary-search-variants)
+- [৭.১০ PART 7 — Interview Q&A](#৭১০-part-7--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📃 PART 8 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৮.১ Dynamic Programming কী?](#৮১-dynamic-programming-কী)
+- [৮.২ Memoization (Top-Down)](#৮২-memoization-top-down)
+- [৮.৩ Tabulation (Bottom-Up)](#৮৩-tabulation-bottom-up)
+- [৮.৪ Fibonacci ও Classic DP](#৮৪-fibonacci-ও-classic-dp)
+- [৮.৫ Longest Common Subsequence (LCS)](#৮৫-longest-common-subsequence-lcs)
+- [৮.৬ Longest Increasing Subsequence (LIS)](#৮৬-longest-increasing-subsequence-lis)
+- [৮.৭ 0/1 Knapsack](#৮৭-01-knapsack)
+- [৮.৮ Coin Change](#৮৮-coin-change)
+- [৮.৯ Greedy Algorithm](#৮৯-greedy-algorithm)
+- [৮.১০ PART 8 — Interview Q&A](#৮১০-part-8--interview-qa)
 
 </details>
 
@@ -5040,6 +5076,1065 @@ def kruskal_mst(n, edges):
 
 ---
 
+
+
+<a id="part7"></a>
+
+# PART 7: Sorting & Searching (সর্টিং ও সার্চিং)
+
+> **পড়ার নির্দেশনা:** Sorting হলো DSA interview এর bread and butter। প্রতিটি algorithm এর time/space complexity, stable কিনা, এবং কখন কোনটি ব্যবহার করবেন — এগুলো মুখস্থ রাখুন। Binary Search এর variants interview তে বারবার আসে।
+
+---
+
+## ৭.১ Sorting Overview
+
+### Complexity Comparison Table
+
+```
+Algorithm       Best       Average    Worst      Space   Stable?
+Bubble Sort     O(n)       O(n²)      O(n²)      O(1)    Yes
+Selection Sort  O(n²)      O(n²)      O(n²)      O(1)    No
+Insertion Sort  O(n)       O(n²)      O(n²)      O(1)    Yes
+Merge Sort      O(n log n) O(n log n) O(n log n) O(n)    Yes
+Quick Sort      O(n log n) O(n log n) O(n²)      O(log n) No
+Heap Sort       O(n log n) O(n log n) O(n log n) O(1)    No
+Counting Sort   O(n+k)     O(n+k)     O(n+k)     O(k)    Yes
+Radix Sort      O(nk)      O(nk)      O(nk)      O(n+k)  Yes
+
+Stable = equal elements এর relative order preserve করে।
+Python এর built-in sort: Timsort — O(n log n), stable।
+```
+
+### কোন Algorithm কখন?
+
+```
+Small array (n < 20):         Insertion Sort (cache-friendly)
+General purpose:              Merge Sort বা Quick Sort
+Memory constraint:            Heap Sort (O(1) space)
+Nearly sorted:                Insertion Sort (O(n) best case)
+Integer range limited:        Counting Sort বা Radix Sort
+Linked List sort:             Merge Sort (no random access needed)
+Stability required:           Merge Sort, Insertion Sort, Timsort
+```
+
+---
+
+## ৭.২ Bubble Sort
+
+```python
+def bubble_sort(arr):
+    """
+    Adjacent elements compare ও swap করো।
+    প্রতিটি pass এ largest element শেষে যায়।
+    Optimized: swap না হলে early exit।
+    """
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break   # already sorted — O(n) best case
+
+# Dry Run: [5, 3, 1, 4]
+# Pass 1: 3<5→swap [3,5,1,4], 1<5→swap [3,1,5,4], 4<5→swap [3,1,4,5]
+# Pass 2: 1<3→swap [1,3,4,5], no swap after → swapped=True still
+# Pass 3: no swap → break
+# Result: [1, 3, 4, 5]
+```
+
+---
+
+## ৭.৩ Selection Sort
+
+```python
+def selection_sort(arr):
+    """
+    প্রতিটি pass এ minimum element খুঁজে correct position এ রাখো।
+    O(n²) সবসময় — early exit নেই।
+    """
+    n = len(arr)
+    for i in range(n):
+        min_idx = i
+        for j in range(i + 1, n):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+
+# Dry Run: [64, 25, 12, 22]
+# i=0: min=12 (idx=2), swap→[12, 25, 64, 22]
+# i=1: min=22 (idx=3), swap→[12, 22, 64, 25]
+# i=2: min=25 (idx=3), swap→[12, 22, 25, 64]
+# i=3: min=64 (idx=3), no change
+# Result: [12, 22, 25, 64]
+```
+
+---
+
+## ৭.৪ Insertion Sort
+
+```python
+def insertion_sort(arr):
+    """
+    Left part sorted রাখো। প্রতিটি element কে correct position এ insert করো।
+    Nearly sorted array তে O(n)।
+    Small array ও online sorting এ ideal।
+    """
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and arr[j] > key:
+            arr[j + 1] = arr[j]   # shift right
+            j -= 1
+        arr[j + 1] = key
+
+# Dry Run: [4, 3, 1, 2]
+# i=1: key=3, shift 4→[4,4,1,2], insert 3→[3,4,1,2]
+# i=2: key=1, shift 4,3→[3,4,4,2],[3,3,4,2], insert 1→[1,3,4,2]
+# i=3: key=2, shift 4,3→[1,3,4,4],[1,3,3,4], insert 2→[1,2,3,4]
+```
+
+---
+
+## ৭.৫ Merge Sort
+
+```python
+def merge_sort(arr):
+    """
+    Divide & Conquer — half করো, sort করো, merge করো।
+    O(n log n) guaranteed। Stable। Extra O(n) space।
+    Linked List sort এ optimal।
+    """
+    if len(arr) <= 1:
+        return arr
+
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+# Dry Run: [38, 27, 43, 3]
+# Split: [38,27] | [43,3]
+# Split: [38]|[27]  [43]|[3]
+# Merge: [27,38]    [3,43]
+# Merge: [3,27,38,43]
+
+# Inversion Count (Merge Sort application):
+def merge_count(arr):
+    """Inversions = (i<j but arr[i]>arr[j]) pairs সংখ্যা"""
+    if len(arr) <= 1:
+        return arr, 0
+    mid = len(arr) // 2
+    left, lc = merge_count(arr[:mid])
+    right, rc = merge_count(arr[mid:])
+    merged, sc = merge_count_helper(left, right)
+    return merged, lc + rc + sc
+
+def merge_count_helper(left, right):
+    result, count, i, j = [], 0, 0, 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i]); i += 1
+        else:
+            count += len(left) - i   # left এর remaining সব inversion
+            result.append(right[j]); j += 1
+    result.extend(left[i:]); result.extend(right[j:])
+    return result, count
+```
+
+---
+
+## ৭.৬ Quick Sort
+
+```python
+def quick_sort(arr, low=0, high=None):
+    """
+    Pivot নিয়ে partition করো। Pivot left এ smaller, right এ larger।
+    Average O(n log n)। Worst O(n²) sorted array তে।
+    In-place, O(log n) stack space।
+    """
+    if high is None:
+        high = len(arr) - 1
+    if low < high:
+        pi = partition(arr, low, high)
+        quick_sort(arr, low, pi - 1)
+        quick_sort(arr, pi + 1, high)
+
+def partition(arr, low, high):
+    """Lomuto partition scheme — pivot = last element"""
+    pivot = arr[high]
+    i = low - 1   # smaller elements এর boundary
+
+    for j in range(low, high):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    return i + 1
+
+# Dry Run: [3, 6, 8, 10, 1, 2, 1], pivot=1 (last)
+# i=-1
+# j=0: arr[0]=3 > 1, skip
+# j=1: arr[1]=6 > 1, skip
+# ...
+# j=5: arr[5]=2 > 1, skip
+# j=6: j=high, exit loop
+# swap arr[0] with pivot=arr[6]: [1, 6, 8, 10, 1, 2, 3]
+# pi=0
+
+# Worst case prevention:
+def partition_random(arr, low, high):
+    import random
+    rand_idx = random.randint(low, high)
+    arr[rand_idx], arr[high] = arr[high], arr[rand_idx]
+    return partition(arr, low, high)
+```
+
+---
+
+## ৭.৭ Heap Sort
+
+```python
+def heap_sort(arr):
+    """
+    Max-Heap তৈরি করো, তারপর root বারবার extract করো।
+    O(n log n) guaranteed। In-place O(1) space।
+    Not stable। Cache performance খারাপ।
+    """
+    n = len(arr)
+
+    # Build max heap — O(n)
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(arr, n, i)
+
+    # Extract elements one by one
+    for i in range(n - 1, 0, -1):
+        arr[0], arr[i] = arr[i], arr[0]   # root (max) → end
+        heapify(arr, i, 0)                 # restore heap
+
+def heapify(arr, n, i):
+    largest = i
+    left, right = 2*i + 1, 2*i + 2
+
+    if left < n and arr[left] > arr[largest]:
+        largest = left
+    if right < n and arr[right] > arr[largest]:
+        largest = right
+
+    if largest != i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        heapify(arr, n, largest)
+```
+
+---
+
+## ৭.৮ Counting Sort ও Radix Sort
+
+### Counting Sort
+
+```python
+def counting_sort(arr, max_val=None):
+    """
+    Integer array, bounded range।
+    O(n + k) — k = range of values।
+    Stable। Non-comparison sort।
+    """
+    if not arr:
+        return arr
+    if max_val is None:
+        max_val = max(arr)
+
+    count = [0] * (max_val + 1)
+    for num in arr:
+        count[num] += 1
+
+    # Prefix sum for positions (stable)
+    for i in range(1, len(count)):
+        count[i] += count[i - 1]
+
+    output = [0] * len(arr)
+    for num in reversed(arr):   # reverse for stability
+        output[count[num] - 1] = num
+        count[num] -= 1
+
+    return output
+
+# arr = [4, 2, 2, 8, 3, 3, 1]
+# count = [0,1,2,2,1,0,0,0,1]  (index=value, val=freq)
+# prefix = [0,1,3,5,6,6,6,6,7]
+# Output built right-to-left for stability
+```
+
+### Radix Sort
+
+```python
+def radix_sort(arr):
+    """
+    Digit by digit sort (LSD — Least Significant Digit first)।
+    O(nk) — k = number of digits।
+    Non-comparison। Integers এর জন্য।
+    """
+    if not arr:
+        return arr
+    max_num = max(arr)
+    exp = 1
+
+    while max_num // exp > 0:
+        counting_sort_by_digit(arr, exp)
+        exp *= 10
+
+def counting_sort_by_digit(arr, exp):
+    n = len(arr)
+    output = [0] * n
+    count = [0] * 10
+
+    for num in arr:
+        digit = (num // exp) % 10
+        count[digit] += 1
+
+    for i in range(1, 10):
+        count[i] += count[i - 1]
+
+    for num in reversed(arr):
+        digit = (num // exp) % 10
+        output[count[digit] - 1] = num
+        count[digit] -= 1
+
+    for i in range(n):
+        arr[i] = output[i]
+```
+
+---
+
+## ৭.৯ Binary Search Variants
+
+### Standard Binary Search
+
+```python
+def binary_search(arr, target):
+    """Sorted array তে O(log n)"""
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = left + (right - left) // 2   # overflow-safe
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
+```
+
+### Lower Bound — First Occurrence
+
+```python
+def lower_bound(arr, target):
+    """target এর প্রথম occurrence এর index। নেই হলে insertion point।"""
+    left, right = 0, len(arr)
+    while left < right:
+        mid = (left + right) // 2
+        if arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid
+    return left   # first index where arr[i] >= target
+```
+
+### Upper Bound — Last Occurrence + 1
+
+```python
+def upper_bound(arr, target):
+    """target এর পরের position। Count = upper - lower।"""
+    left, right = 0, len(arr)
+    while left < right:
+        mid = (left + right) // 2
+        if arr[mid] <= target:
+            left = mid + 1
+        else:
+            right = mid
+    return left   # first index where arr[i] > target
+
+# Count occurrences of target:
+# count = upper_bound(arr, target) - lower_bound(arr, target)
+```
+
+### Binary Search on Answer
+
+```python
+def min_eating_speed(piles, h):
+    """
+    Koko Eating Bananas — Binary Search on Answer।
+    কত কম speed এ h ঘণ্টায় সব banana শেষ করা যাবে?
+    Search space: [1, max(piles)]
+    """
+    import math
+
+    def can_finish(speed):
+        return sum(math.ceil(p / speed) for p in piles) <= h
+
+    left, right = 1, max(piles)
+    while left < right:
+        mid = (left + right) // 2
+        if can_finish(mid):
+            right = mid       # speed কমানোর চেষ্টা
+        else:
+            left = mid + 1    # speed বাড়াতে হবে
+    return left
+
+def find_peak_element(nums):
+    """
+    nums[i] > nums[i-1] ও nums[i+1] এমন peak index।
+    O(log n) — Binary Search।
+    """
+    left, right = 0, len(nums) - 1
+    while left < right:
+        mid = (left + right) // 2
+        if nums[mid] > nums[mid + 1]:
+            right = mid     # peak বামে বা mid
+        else:
+            left = mid + 1  # peak ডানে
+    return left
+
+def search_rotated(nums, target):
+    """
+    Rotated Sorted Array তে search — O(log n)।
+    [4,5,6,7,0,1,2] তে 0 খোঁজা।
+    """
+    left, right = 0, len(nums) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[left] <= nums[mid]:       # বাম half sorted
+            if nums[left] <= target < nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+        else:                              # ডান half sorted
+            if nums[mid] < target <= nums[right]:
+                left = mid + 1
+            else:
+                right = mid - 1
+    return -1
+```
+
+---
+
+## ৭.১০ PART 7 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Merge Sort ও Quick Sort এর মধ্যে কোনটি ভালো? কেন?**
+
+> **উত্তর:** নির্ভর করে use case এ। Merge Sort: O(n log n) guaranteed, stable, Linked List এ optimal, কিন্তু O(n) extra space। Quick Sort: Average O(n log n), in-place O(log n) space, cache-friendly, কিন্তু worst O(n²) (sorted input এ)। Random pivot বা median-of-three দিয়ে worst case এড়ানো যায়। General arrays এ Quick Sort সাধারণত faster (cache)। Stability দরকার হলে Merge Sort।
+
+**Q2: Counting Sort কেন O(n) কিন্তু comparison-based sort এর minimum O(n log n)?**
+
+> **উত্তর:** Comparison-based sort এর lower bound হলো Ω(n log n) — decision tree argument। n! টি permutation এর মধ্যে একটি বেছে নিতে কমপক্ষে log₂(n!) ≈ n log n comparisons। Counting Sort comparison করে না — directly value কে index হিসেবে ব্যবহার করে। তাই O(n+k)। Constraint: integer, bounded range।
+
+**Q3: Binary Search এ mid = (left+right)/2 কেন unsafe?**
+
+> **উত্তর:** left ও right উভয়ই large integer হলে left+right overflow হতে পারে (C/Java তে)। Safe formula: `mid = left + (right - left) // 2`। Python এ integer overflow নেই, কিন্তু এটি best practice হিসেবে সব language এ follow করুন।
+
+**Q4: কোন sorting algorithm stable এবং কেন stability গুরুত্বপূর্ণ?**
+
+> **উত্তর:** Stable: Bubble, Insertion, Merge Sort, Counting, Radix, Timsort। Unstable: Selection, Quick, Heap Sort। Stability গুরুত্বপূর্ণ: যখন multiple criteria তে sort করতে হয়। যেমন: প্রথমে name অনুযায়ী sort, তারপর age অনুযায়ী — stable sort করলে same age এ name order preserved থাকে। Database ORDER BY তে stability often assumed।
+
+**Q5: Binary Search on Answer কখন apply হয়?**
+
+> **উত্তর:** যখন answer একটি monotonic range এ থাকে — কোনো threshold এর নিচে feasible, উপরে infeasible (বা vice versa)। Pattern: "minimum/maximum value যাতে condition সত্য হয়"। উদাহরণ: Koko Eating Bananas, Capacity to Ship, Split Array Largest Sum। Check: candidate answer দিয়ে feasibility O(n) তে check করা গেলে total O(n log n)।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| Fastest comparison sort | O(n log n) — lower bound |
+| Python sort algorithm | Timsort |
+| Stable sort examples | Merge, Insertion, Bubble, Counting |
+| Unstable sort examples | Quick, Heap, Selection |
+| In-place, O(n log n) | Heap Sort |
+| Best for linked list | Merge Sort |
+| Best nearly sorted | Insertion Sort |
+| Worst Quick Sort | O(n²) sorted input |
+| Counting Sort constraint | Integer, bounded range |
+| Radix Sort complexity | O(nk) |
+| Binary Search complexity | O(log n) |
+| Lower bound returns | First index ≥ target |
+| Upper bound returns | First index > target |
+| Rotated array search | Modified Binary Search |
+| Binary Search on Answer | Monotonic feasibility |
+| Inversion count | Merge Sort modification |
+
+---
+
+> **⚠️ PART 7 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part8"></a>
+
+# PART 8: Dynamic Programming & Greedy (ডায়নামিক প্রোগ্রামিং ও গ্রিডি)
+
+> **পড়ার নির্দেশনা:** DP হলো interview এর সবচেয়ে কঠিন topic। Pattern চেনা শিখুন — "optimal substructure" ও "overlapping subproblems" থাকলে DP। Greedy তে locally optimal choice globally optimal হয় কিনা সেটা prove করতে হয়।
+
+---
+
+## ৮.১ Dynamic Programming কী?
+
+### সংজ্ঞা
+
+**Dynamic Programming** হলো complex problem কে overlapping subproblems এ ভেঙে solve করার technique। প্রতিটি subproblem একবার solve করে store করা হয়।
+
+```
+DP এর দুটি শর্ত:
+  1. Optimal Substructure:
+     Problem এর optimal solution এ subproblems এর optimal solution থাকে।
+     উদাহরণ: Shortest Path — A→C shortest হলে A→B→C তে A→B shortest।
+
+  2. Overlapping Subproblems:
+     Same subproblem বারবার solve করতে হয়।
+     Fibonacci: fib(5) = fib(4) + fib(3)
+               fib(4) = fib(3) + fib(2)  ← fib(3) দুবার!
+
+DP vs Divide & Conquer:
+  D&C: Subproblems overlap করে না (Merge Sort)
+  DP:  Subproblems overlap করে (Fibonacci, LCS)
+```
+
+---
+
+## ৮.২ Memoization (Top-Down)
+
+### Fibonacci — Naive vs Memoized
+
+```python
+# Naive Recursion — O(2^n)
+def fib_naive(n):
+    if n <= 1:
+        return n
+    return fib_naive(n-1) + fib_naive(n-2)
+
+# Memoization — O(n) time, O(n) space
+def fib_memo(n, memo={}):
+    if n in memo:
+        return memo[n]
+    if n <= 1:
+        return n
+    memo[n] = fib_memo(n-1, memo) + fib_memo(n-2, memo)
+    return memo[n]
+
+# Python functools
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n-1) + fib(n-2)
+
+# Call tree for fib(5) — memoized:
+# fib(5) → fib(4) → fib(3) → fib(2) → fib(1)=1
+#                             fib(1)=1 (cached)
+#                   fib(2) (cached)
+#          fib(3) (cached)
+# Total unique calls: 6 (vs 15 naive)
+```
+
+---
+
+## ৮.৩ Tabulation (Bottom-Up)
+
+### Fibonacci — Tabulation
+
+```python
+def fib_tab(n):
+    """Bottom-up DP — O(n) time, O(n) space"""
+    if n <= 1:
+        return n
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    for i in range(2, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    return dp[n]
+
+def fib_optimized(n):
+    """Space-optimized — O(1) space"""
+    if n <= 1:
+        return n
+    prev2, prev1 = 0, 1
+    for _ in range(2, n + 1):
+        prev2, prev1 = prev1, prev1 + prev2
+    return prev1
+```
+
+```
+Memoization vs Tabulation:
+
+Memoization (Top-Down):
+  ✅ Natural — recursive ভাবে ভাবা যায়
+  ✅ শুধু needed subproblems compute করে
+  ❌ Recursion stack overhead
+  ❌ Stack overflow বড় input এ
+
+Tabulation (Bottom-Up):
+  ✅ No recursion overhead
+  ✅ Space optimization সহজ
+  ❌ সব subproblems compute করতে হয়
+  ❌ Iterative order ভাবা কঠিন
+
+Interview: উভয়টি জানুন। Space optimize করতে বললে tabulation।
+```
+
+---
+
+## ৮.৪ Fibonacci ও Classic DP
+
+### Climbing Stairs
+
+```python
+def climb_stairs(n):
+    """
+    n সিঁড়ি উঠতে হবে। প্রতিবার 1 বা 2 step নেওয়া যায়।
+    কত উপায়ে উঠা যাবে?
+    DP[i] = DP[i-1] + DP[i-2] (Fibonacci!)
+    O(n) time, O(1) space
+    """
+    if n <= 2:
+        return n
+    prev2, prev1 = 1, 2
+    for _ in range(3, n + 1):
+        prev2, prev1 = prev1, prev1 + prev2
+    return prev1
+
+# n=5: dp = [1,2,3,5,8] → 8 ways
+```
+
+### House Robber
+
+```python
+def house_robber(nums):
+    """
+    Adjacent house rob করা যাবে না।
+    Maximum amount rob করো।
+    dp[i] = max(dp[i-1], dp[i-2] + nums[i])
+    O(n) time, O(1) space
+    """
+    if not nums:
+        return 0
+    if len(nums) == 1:
+        return nums[0]
+
+    prev2, prev1 = 0, 0
+    for num in nums:
+        prev2, prev1 = prev1, max(prev1, prev2 + num)
+    return prev1
+
+# nums = [2, 7, 9, 3, 1]
+# prev2=0, prev1=0
+# num=2: prev1=max(0,0+2)=2
+# num=7: prev1=max(2,0+7)=7, prev2=2
+# num=9: prev1=max(7,2+9)=11, prev2=7
+# num=3: prev1=max(11,7+3)=11, prev2=11
+# num=1: prev1=max(11,11+1)=12, prev2=11
+# return 12 ✓ (rob 2+9+1 or 7+3+? No: 2+9+1=12)
+```
+
+---
+
+## ৮.৫ Longest Common Subsequence (LCS)
+
+### সংজ্ঞা
+
+**LCS**: দুটি string এ common subsequence এর সর্বোচ্চ length।
+
+```
+Subsequence: order রেখে কিছু characters skip করা।
+"ACE" is subsequence of "ABCDE" ✓
+"AEC" is NOT (order ভাঙে) ✗
+
+LCS("ABCBDAB", "BDCAB") = 4 ("BCAB" বা "BDAB")
+```
+
+```python
+def lcs(s1, s2):
+    """
+    dp[i][j] = s1[:i] ও s2[:j] এর LCS length।
+    dp[i][j] = dp[i-1][j-1] + 1         if s1[i-1] == s2[j-1]
+             = max(dp[i-1][j], dp[i][j-1]) otherwise
+    O(mn) time ও space।
+    """
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if s1[i-1] == s2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+
+    return dp[m][n]
+
+# s1="ABCD", s2="ACDF"
+# dp table (row=s1, col=s2):
+#     ""  A  C  D  F
+# ""   0  0  0  0  0
+# A    0  1  1  1  1
+# B    0  1  1  1  1
+# C    0  1  2  2  2
+# D    0  1  2  3  3
+# LCS = 3 ("ACD")
+```
+
+---
+
+## ৮.৬ Longest Increasing Subsequence (LIS)
+
+```python
+def lis_dp(nums):
+    """
+    O(n²) DP approach।
+    dp[i] = nums[i] দিয়ে শেষ হওয়া LIS এর length।
+    """
+    n = len(nums)
+    dp = [1] * n   # প্রতিটি element নিজেই LIS=1
+
+    for i in range(1, n):
+        for j in range(i):
+            if nums[j] < nums[i]:
+                dp[i] = max(dp[i], dp[j] + 1)
+
+    return max(dp)
+
+# nums = [10, 9, 2, 5, 3, 7, 101, 18]
+# dp   = [1,  1, 1, 2, 2, 3, 4,   4]
+# LIS = 4 ([2,3,7,101] বা [2,5,7,101])
+
+def lis_binary_search(nums):
+    """
+    O(n log n) — Binary Search + patience sorting।
+    tails[i] = length-(i+1) LIS এর সবচেয়ে ছোট tail।
+    """
+    tails = []
+    for num in nums:
+        left, right = 0, len(tails)
+        while left < right:
+            mid = (left + right) // 2
+            if tails[mid] < num:
+                left = mid + 1
+            else:
+                right = mid
+        if left == len(tails):
+            tails.append(num)
+        else:
+            tails[left] = num
+    return len(tails)
+```
+
+---
+
+## ৮.৭ 0/1 Knapsack
+
+### সংজ্ঞা
+
+**0/1 Knapsack**: n টি item (weight, value)। Knapsack এর capacity W। Maximum value কত নেওয়া যাবে? প্রতিটি item হয় নেবো (1) নয়তো নেবো না (0)।
+
+```python
+def knapsack(weights, values, W):
+    """
+    dp[i][w] = প্রথম i টি item থেকে capacity w তে max value।
+    dp[i][w] = max(dp[i-1][w],              ← item i নেওয়া হলো না
+                   dp[i-1][w-weights[i-1]] + values[i-1])  ← নেওয়া হলো
+    O(nW) time ও space।
+    """
+    n = len(weights)
+    dp = [[0] * (W + 1) for _ in range(n + 1)]
+
+    for i in range(1, n + 1):
+        for w in range(W + 1):
+            dp[i][w] = dp[i-1][w]   # item না নিলে
+            if weights[i-1] <= w:
+                dp[i][w] = max(dp[i][w],
+                               dp[i-1][w - weights[i-1]] + values[i-1])
+
+    return dp[n][W]
+
+# weights=[2,3,4,5], values=[3,4,5,6], W=8
+# dp[4][8] = 10 (item 1+3: weight=2+4=6, value=3+5=8? or 2+3=4,3+4=7?)
+# Best: items 2,3 → weight=3+4=7≤8, value=4+5=9. Or items 1,2,4→2+3+5=10>8.
+# items 1,4→2+5=7≤8, value=3+6=9. items 2,3→value=9. items 1,2,3→weight=9>8
+# Answer: 9
+
+def knapsack_optimized(weights, values, W):
+    """Space O(W) — 1D array"""
+    dp = [0] * (W + 1)
+    for i in range(len(weights)):
+        for w in range(W, weights[i] - 1, -1):   # reverse! avoid reuse
+            dp[w] = max(dp[w], dp[w - weights[i]] + values[i])
+    return dp[W]
+```
+
+---
+
+## ৮.৮ Coin Change
+
+### Minimum Coins (Unbounded Knapsack variant)
+
+```python
+def coin_change_min(coins, amount):
+    """
+    Minimum number of coins to make amount।
+    dp[i] = amount i তে minimum coins।
+    dp[i] = min(dp[i - coin] + 1) for all coins।
+    O(amount × len(coins))
+    """
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+
+    for i in range(1, amount + 1):
+        for coin in coins:
+            if coin <= i:
+                dp[i] = min(dp[i], dp[i - coin] + 1)
+
+    return dp[amount] if dp[amount] != float('inf') else -1
+
+# coins=[1,5,6,9], amount=11
+# dp[0]=0, dp[1]=1(1), dp[5]=1(5), dp[6]=1(6)
+# dp[9]=1(9), dp[10]=2(9+1), dp[11]=2(5+6) ✓
+```
+
+### Number of Ways (Combination)
+
+```python
+def coin_change_ways(coins, amount):
+    """
+    কত উপায়ে amount তৈরি করা যাবে?
+    dp[i] += dp[i - coin] for each coin।
+    O(amount × len(coins))
+    """
+    dp = [0] * (amount + 1)
+    dp[0] = 1   # empty combination
+
+    for coin in coins:
+        for i in range(coin, amount + 1):
+            dp[i] += dp[i - coin]
+
+    return dp[amount]
+
+# coins=[1,2,5], amount=5
+# coin=1: dp=[1,1,1,1,1,1]
+# coin=2: dp=[1,1,2,2,3,3]
+# coin=5: dp=[1,1,2,2,3,4]
+# 4 ways: (1+1+1+1+1), (1+1+1+2), (1+2+2), (5)
+```
+
+---
+
+## ৮.৯ Greedy Algorithm
+
+### সংজ্ঞা
+
+**Greedy**: প্রতিটি step এ locally optimal choice নাও। Globally optimal এ পৌঁছানো যাবে কিনা — এটা prove করতে হয়।
+
+```
+Greedy কাজ করে যখন:
+  → Greedy choice property: local optimal → global optimal
+  → Optimal substructure আছে
+
+Greedy কাজ করে না:
+  → 0/1 Knapsack (DP লাগে)
+  → Shortest path (negative edges)
+  → Travelling Salesman
+```
+
+### Activity Selection / Interval Scheduling
+
+```python
+def activity_selection(intervals):
+    """
+    Maximum non-overlapping intervals।
+    Greedy: সবার আগে শেষ হয় এমন interval নাও।
+    O(n log n) sorting + O(n) selection।
+    """
+    intervals.sort(key=lambda x: x[1])   # end time অনুযায়ী sort
+    count = 0
+    last_end = float('-inf')
+
+    for start, end in intervals:
+        if start >= last_end:       # overlap নেই
+            count += 1
+            last_end = end
+
+    return count
+
+# intervals = [(1,4),(3,5),(0,6),(5,7),(3,8),(5,9),(6,10),(8,11),(8,12),(2,13),(12,14)]
+# Sorted by end: (1,4),(3,5),(0,6),(5,7),(3,8),(5,9),(6,10),(8,11),(8,12),(2,13),(12,14)
+# Take (1,4): last_end=4, count=1
+# (3,5): 3<4 overlap, skip
+# (0,6): 0<4 overlap, skip
+# (5,7): 5>=4 ✓, last_end=7, count=2
+# (3,8): 3<7 skip; (5,9): 5<7 skip; (6,10): 6<7 skip
+# (8,11): 8>=7 ✓, last_end=11, count=3
+# (8,12): 8<11 skip; (2,13): 2<11 skip
+# (12,14): 12>=11 ✓, last_end=14, count=4
+# Answer: 4
+```
+
+### Jump Game
+
+```python
+def can_jump(nums):
+    """
+    প্রতিটি position থেকে nums[i] step পর্যন্ত jump করা যায়।
+    শেষে পৌঁছানো সম্ভব কিনা?
+    Greedy: max reachable position track করো।
+    O(n)
+    """
+    max_reach = 0
+    for i, jump in enumerate(nums):
+        if i > max_reach:
+            return False
+        max_reach = max(max_reach, i + jump)
+    return True
+
+def jump_game_ii(nums):
+    """Minimum jumps to reach end — Greedy O(n)"""
+    jumps = 0
+    current_end = 0
+    farthest = 0
+
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == current_end:
+            jumps += 1
+            current_end = farthest
+
+    return jumps
+```
+
+### Fractional Knapsack (Greedy কাজ করে)
+
+```python
+def fractional_knapsack(weights, values, W):
+    """
+    Item ভাঙা যায়। Value/Weight ratio অনুযায়ী নাও।
+    O(n log n)
+    """
+    items = sorted(zip(weights, values),
+                   key=lambda x: x[1]/x[0], reverse=True)
+
+    total_value = 0
+    remaining = W
+
+    for weight, value in items:
+        if remaining >= weight:
+            total_value += value
+            remaining -= weight
+        else:
+            total_value += value * (remaining / weight)
+            break
+
+    return total_value
+```
+
+### Gas Station
+
+```python
+def can_complete_circuit(gas, cost):
+    """
+    Circular route — কোন station থেকে শুরু করলে complete করা যাবে?
+    O(n) greedy।
+    """
+    total_surplus = 0
+    current_surplus = 0
+    start = 0
+
+    for i in range(len(gas)):
+        diff = gas[i] - cost[i]
+        total_surplus += diff
+        current_surplus += diff
+
+        if current_surplus < 0:
+            start = i + 1
+            current_surplus = 0
+
+    return start if total_surplus >= 0 else -1
+```
+
+---
+
+## ৮.১০ PART 8 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: DP ও Recursion এর মধ্যে পার্থক্য কী? DP কখন apply করবেন?**
+
+> **উত্তর:** সাধারণ Recursion বারবার same subproblem solve করে — exponential time। DP overlapping subproblems memoize/tabulate করে — polynomial time। Apply করুন: (1) Optimal Substructure — subproblem এর optimal solution থেকে problem এর optimal solution। (2) Overlapping Subproblems — same calculation বারবার। Keywords: "maximum/minimum", "number of ways", "is it possible"।
+
+**Q2: 0/1 Knapsack ও Fractional Knapsack এ greedy কেন কাজ করে না?**
+
+> **উত্তর:** 0/1 Knapsack এ item ভাঙা যায় না। Ratio অনুযায়ী greedy নিলে — পরে ছোট weight এর item এ বেশি value পাওয়া যেতে পারে। Counterexample: capacity=10, items=(6,value=6),(5,5),(5,5)। Greedy: take (6,6)→remaining=4, nothing fits, total=6। DP: take (5,5)+(5,5)=10=capacity, total=10। Fractional তে ভাঙা যায় বলে greedy optimal।
+
+**Q3: Memoization এ default mutable argument ব্যবহারের বিপদ কী?**
+
+> **উত্তর:** Python এ `def f(n, memo={})` এর `memo` সব function calls এ share হয় — function definition হওয়ার সময় একবার তৈরি হয়। সুবিধা: automatic caching। বিপদ: different test cases এ stale data। Safe approach: `memo=None` তারপর `if memo is None: memo = {}`। অথবা `@lru_cache(maxsize=None)` ব্যবহার করুন।
+
+**Q4: Greedy কাজ করছে কিনা কীভাবে বুঝবেন?**
+
+> **উত্তর:** (1) Exchange argument: যদি greedy choice এর বদলে অন্য choice নিলে result খারাপ বা equal হয় → greedy সঠিক। (2) Counterexample খোঁজো: ছোট input এ brute force দিয়ে check করো। (3) Classic greedy problems চিনুন: Activity Selection, Huffman Coding, Dijkstra, MST (Kruskal/Prim), Fractional Knapsack।
+
+**Q5: LCS ও Edit Distance এর মধ্যে সম্পর্ক কী?**
+
+> **উত্তর:** উভয়ই string DP। LCS: দুটি string এর common structure measure করে। Edit Distance (Levenshtein): একটি string কে অন্যটিতে রূপান্তর করতে minimum operations (insert, delete, replace)। সম্পর্ক: যদি LCS = L হয় এবং string lengths m, n হয় তাহলে insert/delete দিয়ে edit distance = (m-L) + (n-L)। Replace এর ক্ষেত্রে আলাদা DP।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| DP এর দুটি শর্ত | Optimal substructure + Overlapping subproblems |
+| Memoization | Top-down recursion + cache |
+| Tabulation | Bottom-up iterative DP |
+| Fibonacci DP | O(n) time, O(1) space |
+| LCS complexity | O(mn) |
+| LIS O(n²) approach | DP |
+| LIS O(n log n) | Binary Search + tails array |
+| 0/1 Knapsack | O(nW) |
+| Coin Change (min) | O(amount × coins) |
+| Greedy — interval | Sort by end time |
+| Jump Game | Greedy, O(n) |
+| Fractional Knapsack | Greedy, ratio sort |
+| House Robber DP | dp[i] = max(dp[i-1], dp[i-2]+nums[i]) |
+| Climb Stairs | Fibonacci variant |
+| DP vs Greedy | DP: explore all; Greedy: local optimal |
+| lru_cache | Python memoization decorator |
+
+---
+
+> **⚠️ PART 8 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
 *হ্যান্ডবুক তৈরিতে: Senior Software Engineer, Competitive Programmer & DSA Instructor*
 *Version: 1.0 | তারিখ: মে ২০২৬*
-*মোট PART: 12 | চলমান — PART 1–6 সম্পন্ন*
+*মোট PART: 12 | চলমান — PART 1–8 সম্পন্ন*
