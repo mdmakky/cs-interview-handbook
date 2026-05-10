@@ -27,10 +27,10 @@
 | 📔 | [**PART 6** — Graphs](#part6) | Graph Representation, BFS, DFS, Dijkstra, Bellman-Ford, Floyd, Topological Sort, Union-Find |
 | 📒 | [**PART 7** — Sorting & Searching](#part7) | Bubble, Selection, Insertion, Merge, Quick, Heap Sort, Counting, Radix, Binary Search Variants |
 | 📃 | [**PART 8** — Dynamic Programming & Greedy](#part8) | Memoization, Tabulation, LCS, LIS, Knapsack, Coin Change, Greedy, Interval Scheduling |
-| 📄 | **PART 9** — Advanced DSA | *(শীঘ্রই আসছে)* |
-| 🗒️ | **PART 10** — Coding Interview Q&A | *(শীঘ্রই আসছে)* |
-| 🗓️ | **PART 11** — Problem Solving Strategy | *(শীঘ্রই আসছে)* |
-| 🗃️ | **PART 12** — Bangladeshi Interview Prep | *(শীঘ্রই আসছে)* |
+| 📄 | [**PART 9** — Advanced DSA](#part9) | Hash Map, Bit Manipulation, Backtracking, Divide & Conquer, String Algorithms (KMP) |
+| 🗒️ | [**PART 10** — Coding Interview Q&A](#part10) | Top 50 DSA Q&A, Patterns Cheat Sheet, Complexity Quick Reference |
+| 🗓️ | [**PART 11** — Problem Solving Strategy](#part11) | UMPIRE Method, Pattern Recognition, 14 Core Patterns, Interview Checklist |
+| 🗃️ | [**PART 12** — Bangladeshi Interview Prep](#part12) | BD Tech Companies, HR Q&A, Salary Negotiation, Study Plan, Final Tips |
 
 ---
 
@@ -138,6 +138,63 @@
 - [৮.৮ Coin Change](#৮৮-coin-change)
 - [৮.৯ Greedy Algorithm](#৮৯-greedy-algorithm)
 - [৮.১০ PART 8 — Interview Q&A](#৮১০-part-8--interview-qa)
+
+</details>
+
+---
+
+<details>
+<summary><strong>📄 PART 9 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৯.১ Hash Map ও Hash Table](#৯১-hash-map-ও-hash-table)
+- [৯.২ Hash Map Patterns](#৯২-hash-map-patterns)
+- [৯.৩ Bit Manipulation](#৯৩-bit-manipulation)
+- [৯.৪ Bit Manipulation Problems](#৯৪-bit-manipulation-problems)
+- [৯.৫ Backtracking](#৯৫-backtracking)
+- [৯.৬ Divide & Conquer](#৯৬-divide--conquer)
+- [৯.৭ String Algorithms — KMP](#৯৭-string-algorithms--kmp)
+- [৯.৮ Rolling Hash ও Rabin-Karp](#৯৮-rolling-hash-ও-rabin-karp)
+- [৯.৯ PART 9 — Interview Q&A](#৯৯-part-9--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>🗒️ PART 10 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [১০.১ Array & String Top Q&A](#১০১-array--string-top-qa)
+- [১০.২ Linked List Top Q&A](#১০২-linked-list-top-qa)
+- [১০.৩ Stack & Queue Top Q&A](#১০৩-stack--queue-top-qa)
+- [১০.৪ Tree & Graph Top Q&A](#১০৪-tree--graph-top-qa)
+- [১০.৫ Sorting & DP Top Q&A](#১০৫-sorting--dp-top-qa)
+- [১০.৬ Complexity Cheat Sheet](#১০৬-complexity-cheat-sheet)
+
+</details>
+
+<details>
+<summary><strong>🗓️ PART 11 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [১১.১ UMPIRE Method](#১১১-umpire-method)
+- [১১.২ 14 Core Problem Patterns](#১১২-14-core-problem-patterns)
+- [১১.৩ Pattern Recognition Guide](#১১৩-pattern-recognition-guide)
+- [১১.৪ Interview Do's & Don'ts](#১১৪-interview-dos--donts)
+- [১১.৫ Time Management](#১১৫-time-management)
+- [১১.৬ Mock Interview Checklist](#১১৬-mock-interview-checklist)
+
+</details>
+
+<details>
+<summary><strong>🗃️ PART 12 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [১২.১ বাংলাদেশের Top Tech Companies](#১২১-বাংলাদেশের-top-tech-companies)
+- [১২.২ Company-wise Interview Pattern](#১২২-company-wise-interview-pattern)
+- [১২.৩ HR Interview Q&A (বাংলায়)](#১২৩-hr-interview-qa-বাংলায়)
+- [১২.৪ Salary Negotiation](#১২৪-salary-negotiation)
+- [১২.৫ 90-Day Study Plan](#১২৫-90-day-study-plan)
+- [১২.৬ Final Tips & Resources](#১২৬-final-tips--resources)
 
 </details>
 
@@ -6135,6 +6192,1488 @@ def can_complete_circuit(gas, cost):
 
 ---
 
+
+
+<a id="part9"></a>
+
+# PART 9: Advanced DSA (উন্নত ডেটা স্ট্রাকচার ও অ্যালগরিদম)
+
+> **পড়ার নির্দেশনা:** এই PART এ Hash Map patterns, Bit Manipulation, Backtracking ও String Algorithms আছে। Hash Map ও Bit tricks interview তে প্রায়ই আসে। Backtracking সব permutation/combination/subset problem এ কাজ করে।
+
+---
+
+## ৯.১ Hash Map ও Hash Table
+
+### সংজ্ঞা
+
+**Hash Map** (Dictionary) হলো key-value pair store এর data structure। Hash function key কে index এ convert করে।
+
+```
+Hash Function: key → index
+  hash("name") → 3
+  hash("age")  → 7
+
+Collision: দুটি key একই index এ গেলে
+  Chaining:   Linked List দিয়ে
+  Open Addressing: পরের খালি slot এ
+
+Operations:
+  insert(k, v)  → O(1) amortized
+  search(k)     → O(1) amortized
+  delete(k)     → O(1) amortized
+  Worst case:   O(n) — সব collision এ
+```
+
+### Python Dictionary Patterns
+
+```python
+# Basic usage
+freq = {}
+for char in "abracadabra":
+    freq[char] = freq.get(char, 0) + 1
+# {'a':5, 'b':2, 'r':2, 'c':1, 'd':1}
+
+# defaultdict
+from collections import defaultdict
+freq = defaultdict(int)
+for char in "hello":
+    freq[char] += 1
+
+# Counter
+from collections import Counter
+cnt = Counter("banana")
+print(cnt.most_common(2))   # [('a',3),('n',2)]
+
+# OrderedDict (Python 3.7+ dict maintains order)
+from collections import OrderedDict
+lru = OrderedDict()
+```
+
+---
+
+## ৯.২ Hash Map Patterns
+
+### Two Sum
+
+```python
+def two_sum(nums, target):
+    """
+    nums এ দুটি index খোঁজো যাদের sum = target।
+    Hash Map দিয়ে O(n) — complement check।
+    """
+    seen = {}   # {value: index}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []
+
+# nums=[2,7,11,15], target=9
+# i=0: complement=7, not in seen; seen={2:0}
+# i=1: complement=2, 2 in seen! return [0,1] ✓
+```
+
+### Subarray Sum Equals K (Prefix Sum + Hash Map)
+
+```python
+def subarray_sum(nums, k):
+    """
+    Sum = k এমন subarray এর সংখ্যা।
+    Prefix Sum + Hash Map = O(n)।
+    """
+    count = 0
+    prefix_sum = 0
+    sum_count = {0: 1}   # empty subarray
+
+    for num in nums:
+        prefix_sum += num
+        count += sum_count.get(prefix_sum - k, 0)
+        sum_count[prefix_sum] = sum_count.get(prefix_sum, 0) + 1
+
+    return count
+
+# nums=[1,1,1], k=2
+# prefix=0: sum_count={0:1}
+# num=1: prefix=1, count+=sum_count.get(-1,0)=0; sum_count={0:1,1:1}
+# num=1: prefix=2, count+=sum_count.get(0,0)=1; sum_count={0:1,1:1,2:1}
+# num=1: prefix=3, count+=sum_count.get(1,0)=1; count=2
+# return 2 ✓ ([1,1] twice: index 0-1, 1-2)
+```
+
+### LRU Cache
+
+```python
+from collections import OrderedDict
+
+class LRUCache:
+    """
+    Least Recently Used Cache।
+    O(1) get ও put — OrderedDict (doubly linked list + hash map)।
+    """
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.cache = OrderedDict()
+
+    def get(self, key):
+        if key not in self.cache:
+            return -1
+        self.cache.move_to_end(key)   # recently used
+        return self.cache[key]
+
+    def put(self, key, value):
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        self.cache[key] = value
+        if len(self.cache) > self.capacity:
+            self.cache.popitem(last=False)  # remove LRU (front)
+```
+
+### Group Anagrams
+
+```python
+def group_anagrams(strs):
+    """Sorted string কে key হিসেবে ব্যবহার করো — O(n × m log m)"""
+    groups = defaultdict(list)
+    for s in strs:
+        key = tuple(sorted(s))
+        groups[key].append(s)
+    return list(groups.values())
+
+# ["eat","tea","tan","ate","nat","bat"]
+# "eat"→('a','e','t'): ["eat","tea","ate"]
+# "tan"→('a','n','t'): ["tan","nat"]
+# "bat"→('a','b','t'): ["bat"]
+```
+
+---
+
+## ৯.৩ Bit Manipulation
+
+### Binary Basics
+
+```
+Decimal 13 = Binary 1101
+  1×2³ + 1×2² + 0×2¹ + 1×2⁰ = 8+4+0+1 = 13
+
+Bitwise Operators:
+  &  (AND):    1101 & 1010 = 1000  (8)
+  |  (OR):     1101 | 1010 = 1111  (15)
+  ^  (XOR):    1101 ^ 1010 = 0111  (7)
+  ~  (NOT):    ~1101 = 0010  (complement)
+  << (Left):   0001 << 2 = 0100   (×4)
+  >> (Right):  1100 >> 2 = 0011   (÷4)
+
+Key Properties:
+  a ^ a = 0         (XOR নিজের সাথে = 0)
+  a ^ 0 = a         (XOR 0 = নিজেই)
+  a & (a-1) = 0     (a power of 2 হলে)
+  a & 1 = last bit  (odd হলে 1, even হলে 0)
+```
+
+### Essential Bit Tricks
+
+```python
+# Check if n is power of 2
+def is_power_of_two(n):
+    return n > 0 and (n & (n - 1)) == 0
+# 8 = 1000, 7 = 0111, 8&7 = 0 ✓
+# 6 = 0110, 5 = 0101, 6&5 = 4 ≠ 0 ✗
+
+# Count set bits (Brian Kernighan's)
+def count_bits(n):
+    count = 0
+    while n:
+        n &= (n - 1)   # rightmost set bit clear করো
+        count += 1
+    return count
+# 13 = 1101: 1101→1100→1000→0000, count=3
+
+# Get i-th bit
+def get_bit(n, i):
+    return (n >> i) & 1
+
+# Set i-th bit
+def set_bit(n, i):
+    return n | (1 << i)
+
+# Clear i-th bit
+def clear_bit(n, i):
+    return n & ~(1 << i)
+
+# Toggle i-th bit
+def toggle_bit(n, i):
+    return n ^ (1 << i)
+
+# Swap two numbers without temp
+a, b = 5, 3
+a ^= b; b ^= a; a ^= b   # a=3, b=5
+```
+
+---
+
+## ৯.৪ Bit Manipulation Problems
+
+### Single Number (XOR trick)
+
+```python
+def single_number(nums):
+    """
+    সব number দুবার আছে, একটি একবার। সেটি খোঁজো।
+    XOR: a^a=0, a^0=a → সব pairs cancel → একা টা থাকে।
+    O(n) time, O(1) space।
+    """
+    result = 0
+    for num in nums:
+        result ^= num
+    return result
+
+# [4,1,2,1,2]: 4^1^2^1^2 = 4^(1^1)^(2^2) = 4^0^0 = 4 ✓
+```
+
+### Missing Number
+
+```python
+def missing_number(nums):
+    """0 থেকে n পর্যন্ত, একটি missing। XOR দিয়ে O(n), O(1)।"""
+    n = len(nums)
+    result = n   # 0..n সব XOR করো, তারপর nums XOR করো
+    for i, num in enumerate(nums):
+        result ^= i ^ num
+    return result
+# Alternatively: return n*(n+1)//2 - sum(nums)
+```
+
+### Counting Bits (DP + Bit)
+
+```python
+def count_bits_all(n):
+    """0 থেকে n পর্যন্ত প্রতিটি number এর set bits count।"""
+    dp = [0] * (n + 1)
+    for i in range(1, n + 1):
+        dp[i] = dp[i >> 1] + (i & 1)
+    # i>>1 = i//2, আগের answer reuse
+    return dp
+# [0,1,1,2,1,2] for n=5
+```
+
+---
+
+## ৯.৫ Backtracking
+
+### সংজ্ঞা
+
+**Backtracking** হলো exhaustive search with pruning। সব possibilities explore করো, valid না হলে undo করে অন্যটা try করো।
+
+```
+Template:
+  def backtrack(state, choices):
+      if goal reached:
+          add to results
+          return
+      for choice in choices:
+          if valid(choice):
+              make choice     ← state পরিবর্তন
+              backtrack(...)
+              undo choice     ← state ফিরিয়ে দাও (backtrack!)
+```
+
+### Permutations
+
+```python
+def permutations(nums):
+    """সব permutation generate করো — O(n × n!)"""
+    result = []
+
+    def backtrack(current, remaining):
+        if not remaining:
+            result.append(current[:])
+            return
+        for i in range(len(remaining)):
+            current.append(remaining[i])
+            backtrack(current, remaining[:i] + remaining[i+1:])
+            current.pop()   # undo
+
+    backtrack([], nums)
+    return result
+
+# [1,2,3] → [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+```
+
+### Subsets
+
+```python
+def subsets(nums):
+    """সব subsets (power set) — O(2^n)"""
+    result = []
+
+    def backtrack(start, current):
+        result.append(current[:])   # প্রতিটি state একটি subset
+        for i in range(start, len(nums)):
+            current.append(nums[i])
+            backtrack(i + 1, current)
+            current.pop()
+
+    backtrack(0, [])
+    return result
+
+# [1,2,3] → [[],[1],[1,2],[1,2,3],[1,3],[2],[2,3],[3]]
+```
+
+### N-Queens
+
+```python
+def solve_n_queens(n):
+    """n×n board এ n queens রাখো যাতে কেউ attack করতে না পারে।"""
+    result = []
+    cols = set()
+    diag1 = set()   # row - col
+    diag2 = set()   # row + col
+
+    def backtrack(row, board):
+        if row == n:
+            result.append([''.join(r) for r in board])
+            return
+        for col in range(n):
+            if col in cols or (row-col) in diag1 or (row+col) in diag2:
+                continue
+            cols.add(col); diag1.add(row-col); diag2.add(row+col)
+            board[row][col] = 'Q'
+            backtrack(row + 1, board)
+            cols.remove(col); diag1.remove(row-col); diag2.remove(row+col)
+            board[row][col] = '.'
+
+    board = [['.']*n for _ in range(n)]
+    backtrack(0, board)
+    return result
+```
+
+---
+
+## ৯.৬ Divide & Conquer
+
+### সংজ্ঞা
+
+**Divide & Conquer**: Problem কে subproblems এ ভাগ করো, recursively solve করো, combine করো।
+
+```
+Steps:
+  1. Divide: Problem → smaller subproblems
+  2. Conquer: Recursively solve each
+  3. Combine: Results merge করো
+
+Examples: Merge Sort, Quick Sort, Binary Search,
+          Maximum Subarray, Closest Pair of Points
+```
+
+### Maximum Subarray — Divide & Conquer
+
+```python
+def max_subarray_dc(arr, low=0, high=None):
+    """
+    Divide & Conquer — O(n log n)।
+    Kadane's O(n) এর চেয়ে ধীর কিন্তু concept বোঝার জন্য।
+    """
+    if high is None:
+        high = len(arr) - 1
+    if low == high:
+        return arr[low]
+
+    mid = (low + high) // 2
+    left_max = max_subarray_dc(arr, low, mid)
+    right_max = max_subarray_dc(arr, mid + 1, high)
+    cross_max = max_crossing(arr, low, mid, high)
+
+    return max(left_max, right_max, cross_max)
+
+def max_crossing(arr, low, mid, high):
+    left_sum = float('-inf')
+    total = 0
+    for i in range(mid, low - 1, -1):
+        total += arr[i]
+        left_sum = max(left_sum, total)
+
+    right_sum = float('-inf')
+    total = 0
+    for i in range(mid + 1, high + 1):
+        total += arr[i]
+        right_sum = max(right_sum, total)
+
+    return left_sum + right_sum
+```
+
+---
+
+## ৯.৭ String Algorithms — KMP
+
+### KMP (Knuth-Morris-Pratt)
+
+**সমস্যা**: text এ pattern কোথায় আছে?
+- Naive: O(n×m) — প্রতিটি position এ match করো
+- KMP: O(n+m) — mismatch এ কতটুকু skip করা যায় precompute
+
+```python
+def kmp_search(text, pattern):
+    """
+    Failure function (LPS array) দিয়ে O(n+m) pattern matching।
+    LPS = Longest Proper Prefix which is also Suffix।
+    """
+    if not pattern:
+        return 0
+
+    lps = compute_lps(pattern)
+    result = []
+    j = 0   # pattern index
+
+    for i in range(len(text)):
+        while j > 0 and text[i] != pattern[j]:
+            j = lps[j - 1]   # fallback
+        if text[i] == pattern[j]:
+            j += 1
+        if j == len(pattern):
+            result.append(i - j + 1)
+            j = lps[j - 1]
+
+    return result
+
+def compute_lps(pattern):
+    """LPS (Failure Function) array compute করো।"""
+    m = len(pattern)
+    lps = [0] * m
+    length = 0
+    i = 1
+
+    while i < m:
+        if pattern[i] == pattern[length]:
+            length += 1
+            lps[i] = length
+            i += 1
+        else:
+            if length > 0:
+                length = lps[length - 1]
+            else:
+                lps[i] = 0
+                i += 1
+    return lps
+
+# text="AABAACAADAABAABA", pattern="AABA"
+# lps("AABA") = [0,1,0,1]
+# Matches at: index 0, 9, 12
+```
+
+---
+
+## ৯.৮ Rolling Hash ও Rabin-Karp
+
+```python
+def rabin_karp(text, pattern):
+    """
+    Rolling hash দিয়ে O(n+m) average pattern matching।
+    Hash collision হলে character-by-character verify।
+    """
+    n, m = len(text), len(pattern)
+    if m > n:
+        return []
+
+    BASE = 31
+    MOD = 10**9 + 7
+    results = []
+
+    def poly_hash(s):
+        h = 0
+        for c in s:
+            h = (h * BASE + ord(c)) % MOD
+        return h
+
+    pat_hash = poly_hash(pattern)
+    power = pow(BASE, m - 1, MOD)
+    window_hash = poly_hash(text[:m])
+
+    for i in range(n - m + 1):
+        if window_hash == pat_hash:
+            if text[i:i+m] == pattern:
+                results.append(i)
+        if i < n - m:
+            window_hash = (window_hash - ord(text[i]) * power) % MOD
+            window_hash = (window_hash * BASE + ord(text[i + m])) % MOD
+
+    return results
+```
+
+---
+
+## ৯.৯ PART 9 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Hash Map এর average O(1) কিন্তু worst O(n) কেন?**
+
+> **উত্তর:** Average: Hash function সমানভাবে distribute করে, প্রতিটি bucket এ O(1) elements → O(1)। Worst: সব keys একই bucket এ গেলে (সব collision) → linked list → O(n)। Good hash function ও load factor < 0.75 রাখলে worst case এড়ানো যায়। Python dict এ load factor > 2/3 হলে resize হয়।
+
+**Q2: XOR দিয়ে duplicate খোঁজার trick কেন কাজ করে?**
+
+> **উত্তর:** XOR এর properties: a^a=0 (self-inverse), a^0=a (identity), commutative ও associative। সব elements XOR করলে pairs cancel হয়ে 0 হয়। যে element একবার আছে সেটা 0 এর সাথে XOR হয়ে নিজেই থাকে। O(n) time, O(1) space — যেখানে hash map O(n) space নেয়।
+
+**Q3: Backtracking ও Dynamic Programming এর পার্থক্য কী?**
+
+> **উত্তর:** উভয়ই recursion ব্যবহার করে কিন্তু approach আলাদা। Backtracking: সব valid solutions explore করে, dead end এ undo করে অন্য path নেয়। Overlapping subproblems নেই। DP: overlapping subproblems আছে, results memoize করে reuse করে। Backtracking O(exponential), DP O(polynomial)। Backtracking: permutation, N-Queens, Sudoku। DP: LCS, Knapsack, Coin Change।
+
+**Q4: KMP এর LPS array কী কাজ করে?**
+
+> **উত্তর:** LPS (Longest Proper Prefix which is also Suffix) — pattern এর প্রতিটি position এ mismatch হলে কতটুকু পিছিয়ে যাবো সেটা বলে। যেমন pattern="AABA" এ lps=[0,1,0,1]। "AABA" তে mismatch হলে শেষে index 3 এর lps=1 মানে index 1 থেকে আবার match শুরু। Naive approach এ প্রতিবার শুরু থেকে, KMP এ আগের match reuse করে → O(n+m)।
+
+**Q5: Subsets problem এ কতটি subset থাকে? কেন 2^n?**
+
+> **উত্তর:** n টি element এ প্রতিটি element independent ভাবে include বা exclude করা যায় → 2 choices × 2 choices × ... (n বার) = 2^n। Backtracking এ প্রতিটি element এ দুটি branch হয় → 2^n leaves। Bitmask দিয়েও করা যায়: 0 থেকে 2^n-1 পর্যন্ত সব numbers এ i-th bit set হলে i-th element include।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| Hash Map average | O(1) |
+| Hash Map worst | O(n) collision |
+| Python dict ordering | Insertion order (3.7+) |
+| XOR self | 0 |
+| XOR identity | a^0=a |
+| Power of 2 check | n & (n-1) == 0 |
+| Count set bits fast | Brian Kernighan: n&(n-1) |
+| Backtracking template | make, recurse, undo |
+| Subsets count | 2^n |
+| Permutations count | n! |
+| KMP complexity | O(n+m) |
+| Naive string search | O(n×m) |
+| Rabin-Karp | Rolling hash, O(n+m) avg |
+| LRU Cache | OrderedDict, O(1) |
+| Two Sum optimal | Hash Map, O(n) |
+| Prefix Sum + Hash Map | Subarray sum = k |
+
+---
+
+> **⚠️ PART 9 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part10"></a>
+
+# PART 10: Coding Interview Q&A (টপ ইন্টারভিউ প্রশ্নোত্তর)
+
+> **পড়ার নির্দেশনা:** এই PART এ সবচেয়ে বেশি জিজ্ঞেস করা DSA interview questions একসাথে। প্রতিটি topic এর top problems ও complexity quick reference।
+
+---
+
+## ১০.১ Array & String Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Two Sum | Hash Map | O(n) | O(n) |
+| 2 | Best Time to Buy Stock | Single pass, min track | O(n) | O(1) |
+| 3 | Contains Duplicate | Hash Set | O(n) | O(n) |
+| 4 | Product of Array Except Self | Left & Right prefix | O(n) | O(1) |
+| 5 | Maximum Subarray | Kadane's | O(n) | O(1) |
+| 6 | Maximum Product Subarray | Track max & min | O(n) | O(1) |
+| 7 | Find Min in Rotated Sorted Array | Binary Search | O(log n) | O(1) |
+| 8 | Search in Rotated Array | Modified Binary Search | O(log n) | O(1) |
+| 9 | 3Sum | Sort + Two Pointer | O(n²) | O(1) |
+| 10 | Container With Most Water | Two Pointer | O(n) | O(1) |
+| 11 | Valid Palindrome | Two Pointer | O(n) | O(1) |
+| 12 | Longest Substring No Repeat | Sliding Window + Hash Map | O(n) | O(k) |
+| 13 | Longest Repeating Char Replacement | Sliding Window | O(n) | O(1) |
+| 14 | Minimum Window Substring | Sliding Window | O(n) | O(k) |
+| 15 | Group Anagrams | Sort + Hash Map | O(nm log m) | O(nm) |
+
+### Key Code Snippets
+
+```python
+# Best Time to Buy & Sell Stock
+def max_profit(prices):
+    min_price, max_profit = float('inf'), 0
+    for price in prices:
+        min_price = min(min_price, price)
+        max_profit = max(max_profit, price - min_price)
+    return max_profit
+
+# Product Except Self — O(1) extra space
+def product_except_self(nums):
+    n = len(nums)
+    result = [1] * n
+    # Left pass
+    prefix = 1
+    for i in range(n):
+        result[i] = prefix
+        prefix *= nums[i]
+    # Right pass
+    suffix = 1
+    for i in range(n-1, -1, -1):
+        result[i] *= suffix
+        suffix *= nums[i]
+    return result
+
+# 3Sum
+def three_sum(nums):
+    nums.sort()
+    result = []
+    for i in range(len(nums) - 2):
+        if i > 0 and nums[i] == nums[i-1]:
+            continue  # skip duplicates
+        left, right = i+1, len(nums)-1
+        while left < right:
+            s = nums[i] + nums[left] + nums[right]
+            if s == 0:
+                result.append([nums[i], nums[left], nums[right]])
+                while left < right and nums[left] == nums[left+1]: left += 1
+                while left < right and nums[right] == nums[right-1]: right -= 1
+                left += 1; right -= 1
+            elif s < 0: left += 1
+            else: right -= 1
+    return result
+```
+
+---
+
+## ১০.২ Linked List Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Reverse Linked List | Iterative/Recursive | O(n) | O(1) |
+| 2 | Detect Cycle | Floyd's Two Pointer | O(n) | O(1) |
+| 3 | Find Middle | Fast & Slow Pointer | O(n) | O(1) |
+| 4 | Merge Two Sorted Lists | Two Pointer | O(n+m) | O(1) |
+| 5 | Remove N-th From End | Two Pointer gap=n | O(n) | O(1) |
+| 6 | Reorder List | Middle + Reverse + Merge | O(n) | O(1) |
+| 7 | Add Two Numbers | Simulate addition | O(n) | O(n) |
+| 8 | LRU Cache | OrderedDict / DLL+HashMap | O(1) | O(n) |
+
+```python
+# Remove N-th Node From End
+def remove_nth_from_end(head, n):
+    dummy = ListNode(0, head)
+    fast = slow = dummy
+    for _ in range(n + 1):
+        fast = fast.next
+    while fast:
+        fast = fast.next
+        slow = slow.next
+    slow.next = slow.next.next
+    return dummy.next
+```
+
+---
+
+## ১০.৩ Stack & Queue Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Valid Parentheses | Stack | O(n) | O(n) |
+| 2 | Min Stack | Stack of (val, min) | O(1) | O(n) |
+| 3 | Evaluate Reverse Polish | Stack | O(n) | O(n) |
+| 4 | Daily Temperatures | Monotonic Stack | O(n) | O(n) |
+| 5 | Car Fleet | Stack + Sort | O(n log n) | O(n) |
+| 6 | Largest Rectangle Histogram | Monotonic Stack | O(n) | O(n) |
+| 7 | Sliding Window Maximum | Deque | O(n) | O(k) |
+| 8 | Top K Frequent Elements | Heap / Bucket Sort | O(n log k) | O(n) |
+
+```python
+# Top K Frequent Elements
+def top_k_frequent(nums, k):
+    count = Counter(nums)
+    return heapq.nlargest(k, count.keys(), key=count.get)
+```
+
+---
+
+## ১০.৪ Tree & Graph Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Invert Binary Tree | DFS/BFS | O(n) | O(n) |
+| 2 | Max Depth Binary Tree | DFS | O(n) | O(h) |
+| 3 | Same Tree | DFS | O(n) | O(h) |
+| 4 | Subtree of Another Tree | DFS + is_same | O(nm) | O(h) |
+| 5 | LCA of BST | BST property | O(h) | O(1) |
+| 6 | Level Order Traversal | BFS | O(n) | O(n) |
+| 7 | Validate BST | DFS + min/max | O(n) | O(h) |
+| 8 | Kth Smallest in BST | Inorder | O(n) | O(h) |
+| 9 | Number of Islands | DFS/BFS | O(mn) | O(mn) |
+| 10 | Clone Graph | BFS + HashMap | O(V+E) | O(V) |
+| 11 | Course Schedule | Topo Sort / Cycle | O(V+E) | O(V+E) |
+| 12 | Word Ladder | BFS | O(m²×n) | O(m²×n) |
+
+```python
+# Course Schedule (Cycle detection in directed graph)
+def can_finish(num_courses, prerequisites):
+    graph = defaultdict(list)
+    for a, b in prerequisites:
+        graph[b].append(a)
+
+    # 0=unvisited, 1=visiting, 2=done
+    state = [0] * num_courses
+
+    def dfs(node):
+        if state[node] == 1: return False  # cycle
+        if state[node] == 2: return True
+        state[node] = 1
+        for nei in graph[node]:
+            if not dfs(nei): return False
+        state[node] = 2
+        return True
+
+    return all(dfs(i) for i in range(num_courses))
+```
+
+---
+
+## ১০.৫ Sorting & DP Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Merge Intervals | Sort + merge | O(n log n) | O(n) |
+| 2 | Insert Interval | Linear scan | O(n) | O(n) |
+| 3 | Non-overlapping Intervals | Greedy, sort by end | O(n log n) | O(1) |
+| 4 | Climbing Stairs | DP (Fibonacci) | O(n) | O(1) |
+| 5 | House Robber | DP | O(n) | O(1) |
+| 6 | House Robber II (circular) | 2× House Robber | O(n) | O(1) |
+| 7 | Longest Palindromic Substring | DP / Expand Around | O(n²) | O(1) |
+| 8 | Coin Change | DP (BFS/tab) | O(n×coins) | O(n) |
+| 9 | Unique Paths | DP | O(mn) | O(n) |
+| 10 | Jump Game | Greedy | O(n) | O(1) |
+| 11 | Word Break | DP + Hash Set | O(n²) | O(n) |
+| 12 | Combination Sum | Backtracking | O(n^(T/M)) | O(T/M) |
+
+```python
+# Merge Intervals
+def merge(intervals):
+    intervals.sort()
+    merged = [intervals[0]]
+    for start, end in intervals[1:]:
+        if start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    return merged
+
+# Word Break
+def word_break(s, word_dict):
+    word_set = set(word_dict)
+    dp = [False] * (len(s) + 1)
+    dp[0] = True
+    for i in range(1, len(s) + 1):
+        for j in range(i):
+            if dp[j] and s[j:i] in word_set:
+                dp[i] = True
+                break
+    return dp[len(s)]
+```
+
+---
+
+## ১০.৬ Complexity Cheat Sheet
+
+### Time Complexity Quick Reference
+
+```
+O(1)       → Hash Map lookup, Array access, Stack push/pop
+O(log n)   → Binary Search, BST search, Heap push/pop
+O(n)       → Linear scan, BFS/DFS, Hash Map build
+O(n log n) → Merge Sort, Quick Sort (avg), Heap Sort, Dijkstra
+O(n²)      → Bubble/Selection/Insertion Sort, Naive 2 loops
+O(n³)      → Floyd-Warshall, Naive matrix multiply
+O(2^n)     → Subsets, Backtracking exponential
+O(n!)      → Permutations
+```
+
+### Space Complexity Quick Reference
+
+```
+O(1)       → Two Pointer, In-place sort, Greedy
+O(log n)   → Recursion depth (balanced tree/binary search)
+O(n)       → Hash Map, Stack, Queue, DP array
+O(n²)      → 2D DP table, Adjacency Matrix
+O(V+E)     → Adjacency List (graph)
+```
+
+### Data Structure Selection Guide
+
+```
+Need fast lookup by key?           → Hash Map O(1)
+Need sorted data with fast ops?    → BST O(log n) / SortedList
+Need LIFO?                         → Stack
+Need FIFO?                         → Queue (deque)
+Need priority order?               → Heap (heapq)
+Need prefix query on strings?      → Trie
+Need range sum/min/max + update?   → Segment Tree
+Need connected components?         → Union-Find
+Need shortest path (unweighted)?   → BFS
+Need shortest path (weighted)?     → Dijkstra
+Need all-pairs shortest path?      → Floyd-Warshall
+```
+
+---
+
+> **⚠️ PART 10 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part11"></a>
+
+# PART 11: Problem Solving Strategy (সমস্যা সমাধানের কৌশল)
+
+> **পড়ার নির্দেশনা:** Technical skill এর পাশাপাশি interview এ approach ও communication দেখা হয়। এই PART এ systematic problem solving framework শিখুন যা যেকোনো নতুন problem এ apply করা যাবে।
+
+---
+
+## ১১.১ UMPIRE Method
+
+**UMPIRE** হলো systematic interview approach:
+
+```
+U — Understand the Problem
+M — Match to Known Patterns
+P — Plan the Solution
+I — Implement
+R — Review (Test & Debug)
+E — Evaluate Complexity
+```
+
+### U — Understand (৫ মিনিট)
+
+```
+Interview শুরুতে সরাসরি code লিখবেন না। আগে বুঝুন:
+
+প্রশ্ন করুন:
+  ✅ Input এর range কত? (n এর size)
+  ✅ Negative numbers আসতে পারে?
+  ✅ Duplicates থাকতে পারে?
+  ✅ Empty input handle করতে হবে?
+  ✅ Sorted আছে?
+  ✅ Return কী করতে হবে — index না value?
+
+Example দিয়ে verify করুন:
+  Input: [2, 7, 11, 15], target = 9
+  Output: [0, 1]  (কারণ 2+7=9)
+  ✓ আমার বোঝা সঠিক?
+```
+
+### M — Match (২ মিনিট)
+
+```
+Problem টা কোন pattern এর সাথে মেলে?
+
+Array/String → Sliding Window? Two Pointer? Prefix Sum?
+Sorted Array → Binary Search?
+Tree/Graph   → BFS? DFS? Topological?
+Optimal      → DP? Greedy?
+Multiple ans → Backtracking?
+Frequency    → Hash Map? Counting Sort?
+K smallest   → Heap?
+Connectivity → Union-Find?
+```
+
+### P — Plan (৩ মিনিট)
+
+```
+Brute force দিয়ে শুরু করুন:
+  "Brute force হবে O(n²)। আমি X approach এ O(n) করতে পারি।"
+
+Step by step algorithm বলুন:
+  1. Hash Map তৈরি করবো value → index
+  2. প্রতিটি element এ complement = target - num
+  3. Complement hash map এ থাকলে return
+
+Code লেখার আগে interviewer কে plan বলুন।
+```
+
+### I — Implement (১৫-২০ মিনিট)
+
+```
+Clean code লিখুন:
+  ✅ Meaningful variable names
+  ✅ Edge cases handle করুন
+  ✅ সহজ logic — clever trick নয়
+  ✅ চিন্তা করতে করতে বলুন (think aloud)
+
+Think aloud:
+  "এখানে আমি i থেকে j পর্যন্ত..."
+  "এই condition চেক করছি কারণ..."
+  "Stack এ index রাখছি কারণ value দরকার না"
+```
+
+### R — Review (৫ মিনিট)
+
+```
+নিজেই test করুন:
+  ✅ Happy path test করুন
+  ✅ Edge cases: empty, single element, all same, max/min values
+  ✅ Dry run করুন ছোট input দিয়ে
+  ✅ Off-by-one error check করুন (i < n vs i <= n)
+```
+
+### E — Evaluate (২ মিনিট)
+
+```
+Complexity বলুন:
+  "Time Complexity: O(n) কারণ একবার iterate করি।"
+  "Space Complexity: O(n) কারণ hash map এ সব elements।"
+  "Optimize করা যায় কিনা? এই approach এই optimal।"
+```
+
+---
+
+## ১১.২ 14 Core Problem Patterns
+
+```
+Pattern 1:  Sliding Window
+Pattern 2:  Two Pointers
+Pattern 3:  Fast & Slow Pointers (Floyd's)
+Pattern 4:  Merge Intervals
+Pattern 5:  Cyclic Sort
+Pattern 6:  In-place Reversal of LinkedList
+Pattern 7:  Tree BFS (Level Order)
+Pattern 8:  Tree DFS
+Pattern 9:  Two Heaps
+Pattern 10: Subsets (Backtracking)
+Pattern 11: Modified Binary Search
+Pattern 12: Bitwise XOR
+Pattern 13: Top K Elements (Heap)
+Pattern 14: K-way Merge
+```
+
+---
+
+## ১১.৩ Pattern Recognition Guide
+
+### কীভাবে Pattern চিনবেন?
+
+```
+Input sorted / rotated sorted?
+  → Binary Search (standard বা modified)
+
+"Subarray", "substring", "window" + max/min/k?
+  → Sliding Window
+
+"Pair", "triplet" + sorted?
+  → Two Pointer
+
+Linked List cycle বা middle?
+  → Fast & Slow Pointer
+
+"All combinations/subsets/permutations"?
+  → Backtracking
+
+"Overlapping intervals" বা "meeting rooms"?
+  → Merge Intervals + Sorting
+
+"Top K" বা "K largest/smallest"?
+  → Heap (heapq)
+
+Tree / Graph traversal?
+  → BFS (shortest, level) বা DFS (path, cycle)
+
+"Maximum profit/value" বা "minimum cost"?
+  → Dynamic Programming বা Greedy
+
+Connected components বা union?
+  → Union-Find
+
+String matching?
+  → KMP বা Rabin-Karp বা Trie
+
+Frequency count?
+  → Hash Map বা Counter
+```
+
+### Sliding Window কখন?
+
+```
+✅ Contiguous subarray/substring
+✅ Window size fixed বা variable
+✅ "Longest/Shortest" + condition
+
+Fixed Window:
+  for i in range(k, n):
+      window_sum += arr[i] - arr[i-k]
+
+Variable Window:
+  left = 0
+  for right in range(n):
+      # add arr[right]
+      while condition_violated:
+          # remove arr[left]; left += 1
+      # update answer
+```
+
+### Two Pointer কখন?
+
+```
+✅ Sorted array তে pair/triplet খোঁজা
+✅ Palindrome check
+✅ Partition/rearrange
+
+Template:
+  left, right = 0, n-1
+  while left < right:
+      if condition: left += 1
+      elif: right -= 1
+      else: process, move both
+```
+
+---
+
+## ১১.৪ Interview Do's & Don'ts
+
+### করুন ✅
+
+```
+✅ Clarifying questions করুন শুরুতে
+✅ Brute force বলুন, তারপর optimize করুন
+✅ Think aloud — চুপ থাকবেন না
+✅ Example দিয়ে algorithm verify করুন
+✅ Edge cases নিজে mention করুন
+✅ Complexity বলুন — time ও space উভয়
+✅ Clean, readable code লিখুন
+✅ নিজে test করুন শেষে
+✅ Stuck হলে hint চাওয়া ঠিক আছে
+✅ Interviewer এর feedback শুনুন
+```
+
+### করবেন না ❌
+
+```
+❌ প্রশ্ন না বুঝে সাথে সাথে code লিখবেন না
+❌ চুপ থেকে ভাববেন না — বলতে বলতে ভাবুন
+❌ Optimal solution সরাসরি না পেলে হতাশ হবেন না
+❌ Interviewer কে ignore করবেন না
+❌ Wrong complexity বলবেন না — জানলে বলুন, না জানলে estimate করুন
+❌ সব edge case skip করবেন না
+❌ Variable name: a, b, x, y ব্যবহার করবেন না
+❌ Copy-paste pattern রাখবেন না (off-by-one)
+```
+
+---
+
+## ১১.৫ Time Management
+
+```
+30-minute problem breakdown:
+  0-5 min:   Understand + clarify + example
+  5-8 min:   Pattern match + brute force discuss
+  8-12 min:  Optimal approach plan + algorithm
+  12-25 min: Code implementation
+  25-28 min: Test + dry run + edge cases
+  28-30 min: Complexity analysis
+
+45-minute problem:
+  0-5 min:   Understand
+  5-10 min:  Plan (brute → optimal)
+  10-35 min: Implement
+  35-42 min: Test & debug
+  42-45 min: Complexity + possible improvements
+
+ঘড়ি দেখুন। 20 মিনিটেও শুরু না করলে → সরল approach নিন।
+```
+
+---
+
+## ১১.৬ Mock Interview Checklist
+
+```
+Interview এর আগে:
+  □ নিজেকে পরিচয় দেওয়ার ৩০-সেকেন্ড pitch প্রস্তুত
+  □ LeetCode Easy ও Medium এর 150+ problems সমাধান
+  □ প্রতিটি data structure এর complexity মুখস্থ
+  □ 5-7 টি project এর জন্য STAR format গল্প তৈরি
+  □ Company সম্পর্কে research (product, tech stack, culture)
+
+Interview চলাকালে:
+  □ UMPIRE method follow করুন
+  □ Brute force → optimal path দেখান
+  □ Think aloud রাখুন
+  □ Edge cases mention করুন
+  □ Clean code লিখুন
+  □ Test করুন
+
+Interview শেষে:
+  □ Interviewer কে প্রশ্ন করুন (team, challenges, tech decisions)
+  □ Feedback চাওয়ার চেষ্টা করুন
+  □ ভুল problems গুলো note করুন ও পরে ঠিক করুন
+```
+
+### দৈনিক Practice Routine
+
+```
+Beginner (প্রথম ৩ মাস):
+  দিনে ২-৩ টি LeetCode Easy
+  Array, String, Hash Map সম্পন্ন করুন
+  প্রতিটি solution complexity বলুন
+
+Intermediate (৩-৬ মাস):
+  দিনে ১-২ টি Medium
+  Tree, Graph, DP শুরু করুন
+  Blind 75 list complete করুন
+
+Advanced (৬ মাস+):
+  Hard problems সপ্তাহে ৩-৪ টি
+  Mock interviews (Pramp, Interviewing.io)
+  System Design শুরু করুন
+```
+
+---
+
+> **⚠️ PART 11 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part12"></a>
+
+# PART 12: Bangladeshi Interview Prep (বাংলাদেশি ইন্টারভিউ প্রস্তুতি)
+
+> **পড়ার নির্দেশনা:** বাংলাদেশের tech industry র নিজস্ব culture ও interview pattern আছে। এই PART এ BD specific tips, HR questions, salary negotiation ও final study plan আছে।
+
+---
+
+## ১২.১ বাংলাদেশের Top Tech Companies
+
+### Product-based Companies (DSA focus বেশি)
+
+```
+🏆 Tier 1 — International Standard:
+  • Chaldal (Bangladesh's Amazon)
+  • Shohoz / Paperfly
+  • bKash (FinTech)
+  • BJIT Group
+  • Augmedix (AI Healthcare)
+  • TigerIT Bangladesh
+  • Samsung R&D Bangladesh
+  • Pathao
+
+🥈 Tier 2 — Growing Product Companies:
+  • ShajGoj
+  • Sheba.xyz
+  • Bondstein Technologies
+  • Brain Station 23
+  • Kona Software Lab
+  • Therap Services
+  • Reve Systems
+  • NewsCred (now Welcome)
+```
+
+### Service-based Companies (OOP + Problem Solving)
+
+```
+• Leads Corporation
+• Nascenia
+• Bitstrips (acquired by Snap)
+• CodeSynthesis
+• IntroIT
+• Creative Software
+• WebAble Digital
+• Orion Informatics
+```
+
+---
+
+## ১২.২ Company-wise Interview Pattern
+
+### Chaldal, Pathao, bKash Type (Strong DSA)
+
+```
+Round 1: Online Assessment
+  → LeetCode style 2-3 problems (45-60 min)
+  → Easy to Medium difficulty
+  → Array, String, HashMap, Two Pointer
+
+Round 2: Technical Phone Screen
+  → 1-2 coding problems live
+  → Data Structure theory
+  → Time/Space complexity
+
+Round 3: Onsite / Video Technical
+  → 2-3 Coding problems
+  → System Design (basic for junior)
+  → Project discussion
+
+Round 4: HR + Management
+  → Behavioral questions
+  → Salary discussion
+  → Team fit
+```
+
+### BJIT, Brain Station Type (Mixed)
+
+```
+Round 1: Written Test
+  → MCQ: OOP, DBMS, OS, Networking
+  → 1-2 coding problems (C/Java/Python)
+  → Aptitude questions
+
+Round 2: Technical Interview
+  → OOP concepts গভীরভাবে
+  → SQL queries লাইভ
+  → Project walk-through
+
+Round 3: HR Interview
+  → Bengali/English mix
+  → Joining timeline
+```
+
+### সাধারণ Interview Flow (Most BD Companies)
+
+```
+সপ্তাহ 1: CV screening + HR call
+সপ্তাহ 2: Online test বা written exam
+সপ্তাহ 3: Technical interview (1-2 round)
+সপ্তাহ 4: Final HR + offer
+```
+
+---
+
+## ১২.৩ HR Interview Q&A (বাংলায়)
+
+### নিজের সম্পর্কে
+
+**Q: নিজের সম্পর্কে বলুন।**
+
+> **Template উত্তর:** "আমি [নাম], [বিশ্ববিদ্যালয়] থেকে CSE তে [সাল] এ পাস করেছি। আমার [X] বছরের [technology] এ অভিজ্ঞতা আছে। সম্প্রতি [project] এ কাজ করেছি যেখানে [achievement]। আমি এই role এ apply করছি কারণ [company] এর [specific reason] আমাকে অনুপ্রাণিত করেছে।"
+
+**Q: আপনার strongest skill কী?**
+
+> **Template:** "আমার strongest দিক হলো [skill]। [project] এ এটি apply করে [result] অর্জন করেছি। আমি problem-solving ও quick learning এ comfortable।"
+
+**Q: আপনার weakness কী?**
+
+> **Template:** "আমি কখনো কখনো perfectionism এ বেশি সময় দিই। কিন্তু এখন time-boxing শিখেছি — নির্দিষ্ট সময়ে একটি কাজ শেষ করে পরেরটায় যাই।" (Weakness বলুন কিন্তু improvement ও বলুন।)
+
+### Motivation
+
+**Q: আমাদের company তে কেন join করতে চান?**
+
+> "আপনাদের [specific product/technology/culture] আমাকে আকৃষ্ট করেছে। [Company name] বাংলাদেশে [industry] তে real impact তৈরি করছে। আমি এখানে grow করতে ও contribute করতে চাই।"
+
+**Q: ৫ বছর পরে নিজেকে কোথায় দেখতে চান?**
+
+> "আমি technical leadership এ যেতে চাই। ভালো engineer হওয়ার পাশাপাশি junior team members কে mentor করতে চাই। আপনাদের company তে সেই সুযোগ আছে বলে মনে করি।"
+
+### Conflict & Teamwork
+
+**Q: Team এ conflict হলে কীভাবে handle করেন?**
+
+> "আমি সরাসরি আলোচনায় বিশ্বাসী। প্রথমে সবার perspective বুঝি, তারপর data ও logic দিয়ে common ground খুঁজি। Personal attack নয়, problem focus রাখি।"
+
+**Q: Deadline miss হলে কী করেন?**
+
+> "সরাসরি manager কে inform করি এবং revised estimate দিই। Scope reduce করা যায় কিনা আলোচনা করি। Post-mortem এ root cause বের করি যাতে পরবর্তীতে না হয়।"
+
+---
+
+## ১২.৪ Salary Negotiation
+
+### বাংলাদেশে Junior SWE Salary Range (২০২৬)
+
+```
+Entry Level (0-1 year):
+  • Service companies:  ২৫,০০০ – ৪৫,০০০ টাকা
+  • Product companies:  ৪০,০০০ – ৭০,০০০ টাকা
+  • Top tier (bKash, Chaldal): ৬০,০০০ – ১,০০,০০০ টাকা
+
+1-2 year experience:
+  • Service:  ৪৫,০০০ – ৭০,০০০ টাকা
+  • Product:  ৭০,০০০ – ১,২০,০০০ টাকা
+
+Remote / International salary (USD):
+  • Junior Remote: $800 – $1,500/month
+  • Mid Remote: $1,500 – $3,000/month
+```
+
+### Negotiation Script
+
+```
+HR: "আপনার expected salary কত?"
+
+আপনি: "আমি industry standard এ আগ্রহী। এই role এ সাধারণত কত offer করা হয়?"
+(Counter-question দিয়ে তাদের range জানুন আগে)
+
+যদি তারা জানতে চায়:
+"আমার current research এ এই role এর range [X-Y] টাকা।
+আমার experience ও skills বিবেচনায় [Y এর কাছাকাছি] expect করছি।
+তবে total package (bonus, leave, growth) সহ আলোচনা করতে চাই।"
+
+Offer পেলে:
+"এই offer টা বিবেচনা করার জন্য ধন্যবাদ। 24-48 ঘণ্টা সময় নিতে পারি কি?"
+(কখনো সাথে সাথে accept বা reject করবেন না)
+```
+
+### Negotiation Tips
+
+```
+✅ Market rate research করুন (LinkedIn, Glassdoor, BD job sites)
+✅ Multiple offers থাকলে leverage হিসেবে ব্যবহার করুন
+✅ Base salary ছাড়াও দেখুন: bonus, increment policy, remote option
+✅ Minimum চাওয়া থেকে সামান্য বেশি চান (negotiate করার room)
+✅ "হ্যাঁ" বা "না" এর আগে সময় নিন
+❌ First offer এ সাথে সাথে accept করবেন না
+❌ Desperate দেখাবেন না
+❌ মিথ্যা competing offer বলবেন না
+```
+
+---
+
+## ১২.৫ 90-Day Study Plan
+
+### Month 1 — Foundation (দিন 1-30)
+
+```
+Week 1-2: Array & String (PART 2)
+  □ LeetCode Easy: Two Sum, Valid Anagram, Palindrome, Contains Duplicate
+  □ LeetCode Medium: 3Sum, Sliding Window Maximum, Longest Substring
+
+Week 3: Linked List + Stack (PART 3, 4)
+  □ Reverse LL, Detect Cycle, Merge Sorted LL
+  □ Valid Parentheses, Min Stack, Daily Temperatures
+
+Week 4: Binary Search + Sorting (PART 7)
+  □ Binary Search, Search Rotated, Find Peak
+  □ Merge Sort implement করুন হাতে
+  □ Sorting algorithms complexity মুখস্থ
+
+Daily: ২ টি problems solve। Dry run লিখুন কাগজে।
+```
+
+### Month 2 — Core DSA (দিন 31-60)
+
+```
+Week 5-6: Trees (PART 5)
+  □ Tree Traversals (iterative + recursive)
+  □ Max Depth, Diameter, LCA, Validate BST
+  □ Level Order, Right Side View
+
+Week 7: Graphs (PART 6)
+  □ BFS, DFS implement করুন
+  □ Number of Islands, Course Schedule
+  □ Dijkstra, Union-Find
+
+Week 8: DP (PART 8)
+  □ Fibonacci, Climbing Stairs, House Robber
+  □ LCS, Coin Change, 0/1 Knapsack
+  □ Jump Game (Greedy)
+
+Daily: ১ Medium + ১ Easy। Mock করুন নিজে।
+```
+
+### Month 3 — Advanced + Mock (দিন 61-90)
+
+```
+Week 9: Advanced DSA (PART 9)
+  □ Hash Map patterns: LRU Cache, Group Anagrams
+  □ Backtracking: Subsets, Permutations, N-Queens
+  □ Bit Manipulation: Single Number, Missing Number
+
+Week 10-11: Mock Interviews
+  □ LeetCode Contest সপ্তাহে ১ টি
+  □ Pramp / Interviewing.io mock করুন
+  □ Blind 75 remaining problems
+
+Week 12: Company Preparation
+  □ Target company এর Glassdoor reviews পড়ুন
+  □ Previous interview questions research
+  □ HR questions practice করুন বাংলায়
+
+Final Week: Review + Rest
+  □ Weak areas revisit
+  □ Interview আগের রাতে ভালো ঘুমান
+```
+
+### Resources
+
+```
+Practice Platforms:
+  🔗 LeetCode (leetcode.com) — সবচেয়ে গুরুত্বপূর্ণ
+  🔗 HackerRank — BD companies তে প্রায়ই ব্যবহার
+  🔗 Codeforces — Competitive programming
+  🔗 AlgoExpert — Video explanations
+
+Study Resources:
+  📚 "Cracking the Coding Interview" — Gayle McDowell
+  📚 "Introduction to Algorithms" (CLRS) — Reference
+  📹 Abdul Bari (YouTube) — Algorithm বাংলায় কাছাকাছি
+  📹 NeetCode.io — LeetCode solutions with patterns
+
+BD Community:
+  💬 Facebook: "CSE Jobs Bangladesh"
+  💬 Facebook: "Competitive Programming Bangladesh"
+  💬 Telegram: BD Tech Career groups
+```
+
+---
+
+## ১২.৬ Final Tips & Resources
+
+### Interview এর দিন
+
+```
+আগের রাতে:
+  ✅ সমস্ত algorithm একবার review করুন
+  ✅ ৭-৮ ঘণ্টা ঘুমান
+  ✅ Interview platform (Zoom/Google Meet) test করুন
+
+Interview এর দিন:
+  ✅ ৩০ মিনিট আগে ready হন
+  ✅ Quiet environment নিশ্চিত করুন
+  ✅ পানি কাছে রাখুন
+  ✅ Paper ও pen রাখুন (dry run এর জন্য)
+
+Mental preparation:
+  "আমি জানি না" বলা ঠিক আছে — honestly বলুন
+  Stuck হলে: "এই approach এ O(n²) হচ্ছে, optimize করি" — process দেখান
+  Interviewer আপনার enemy নন — সাথে work করতে চান
+```
+
+### Long-term Career Growth
+
+```
+Junior SWE হওয়ার পরে:
+  Year 1-2: Codebase বুঝুন, quick delivery করুন
+  Year 2-3: System design শিখুন, code review করুন
+  Year 3-5: Tech Lead বা Senior SWE
+  Year 5+:  Staff Engineer, Engineering Manager, বা Startup
+
+বাংলাদেশ থেকে Remote opportunity:
+  → LinkedIn profile optimize করুন (English)
+  → GitHub এ open source contribute করুন
+  → Personal projects deploy করুন
+  → Toptal, Crossover, Remote.com তে apply করুন
+  → English communication practice করুন (daily)
+```
+
+### Final Words
+
+```
+🎯 DSA শেখা marathon — sprint নয়। Consistent থাকুন।
+
+📊 LeetCode Easy 50 → Medium 100 → Hard 25 এই order এ।
+
+🤝 Community তে থাকুন — একা শেখা কঠিন।
+
+💪 Rejection হলে: feedback নিন, শিখুন, আবার apply করুন।
+
+🇧🇩 বাংলাদেশের tech industry দ্রুত বাড়ছে।
+    আপনার সুযোগ আছে — প্রস্তুত থাকুন।
+
+সাফল্য কামনায় — শুভকামনা! 🚀
+```
+
+---
+
+> **✅ DSA Junior Engineer Handbook সম্পূর্ণ হয়েছে! (12/12 PARTS)**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
 *হ্যান্ডবুক তৈরিতে: Senior Software Engineer, Competitive Programmer & DSA Instructor*
 *Version: 1.0 | তারিখ: মে ২০২৬*
-*মোট PART: 12 | চলমান — PART 1–8 সম্পন্ন*
+*মোট PART: 12 | সম্পূর্ণ — PART 1–12 সম্পন্ন ✅*
