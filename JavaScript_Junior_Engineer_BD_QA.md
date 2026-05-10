@@ -20,7 +20,7 @@
 |:-:|------|------------|:------:|
 | 📘 | [**PART 1** — JavaScript Fundamentals](#part1) | Variables, Data Types, Functions, Scope, Hoisting, Closures | ✅ |
 | 📗 | [**PART 2** — Advanced JavaScript](#part2) | Execution Context, Event Loop, Promises, Async/Await, Prototype | 🔜 |
-| 📙 | [**PART 3** — DOM & Browser APIs](#part3) | DOM Manipulation, Events, Local Storage, Cookies | 🔜 |
+| 📙 | [**PART 3** — DOM & Browser APIs](#part3) | DOM Manipulation, Events, Local Storage, Cookies | ✅ |
 | 📕 | [**PART 4** — ES6+ Features](#part4) | Destructuring, Spread/Rest, Optional Chaining, Map, Set | 🔜 |
 | 📓 | [**PART 5** — Asynchronous JavaScript](#part5) | Callbacks, Promises, Async/Await, Error Handling | 🔜 |
 | 📔 | [**PART 6** — Object-Oriented JavaScript](#part6) | OOP, Classes, Prototypes, SOLID | 🔜 |
@@ -85,7 +85,19 @@
 <summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-*(শীঘ্রই আসছে)*
+- [৩.১ DOM কী?](#৩১-dom-কী)
+- [৩.২ DOM Manipulation](#৩২-dom-manipulation)
+- [৩.৩ DOM Traversal](#৩৩-dom-traversal)
+- [৩.৪ Event Handling](#৩৪-event-handling)
+- [৩.৫ Event Bubbling](#৩৫-event-bubbling)
+- [৩.৬ Event Capturing](#৩৬-event-capturing)
+- [৩.৭ Event Delegation](#৩৭-event-delegation)
+- [৩.৮ Local Storage](#৩৮-local-storage)
+- [৩.৯ Session Storage](#৩৯-session-storage)
+- [৩.১০ Cookies](#৩১০-cookies)
+- [৩.১১ Browser APIs](#৩১১-browser-apis)
+- [৩.১২ Form Validation](#৩১২-form-validation)
+- [৩.১৩ Interview Q&A](#৩১৩-part-3--interview-questions--answers)
 
 </details>
 
@@ -3169,3 +3181,1122 @@ console.log("D");
 > **🚀 PART 3 আসছে:** DOM & Browser APIs — DOM Manipulation, Event Handling, Event Bubbling/Capturing, Event Delegation, Local Storage, Cookies এবং আরও অনেক কিছু।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 3 দাও" লিখুন।
+
+
+---
+
+<a id="part3"></a>
+
+# PART 3 — DOM & Browser APIs
+
+> **📍 এই PART-এর Sections:** [৩.১ DOM কী?](#৩১-dom-কী) · [৩.২ DOM Manipulation](#৩২-dom-manipulation) · [৩.৩ DOM Traversal](#৩৩-dom-traversal) · [৩.৪ Event Handling](#৩৪-event-handling) · [৩.৫ Event Bubbling](#৩৫-event-bubbling) · [৩.৬ Event Capturing](#৩৬-event-capturing) · [৩.৭ Event Delegation](#৩৭-event-delegation) · [৩.৮ Local Storage](#৩৮-local-storage) · [৩.৯ Session Storage](#৩৯-session-storage) · [৩.১০ Cookies](#৩১০-cookies) · [৩.১১ Browser APIs](#৩১১-browser-apis) · [৩.১২ Form Validation](#৩১২-form-validation) · [৩.১৩ Interview Q&A](#৩১৩-part-3--interview-questions--answers)
+
+---
+
+## ৩.১ DOM কী?
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**DOM (Document Object Model)** হলো HTML document-এর একটি tree-shaped representation যা browser তৈরি করে। JavaScript এই tree-এর মাধ্যমে HTML elements পড়তে, পরিবর্তন করতে, যোগ করতে ও মুছতে পারে।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> একটি পারিবারিক বংশতালিকার মতো। বাবা-মা → সন্তান → নাতিপুতি। HTML-এ `<html>` হলো root, `<body>` তার সন্তান, `<div>`, `<p>` তার নাতি। DOM এই সম্পর্ক map করে এবং JavaScript সেই map ব্যবহার করে যেকোনো element-এ পৌঁছাতে পারে।
+
+### 📊 DOM Tree Visualization
+
+```
+Document
+└── <html>
+    ├── <head>
+    │   ├── <title> "My Page" </title>
+    │   └── <meta charset="UTF-8">
+    └── <body>
+        ├── <h1 id="title"> Hello </h1>
+        ├── <nav class="menu">
+        │   ├── <a href="/"> Home </a>
+        │   └── <a href="/about"> About </a>
+        └── <div class="container">
+            ├── <p> Paragraph 1 </p>
+            └── <ul>
+                ├── <li> Item 1 </li>
+                └── <li> Item 2 </li>
+```
+
+### 📊 DOM Node Types
+
+| Node Type | উদাহরণ |
+|-----------|---------|
+| **Element Node** | `<div>`, `<p>`, `<span>` |
+| **Text Node** | `"Hello World"` (element-এর ভেতরের text) |
+| **Attribute Node** | `id="title"`, `class="menu"` |
+| **Comment Node** | `<!-- comment -->` |
+| **Document Node** | `document` object নিজে |
+
+---
+
+## ৩.২ DOM Manipulation
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Element Select করা
+
+```javascript
+// ১. getElementById — সবচেয়ে দ্রুত (single element)
+const title = document.getElementById("title");
+
+// ২. getElementsByClassName — HTMLCollection (live)
+const items = document.getElementsByClassName("item");
+// items[0], items[1] — index দিয়ে access
+
+// ৩. getElementsByTagName — HTMLCollection
+const paragraphs = document.getElementsByTagName("p");
+
+// ৪. querySelector — CSS selector, প্রথম match
+const btn = document.querySelector("#submit-btn");
+const firstItem = document.querySelector(".item");
+const input = document.querySelector("input[type='email']");
+
+// ৫. querySelectorAll — NodeList (সব match)
+const allItems = document.querySelectorAll(".item");
+allItems.forEach(item => console.log(item.textContent));
+
+// ৬. Modern selectors
+const nav = document.querySelector("nav > a:first-child");
+const checked = document.querySelectorAll("input:checked");
+```
+
+### 💻 Content পরিবর্তন করা
+
+```javascript
+const el = document.querySelector("#message");
+
+// ১. textContent — plain text (XSS safe ✅)
+el.textContent = "নতুন বার্তা";
+console.log(el.textContent); // "নতুন বার্তা"
+
+// ২. innerHTML — HTML parse করে (XSS risk ⚠️)
+el.innerHTML = "<strong>Bold</strong> text";
+el.innerHTML = "<img src=x onerror=alert(1)>"; // ❌ XSS!
+
+// ✅ User input হলে textContent ব্যবহার করুন
+el.textContent = userInput; // XSS safe
+
+// ৩. innerText — visible text শুধু (CSS-aware)
+el.innerText = "দৃশ্যমান text";
+
+// ৪. value — input elements
+const input = document.querySelector("#name");
+input.value = "Rahim";
+console.log(input.value); // "Rahim"
+```
+
+### 💻 Attributes পরিবর্তন করা
+
+```javascript
+const img = document.querySelector("img");
+const link = document.querySelector("a");
+
+// getAttribute / setAttribute / removeAttribute
+console.log(img.getAttribute("src"));      // "photo.jpg"
+img.setAttribute("src", "new-photo.jpg");
+img.setAttribute("alt", "New Photo");
+img.removeAttribute("title");
+
+// Direct property access (বেশি ব্যবহৃত)
+img.src = "new-photo.jpg";
+img.alt = "New Photo";
+link.href = "https://example.com";
+link.target = "_blank";
+
+// dataset — data-* attributes
+// HTML: <div data-user-id="123" data-role="admin">
+const div = document.querySelector("[data-user-id]");
+console.log(div.dataset.userId);  // "123"
+console.log(div.dataset.role);    // "admin"
+div.dataset.status = "active";    // data-status="active" যোগ হয়
+```
+
+### 💻 CSS Styles পরিবর্তন করা
+
+```javascript
+const box = document.querySelector(".box");
+
+// ১. Inline style
+box.style.backgroundColor = "blue";
+box.style.fontSize = "18px";
+box.style.display = "none";     // hide
+box.style.display = "";         // inline style সরিয়ে default
+
+// ২. CSS Classes (বেশি ভালো পদ্ধতি)
+box.classList.add("active");
+box.classList.remove("hidden");
+box.classList.toggle("dark-mode");    // থাকলে সরায়, না থাকলে যোগ করে
+box.classList.contains("active");     // true/false
+box.classList.replace("old", "new");
+
+// ৩. getComputedStyle — computed styles পড়া
+const styles = window.getComputedStyle(box);
+console.log(styles.fontSize);    // "18px"
+console.log(styles.color);       // "rgb(0, 0, 0)"
+```
+
+### 💻 Element তৈরি ও যোগ করা
+
+```javascript
+// ১. createElement
+const newDiv = document.createElement("div");
+newDiv.className = "card";
+newDiv.textContent = "নতুন Card";
+
+// ২. append / prepend / before / after (modern)
+const container = document.querySelector(".container");
+container.append(newDiv);           // শেষে যোগ
+container.prepend(newDiv);          // শুরুতে যোগ
+
+const existingEl = document.querySelector(".existing");
+existingEl.before(newDiv);          // existingEl-এর আগে
+existingEl.after(newDiv);           // existingEl-এর পরে
+
+// ৩. appendChild / insertBefore (পুরনো)
+container.appendChild(newDiv);
+container.insertBefore(newDiv, existingEl);
+
+// ৪. innerHTML দিয়ে (সহজ কিন্তু XSS risk)
+container.innerHTML += "<div class='card'>নতুন</div>";
+
+// ৫. insertAdjacentHTML (নিরাপদ + দ্রুত)
+container.insertAdjacentHTML("beforeend", "<div>শেষে</div>");
+container.insertAdjacentHTML("afterbegin", "<div>শুরুতে</div>");
+// positions: beforebegin, afterbegin, beforeend, afterend
+
+// ৬. Element remove করা
+const toRemove = document.querySelector(".old-item");
+toRemove.remove();                  // modern
+toRemove.parentNode.removeChild(toRemove); // পুরনো
+
+// ৭. DocumentFragment — performance optimization
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < 100; i++) {
+  const li = document.createElement("li");
+  li.textContent = `Item ${i}`;
+  fragment.appendChild(li);
+}
+document.querySelector("ul").appendChild(fragment); // একবারেই DOM update
+```
+
+### ⚠️ Common Mistakes
+
+```javascript
+// ❌ innerHTML দিয়ে user input
+el.innerHTML = userInput; // XSS vulnerability!
+// ✅ textContent
+el.textContent = userInput;
+
+// ❌ Loop-এ বারবার DOM update (reflow)
+for (let i = 0; i < 1000; i++) {
+  list.innerHTML += "<li>" + i + "</li>"; // প্রতিবার reflow!
+}
+// ✅ DocumentFragment বা একবারে innerHTML
+```
+
+---
+
+## ৩.৩ DOM Traversal
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Navigation Properties
+
+```javascript
+const parent = document.querySelector(".parent");
+
+// Parent navigation
+parent.parentNode;           // যেকোনো node (text node সহ)
+parent.parentElement;        // শুধু element parent
+
+// Children navigation
+parent.childNodes;           // সব child nodes (text nodes সহ)
+parent.children;             // শুধু element children (HTMLCollection)
+parent.firstChild;           // প্রথম child node (text হতে পারে)
+parent.firstElementChild;    // প্রথম element child
+parent.lastChild;
+parent.lastElementChild;
+parent.childElementCount;    // কতটি element child
+
+// Sibling navigation
+const child = parent.firstElementChild;
+child.nextSibling;           // পরের node
+child.nextElementSibling;    // পরের element
+child.previousSibling;
+child.previousElementSibling;
+
+// closest — ancestor খোঁজা
+const btn = document.querySelector(".btn");
+const form = btn.closest("form");    // btn-এর সবচেয়ে কাছের form ancestor
+const modal = btn.closest(".modal"); // closest CSS selector match
+
+// matches — CSS selector check
+btn.matches(".primary-btn");   // true/false
+btn.matches("[disabled]");
+
+// Practical example
+document.querySelector("ul").querySelectorAll("li").forEach((li, i) => {
+  li.textContent = `Item ${i + 1}`;
+  li.dataset.index = i;
+});
+```
+
+---
+
+## ৩.৪ Event Handling
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Event** হলো browser-এ ঘটে যাওয়া যেকোনো ঘটনা — click, keypress, scroll, form submit। JavaScript এই events-এ **listen** করে এবং **react** করে।
+
+### 💻 Event Listener যোগ করার পদ্ধতি
+
+```javascript
+const btn = document.querySelector("#myBtn");
+
+// ১. addEventListener (সবচেয়ে ভালো পদ্ধতি ✅)
+btn.addEventListener("click", function(event) {
+  console.log("Clicked!", event);
+});
+
+// Arrow function
+btn.addEventListener("click", (e) => {
+  console.log("Target:", e.target);
+});
+
+// Named function (remove করা সম্ভব)
+function handleClick(e) {
+  console.log("Click handled");
+}
+btn.addEventListener("click", handleClick);
+btn.removeEventListener("click", handleClick); // সরানো যায়
+
+// ২. Inline HTML (এড়িয়ে চলুন ❌)
+// <button onclick="handleClick()">Click</button>
+
+// ৩. on-property (সীমাবদ্ধ)
+btn.onclick = function() { console.log("clicked"); };
+// শুধু একটি handler — পরের টি আগেরটি override করে
+```
+
+### 💻 Event Object (e / event)
+
+```javascript
+document.querySelector("form").addEventListener("submit", (e) => {
+  e.preventDefault();   // form submit হবে না (page reload রোধ)
+
+  console.log(e.type);         // "submit"
+  console.log(e.target);       // form element
+  console.log(e.currentTarget); // listener যেখানে attached
+
+  // Mouse events
+  console.log(e.clientX, e.clientY);   // viewport position
+  console.log(e.pageX, e.pageY);       // page position
+  console.log(e.button);               // 0=left, 1=middle, 2=right
+
+  // Keyboard events
+  console.log(e.key);         // "Enter", "a", "ArrowUp"
+  console.log(e.code);        // "KeyA", "Space"
+  console.log(e.ctrlKey);     // Ctrl চাপা আছে? true/false
+  console.log(e.shiftKey);
+  console.log(e.altKey);
+
+  e.stopPropagation();  // bubbling বন্ধ
+});
+
+// Common Events
+const events = [
+  // Mouse: click, dblclick, mousedown, mouseup, mouseover, mouseout, mousemove
+  // Keyboard: keydown, keyup, keypress (deprecated)
+  // Form: submit, change, input, focus, blur, reset
+  // Window: load, DOMContentLoaded, resize, scroll
+  // Touch: touchstart, touchend, touchmove
+];
+```
+
+### 💻 Practical Event Examples
+
+```javascript
+// ১. Input live validation
+const emailInput = document.querySelector("#email");
+emailInput.addEventListener("input", (e) => {
+  const valid = e.target.value.includes("@");
+  e.target.classList.toggle("valid", valid);
+  e.target.classList.toggle("invalid", !valid);
+});
+
+// ২. Keyboard shortcuts
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key === "s") {
+    e.preventDefault();
+    saveDocument();
+  }
+  if (e.key === "Escape") closeModal();
+});
+
+// ৩. Once option — একবার শুনবে
+btn.addEventListener("click", handleClick, { once: true });
+
+// ৪. Passive option — scroll performance
+window.addEventListener("scroll", onScroll, { passive: true });
+```
+
+---
+
+## ৩.৫ Event Bubbling
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Event Bubbling** হলো যখন কোনো element-এ event ঘটে, সেই event সেই element থেকে শুরু হয়ে parent → grandparent → document পর্যন্ত উপরে "bubble" করে।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> পানিতে ঢিল ফেললে বুদবুদ নিচ থেকে উপরে ওঠে। Event ঘটে innermost element-এ, তারপর উপরে উঠতে থাকে।
+
+### 💻 Bubbling Example
+
+```html
+<div id="outer">    <!-- ③ তৃতীয়ে fire হয় -->
+  <div id="middle"> <!-- ② দ্বিতীয়ে fire হয় -->
+    <button id="inner">Click me</button> <!-- ① প্রথমে fire হয় -->
+  </div>
+</div>
+```
+
+```javascript
+document.getElementById("inner").addEventListener("click", () => {
+  console.log("Inner clicked");   // ① প্রথমে
+});
+
+document.getElementById("middle").addEventListener("click", () => {
+  console.log("Middle clicked");  // ② দ্বিতীয়ে (bubble)
+});
+
+document.getElementById("outer").addEventListener("click", () => {
+  console.log("Outer clicked");   // ③ তৃতীয়ে (bubble)
+});
+
+// inner button click করলে:
+// Inner clicked
+// Middle clicked
+// Outer clicked
+```
+
+### 💻 Bubbling বন্ধ করা
+
+```javascript
+document.getElementById("inner").addEventListener("click", (e) => {
+  e.stopPropagation(); // bubble বন্ধ — parent-এ পৌঁছাবে না
+  console.log("Inner only");
+});
+
+// stopImmediatePropagation — same element-এর অন্য handlers-ও বন্ধ
+btn.addEventListener("click", (e) => {
+  e.stopImmediatePropagation();
+  console.log("Only this handler");
+});
+btn.addEventListener("click", () => {
+  console.log("This won't run");  // blocked
+});
+```
+
+---
+
+## ৩.৬ Event Capturing
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Event Capturing** (বা Trickling) হলো bubbling-এর বিপরীত — event document থেকে নিচের দিকে target element পর্যন্ত ভ্রমণ করে। Default-এ disabled — তৃতীয় argument `true` দিলে সক্রিয় হয়।
+
+### 💻 Event Flow — তিনটি Phase
+
+```
+Event Flow (click on #inner):
+
+CAPTURING Phase (↓):          BUBBLING Phase (↑):
+document                       #inner
+  ↓                              ↑
+html                           #middle
+  ↓                              ↑
+body                           #outer
+  ↓                              ↑
+#outer                         body
+  ↓                              ↑
+#middle                        html
+  ↓                              ↑
+#inner (TARGET Phase)          document
+```
+
+```javascript
+// Bubbling (default, 3rd arg false বা omit)
+outer.addEventListener("click", () => console.log("Outer bubble"), false);
+
+// Capturing (3rd arg = true)
+outer.addEventListener("click", () => console.log("Outer capture"), true);
+middle.addEventListener("click", () => console.log("Middle capture"), true);
+
+// inner click করলে:
+// Outer capture   ← capturing phase (বাইরে থেকে)
+// Middle capture  ← capturing phase
+// Inner...        ← target phase
+// Middle bubble   ← bubbling phase (ভেতর থেকে)
+// Outer bubble    ← bubbling phase
+```
+
+### 📊 Bubbling vs Capturing
+
+| | Bubbling | Capturing |
+|--|---------|-----------|
+| **Direction** | ভেতর → বাইরে ↑ | বাইরে → ভেতর ↓ |
+| **Default** | ✅ (3rd arg false) | ❌ (3rd arg true) |
+| **ব্যবহার** | সাধারণ event handling | বিশেষ intercept দরকারে |
+
+---
+
+## ৩.৭ Event Delegation
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Event Delegation** হলো child elements-এ আলাদা আলাদা listener না দিয়ে **parent element-এ একটি listener** দেওয়া এবং bubbling ব্যবহার করে কোন child-এ click হয়েছে বের করা।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> অফিসে ১০০ জন কর্মীর কাছে আলাদা আলাদা ফোন না দিয়ে একটি receptionist রাখা হলো। যে call আসে, receptionist বুঝে সঠিক ব্যক্তির কাছে পাঠায়। Event Delegation এই receptionist।
+
+### 💻 Event Delegation Examples
+
+```javascript
+// ❌ Non-delegated — প্রতিটি item-এ listener (inefficient)
+document.querySelectorAll(".todo-item").forEach(item => {
+  item.addEventListener("click", handleItemClick);
+  // নতুন item যোগ হলে তাতে listener নেই!
+});
+
+// ✅ Delegated — parent-এ একটি listener
+const todoList = document.querySelector("#todo-list");
+todoList.addEventListener("click", (e) => {
+  // কোন child-এ click হয়েছে?
+  const item = e.target.closest(".todo-item");
+  if (!item) return; // list-এ click কিন্তু item-এ নয়
+
+  if (e.target.matches(".delete-btn")) {
+    item.remove();
+  } else if (e.target.matches(".complete-btn")) {
+    item.classList.toggle("completed");
+  } else {
+    item.classList.toggle("selected");
+  }
+});
+
+// dynamically যোগ করা items-এ এও কাজ করবে!
+function addItem(text) {
+  const li = document.createElement("li");
+  li.className = "todo-item";
+  li.innerHTML = `
+    <span>${text}</span>
+    <button class="complete-btn">✓</button>
+    <button class="delete-btn">✗</button>
+  `;
+  todoList.appendChild(li);
+  // নতুন listener দিতে হয়নি!
+}
+```
+
+### 📊 Event Delegation এর সুবিধা
+
+| সুবিধা | ব্যাখ্যা |
+|--------|---------|
+| **Memory efficient** | ১০০টির বদলে একটি listener |
+| **Dynamic elements** | নতুন যোগ হওয়া elements-এও কাজ করে |
+| **Code simple** | Listener management সহজ |
+| **Performance** | Attach/detach overhead কম |
+
+---
+
+## ৩.৮ Local Storage
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Local Storage** হলো browser-এ data store করার একটি mechanism যা **permanent** — browser বন্ধ করলেও, computer restart করলেও data থাকে। Origin-specific (same domain, same protocol, same port)।
+
+### 💻 Local Storage API
+
+```javascript
+// ১. Data সংরক্ষণ
+localStorage.setItem("username", "Rahim");
+localStorage.setItem("theme", "dark");
+
+// Object/Array সংরক্ষণ (stringify করতে হবে)
+const user = { name: "Rahim", age: 25, role: "admin" };
+localStorage.setItem("user", JSON.stringify(user));
+
+const tasks = ["Task 1", "Task 2", "Task 3"];
+localStorage.setItem("tasks", JSON.stringify(tasks));
+
+// ২. Data পড়া
+const username = localStorage.getItem("username"); // "Rahim"
+const theme = localStorage.getItem("theme");       // "dark"
+const missing = localStorage.getItem("notExist");  // null
+
+// Object পড়া (parse করতে হবে)
+const storedUser = JSON.parse(localStorage.getItem("user"));
+console.log(storedUser.name); // "Rahim"
+
+const storedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+// || "[]" — null হলে empty array default
+
+// ৩. Data মুছে ফেলা
+localStorage.removeItem("theme");
+localStorage.clear(); // সব মুছে ফেলা
+
+// ৪. Keys iterate করা
+for (let i = 0; i < localStorage.length; i++) {
+  const key = localStorage.key(i);
+  console.log(key, localStorage.getItem(key));
+}
+
+// ৫. Storage event (অন্য tab-এ change detect করা)
+window.addEventListener("storage", (e) => {
+  console.log("Key changed:", e.key);
+  console.log("Old value:", e.oldValue);
+  console.log("New value:", e.newValue);
+});
+```
+
+### 💻 Practical: Dark Mode সংরক্ষণ
+
+```javascript
+// সংরক্ষণ
+function toggleDarkMode() {
+  const isDark = document.body.classList.toggle("dark-mode");
+  localStorage.setItem("darkMode", isDark ? "true" : "false");
+}
+
+// Page load-এ apply
+const savedTheme = localStorage.getItem("darkMode");
+if (savedTheme === "true") {
+  document.body.classList.add("dark-mode");
+}
+```
+
+---
+
+## ৩.৯ Session Storage
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Session Storage** Local Storage-এর মতোই, কিন্তু **tab/browser বন্ধ করলে data মুছে যায়**। প্রতিটি tab-এর আলাদা session storage।
+
+### 💻 Session Storage API
+
+```javascript
+// API একই — localStorage → sessionStorage
+sessionStorage.setItem("formData", JSON.stringify({ step: 2, data: {} }));
+const formData = JSON.parse(sessionStorage.getItem("formData"));
+sessionStorage.removeItem("formData");
+sessionStorage.clear();
+
+// Practical: Multi-step form progress
+function saveProgress(step, data) {
+  sessionStorage.setItem("formStep", step);
+  sessionStorage.setItem("formData", JSON.stringify(data));
+}
+
+function loadProgress() {
+  return {
+    step: parseInt(sessionStorage.getItem("formStep") || "1"),
+    data: JSON.parse(sessionStorage.getItem("formData") || "{}")
+  };
+}
+```
+
+### 📊 localStorage vs sessionStorage vs Cookie
+
+| | localStorage | sessionStorage | Cookie |
+|--|-------------|---------------|--------|
+| **Lifetime** | Permanent | Tab বন্ধ পর্যন্ত | Expiry date পর্যন্ত |
+| **Storage** | ~5-10 MB | ~5 MB | ~4 KB |
+| **Server access** | ❌ | ❌ | ✅ (HTTP header) |
+| **Tab sharing** | ✅ | ❌ (per tab) | ✅ |
+| **API** | key-value | key-value | string |
+| **Use case** | Theme, preferences | Form progress | Auth token, session |
+
+---
+
+## ৩.১০ Cookies
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Cookie** হলো server বা client থেকে set করা ছোট data যা প্রতিটি HTTP request-এ server-এ পাঠানো হয়। Authentication, session tracking-এ ব্যবহৃত।
+
+### 💻 Cookie Manipulation
+
+```javascript
+// Cookie set (basic)
+document.cookie = "username=Rahim";
+
+// Options সহ
+document.cookie = "token=abc123; expires=Thu, 31 Dec 2026 23:59:59 GMT; path=/; Secure; SameSite=Strict";
+
+// Max-Age (seconds) দিয়ে
+document.cookie = "session=xyz; max-age=3600; path=/"; // 1 ঘন্টা
+
+// Cookie read — সব cookies একসাথে আসে
+console.log(document.cookie); // "username=Rahim; token=abc123"
+
+// নির্দিষ্ট cookie read করার utility
+function getCookie(name) {
+  const cookies = document.cookie.split("; ");
+  const found = cookies.find(c => c.startsWith(name + "="));
+  return found ? found.split("=")[1] : null;
+}
+console.log(getCookie("username")); // "Rahim"
+
+// Cookie delete — expires অতীতে সেট
+document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+
+// Cookie utility class
+class CookieManager {
+  static set(name, value, days = 7, options = {}) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    const secure = options.secure ? "; Secure" : "";
+    const sameSite = `; SameSite=${options.sameSite || "Lax"}`;
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=${options.path || "/"}${secure}${sameSite}`;
+  }
+
+  static get(name) {
+    const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+    return match ? decodeURIComponent(match[2]) : null;
+  }
+
+  static delete(name) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+  }
+}
+
+CookieManager.set("theme", "dark", 30);
+console.log(CookieManager.get("theme")); // "dark"
+```
+
+### ⚠️ Cookie Security Flags
+
+| Flag | ব্যাখ্যা |
+|------|---------|
+| **Secure** | শুধু HTTPS-এ পাঠানো হবে |
+| **HttpOnly** | JavaScript access করতে পারবে না (XSS protection, server set করে) |
+| **SameSite=Strict** | Cross-site request-এ পাঠানো হবে না (CSRF protection) |
+| **SameSite=Lax** | Top-level navigation-এ পাঠানো হবে |
+| **SameSite=None** | Cross-site-এ পাঠানো হবে (Secure লাগবে) |
+
+---
+
+## ৩.১১ Browser APIs
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Geolocation API
+
+```javascript
+// ব্যবহারকারীর অবস্থান জানা
+if ("geolocation" in navigator) {
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude, accuracy } = position.coords;
+      console.log(`Lat: ${latitude}, Lng: ${longitude}`);
+    },
+    (error) => {
+      console.error("Error:", error.message);
+    },
+    { enableHighAccuracy: true, timeout: 5000 }
+  );
+
+  // Continuous tracking
+  const watchId = navigator.geolocation.watchPosition(
+    (pos) => updateMap(pos.coords)
+  );
+  // বন্ধ করতে:
+  navigator.geolocation.clearWatch(watchId);
+}
+```
+
+### 💻 Intersection Observer API
+
+```javascript
+// Element viewport-এ এলে lazy load করা
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      // element দেখা যাচ্ছে
+      const img = entry.target;
+      img.src = img.dataset.src;      // lazy load
+      img.classList.add("visible");
+      observer.unobserve(img);        // একবারেই যথেষ্ট
+    }
+  });
+}, {
+  threshold: 0.1,        // 10% দেখা গেলে trigger
+  rootMargin: "0px 0px -100px 0px"  // 100px আগে trigger
+});
+
+document.querySelectorAll("img[data-src]").forEach(img => {
+  observer.observe(img);
+});
+```
+
+### 💻 History API
+
+```javascript
+// SPA routing
+window.history.pushState({ page: "about" }, "About", "/about");
+window.history.replaceState({ page: "home" }, "Home", "/");
+window.history.back();
+window.history.forward();
+window.history.go(-2);
+
+// Back/forward button handle
+window.addEventListener("popstate", (e) => {
+  console.log("State:", e.state);
+  renderPage(e.state?.page || "home");
+});
+```
+
+### 💻 Clipboard API
+
+```javascript
+// Copy to clipboard
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log("Copied!");
+  } catch (err) {
+    console.error("Copy failed:", err);
+  }
+}
+
+// Paste from clipboard
+async function pasteText() {
+  const text = await navigator.clipboard.readText();
+  console.log("Pasted:", text);
+}
+```
+
+### 💻 Notification API
+
+```javascript
+async function showNotification(title, body) {
+  const permission = await Notification.requestPermission();
+
+  if (permission === "granted") {
+    const notification = new Notification(title, {
+      body,
+      icon: "/icon.png",
+      badge: "/badge.png"
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      notification.close();
+    };
+  }
+}
+```
+
+### 💻 Web Storage Events ও Other Useful APIs
+
+```javascript
+// ১. ResizeObserver — element resize track
+const resizeObserver = new ResizeObserver(entries => {
+  entries.forEach(entry => {
+    const { width, height } = entry.contentRect;
+    console.log(`Size: ${width}x${height}`);
+  });
+});
+resizeObserver.observe(document.querySelector(".responsive-box"));
+
+// ২. MutationObserver — DOM change track
+const mutationObserver = new MutationObserver(mutations => {
+  mutations.forEach(mutation => {
+    console.log("DOM changed:", mutation.type);
+    mutation.addedNodes.forEach(node => console.log("Added:", node));
+  });
+});
+mutationObserver.observe(document.querySelector("#dynamic-content"), {
+  childList: true,
+  subtree: true,
+  attributes: true
+});
+
+// ৩. Page Visibility API
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    pauseVideo(); // tab hidden হলে pause
+  } else {
+    resumeVideo();
+  }
+});
+
+// ৪. Online/Offline detection
+window.addEventListener("online", () => console.log("Back online!"));
+window.addEventListener("offline", () => console.log("Offline!"));
+console.log(navigator.onLine); // true/false
+```
+
+---
+
+## ৩.১২ Form Validation
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 HTML5 Built-in Validation
+
+```html
+<form id="registration-form" novalidate>
+  <input type="text" id="name" required minlength="2" maxlength="50"
+         placeholder="পুরো নাম">
+  <input type="email" id="email" required placeholder="ইমেইল">
+  <input type="tel" id="phone" pattern="[0-9]{11}" placeholder="01XXXXXXXXX">
+  <input type="password" id="password" required minlength="8">
+  <input type="number" id="age" min="18" max="100">
+  <button type="submit">নিবন্ধন করুন</button>
+</form>
+```
+
+### 💻 Custom JavaScript Validation
+
+```javascript
+class FormValidator {
+  constructor(formId) {
+    this.form = document.getElementById(formId);
+    this.errors = {};
+    this.setupValidation();
+  }
+
+  // Validation rules
+  validators = {
+    name: (value) => {
+      if (!value.trim()) return "নাম আবশ্যক";
+      if (value.trim().length < 2) return "নাম কমপক্ষে ২ অক্ষর হতে হবে";
+      return null; // null = valid
+    },
+
+    email: (value) => {
+      if (!value) return "ইমেইল আবশ্যক";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) return "সঠিক ইমেইল দিন";
+      return null;
+    },
+
+    phone: (value) => {
+      if (!value) return "ফোন নম্বর আবশ্যক";
+      const phoneRegex = /^01[3-9]\d{8}$/; // BD mobile
+      if (!phoneRegex.test(value)) return "সঠিক বাংলাদেশি নম্বর দিন (01XXXXXXXXX)";
+      return null;
+    },
+
+    password: (value) => {
+      if (!value) return "পাসওয়ার্ড আবশ্যক";
+      if (value.length < 8) return "পাসওয়ার্ড কমপক্ষে ৮ অক্ষর";
+      if (!/[A-Z]/.test(value)) return "একটি বড় হাতের অক্ষর লাগবে";
+      if (!/[0-9]/.test(value)) return "একটি সংখ্যা লাগবে";
+      return null;
+    }
+  };
+
+  validateField(fieldName, value) {
+    const validator = this.validators[fieldName];
+    if (!validator) return null;
+
+    const error = validator(value);
+    this.showError(fieldName, error);
+    return error;
+  }
+
+  showError(fieldName, error) {
+    const field = this.form.querySelector(`#${fieldName}`);
+    const errorEl = this.form.querySelector(`#${fieldName}-error`);
+
+    if (error) {
+      field?.classList.add("invalid");
+      field?.classList.remove("valid");
+      if (errorEl) errorEl.textContent = error;
+    } else {
+      field?.classList.remove("invalid");
+      field?.classList.add("valid");
+      if (errorEl) errorEl.textContent = "";
+    }
+  }
+
+  setupValidation() {
+    // Real-time validation on input
+    ["name", "email", "phone", "password"].forEach(fieldName => {
+      const field = this.form.querySelector(`#${fieldName}`);
+      field?.addEventListener("blur", (e) => {
+        this.validateField(fieldName, e.target.value);
+      });
+      field?.addEventListener("input", (e) => {
+        if (this.errors[fieldName]) { // error থাকলেই live validate
+          this.validateField(fieldName, e.target.value);
+        }
+      });
+    });
+
+    // Form submit
+    this.form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      let hasError = false;
+      ["name", "email", "phone", "password"].forEach(fieldName => {
+        const value = this.form.querySelector(`#${fieldName}`)?.value || "";
+        const error = this.validateField(fieldName, value);
+        if (error) {
+          this.errors[fieldName] = error;
+          hasError = true;
+        }
+      });
+
+      if (!hasError) {
+        this.onSuccess();
+      }
+    });
+  }
+
+  onSuccess() {
+    const formData = new FormData(this.form);
+    const data = Object.fromEntries(formData.entries());
+    console.log("Form submitted:", data);
+    // API call করুন
+  }
+}
+
+const validator = new FormValidator("registration-form");
+```
+
+### 💻 Constraint Validation API
+
+```javascript
+const input = document.querySelector("#email");
+
+// Built-in validation state
+console.log(input.validity.valid);       // সব ঠিক আছে?
+console.log(input.validity.valueMissing); // required কিন্তু খালি?
+console.log(input.validity.typeMismatch); // email format ভুল?
+console.log(input.validity.tooShort);    // minlength পূরণ হয়নি?
+console.log(input.validity.patternMismatch); // pattern match করেনি?
+console.log(input.validationMessage);    // browser-এর error message
+
+// Custom error set
+input.setCustomValidity("এই ইমেইল ইতিমধ্যে নিবন্ধিত");
+input.setCustomValidity(""); // error clear
+```
+
+---
+
+## ৩.১৩ PART 3 — Interview Questions & Answers
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 DOM & Events (Q1–Q15)</strong></summary>
+<br>
+
+**Q1: DOM কী? JavaScript কীভাবে DOM ব্যবহার করে?**
+> **A:** DOM (Document Object Model) হলো HTML document-এর tree-shaped object representation যা browser তৈরি করে। JavaScript `document` object-এর মাধ্যমে DOM access করে — elements পড়তে, পরিবর্তন করতে, যোগ করতে ও মুছতে পারে। DOM manipulation-ই web interactivity-র মূল ভিত্তি।
+
+**Q2: querySelector এবং getElementById-এর পার্থক্য?**
+> **A:** `getElementById` শুধু ID দিয়ে search করে, দ্রুততম। `querySelector` যেকোনো CSS selector ব্যবহার করতে পারে — class, attribute, pseudo-class সহ। `querySelectorAll` সব matches দেয়। Modern code-এ `querySelector`/`querySelectorAll` prefer করা হয়।
+
+**Q3: innerHTML এবং textContent-এর পার্থক্য? কোনটি নিরাপদ?**
+> **A:** `innerHTML` HTML parse করে — HTML tags কাজ করে কিন্তু user input দিলে XSS vulnerability। `textContent` plain text — HTML tags escape হয়, XSS safe। User input display করতে সবসময় `textContent` ব্যবহার করুন।
+
+**Q4: Event Bubbling কী? কীভাবে বন্ধ করবেন?**
+> **A:** Event ঘটে innermost element-এ, তারপর parent → grandparent → document পর্যন্ত উপরে "bubble" করে। বন্ধ করতে: `e.stopPropagation()` — bubble বন্ধ হয়। `e.stopImmediatePropagation()` — same element-এর অন্য handlers-ও বন্ধ।
+
+**Q5: Event Capturing কী? Bubbling থেকে কীভাবে আলাদা?**
+> **A:** Capturing-এ event document থেকে নিচে target-এ আসে। Bubbling-এ target থেকে উপরে যায়। Capturing activate: `addEventListener("click", fn, true)`। Event flow: Capturing (↓) → Target → Bubbling (↑)। Default হলো bubbling।
+
+**Q6: Event Delegation কী? কেন ব্যবহার করবেন?**
+> **A:** Child elements-এর বদলে parent-এ একটি listener — bubbling ব্যবহার করে কোন child-এ event হয়েছে `e.target` দিয়ে বের করা। সুবিধা: (১) Memory efficient, (২) Dynamic elements-এও কাজ করে, (৩) Code simple।
+
+**Q7: preventDefault() কী করে?**
+> **A:** Browser-এর default behavior বন্ধ করে। যেমন: form submit-এ page reload বন্ধ, `<a>` click-এ navigation বন্ধ, right-click-এ context menu বন্ধ। `stopPropagation()` থেকে আলাদা — এটি শুধু default বন্ধ করে, bubbling নয়।
+
+**Q8: Event-এ `target` এবং `currentTarget`-এর পার্থক্য?**
+> **A:** `e.target` — actual element যেখানে event ঘটেছে (innermost)। `e.currentTarget` — যে element-এ listener attached আছে। Delegation-এ: `e.target` = clicked child, `e.currentTarget` = parent যেখানে listener আছে।
+
+**Q9: DOMContentLoaded এবং load event-এর পার্থক্য?**
+> **A:** `DOMContentLoaded` — HTML parse হয়ে DOM ready হলে fire হয় (CSS, images-এর জন্য wait করে না)। `load` — সব resources (CSS, images, scripts) load সম্পন্ন হলে fire হয়। Script-এর জন্য সাধারণত `DOMContentLoaded` prefer করা হয়।
+
+**Q10: DocumentFragment কী? কেন ব্যবহার করবেন?**
+> **A:** DocumentFragment হলো একটি virtual DOM node — এতে elements যোগ করলে actual DOM-এ reflow হয় না। সব elements যোগ করে একবারে DOM-এ insert করলে performance অনেক ভালো। ১০০০ items insert-এ প্রতিটিতে reflow না হয়ে একটি reflow।
+
+**Q11: Local Storage এবং Session Storage-এর পার্থক্য?**
+> **A:** `localStorage` — permanent, browser বন্ধেও থাকে, সব tab share করে। `sessionStorage` — tab বন্ধ হলে মুছে যায়, প্রতিটি tab আলাদা। উভয়ে ~5MB, শুধু string store করে (object-এ JSON.stringify/parse দরকার), server-এ যায় না।
+
+**Q12: Cookie-এর HttpOnly এবং Secure flag কী?**
+> **A:** `HttpOnly` — JavaScript দিয়ে cookie read করা যাবে না (XSS attack থেকে রক্ষা — server set করে)। `Secure` — শুধু HTTPS connection-এ পাঠানো হবে। `SameSite=Strict` — CSRF attack থেকে রক্ষা।
+
+**Q13: Intersection Observer কী? কীভাবে ব্যবহার করবেন?**
+> **A:** Element কখন viewport-এ enter/exit করে তা detect করে, scroll event ছাড়াই। Lazy loading, infinite scroll, animation trigger-এ ব্যবহার। `scroll` event-এর চেয়ে অনেক বেশি performant।
+
+**Q14: MutationObserver কী?**
+> **A:** DOM-এ কোনো change হলে detect করে — attribute change, child nodes যোগ/বাদ, text content change। Virtual DOM implementation, dynamic content monitoring-এ ব্যবহার।
+
+**Q15: Form validation-এ HTML5 API vs JavaScript-এর পার্থক্য?**
+> **A:** HTML5 built-in: `required`, `minlength`, `pattern` — সহজ কিন্তু custom error message বা complex logic কঠিন। JavaScript: সম্পূর্ণ control, custom messages, async validation (API call), multi-field validation সম্ভব। Production-এ দুটিই ব্যবহার করা হয়।
+
+</details>
+
+<details>
+<summary><strong>🔹 Tricky & Practical Questions (Q16–Q20)</strong></summary>
+<br>
+
+**Q16: Event listener remove করতে না পারলে কী সমস্যা হয়?**
+> **A:** **Memory leak**। Element DOM থেকে remove হলেও listener active থাকলে সেই element ও তার closure garbage collected হয় না। `removeEventListener` দিয়ে remove করুন। অথবা `{ once: true }` option ব্যবহার করুন।
+
+**Q17: `closest()` method কী করে?**
+> **A:** Current element থেকে শুরু করে ancestor chain-এ CSS selector match খোঁজে। Event delegation-এ `e.target.closest(".item")` দিয়ে nested element-এ click হলে parent item বের করা যায়।
+
+**Q18: Cookies JavaScript দিয়ে set করা এবং server দিয়ে set করার পার্থক্য?**
+> **A:** Server `Set-Cookie` header দিয়ে `HttpOnly` flag সহ cookie set করলে JavaScript access করতে পারে না (XSS safe)। JavaScript `document.cookie` দিয়ে set করলে JS-এ readable — sensitive data (auth token) server থেকে HttpOnly cookie-তে রাখুন।
+
+**Q19: Web Storage-এ Object সরাসরি রাখা যায় না কেন?**
+> **A:** Web Storage শুধু string store করে। Object রাখতে `JSON.stringify()`, পড়তে `JSON.parse()` দরকার। Function, `undefined`, `Symbol` JSON-এ serialize হয় না — হারিয়ে যায়।
+
+**Q20: Passive event listener কী? কেন দরকার?**
+> **A:** `{ passive: true }` option দিলে browser জানে এই listener `preventDefault()` call করবে না — তাই scroll rendering optimize করতে পারে। Touch/scroll events-এ passive listener না থাকলে browser scroll শুরু করার আগে JS-এর জন্য wait করে — জার্কি scroll। `window.addEventListener("scroll", fn, { passive: true })`।
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 4 আসছে:** ES6+ Features — Destructuring, Spread/Rest, Optional Chaining, Nullish Coalescing, Map, Set, WeakMap, WeakSet, Array Methods, Dynamic Import এবং আরও।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 4 দাও" লিখুন।
