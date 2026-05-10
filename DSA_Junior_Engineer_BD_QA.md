@@ -23,8 +23,8 @@
 | 📗 | [**PART 2** — Arrays & Strings](#part2) | Array, Prefix Sum, Sliding Window, Two Pointer, Kadane, Binary Search, Matrix |
 | 📙 | [**PART 3** — Linked List](#part3) | Singly/Doubly/Circular LL, Insert/Delete, Reverse, Cycle Detection, Floyd, Merge |
 | 📕 | [**PART 4** — Stack & Queue](#part4) | Stack, Queue, Circular Queue, Deque, Priority Queue, Monotonic Stack, Expression Eval |
-| 📓 | **PART 5** — Trees & Binary Trees | *(শীঘ্রই আসছে)* |
-| 📔 | **PART 6** — Graphs | *(শীঘ্রই আসছে)* |
+| 📓 | [**PART 5** — Trees & Binary Trees](#part5) | Tree, Binary Tree, BST, Traversal, BFS/DFS, AVL, Segment Tree, Tries |
+| 📔 | [**PART 6** — Graphs](#part6) | Graph Representation, BFS, DFS, Dijkstra, Bellman-Ford, Floyd, Topological Sort, Union-Find |
 | 📒 | **PART 7** — Sorting & Searching | *(শীঘ্রই আসছে)* |
 | 📃 | **PART 8** — Dynamic Programming & Greedy | *(শীঘ্রই আসছে)* |
 | 📄 | **PART 9** — Advanced DSA | *(শীঘ্রই আসছে)* |
@@ -68,6 +68,40 @@
 - [২.৮ Binary Search](#২৮-binary-search)
 - [২.৯ Matrix Operations](#২৯-matrix-operations)
 - [২.১০ PART 2 — Interview Q&A](#২১০-part-2--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৫.১ Tree কী?](#৫১-tree-কী)
+- [৫.২ Binary Tree](#৫২-binary-tree)
+- [৫.৩ Binary Search Tree (BST)](#৫৩-binary-search-tree-bst)
+- [৫.৪ Tree Traversal](#৫৪-tree-traversal)
+- [৫.৫ BFS — Level-Order Traversal](#৫৫-bfs--level-order-traversal)
+- [৫.৬ Height, Depth ও Diameter](#৫৬-height-depth-ও-diameter)
+- [৫.৭ Balanced Tree ও AVL](#৫৭-balanced-tree-ও-avl)
+- [৫.৮ Segment Tree](#৫৮-segment-tree)
+- [৫.৯ Trie](#৫৯-trie)
+- [৫.১০ PART 5 — Interview Q&A](#৫১০-part-5--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৬.১ Graph কী?](#৬১-graph-কী)
+- [৬.২ Graph Representation](#৬২-graph-representation)
+- [৬.৩ BFS](#৬৩-bfs)
+- [৬.৪ DFS](#৬৪-dfs)
+- [৬.৫ Cycle Detection](#৬৫-cycle-detection)
+- [৬.৬ Topological Sort](#৬৬-topological-sort)
+- [৬.৭ Shortest Path — Dijkstra](#৬৭-shortest-path--dijkstra)
+- [৬.৮ Bellman-Ford ও Floyd-Warshall](#৬৮-bellman-ford-ও-floyd-warshall)
+- [৬.৯ Union-Find (Disjoint Set)](#৬৯-union-find-disjoint-set)
+- [৬.১০ PART 6 — Interview Q&A](#৬১০-part-6--interview-qa)
 
 </details>
 
@@ -3672,6 +3706,1340 @@ def evaluate_infix(expression):
 
 ---
 
+
+
+<a id="part5"></a>
+
+# PART 5: Trees & Binary Trees (ট্রি ও বাইনারি ট্রি)
+
+> **পড়ার নির্দেশনা:** Tree হলো DSA এর সবচেয়ে গুরুত্বপূর্ণ non-linear structure। Traversal, BST, Height, Diameter — এগুলো interview তে বারবার আসে। Recursion দিয়ে ভাবতে শিখুন।
+
+---
+
+## ৫.১ Tree কী?
+
+### সংজ্ঞা
+
+**Tree** হলো connected, acyclic (cycle-free) undirected graph। Hierarchical data represent করে।
+
+```
+Tree Terminology:
+                    A          ← Root (কোনো parent নেই)
+                  /                   B       C      ← Internal Nodes
+               / \                     D   E       F    ← Leaves (কোনো child নেই)
+
+  Root:    A (top-most node)
+  Parent:  B হলো D ও E এর parent
+  Child:   D ও E হলো B এর children
+  Leaf:    D, E, F (children নেই)
+  Sibling: D ও E (same parent)
+  Depth:   Root থেকে node পর্যন্ত edge সংখ্যা
+           A→depth 0, B→depth 1, D→depth 2
+  Height:  Node থেকে deepest leaf পর্যন্ত edge সংখ্যা
+           A→height 2, B→height 1, D→height 0
+  Level:   depth + 1
+```
+
+### Tree এর Properties
+
+```
+n টি node থাকলে (n-1) টি edge
+Binary Tree: প্রতিটি node এ সর্বোচ্চ 2 টি child
+Full BT:     প্রতিটি node এ 0 বা 2 টি child
+Complete BT: শেষ level বাদে সব level পূর্ণ; শেষ level বামদিক থেকে পূর্ণ
+Perfect BT:  সব internal nodes এ 2 child; সব leaves same depth এ
+```
+
+---
+
+## ৫.২ Binary Tree
+
+### Node Structure
+
+```python
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# Tree তৈরি করা:
+#        1
+#       / #      2   3
+#     / #    4   5
+root = TreeNode(1)
+root.left = TreeNode(2)
+root.right = TreeNode(3)
+root.left.left = TreeNode(4)
+root.left.right = TreeNode(5)
+```
+
+### Mirror / Invert Binary Tree
+
+```python
+def invert_tree(root):
+    """Left ও Right subtree swap করো — O(n)"""
+    if not root:
+        return None
+    root.left, root.right = invert_tree(root.right), invert_tree(root.left)
+    return root
+
+# Original:          Inverted:
+#      1                  1
+#     / \                / #    2   3              3   2
+#   / \                    / #  4   5                  5   4
+```
+
+---
+
+## ৫.৩ Binary Search Tree (BST)
+
+### সংজ্ঞা
+
+**BST Property:** প্রতিটি node এর জন্য:
+- বাম subtree এর সব values < node value
+- ডান subtree এর সব values > node value
+
+```
+BST উদাহরণ:
+        8
+       /       3   10
+     / \        1   6    14
+       / \   /
+      4   7 13
+
+Search 6: root(8)→left→3→right→6 ✓  (3 steps)
+```
+
+### BST Insert, Search, Delete
+
+```python
+class BST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, val):
+        self.root = self._insert(self.root, val)
+
+    def _insert(self, node, val):
+        if not node:
+            return TreeNode(val)
+        if val < node.val:
+            node.left = self._insert(node.left, val)
+        elif val > node.val:
+            node.right = self._insert(node.right, val)
+        return node
+
+    def search(self, val):
+        return self._search(self.root, val)
+
+    def _search(self, node, val):
+        if not node or node.val == val:
+            return node
+        if val < node.val:
+            return self._search(node.left, val)
+        return self._search(node.right, val)
+
+    def delete(self, val):
+        self.root = self._delete(self.root, val)
+
+    def _delete(self, node, val):
+        if not node:
+            return None
+        if val < node.val:
+            node.left = self._delete(node.left, val)
+        elif val > node.val:
+            node.right = self._delete(node.right, val)
+        else:
+            # Case 1: No child
+            if not node.left and not node.right:
+                return None
+            # Case 2: One child
+            if not node.left:
+                return node.right
+            if not node.right:
+                return node.left
+            # Case 3: Two children — inorder successor দিয়ে replace
+            successor = self._find_min(node.right)
+            node.val = successor.val
+            node.right = self._delete(node.right, successor.val)
+        return node
+
+    def _find_min(self, node):
+        while node.left:
+            node = node.left
+        return node
+
+# BST Complexity:
+# Balanced BST: Search/Insert/Delete — O(log n)
+# Unbalanced (worst): O(n) — sorted array insert করলে skewed হয়
+```
+
+### BST Validation
+
+```python
+def is_valid_bst(root, min_val=float('-inf'), max_val=float('inf')):
+    """
+    প্রতিটি node এর value valid range এ আছে কিনা check করো।
+    O(n) time, O(h) space (h = height)
+    """
+    if not root:
+        return True
+    if root.val <= min_val or root.val >= max_val:
+        return False
+    return (is_valid_bst(root.left, min_val, root.val) and
+            is_valid_bst(root.right, root.val, max_val))
+
+# Intuition: Left subtree → max bound = root.val
+#            Right subtree → min bound = root.val
+```
+
+---
+
+## ৫.৪ Tree Traversal
+
+### চার ধরনের Traversal
+
+```python
+def inorder(root, result=[]):
+    """Left → Root → Right | BST এ sorted order দেয়"""
+    if root:
+        inorder(root.left, result)
+        result.append(root.val)
+        inorder(root.right, result)
+    return result
+
+def preorder(root, result=[]):
+    """Root → Left → Right | Tree copy, serialize"""
+    if root:
+        result.append(root.val)
+        preorder(root.left, result)
+        preorder(root.right, result)
+    return result
+
+def postorder(root, result=[]):
+    """Left → Right → Root | Tree delete, evaluate expression"""
+    if root:
+        postorder(root.left, result)
+        postorder(root.right, result)
+        result.append(root.val)
+    return result
+```
+
+### Traversal Dry Run
+
+```
+Tree:        1
+            /            2   3
+          /          4   5
+
+Inorder:   [4, 2, 5, 1, 3]   (L-Root-R)
+Preorder:  [1, 2, 4, 5, 3]   (Root-L-R)
+Postorder: [4, 5, 2, 3, 1]   (L-R-Root)
+```
+
+### Iterative Inorder (Stack দিয়ে)
+
+```python
+def inorder_iterative(root):
+    """Recursive এর stack-overflow এড়াতে iterative"""
+    result = []
+    stack = []
+    curr = root
+
+    while curr or stack:
+        # যতদূর পারো বামে যাও
+        while curr:
+            stack.append(curr)
+            curr = curr.left
+        # Pop ও process
+        curr = stack.pop()
+        result.append(curr.val)
+        # ডানে যাও
+        curr = curr.right
+
+    return result
+```
+
+---
+
+## ৫.৫ BFS — Level-Order Traversal
+
+```python
+from collections import deque
+
+def level_order(root):
+    """
+    Level by level traversal — O(n)
+    Interview classic: প্রতিটি level আলাদা list এ
+    """
+    if not root:
+        return []
+
+    result = []
+    queue = deque([root])
+
+    while queue:
+        level_size = len(queue)
+        level = []
+
+        for _ in range(level_size):
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+
+        result.append(level)
+
+    return result
+
+# Tree:        1
+#             / #            2   3
+#           / #          4   5
+#
+# Output: [[1], [2, 3], [4, 5]]
+
+def right_side_view(root):
+    """প্রতিটি level এর rightmost element — BFS"""
+    if not root:
+        return []
+    result = []
+    queue = deque([root])
+    while queue:
+        level_size = len(queue)
+        for i in range(level_size):
+            node = queue.popleft()
+            if i == level_size - 1:
+                result.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+    return result
+```
+
+---
+
+## ৫.৬ Height, Depth ও Diameter
+
+### Height of Binary Tree
+
+```python
+def height(root):
+    """
+    Root থেকে deepest leaf পর্যন্ত edge সংখ্যা।
+    Empty tree: -1 (edge counting) বা 0 (node counting)
+    O(n) — সব node visit করতে হয়
+    """
+    if not root:
+        return -1
+    return 1 + max(height(root.left), height(root.right))
+
+# Dry Run:
+#      1 (height=2)
+#     / #    2   3 (height=1)  (height=0)
+#   / #  4   5 (height=0)   (height=0)
+#
+# height(4)=0, height(5)=0
+# height(2)=1+max(0,0)=1
+# height(3)=0
+# height(1)=1+max(1,0)=2
+```
+
+### Balanced Tree Check
+
+```python
+def is_balanced(root):
+    """
+    |height(left) - height(right)| <= 1 সব subtree তে।
+    O(n) — bottom-up -1 return করে shortcircuit।
+    """
+    def check(node):
+        if not node:
+            return 0
+        left_h = check(node.left)
+        if left_h == -1:
+            return -1
+        right_h = check(node.right)
+        if right_h == -1:
+            return -1
+        if abs(left_h - right_h) > 1:
+            return -1
+        return 1 + max(left_h, right_h)
+
+    return check(root) != -1
+```
+
+### Diameter of Binary Tree
+
+```python
+def diameter_of_binary_tree(root):
+    """
+    Tree এর দুটি node এর মধ্যে সবচেয়ে দীর্ঘ path (edges)।
+    Diameter = max(left_height + right_height) যেকোনো node এ।
+    O(n)
+    """
+    max_diameter = [0]
+
+    def height(node):
+        if not node:
+            return 0
+        left_h = height(node.left)
+        right_h = height(node.right)
+        max_diameter[0] = max(max_diameter[0], left_h + right_h)
+        return 1 + max(left_h, right_h)
+
+    height(root)
+    return max_diameter[0]
+
+# Tree:      1
+#           / #          2   3
+#         / #        4   5
+# Diameter = 3 (path: 4→2→1→3 or 5→2→1→3)
+```
+
+### Lowest Common Ancestor (LCA)
+
+```python
+def lca(root, p, q):
+    """
+    p ও q এর সর্বনিম্ন common ancestor।
+    O(n) — single pass।
+    """
+    if not root or root == p or root == q:
+        return root
+
+    left = lca(root.left, p, q)
+    right = lca(root.right, p, q)
+
+    if left and right:
+        return root  # p এক দিকে, q অন্য দিকে
+    return left or right  # দুটোই এক দিকে
+```
+
+---
+
+## ৫.৭ Balanced Tree ও AVL
+
+### কেন Balanced দরকার?
+
+```
+Unbalanced BST (worst case — sorted insert):
+  Insert: 1, 2, 3, 4, 5
+       1
+                 2
+                     3
+                         4
+                             5
+  Search O(n) — linked list এর মতো!
+
+Balanced BST: O(log n) guaranteed।
+```
+
+### AVL Tree কী?
+
+```
+AVL Tree = Self-balancing BST।
+Balance Factor = height(left) - height(right) ∈ {-1, 0, 1}
+
+Rotation দিয়ে balance রাখা হয়:
+  LL Rotation: Right rotate
+  RR Rotation: Left rotate
+  LR Rotation: Left rotate তারপর Right rotate
+  RL Rotation: Right rotate তারপর Left rotate
+
+Python তে সাধারণত:
+  - Interview তে concept জানলেই চলে
+  - sortedcontainers.SortedList ব্যবহার করুন
+  - Java তে TreeMap/TreeSet (Red-Black Tree backed)
+```
+
+---
+
+## ৫.৮ Segment Tree
+
+### কী ও কেন?
+
+```
+Segment Tree → Range queries efficiently (sum, min, max)।
+Array এর যেকোনো range এর sum/min/max O(log n) তে।
+Point update O(log n)।
+
+ছাড়া range sum: O(n) per query।
+Segment Tree: O(log n) per query, O(n log n) build।
+
+Use case: Competitive programming, DB range aggregation।
+```
+
+### Implementation
+
+```python
+class SegmentTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.tree = [0] * (4 * self.n)
+        self.build(arr, 0, 0, self.n - 1)
+
+    def build(self, arr, node, start, end):
+        if start == end:
+            self.tree[node] = arr[start]
+        else:
+            mid = (start + end) // 2
+            self.build(arr, 2*node+1, start, mid)
+            self.build(arr, 2*node+2, mid+1, end)
+            self.tree[node] = self.tree[2*node+1] + self.tree[2*node+2]
+
+    def query(self, node, start, end, l, r):
+        """Range sum [l, r]"""
+        if r < start or end < l:
+            return 0
+        if l <= start and end <= r:
+            return self.tree[node]
+        mid = (start + end) // 2
+        left_sum = self.query(2*node+1, start, mid, l, r)
+        right_sum = self.query(2*node+2, mid+1, end, l, r)
+        return left_sum + right_sum
+
+    def update(self, node, start, end, idx, val):
+        """Point update"""
+        if start == end:
+            self.tree[node] = val
+        else:
+            mid = (start + end) // 2
+            if idx <= mid:
+                self.update(2*node+1, start, mid, idx, val)
+            else:
+                self.update(2*node+2, mid+1, end, idx, val)
+            self.tree[node] = self.tree[2*node+1] + self.tree[2*node+2]
+
+    def range_sum(self, l, r):
+        return self.query(0, 0, self.n-1, l, r)
+
+    def point_update(self, idx, val):
+        self.update(0, 0, self.n-1, idx, val)
+
+# arr = [1, 3, 5, 7, 9, 11]
+# st = SegmentTree(arr)
+# st.range_sum(1, 3)  → 15 (3+5+7)
+# st.point_update(1, 10)
+# st.range_sum(1, 3)  → 22 (10+5+7)
+```
+
+---
+
+## ৫.৯ Trie
+
+### সংজ্ঞা
+
+**Trie** (Prefix Tree) হলো string storage এর জন্য tree। প্রতিটি node একটি character represent করে।
+
+```
+Insert: "cat", "car", "card", "care", "bat"
+
+         root
+        /           c      b
+       |      |
+       a      a
+      / \     |
+     t   r    t
+         |
+         d  e
+        (words end marked)
+```
+
+```python
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        """O(m) — m = word length"""
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        node.is_end = True
+
+    def search(self, word):
+        """O(m) — exact match"""
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+        return node.is_end
+
+    def starts_with(self, prefix):
+        """O(m) — prefix exists কিনা"""
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+        return True
+
+    def autocomplete(self, prefix):
+        """Prefix দিয়ে শুরু হওয়া সব words"""
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return []
+            node = node.children[char]
+        results = []
+        self._dfs(node, prefix, results)
+        return results
+
+    def _dfs(self, node, current, results):
+        if node.is_end:
+            results.append(current)
+        for char, child in node.children.items():
+            self._dfs(child, current + char, results)
+
+# trie = Trie()
+# trie.insert("apple")
+# trie.insert("app")
+# trie.search("app")         → True
+# trie.starts_with("ap")    → True
+# trie.autocomplete("ap")   → ["app", "apple"]
+```
+
+### Trie Use Cases
+
+```
+✅ Autocomplete / Search suggestions
+✅ Spell checker
+✅ IP routing (Longest Prefix Match)
+✅ Word search in board (DFS + Trie)
+✅ Dictionary implementation
+✅ Prefix matching
+```
+
+---
+
+## ৫.১০ PART 5 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Inorder, Preorder, Postorder traversal এর মধ্যে পার্থক্য কী? কোনটি কোথায় ব্যবহার হয়?**
+
+> **উত্তর:** Inorder (L→Root→R): BST তে sorted order দেয়। কোনো BST এর sorted sequence দরকার হলে। Preorder (Root→L→R): Tree copy বা serialize করতে। Expression tree evaluate এ prefix notation। Postorder (L→R→Root): Tree delete করতে (আগে children তারপর parent)। Expression tree এ postfix। Mnemonic: In=Between, Pre=Before, Post=After (root এর position)।
+
+**Q2: BST এর worst case কখন O(n) হয়? কীভাবে এড়ানো যায়?**
+
+> **উত্তর:** Sorted বা reverse-sorted array insert করলে BST একটি skewed linked list হয়ে যায়। তখন height = n-1, সব operation O(n)। এড়ানোর উপায়: Self-balancing BST (AVL Tree, Red-Black Tree) ব্যবহার করুন। Python এ `sortedcontainers.SortedList`, Java তে `TreeMap`/`TreeSet`।
+
+**Q3: Binary Tree এর diameter কীভাবে বের করবেন?**
+
+> **উত্তর:** Diameter হলো tree তে যেকোনো দুটি node এর মধ্যে সবচেয়ে দীর্ঘ path। প্রতিটি node এ left_height + right_height হিসাব করে maximum নিন। Single DFS pass এ O(n) তে সম্ভব — height function চলার সময় global max update করুন।
+
+**Q4: Trie কেন HashMap এর চেয়ে prefix search এ ভালো?**
+
+> **উত্তর:** HashMap তে prefix search করতে সব keys iterate করতে হয় — O(n×m)। Trie তে prefix এর depth পর্যন্ত O(m) তে পৌঁছানো যায়, তারপর DFS তে সব matches। Autocomplete, spell check এ Trie অপরিহার্য। Space: Trie O(n×m) worst case, কিন্তু common prefix share করে।
+
+**Q5: Segment Tree কখন ব্যবহার করবেন?**
+
+> **উত্তর:** যখন Array তে range query (sum/min/max) ও point/range update উভয়ই দরকার। Prefix Sum শুধু static array তে O(1) query কিন্তু O(n) update। Segment Tree dynamic array তে O(log n) query ও O(log n) update। Competitive programming, DB aggregate query optimization এ ব্যবহার।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| BST inorder traversal | Sorted ascending |
+| BST Search average | O(log n) |
+| BST Search worst | O(n) (skewed) |
+| Tree Height | O(n) |
+| Level Order traversal | BFS + Queue |
+| LCA algorithm | O(n) single DFS |
+| AVL balance factor | {-1, 0, 1} |
+| Segment Tree build | O(n) |
+| Segment Tree query | O(log n) |
+| Trie insert | O(m) |
+| Trie search | O(m) |
+| Trie use case | Prefix search, autocomplete |
+| Complete BT | Last level left-filled |
+| Perfect BT | All levels full |
+| Full BT | 0 or 2 children each |
+| Diameter formula | max(left_h + right_h) |
+
+---
+
+> **⚠️ PART 5 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part6"></a>
+
+# PART 6: Graphs (গ্রাফ)
+
+> **পড়ার নির্দেশনা:** Graph হলো DSA এর সবচেয়ে versatile structure। BFS/DFS দিয়ে শুরু করুন, তারপর Shortest Path ও Topological Sort। Interview তে Cycle Detection ও Dijkstra প্রায়ই আসে।
+
+---
+
+## ৬.১ Graph কী?
+
+### সংজ্ঞা
+
+**Graph** G = (V, E) — Vertices (nodes) ও Edges (connections) এর সমষ্টি।
+
+```
+Graph এর প্রকারভেদ:
+
+Undirected:        Directed:
+  A — B              A → B
+  |   |              ↑   ↓
+  C — D              C ← D
+
+Weighted:          Unweighted:
+  A —5— B            A — B
+  |3    |2           |   |
+  C —7— D            C — D
+
+Cyclic:            Acyclic (DAG):
+  A → B              A → B
+  ↑   ↓              ↓   ↓
+  D ← C              C → D
+
+Connected:         Disconnected:
+  A—B—C              A—B    C—D
+    |
+    D
+
+Special terms:
+  Degree:      undirected graph এ একটি node এর edges সংখ্যা
+  In-degree:   directed এ আসা edges
+  Out-degree:  directed এ যাওয়া edges
+  Path:        node sequence যেখানে consecutive nodes adjacent
+  Cycle:       start ও end same node
+  DAG:         Directed Acyclic Graph
+```
+
+---
+
+## ৬.২ Graph Representation
+
+### Adjacency List (সবচেয়ে বেশি ব্যবহৃত)
+
+```python
+# Undirected Graph
+graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'D'],
+    'C': ['A', 'D'],
+    'D': ['B', 'C']
+}
+
+# Directed Graph
+directed = {
+    0: [1, 2],
+    1: [3],
+    2: [3],
+    3: []
+}
+
+# Weighted Graph
+weighted = {
+    0: [(1, 5), (2, 3)],   # (neighbor, weight)
+    1: [(3, 2)],
+    2: [(3, 7)],
+    3: []
+}
+
+# Space: O(V + E) — sparse graph এ efficient
+```
+
+### Adjacency Matrix
+
+```python
+# n=4 nodes, 0-indexed
+n = 4
+matrix = [[0]*n for _ in range(n)]
+
+# Edge 0→1 add
+matrix[0][1] = 1
+# Weighted
+matrix[0][1] = 5
+
+# Space: O(V²) — dense graph এ ভালো
+# Check edge: O(1)
+# Find neighbors: O(V)
+```
+
+### Edge List
+
+```python
+edges = [(0, 1, 5), (0, 2, 3), (1, 3, 2), (2, 3, 7)]
+# (from, to, weight)
+# Kruskal's algorithm এ ব্যবহার হয়
+```
+
+```
+কোনটি কোথায়:
+  Adjacency List  → Sparse graph (E << V²), BFS/DFS
+  Adjacency Matrix → Dense graph, constant-time edge check
+  Edge List        → Kruskal's MST
+```
+
+---
+
+## ৬.৩ BFS
+
+### Breadth-First Search
+
+```python
+from collections import deque
+
+def bfs(graph, start):
+    """
+    Level by level explore — shortest path (unweighted) এ optimal।
+    O(V + E) time, O(V) space
+    """
+    visited = {start}
+    queue = deque([start])
+    order = []
+
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+    return order
+
+# Shortest Path with BFS
+def bfs_shortest_path(graph, start, end):
+    """Unweighted graph এ shortest path — O(V+E)"""
+    if start == end:
+        return [start]
+
+    visited = {start}
+    queue = deque([(start, [start])])  # (node, path)
+
+    while queue:
+        node, path = queue.popleft()
+
+        for neighbor in graph[node]:
+            if neighbor == end:
+                return path + [neighbor]
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, path + [neighbor]))
+
+    return []  # no path
+
+# BFS: Shortest path (unweighted), Level-order, Connected components
+```
+
+---
+
+## ৬.৪ DFS
+
+### Depth-First Search
+
+```python
+def dfs_recursive(graph, node, visited=None):
+    """
+    যতদূর পারো গভীরে যাও, তারপর backtrack।
+    O(V + E) time, O(V) space (recursion stack)
+    """
+    if visited is None:
+        visited = set()
+    visited.add(node)
+    result = [node]
+
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            result.extend(dfs_recursive(graph, neighbor, visited))
+
+    return result
+
+def dfs_iterative(graph, start):
+    """Stack দিয়ে iterative DFS"""
+    visited = set()
+    stack = [start]
+    result = []
+
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            visited.add(node)
+            result.append(node)
+            for neighbor in reversed(graph[node]):
+                if neighbor not in visited:
+                    stack.append(neighbor)
+
+    return result
+
+# DFS: Cycle detection, Topological sort, Connected components, Maze solving
+```
+
+### Number of Islands (Classic DFS Grid Problem)
+
+```python
+def num_islands(grid):
+    """
+    '1' = land, '0' = water।
+    Connected land groups এর সংখ্যা।
+    O(m × n)
+    """
+    if not grid:
+        return 0
+
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+
+    def dfs(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] == '0':
+            return
+        grid[r][c] = '0'   # visited mark
+        dfs(r+1, c)
+        dfs(r-1, c)
+        dfs(r, c+1)
+        dfs(r, c-1)
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                count += 1
+                dfs(r, c)
+
+    return count
+
+# grid = [
+#   ['1','1','0','0','0'],
+#   ['1','1','0','0','0'],
+#   ['0','0','1','0','0'],
+#   ['0','0','0','1','1']
+# ]
+# num_islands(grid) → 3
+```
+
+---
+
+## ৬.৫ Cycle Detection
+
+### Undirected Graph — DFS
+
+```python
+def has_cycle_undirected(graph, n):
+    """
+    Undirected graph এ cycle আছে কিনা।
+    DFS তে parent track করি।
+    O(V + E)
+    """
+    visited = set()
+
+    def dfs(node, parent):
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                if dfs(neighbor, node):
+                    return True
+            elif neighbor != parent:
+                return True  # cycle!
+        return False
+
+    for node in range(n):
+        if node not in visited:
+            if dfs(node, -1):
+                return True
+    return False
+```
+
+### Directed Graph — DFS + Rec Stack
+
+```python
+def has_cycle_directed(graph, n):
+    """
+    Directed graph এ cycle আছে কিনা।
+    rec_stack: current DFS path এ আছে এমন nodes।
+    O(V + E)
+    """
+    visited = set()
+    rec_stack = set()
+
+    def dfs(node):
+        visited.add(node)
+        rec_stack.add(node)
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                if dfs(neighbor):
+                    return True
+            elif neighbor in rec_stack:
+                return True  # back edge = cycle
+
+        rec_stack.remove(node)
+        return False
+
+    for node in range(n):
+        if node not in visited:
+            if dfs(node):
+                return True
+    return False
+```
+
+---
+
+## ৬.৬ Topological Sort
+
+### সংজ্ঞা
+
+**Topological Sort**: DAG (Directed Acyclic Graph) এর nodes এমনভাবে order করা যাতে প্রতিটি edge u→v তে u, v এর আগে আসে।
+
+```
+Use cases:
+  → Task scheduling (dependency order)
+  → Build system (Makefile, npm)
+  → Course prerequisites
+  → Compilation order
+```
+
+### Kahn's Algorithm (BFS-based)
+
+```python
+from collections import deque
+
+def topological_sort_kahn(n, edges):
+    """
+    In-degree 0 nodes দিয়ে শুরু।
+    O(V + E)
+    """
+    graph = {i: [] for i in range(n)}
+    in_degree = [0] * n
+
+    for u, v in edges:
+        graph[u].append(v)
+        in_degree[v] += 1
+
+    queue = deque([i for i in range(n) if in_degree[i] == 0])
+    order = []
+
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+
+        for neighbor in graph[node]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(order) == n:
+        return order
+    return []  # cycle exists!
+
+# n=4, edges = [(0,1),(0,2),(1,3),(2,3)]
+# in_degree: [0,1,1,2]
+# Queue: [0]
+# Process 0: queue=[1,2], order=[0]
+# Process 1: in_degree[3]=1, order=[0,1]
+# Process 2: in_degree[3]=0, queue=[3], order=[0,1,2]
+# Process 3: order=[0,1,2,3]
+```
+
+### DFS-based Topological Sort
+
+```python
+def topological_sort_dfs(graph, n):
+    """Postorder DFS → reverse = topological order"""
+    visited = set()
+    stack = []
+
+    def dfs(node):
+        visited.add(node)
+        for neighbor in graph.get(node, []):
+            if neighbor not in visited:
+                dfs(neighbor)
+        stack.append(node)  # postorder
+
+    for node in range(n):
+        if node not in visited:
+            dfs(node)
+
+    return stack[::-1]  # reverse
+```
+
+---
+
+## ৬.৭ Shortest Path — Dijkstra
+
+### সংজ্ঞা
+
+**Dijkstra's Algorithm**: Weighted graph এ single source থেকে সব nodes এর shortest path।
+**Constraint**: সব edge weight অবশ্যই non-negative।
+
+```python
+import heapq
+
+def dijkstra(graph, start, n):
+    """
+    Min-heap (priority queue) দিয়ে greedy approach।
+    O((V + E) log V)
+    graph: {node: [(neighbor, weight), ...]}
+    """
+    dist = [float('inf')] * n
+    dist[start] = 0
+    heap = [(0, start)]   # (distance, node)
+
+    while heap:
+        d, u = heapq.heappop(heap)
+
+        if d > dist[u]:
+            continue  # outdated entry
+
+        for v, weight in graph[u]:
+            new_dist = dist[u] + weight
+            if new_dist < dist[v]:
+                dist[v] = new_dist
+                heapq.heappush(heap, (new_dist, v))
+
+    return dist
+
+# Example:
+# graph = {
+#   0: [(1, 4), (2, 1)],
+#   1: [(3, 1)],
+#   2: [(1, 2), (3, 5)],
+#   3: []
+# }
+# dijkstra(graph, 0, 4) → [0, 3, 1, 4]
+# (0→2=1, 2→1=2→1 total=3, 1→3=3+1=4)
+
+# Dry Run:
+# heap=[(0,0)], dist=[0,∞,∞,∞]
+# pop (0,0): neighbors (1,4),(2,1)
+#   dist[1]=4, push (4,1); dist[2]=1, push (1,2)
+# heap=[(1,2),(4,1)]
+# pop (1,2): neighbors (1,2),(3,5)
+#   dist[1]=1+2=3 < 4 → update, push (3,1)
+#   dist[3]=1+5=6, push (6,3)
+# heap=[(3,1),(4,1),(6,3)]
+# pop (3,1): neighbors (3,1)
+#   dist[3]=3+1=4 < 6 → update, push (4,3)
+# Final: [0,3,1,4]
+```
+
+---
+
+## ৬.৮ Bellman-Ford ও Floyd-Warshall
+
+### Bellman-Ford — Negative Edges Handle করে
+
+```python
+def bellman_ford(n, edges, start):
+    """
+    Single source shortest path — negative edges সহ।
+    O(V × E) — V-1 বার relax করে।
+    Negative cycle detect করতে পারে।
+    """
+    dist = [float('inf')] * n
+    dist[start] = 0
+
+    for _ in range(n - 1):  # V-1 iterations
+        for u, v, w in edges:
+            if dist[u] != float('inf') and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+
+    # Negative cycle check
+    for u, v, w in edges:
+        if dist[u] != float('inf') and dist[u] + w < dist[v]:
+            return None  # negative cycle exists!
+
+    return dist
+
+# edges: [(u, v, weight), ...]
+# Dijkstra এর চেয়ে ধীর কিন্তু negative weight handle করে
+```
+
+### Floyd-Warshall — All Pairs Shortest Path
+
+```python
+def floyd_warshall(n, graph):
+    """
+    সব node pair এর মধ্যে shortest path।
+    O(V³) time, O(V²) space।
+    graph: n×n matrix, infinity for no edge.
+    """
+    dist = [row[:] for row in graph]  # copy
+
+    # k = intermediate node
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                if dist[i][k] + dist[k][j] < dist[i][j]:
+                    dist[i][j] = dist[i][k] + dist[k][j]
+
+    return dist
+
+# Use: dense graph, all-pairs shortest path, small n (≤ 500)
+```
+
+```
+Algorithm        Edge Weight    Time         Use Case
+Dijkstra         Non-negative   O((V+E)logV) Single source, large graph
+Bellman-Ford     Any (neg OK)   O(VE)        Negative edges, neg cycle detect
+Floyd-Warshall   Any            O(V³)        All pairs, dense/small graph
+BFS              Unweighted     O(V+E)       Unweighted shortest path
+```
+
+---
+
+## ৬.৯ Union-Find (Disjoint Set)
+
+### সংজ্ঞা
+
+**Union-Find** (Disjoint Set Union — DSU) efficiently manages connected components। দুটি key operation:
+- `find(x)`: x কোন component এ আছে?
+- `union(x, y)`: x ও y এর components merge করো।
+
+```python
+class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))  # নিজেই নিজের parent
+        self.rank = [0] * n           # union by rank
+        self.count = n                # component সংখ্যা
+
+    def find(self, x):
+        """Path compression — O(α(n)) amortized ≈ O(1)"""
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])  # flatten
+        return self.parent[x]
+
+    def union(self, x, y):
+        """Union by rank"""
+        px, py = self.find(x), self.find(y)
+        if px == py:
+            return False  # already connected
+
+        if self.rank[px] < self.rank[py]:
+            px, py = py, px
+        self.parent[py] = px
+        if self.rank[px] == self.rank[py]:
+            self.rank[px] += 1
+        self.count -= 1
+        return True
+
+    def connected(self, x, y):
+        return self.find(x) == self.find(y)
+
+# Example:
+uf = UnionFind(5)  # nodes: 0,1,2,3,4
+uf.union(0, 1)     # {0,1}, {2}, {3}, {4}
+uf.union(2, 3)     # {0,1}, {2,3}, {4}
+uf.union(1, 2)     # {0,1,2,3}, {4}
+print(uf.connected(0, 3))  # True
+print(uf.count)            # 2
+```
+
+### Kruskal's Minimum Spanning Tree (MST)
+
+```python
+def kruskal_mst(n, edges):
+    """
+    Minimum Spanning Tree — সব nodes connect করার minimum cost।
+    Greedy: lightest edge যোগ করো যদি cycle না হয়।
+    O(E log E) — sorting dominant।
+    """
+    edges.sort(key=lambda x: x[2])  # weight অনুযায়ী sort
+    uf = UnionFind(n)
+    mst_cost = 0
+    mst_edges = []
+
+    for u, v, w in edges:
+        if uf.union(u, v):           # cycle নেই
+            mst_cost += w
+            mst_edges.append((u, v, w))
+            if len(mst_edges) == n - 1:
+                break  # n-1 edges = spanning tree complete
+
+    return mst_cost, mst_edges
+
+# edges = [(0,1,4),(0,2,3),(1,2,1),(1,3,2),(2,3,4)]
+# Sorted: (1,2,1),(1,3,2),(0,2,3),(0,1,4),(2,3,4)
+# union(1,2): cost=1
+# union(1,3): cost=3
+# union(0,2): cost=6
+# MST edges: 3, cost=6
+```
+
+### Union-Find Use Cases
+
+```
+✅ Cycle detection in undirected graph
+✅ Minimum Spanning Tree (Kruskal's)
+✅ Number of connected components
+✅ Network connectivity
+✅ Friend circles / Social network components
+✅ Percolation problems
+```
+
+---
+
+## ৬.১০ PART 6 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: BFS ও DFS এর মধ্যে পার্থক্য কী? কোন problem এ কোনটি ব্যবহার করবেন?**
+
+> **উত্তর:** BFS (Queue): Level by level explore। Shortest path (unweighted), minimum steps, nearest neighbor। DFS (Stack/Recursion): যতদূর পারো গভীরে যাও। Cycle detection, Topological sort, Connected components, Maze solving, Backtracking। Rule: "Shortest/minimum" → BFS। "Exists/all paths/cycles" → DFS।
+
+**Q2: Dijkstra কেন negative edge weight handle করতে পারে না?**
+
+> **উত্তর:** Dijkstra greedy — একবার node process করলে তার distance final ধরে নেয়। Negative edge থাকলে পরে আরো ছোট path পাওয়া সম্ভব কিন্তু Dijkstra সেটা দেখে না। Solution: Negative edges এ Bellman-Ford ব্যবহার করুন — এটি V-1 বার সব edges relax করে।
+
+**Q3: Topological Sort শুধু DAG এ কাজ করে কেন?**
+
+> **উত্তর:** Cycle থাকলে topological order অসম্ভব। A→B→C→A cycle এ A কে B এর আগে রাখতে হবে (A→B এর জন্য), কিন্তু A কে C এর পরে রাখতে হবে (C→A এর জন্য) — contradiction! Kahn's algorithm এ cycle থাকলে output তে n nodes আসে না — এটি cycle detection ও করে।
+
+**Q4: Union-Find এর Path Compression কী? কেন দরকার?**
+
+> **উত্তর:** Path Compression: find() করার সময় root পর্যন্ত যাওয়ার পথে প্রতিটি node এর parent সরাসরি root করে দেওয়া। এতে পরের find() O(1) হয়। Union by Rank এর সাথে মিলিয়ে amortized O(α(n)) — practically O(1)। ছাড়া: deep tree হলে find() O(n) হতে পারে।
+
+**Q5: কোথায় Adjacency List ও কোথায় Adjacency Matrix ব্যবহার করবেন?**
+
+> **উত্তর:** Adjacency List: Sparse graph (edges কম, E << V²)। Space O(V+E)। BFS/DFS efficient। Adjacency Matrix: Dense graph (edges অনেক)। Space O(V²)। Edge existence check O(1)। Floyd-Warshall এ সুবিধাজনক। Real life: Social network (sparse) → List। Road network small city (dense) → Matrix।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| BFS data structure | Queue |
+| DFS data structure | Stack / Recursion |
+| BFS/DFS complexity | O(V + E) |
+| Dijkstra complexity | O((V+E) log V) |
+| Bellman-Ford complexity | O(V × E) |
+| Floyd-Warshall complexity | O(V³) |
+| Negative cycle detect | Bellman-Ford |
+| Topological sort → | DAG only |
+| Kahn's algorithm | BFS-based Topo sort |
+| MST algorithm (greedy edge) | Kruskal's |
+| MST algorithm (greedy node) | Prim's |
+| Union-Find find complexity | O(α(n)) ≈ O(1) |
+| Cycle (undirected) | DFS + parent track |
+| Cycle (directed) | DFS + rec_stack |
+| Number of Islands | DFS/BFS on grid |
+| DAG | Directed Acyclic Graph |
+
+---
+
+> **⚠️ PART 6 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
 *হ্যান্ডবুক তৈরিতে: Senior Software Engineer, Competitive Programmer & DSA Instructor*
 *Version: 1.0 | তারিখ: মে ২০২৬*
-*মোট PART: 12 | চলমান — PART 1–4 সম্পন্ন*
+*মোট PART: 12 | চলমান — PART 1–6 সম্পন্ন*
