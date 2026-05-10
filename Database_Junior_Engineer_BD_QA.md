@@ -34,6 +34,27 @@
 
 
 
+
+<details>
+<summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৫.১ ORM কী?](#৫১-orm-কী)
+- [৫.২ ORM vs Raw SQL](#৫২-orm-vs-raw-sql)
+- [৫.৩ Database Migration](#৫৩-database-migration)
+- [৫.৪ Connection Pooling](#৫৪-connection-pooling)
+- [৫.৫ N+1 Query Problem](#৫৫-n1-query-problem)
+- [৫.৬ Database Caching](#৫৬-database-caching)
+- [৫.৭ Pagination — Best Practices](#৫৭-pagination--best-practices)
+- [৫.৮ Soft Delete Pattern](#৫৮-soft-delete-pattern)
+- [৫.৯ Audit Trail Pattern](#৫৯-audit-trail-pattern)
+- [৫.১০ Multi-tenancy Design](#৫১০-multi-tenancy-design)
+- [৫.১১ Database Security](#৫১১-database-security)
+- [৫.১২ Backup & Recovery](#৫১২-backup--recovery)
+- [৫.১৩ Real Project — Job Portal Schema](#৫১৩-real-project--job-portal-schema)
+- [৫.১৪ PART 5 — Interview Q&A](#৫১৪-part-5--interview-questions--answers)
+
+</details>
 <details>
 <summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
