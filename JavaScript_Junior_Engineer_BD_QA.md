@@ -172,7 +172,17 @@
 <summary><strong>⚡ PART 11 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-*(শীঘ্রই আসছে)*
+- [১১.১ Browser Rendering Pipeline](#১১১-browser-rendering-pipeline)
+- [১১.২ Core Web Vitals](#১১২-core-web-vitals)
+- [১১.৩ Lazy Loading](#১১৩-lazy-loading)
+- [১১.৪ Code Splitting & Bundle Optimization](#১১৪-code-splitting--bundle-optimization)
+- [১১.৫ Memory Management](#১১৫-memory-management)
+- [১১.৬ Network Optimization](#১১৬-network-optimization)
+- [১১.৭ React Performance](#১১৭-react-performance)
+- [১১.৮ Web Workers](#১১৮-web-workers)
+- [১১.৯ Caching Strategies](#১১৯-caching-strategies)
+- [১১.১০ Performance Measurement](#১১১০-performance-measurement)
+- [১১.১১ Interview Q&A](#১১১১-part-11--interview-questions--answers)
 
 </details>
 
@@ -11173,3 +11183,1011 @@ export function useChat(roomId) {
 > **🚀 PART 11 আসছে:** Performance & Optimization — Lazy Loading, Code Splitting, Memory Management, Browser Rendering Pipeline, Core Web Vitals, Bundle Optimization।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 11 দাও" লিখুন।
+
+
+---
+
+<a id="part11"></a>
+
+# PART 11 — Performance & Optimization
+
+> **📍 এই PART-এর Sections:** [১১.১ Browser Rendering Pipeline](#১১১-browser-rendering-pipeline) · [১১.২ Core Web Vitals](#১১২-core-web-vitals) · [১১.৩ Lazy Loading](#১১৩-lazy-loading) · [১১.৪ Code Splitting & Bundle Optimization](#১১৪-code-splitting--bundle-optimization) · [১১.৫ Memory Management](#১১৫-memory-management) · [১১.৬ Network Optimization](#১১৬-network-optimization) · [১১.৭ React Performance](#১১৭-react-performance) · [১১.৮ Web Workers](#১১৮-web-workers) · [১১.৯ Caching Strategies](#১১৯-caching-strategies) · [১১.১০ Performance Measurement](#১১১০-performance-measurement) · [১১.১১ Interview Q&A](#১১১১-part-11--interview-questions--answers)
+
+---
+
+## ১১.১ Browser Rendering Pipeline
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 কীভাবে Browser একটি Page Render করে?
+
+```
+URL → DNS → TCP → HTTP Request → Server → HTML Response
+                                                 ↓
+HTML Parse → DOM Tree
+CSS Parse → CSSOM Tree
+            DOM + CSSOM → Render Tree → Layout → Paint → Composite
+                                           ↓          ↓
+                                      (Reflow)    (Repaint)
+```
+
+### 📊 Key Phases
+
+| Phase | কী হয় | Trigger |
+|-------|--------|---------|
+| **Parse** | HTML → DOM, CSS → CSSOM | Initial load |
+| **Style** | Computed styles প্রতিটি node-এ | CSS change |
+| **Layout/Reflow** | Element-এর size, position calculate | Width/height/margin change |
+| **Paint/Repaint** | Pixel fill করা (color, shadow) | Color, opacity change |
+| **Composite** | Layer merge করা | Transform, opacity (GPU) |
+
+### 💻 Reflow vs Repaint — কোনটা Expensive?
+
+```javascript
+// ❌ BAD — প্রতিবার style read করলে forced reflow হয় (layout thrashing)
+for (let i = 0; i < 1000; i++) {
+  element.style.left = element.offsetLeft + 10 + "px"; // read → write → read → write
+}
+
+// ✅ GOOD — batch reads, then batch writes
+const positions = elements.map(el => el.offsetLeft); // সব read একসাথে
+positions.forEach((pos, i) => {
+  elements[i].style.left = pos + 10 + "px"; // সব write একসাথে
+});
+
+// ✅ BEST — CSS transform (compositor thread, no reflow/repaint)
+element.style.transform = "translateX(10px)"; // GPU layer, no layout impact
+
+// Properties that cause Reflow (expensive):
+// width, height, padding, margin, border, top, left,
+// offsetWidth, offsetHeight, scrollTop, clientWidth, getBoundingClientRect()
+
+// Properties that only cause Repaint (less expensive):
+// color, background, border-color, box-shadow, visibility
+
+// Properties on compositor thread only (cheapest):
+// transform, opacity
+```
+
+### 💻 requestAnimationFrame — Smooth Animation
+
+```javascript
+// ❌ BAD — setTimeout-এ animation (drops frames)
+let pos = 0;
+function animate() {
+  pos += 2;
+  element.style.left = pos + "px";
+  if (pos < 500) setTimeout(animate, 16);
+}
+
+// ✅ GOOD — rAF syncs with browser repaint (60fps)
+let pos = 0;
+function animate() {
+  pos += 2;
+  element.style.transform = `translateX(${pos}px)`; // GPU layer
+  if (pos < 500) requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+// Animation cancel করা
+const id = requestAnimationFrame(animate);
+cancelAnimationFrame(id);
+```
+
+---
+
+## ১১.২ Core Web Vitals
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📊 Core Web Vitals — Google's Performance Metrics
+
+| Metric | Full Name | মাপে কী | ভালো | খারাপ |
+|--------|-----------|---------|------|-------|
+| **LCP** | Largest Contentful Paint | Loading speed | < 2.5s | > 4s |
+| **FID/INP** | Interaction to Next Paint | Interactivity | < 200ms | > 500ms |
+| **CLS** | Cumulative Layout Shift | Visual stability | < 0.1 | > 0.25 |
+| **TTFB** | Time to First Byte | Server response | < 800ms | > 1800ms |
+| **FCP** | First Contentful Paint | First content | < 1.8s | > 3s |
+
+### 💻 Performance API দিয়ে Measure করা
+
+```javascript
+// Navigation Timing
+const nav = performance.getEntriesByType("navigation")[0];
+console.log({
+  ttfb: nav.responseStart - nav.requestStart,
+  domLoad: nav.domContentLoadedEventEnd - nav.startTime,
+  fullLoad: nav.loadEventEnd - nav.startTime
+});
+
+// LCP measure
+const observer = new PerformanceObserver(list => {
+  const entries = list.getEntries();
+  const last = entries[entries.length - 1];
+  console.log("LCP:", last.renderTime || last.loadTime, "ms");
+});
+observer.observe({ entryTypes: ["largest-contentful-paint"] });
+
+// CLS measure
+let clsScore = 0;
+new PerformanceObserver(list => {
+  for (const entry of list.getEntries()) {
+    if (!entry.hadRecentInput) clsScore += entry.value;
+  }
+  console.log("CLS:", clsScore);
+}).observe({ entryTypes: ["layout-shift"] });
+
+// Custom measure
+performance.mark("start-operation");
+// ... কোনো কাজ
+performance.mark("end-operation");
+performance.measure("My Operation", "start-operation", "end-operation");
+const measure = performance.getEntriesByName("My Operation")[0];
+console.log(`Operation took: ${measure.duration.toFixed(2)}ms`);
+```
+
+---
+
+## ১১.৩ Lazy Loading
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Image Lazy Loading
+
+```html
+<!-- ১. Native HTML lazy loading -->
+<img src="photo.jpg" loading="lazy" alt="Photo" width="600" height="400">
+
+<!-- ২. Blur placeholder technique -->
+<img
+  src="tiny-placeholder.jpg"
+  data-src="full-resolution.jpg"
+  class="lazy-image"
+  loading="lazy"
+  alt="Product photo"
+>
+```
+
+```javascript
+// ৩. Intersection Observer (custom lazy load)
+const imageObserver = new IntersectionObserver(
+  (entries, observer) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+
+      const img = entry.target;
+      img.src = img.dataset.src;
+      img.classList.remove("lazy");
+      img.classList.add("loaded");
+      observer.unobserve(img); // একবার load হলে observe বন্ধ
+    });
+  },
+  {
+    rootMargin: "200px 0px", // viewport-এর 200px আগে load শুরু
+    threshold: 0
+  }
+);
+
+document.querySelectorAll("img[data-src]").forEach(img => {
+  imageObserver.observe(img);
+});
+
+// ৪. Infinite Scroll
+const sentinel = document.getElementById("load-more-sentinel");
+new IntersectionObserver(async (entries) => {
+  if (entries[0].isIntersecting && !isLoading) {
+    isLoading = true;
+    const newItems = await fetchNextPage();
+    appendItems(newItems);
+    isLoading = false;
+  }
+}, { threshold: 0.1 }).observe(sentinel);
+```
+
+### 💻 React — Lazy Component Loading
+
+```jsx
+import { lazy, Suspense, useState } from "react";
+
+// Route-based code splitting
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const AdminPanel = lazy(() => import("./pages/AdminPanel"));
+const ReportPage = lazy(() => import("./pages/ReportPage"));
+
+// Loading fallback
+function PageLoader() {
+  return (
+    <div className="page-loader">
+      <div className="spinner" />
+      <p>Loading...</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/reports" element={<ReportPage />} />
+        </Routes>
+      </Suspense>
+    </Router>
+  );
+}
+
+// Component-level lazy loading (conditional)
+function ProductPage({ showChart }) {
+  const Chart = lazy(() => import("./components/HeavyChart"));
+
+  return (
+    <div>
+      <ProductInfo />
+      {showChart && (
+        <Suspense fallback={<div>Chart লোড হচ্ছে...</div>}>
+          <Chart />
+        </Suspense>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+## ১১.৪ Code Splitting & Bundle Optimization
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Dynamic Import
+
+```javascript
+// ১. On-demand feature load
+async function loadEditor() {
+  const { Editor } = await import("./Editor"); // chunk তৈরি হবে
+  return new Editor();
+}
+
+button.addEventListener("click", async () => {
+  const module = await import("./heavy-module");
+  module.doSomething();
+});
+
+// ২. Conditional load
+async function processFile(file) {
+  if (file.type === "application/pdf") {
+    const { PDFParser } = await import("./pdf-parser"); // only when needed
+    return PDFParser.parse(file);
+  }
+  // default processing
+}
+
+// ৩. Prefetch — user likely to need it (background)
+// <link rel="prefetch" href="/dashboard.js">
+const prefetchDashboard = () => {
+  import(/* webpackPrefetch: true */ "./pages/Dashboard");
+};
+
+// Preload — user definitely needs it soon
+// import(/* webpackPreload: true */ "./critical-module");
+```
+
+### 💻 Vite / Webpack Bundle Optimization
+
+```javascript
+// vite.config.js
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting
+        manualChunks: {
+          "react-vendor": ["react", "react-dom"],
+          "router": ["react-router-dom"],
+          "ui-lib": ["@mui/material", "@emotion/react"],
+          "charts": ["recharts"]
+        }
+      }
+    },
+    chunkSizeWarningLimit: 500, // KB
+    minify: "esbuild",          // fast minification
+    sourcemap: false            // production-এ off
+  }
+});
+```
+
+```javascript
+// Tree shaking — unused code eliminate
+// ❌ BAD — entire lodash import (70KB+)
+import _ from "lodash";
+const result = _.chunk([1,2,3,4], 2);
+
+// ✅ GOOD — only chunk function (few KB)
+import chunk from "lodash/chunk";
+const result = chunk([1,2,3,4], 2);
+
+// ✅ BEST — native JS (no dependency)
+const result = arr.reduce((acc, _, i) =>
+  i % 2 === 0 ? [...acc, arr.slice(i, i + 2)] : acc, []);
+```
+
+---
+
+## ১১.৫ Memory Management
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 Memory Leak কীভাবে হয়?
+
+```javascript
+// ১. ❌ Event listener remove না করা
+function addHandler() {
+  const data = new Array(10000).fill("leak"); // large data closure-এ
+  document.addEventListener("click", () => {
+    console.log(data.length); // data আটকে থাকবে
+  });
+}
+// প্রতিবার addHandler() call — নতুন listener + data leak
+
+// ✅ FIX
+function setupHandler() {
+  const data = new Array(10000).fill("ok");
+  const handler = () => console.log(data.length);
+  document.addEventListener("click", handler);
+  return () => document.removeEventListener("click", handler); // cleanup return
+}
+const cleanup = setupHandler();
+// যখন দরকার নেই: cleanup()
+
+// ২. ❌ setInterval বন্ধ না করা
+function startPolling() {
+  const interval = setInterval(() => {
+    fetchData(); // forever runs
+  }, 5000);
+  // interval id হারিয়ে গেলে clear করা যায় না
+}
+
+// ✅ FIX
+let pollingId = null;
+function startPolling() {
+  pollingId = setInterval(fetchData, 5000);
+}
+function stopPolling() {
+  clearInterval(pollingId);
+}
+
+// ৩. ❌ Detached DOM node reference
+let detachedNode;
+function createLeak() {
+  const el = document.createElement("div");
+  document.body.appendChild(el);
+  detachedNode = el; // reference রেখে দিলাম
+  document.body.removeChild(el); // DOM থেকে বের, কিন্তু reference-এ আছে
+}
+
+// ৪. ❌ Unbounded cache (Map/Object)
+const cache = new Map();
+function fetchAndCache(key) {
+  if (!cache.has(key)) {
+    cache.set(key, expensiveOperation(key)); // forever grows
+  }
+  return cache.get(key);
+}
+
+// ✅ FIX — LRU Cache with size limit
+class LRUCache {
+  constructor(maxSize = 100) {
+    this.cache = new Map();
+    this.maxSize = maxSize;
+  }
+  get(key) {
+    if (!this.cache.has(key)) return null;
+    const value = this.cache.get(key);
+    this.cache.delete(key); // move to end (most recent)
+    this.cache.set(key, value);
+    return value;
+  }
+  set(key, value) {
+    this.cache.delete(key);
+    this.cache.set(key, value);
+    if (this.cache.size > this.maxSize) {
+      this.cache.delete(this.cache.keys().next().value); // remove oldest
+    }
+  }
+}
+```
+
+### 💻 React Memory Leak Fix
+
+```jsx
+// ❌ BAD — unmount-এর পরেও state set
+function DataComponent() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetchData().then(d => setData(d)); // component unmount হলেও set হবে
+  }, []);
+
+  return <div>{data}</div>;
+}
+
+// ✅ GOOD — AbortController দিয়ে cleanup
+function DataComponent() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/data", { signal: controller.signal })
+      .then(res => res.json())
+      .then(d => setData(d))
+      .catch(err => {
+        if (err.name !== "AbortError") console.error(err);
+      });
+
+    return () => controller.abort(); // cleanup on unmount
+  }, []);
+
+  return <div>{data}</div>;
+}
+
+// useEffect cleanup patterns
+useEffect(() => {
+  const subscription = eventBus.subscribe(handler);
+  return () => subscription.unsubscribe(); // cleanup
+}, []);
+
+useEffect(() => {
+  const id = setInterval(tick, 1000);
+  return () => clearInterval(id); // cleanup
+}, []);
+```
+
+---
+
+## ১১.৬ Network Optimization
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 HTTP Caching Headers
+
+```javascript
+// Express server-এ caching headers
+app.use("/static", express.static("public", {
+  maxAge: "1y",          // 1 year cache (versioned files)
+  etag: true,
+  lastModified: true
+}));
+
+// API responses
+app.get("/api/products", async (req, res) => {
+  const products = await getProducts();
+
+  // ETag — content hash
+  const etag = `"${hashContent(products)}"`;
+  if (req.headers["if-none-match"] === etag) {
+    return res.status(304).end(); // Not Modified — no body send
+  }
+
+  res.setHeader("ETag", etag);
+  res.setHeader("Cache-Control", "public, max-age=300, stale-while-revalidate=60");
+  res.json(products);
+});
+```
+
+### 💻 Resource Hints
+
+```html
+<!-- DNS prefetch — third-party domain -->
+<link rel="dns-prefetch" href="//fonts.googleapis.com">
+<link rel="dns-prefetch" href="//api.example.com">
+
+<!-- Preconnect — DNS + TCP + TLS -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<!-- Preload — current page critical resources -->
+<link rel="preload" as="font" href="font.woff2" type="font/woff2" crossorigin>
+<link rel="preload" as="image" href="hero.webp">
+<link rel="preload" as="script" href="critical.js">
+
+<!-- Prefetch — next page resources (low priority) -->
+<link rel="prefetch" href="/next-page.js">
+```
+
+### 💻 Compression ও Image Optimization
+
+```javascript
+// Express — gzip/brotli compression
+const compression = require("compression");
+app.use(compression({
+  level: 6,
+  threshold: 1024, // 1KB+ response compress
+  filter: (req, res) => {
+    if (req.headers["x-no-compression"]) return false;
+    return compression.filter(req, res);
+  }
+}));
+
+// Response headers এর পর:
+// Content-Encoding: gzip
+// Typically 70-80% size reduction for text/JSON
+```
+
+```html
+<!-- Modern image formats -->
+<picture>
+  <source srcset="image.avif" type="image/avif">
+  <source srcset="image.webp" type="image/webp">
+  <img src="image.jpg" alt="Fallback" loading="lazy" width="800" height="600">
+</picture>
+
+<!-- Responsive images -->
+<img
+  srcset="img-400.webp 400w, img-800.webp 800w, img-1200.webp 1200w"
+  sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1200px"
+  src="img-800.webp"
+  alt="Responsive image"
+>
+```
+
+---
+
+## ১১.৭ React Performance
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 React.memo, useMemo, useCallback
+
+```jsx
+// ১. React.memo — prop unchanged হলে re-render skip
+const ProductCard = React.memo(function ProductCard({ product, onAddToCart }) {
+  console.log("ProductCard render:", product.id);
+  return (
+    <div className="card">
+      <h3>{product.name}</h3>
+      <p>৳{product.price}</p>
+      <button onClick={() => onAddToCart(product)}>Cart-এ যোগ করুন</button>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison — true মানে re-render skip
+  return prevProps.product.id === nextProps.product.id
+    && prevProps.product.price === nextProps.product.price;
+});
+
+// ২. useMemo — expensive calculation cache করা
+function ProductList({ products, searchTerm, sortBy }) {
+  const processedProducts = useMemo(() => {
+    console.log("Processing products..."); // শুধু dependency change-এ
+    return products
+      .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .sort((a, b) => sortBy === "price" ? a.price - b.price : a.name.localeCompare(b.name));
+  }, [products, searchTerm, sortBy]); // dependencies
+
+  return processedProducts.map(p => <ProductCard key={p.id} product={p} />);
+}
+
+// ৩. useCallback — function reference stable রাখা
+function ParentComponent() {
+  const [cart, setCart] = useState([]);
+  const [filter, setFilter] = useState("");
+
+  // ❌ BAD — প্রতি render-এ নতুন function reference
+  // const addToCart = (product) => setCart(prev => [...prev, product]);
+
+  // ✅ GOOD — stable reference, ProductCard re-render হবে না
+  const addToCart = useCallback((product) => {
+    setCart(prev => [...prev, product]);
+  }, []); // কোনো dependency নেই
+
+  return (
+    <>
+      <SearchFilter value={filter} onChange={setFilter} />
+      <ProductList searchTerm={filter} onAddToCart={addToCart} />
+    </>
+  );
+}
+```
+
+### 💻 Virtualization — Large List Rendering
+
+```jsx
+// react-window দিয়ে 10,000 rows efficiently render
+import { FixedSizeList } from "react-window";
+
+function VirtualizedList({ items }) {
+  const Row = ({ index, style }) => (
+    <div style={style} className="list-row">
+      <span>{items[index].name}</span>
+      <span>৳{items[index].price}</span>
+    </div>
+  );
+
+  return (
+    <FixedSizeList
+      height={600}         // visible container height
+      itemCount={items.length}
+      itemSize={50}        // each row height
+      width="100%"
+    >
+      {Row}
+    </FixedSizeList>
+  );
+}
+// শুধু visible rows render হয় — 10,000 items → ~15 DOM nodes
+```
+
+### 💻 State Normalization — Deep Nesting এড়ানো
+
+```javascript
+// ❌ BAD — deeply nested state
+const state = {
+  users: [
+    { id: 1, name: "Rahim", posts: [{ id: 1, comments: [...] }] }
+  ]
+};
+// একটি comment update করতে পুরো array traverse
+
+// ✅ GOOD — normalized (flat) state
+const state = {
+  users: {
+    byId: { 1: { id: 1, name: "Rahim", postIds: [1] } },
+    allIds: [1]
+  },
+  posts: {
+    byId: { 1: { id: 1, userId: 1, commentIds: [1, 2] } },
+    allIds: [1]
+  },
+  comments: {
+    byId: { 1: { id: 1, text: "Great!" }, 2: { id: 2, text: "Nice" } },
+    allIds: [1, 2]
+  }
+};
+// O(1) access, minimal re-render
+```
+
+---
+
+## ১১.৮ Web Workers
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Web Workers** — CPU-intensive কাজ background thread-এ করা। Main thread (UI) block হয় না।
+
+### 💻 Web Worker Example
+
+```javascript
+// worker.js (separate file)
+self.addEventListener("message", ({ data }) => {
+  const { type, payload } = data;
+
+  if (type === "SORT_LARGE_ARRAY") {
+    // Expensive sort — main thread block করবে না
+    const sorted = payload.arr
+      .slice()
+      .sort((a, b) => a - b);
+
+    self.postMessage({ type: "SORT_DONE", result: sorted });
+  }
+
+  if (type === "PROCESS_CSV") {
+    const rows = payload.csv.split("
+").map(row => row.split(","));
+    const processed = processRows(rows); // heavy processing
+    self.postMessage({ type: "CSV_DONE", result: processed });
+  }
+});
+
+function processRows(rows) {
+  return rows.map(row => ({
+    name: row[0]?.trim(),
+    value: parseFloat(row[1]) || 0
+  })).filter(r => r.name);
+}
+```
+
+```javascript
+// main.js — Worker ব্যবহার
+const worker = new Worker("/worker.js");
+
+worker.addEventListener("message", ({ data }) => {
+  if (data.type === "SORT_DONE") {
+    displayResults(data.result);
+    setLoading(false);
+  }
+});
+
+worker.addEventListener("error", err => {
+  console.error("Worker error:", err);
+});
+
+// Large data পাঠানো
+sortBtn.addEventListener("click", () => {
+  setLoading(true);
+  worker.postMessage({
+    type: "SORT_LARGE_ARRAY",
+    payload: { arr: generateMillionNumbers() }
+  });
+});
+
+// Terminate যখন দরকার নেই
+// worker.terminate();
+```
+
+---
+
+## ১১.৯ Caching Strategies
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Service Worker — Offline Cache
+
+```javascript
+// service-worker.js
+const CACHE_NAME = "app-v1.2.0";
+const STATIC_ASSETS = [
+  "/",
+  "/index.html",
+  "/app.css",
+  "/app.js",
+  "/offline.html"
+];
+
+// Install — static assets cache করা
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+  );
+  self.skipWaiting(); // immediately activate
+});
+
+// Activate — old cache clean up
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+// Fetch — caching strategies
+self.addEventListener("fetch", event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Strategy 1: Cache First (static assets)
+  if (request.destination === "image" || url.pathname.startsWith("/static/")) {
+    event.respondWith(
+      caches.match(request).then(cached => cached || fetch(request))
+    );
+    return;
+  }
+
+  // Strategy 2: Network First (API calls)
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match(request) || new Response("Offline", { status: 503 }))
+    );
+    return;
+  }
+
+  // Strategy 3: Stale While Revalidate (HTML pages)
+  event.respondWith(
+    caches.match(request).then(cached => {
+      const fetchPromise = fetch(request).then(response => {
+        caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+        return response;
+      });
+      return cached || fetchPromise;
+    })
+  );
+});
+```
+
+### 💻 Client-Side Caching Pattern
+
+```javascript
+// React Query-style caching (simplified)
+class QueryCache {
+  constructor() {
+    this.cache = new Map();
+    this.DEFAULT_STALE_TIME = 5 * 60 * 1000; // 5 minutes
+  }
+
+  async get(key, fetchFn, options = {}) {
+    const { staleTime = this.DEFAULT_STALE_TIME } = options;
+    const cached = this.cache.get(key);
+
+    if (cached) {
+      const isStale = Date.now() - cached.timestamp > staleTime;
+      if (!isStale) return cached.data; // fresh — return immediately
+
+      // Stale — return stale data but refetch in background
+      if (isStale && !cached.fetching) {
+        cached.fetching = true;
+        fetchFn().then(data => {
+          this.cache.set(key, { data, timestamp: Date.now() });
+        }).finally(() => { cached.fetching = false; });
+      }
+      return cached.data;
+    }
+
+    // No cache — fetch and store
+    const data = await fetchFn();
+    this.cache.set(key, { data, timestamp: Date.now(), fetching: false });
+    return data;
+  }
+
+  invalidate(key) { this.cache.delete(key); }
+  invalidateAll() { this.cache.clear(); }
+}
+
+const queryCache = new QueryCache();
+
+// ব্যবহার
+const products = await queryCache.get(
+  "products-electronics",
+  () => fetch("/api/products?category=electronics").then(r => r.json()),
+  { staleTime: 2 * 60 * 1000 } // 2 minutes
+);
+```
+
+---
+
+## ১১.১০ Performance Measurement
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Tools ও Techniques
+
+```javascript
+// ১. console.time
+console.time("array-process");
+const result = largeArray.filter(x => x > 0).map(x => x * 2);
+console.timeEnd("array-process"); // "array-process: 23.4ms"
+
+// ২. Performance.now() — microsecond precision
+const start = performance.now();
+expensiveOperation();
+const end = performance.now();
+console.log(`Took: ${(end - start).toFixed(3)}ms`);
+
+// ৩. Profiling async code
+async function measureAsync(fn, label) {
+  const start = performance.now();
+  const result = await fn();
+  console.log(`${label}: ${(performance.now() - start).toFixed(2)}ms`);
+  return result;
+}
+
+const data = await measureAsync(() => fetchLargeDataset(), "Dataset Fetch");
+
+// ৪. React Profiler
+import { Profiler } from "react";
+
+function onRenderCallback(id, phase, actualDuration, baseDuration) {
+  if (actualDuration > 16) { // > 1 frame (60fps)
+    console.warn(`Slow render: ${id} (${phase}) — ${actualDuration.toFixed(1)}ms`);
+  }
+}
+
+<Profiler id="ProductList" onRender={onRenderCallback}>
+  <ProductList products={products} />
+</Profiler>
+```
+
+### 📋 Performance Checklist
+
+```
+✅ Images: WebP/AVIF format, lazy loading, responsive srcset
+✅ JS: Code splitting, tree shaking, minification
+✅ CSS: Critical CSS inline, non-critical defer
+✅ Fonts: preconnect, font-display: swap, subset
+✅ Caching: CDN, Cache-Control headers, Service Worker
+✅ Network: HTTP/2, compression (gzip/brotli), resource hints
+✅ React: React.memo, useMemo, useCallback, virtualization
+✅ Bundle: Analyze with rollup-plugin-visualizer, chunk splitting
+✅ Memory: Cleanup event listeners, intervals, AbortController
+✅ Measure: Lighthouse, WebPageTest, Chrome DevTools Performance
+```
+
+---
+
+## ১১.১১ PART 11 — Interview Questions & Answers
+
+<div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Performance Interview Q&A (Q1–Q20)</strong></summary>
+<br>
+
+**Q1: Browser rendering pipeline-এ Reflow এবং Repaint-এর পার্থক্য কী?**
+> **A:** Reflow — layout recalculate (size, position)। Repaint — pixel fill (color, background)। Reflow সবসময় Repaint trigger করে, কিন্তু Repaint সবসময় Reflow করে না। CSS `transform` ও `opacity` compositor thread-এ — দুটোর কোনোটিই trigger করে না।
+
+**Q2: Layout thrashing কী? কীভাবে এড়াবেন?**
+> **A:** Loop-এ DOM read ও write একসাথে করলে browser বারবার layout recalculate করে। Solution: সব reads এক batch-এ, সব writes এক batch-এ। `requestAnimationFrame` দিয়ে batch করুন।
+
+**Q3: Core Web Vitals-এর তিনটি metric কী?**
+> **A:** LCP (Largest Contentful Paint) — loading, < 2.5s ভালো। CLS (Cumulative Layout Shift) — visual stability, < 0.1 ভালো। INP (Interaction to Next Paint) — responsiveness, < 200ms ভালো।
+
+**Q4: CLS কমাবেন কীভাবে?**
+> **A:** Image ও video-তে `width`/`height` attribute দিন। Dynamic content-এর জন্য placeholder রাখুন। Font swap-এ `font-display: swap`। Ad/banner-এ reserved space।
+
+**Q5: LCP উন্নত করার উপায়?**
+> **A:** Hero image preload করুন। Server response time কমান (TTFB)। Render-blocking JS/CSS remove করুন। CDN ব্যবহার করুন। Image format optimize করুন (WebP/AVIF)।
+
+**Q6: Code splitting কী? কেন দরকার?**
+> **A:** Bundle-কে ছোট chunks-এ ভাগ করা। Initial load-এ শুধু প্রয়োজনীয় code। Route-based splitting (`React.lazy`) — নির্দিষ্ট page-এর code সেই page-এ গেলেই load।
+
+**Q7: Tree shaking কী?**
+> **A:** Build time-এ unused code bundle থেকে বাদ দেওয়া। ES Modules static structure-এর কারণে possible। `import { only, what, you, need }` লিখলে বাকিটা bundle-এ যায় না।
+
+**Q8: React.memo, useMemo, useCallback-এর পার্থক্য?**
+> **A:** `React.memo` — component memoize (prop same হলে re-render skip)। `useMemo` — computed value memoize (dependency same হলে recalculate skip)। `useCallback` — function memoize (dependency same হলে নতুন reference তৈরি হয় না)।
+
+**Q9: Virtual DOM কীভাবে performance improve করে?**
+> **A:** Real DOM manipulation expensive। React virtual DOM-এ diff করে (reconciliation) — শুধু changed parts real DOM-এ update করে (batched)। Direct DOM manipulation-এর চেয়ে কম reflow/repaint।
+
+**Q10: Web Worker কখন ব্যবহার করবেন?**
+> **A:** CPU-intensive কাজে — large data sort/filter, image processing, crypto, CSV parse। UI main thread block হয়ে যায় এমন কোনো কাজে। Worker-এ DOM access নেই — শুধু computation।
+
+**Q11: Service Worker কী? কী কাজে লাগে?**
+> **A:** Browser background-এ চলে এমন script — page-এর বাইরে। Network request intercept করে caching strategy implement করা যায়। Offline support, push notification, background sync।
+
+**Q12: Lazy loading image-এ `loading="lazy"` ও Intersection Observer-এর পার্থক্য?**
+> **A:** `loading="lazy"` — browser native, simple, সব modern browser support। Intersection Observer — custom control (rootMargin, threshold), fallback logic, older browser support দরকার।
+
+**Q13: Memory leak React-এ কীভাবে prevent করবেন?**
+> **A:** `useEffect` cleanup function return করুন — event listener, subscription, interval, timer। Fetch-এ AbortController। Unmounted component-এ setState এড়িয়ে চলুন।
+
+**Q14: `requestAnimationFrame` কেন `setTimeout(fn, 16)`-এর চেয়ে ভালো animation-এ?**
+> **A:** rAF browser-এর repaint cycle-এর সাথে sync — ঠিক repaint-এর আগে চলে। Tab inactive থাকলে pause হয়। setTimeout fix interval — frame drop হতে পারে, battery waste।
+
+**Q15: Virtualization/windowing কী?**
+> **A:** বড় list-এ শুধু visible items render করা। 10,000 item → ~15-20 DOM nodes। `react-window`, `react-virtual` library। Scroll করলে item swap হয়।
+
+**Q16: HTTP caching কীভাবে কাজ করে?**
+> **A:** `Cache-Control: max-age=3600` — 1 hour browser cache। `ETag` — content hash, 304 Not Modified দিয়ে bandwidth save। `stale-while-revalidate` — stale data দেখিয়ে background-এ refresh।
+
+**Q17: WebP ও AVIF image format কেন ব্যবহার করবেন?**
+> **A:** JPEG/PNG-এর চেয়ে ছোট file size (25-50% WebP, 50-60% AVIF)। Same quality, less bandwidth। `<picture>` tag দিয়ে fallback রাখুন।
+
+**Q18: Bundle analyze কীভাবে করবেন?**
+> **A:** `rollup-plugin-visualizer` বা `webpack-bundle-analyzer` — visual treemap। বড় dependency চিহ্নিত করুন। Lazy loading বা lighter alternative খুঁজুন।
+
+**Q19: `preload` vs `prefetch` vs `preconnect`-এর পার্থক্য?**
+> **A:** `preload` — current page-এর critical resource এখনই load (high priority)। `prefetch` — next page-এর resource idle time-এ load (low priority)। `preconnect` — DNS + TCP + TLS আগেই করে রাখো।
+
+**Q20: Production build-এ কোন optimizations করবেন?**
+> **A:** Minify JS/CSS, remove sourcemaps, tree shaking, code splitting, image optimization, gzip/brotli, long-term caching (hash filenames), environment variable, dead code elimination।
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 12 আসছে (শেষ PART):** BD Interview Preparation — Fresher Interview Patterns, BD Company-specific Questions, Mock Interview Script, Resume Tips, Salary Negotiation।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 12 দাও" লিখুন।
