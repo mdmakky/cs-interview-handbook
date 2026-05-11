@@ -36,7 +36,7 @@
 | 05 | 📊 **Data Structures & Algorithms** | [DSA Guide →](./DSA_Junior_Engineer_BD_QA.md) | ✅ **Available** | Array, Linked List, Stack, Queue, Tree, Graph, Sorting, DP, Backtracking, Bit Manipulation |
 | 06 | 🏗️ **System Design** | [System Design Guide →](./SystemDesign_Junior_Engineer_BD_QA.md) | ✅ **Available** | Scalability, CAP Theorem, Load Balancing, CDN, REST, JWT, Caching, Microservices |
 | 07 | � **Python** | _Coming Soon_ | 🔜 **Coming Soon** | Basics, OOP, Decorators, Generators, Comprehensions, Standard Library |
-| 08 | ⚡ **FastAPI** | [FastAPI Guide →](./FastAPI_Junior_Engineer_BD_QA.md) | ✅ **Available** (PART 1–4) | Routing, Pydantic, Dependency Injection, Auth, Async, CRUD, Deployment |
+| 08 | ⚡ **FastAPI** | [FastAPI Guide →](./FastAPI_Junior_Engineer_BD_QA.md) | ✅ **Available** (PART 1–6) | Routing, Pydantic, Dependency Injection, Auth, Async, CRUD, Deployment |
 | 09 | 🔀 **Git & Version Control** | _Coming Soon_ | 🔜 **Coming Soon** | Branch Strategy, Merge vs Rebase, CI/CD, GitHub Flow |
 
 ---

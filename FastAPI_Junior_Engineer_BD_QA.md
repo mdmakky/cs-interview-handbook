@@ -24,8 +24,8 @@
 | 📕 | [**PART 4** — Authentication & Security](#part4) | JWT, OAuth2, Password Hashing, CORS, Rate Limiting |
 | 📓 | [**PART 5** — Async Programming](#part5) | async/await, Event Loop, Async DB, Concurrent Requests, Background Tasks |
 | 📔 | [**PART 6** — Advanced FastAPI](#part6) | WebSockets, Streaming, Custom Middleware, Exception Handling, Caching |
-| 📒 | **PART 7** — Testing & Debugging *(Coming Soon)* | Pytest, TestClient, Mocking, Logging |
-| 📃 | **PART 8** — Deployment & DevOps *(Coming Soon)* | Uvicorn, Docker, Nginx, CI/CD, VPS |
+| 📒 | [**PART 7** — Testing & Debugging](#part7) | Pytest, TestClient, Fixtures, Mocking, Logging, Debugging |
+| 📃 | [**PART 8** — Deployment & DevOps](#part8) | Uvicorn, Docker, Nginx, CI/CD, VPS Deployment |
 | 🗂️ | **PART 9** — System Design *(Coming Soon)* | Microservices, Redis, Celery, API Gateway |
 | 💼 | **PART 10** — FastAPI Projects *(Coming Soon)* | Auth System, Blog API, E-commerce, Chat API |
 | ❓ | **PART 11** — Interview Q&A Bank *(Coming Soon)* | ১৫০ Theoretical + ১০০ Coding + Rapid-fire |
@@ -4653,9 +4653,472 @@ def get_data():
 
 ---
 
-> **📌 পরবর্তী:** PART 7 — Testing & Debugging *(Coming Soon)*
+<a id="part7"></a>
+
+# PART 7: Testing & Debugging
+
+> **📍 এই PART এর Sections:** [७.१](#७१-pytest-setup) · [७.२](#७२-testclient) · [७.३](#७३-fixtures) · [७.४](#७४-mocking) · [०७.५](#०७५-logging) · [०००७.६](#०००७६-debugging) · [००००७.७](#००००७७-coverage) · [०००००००७.८](#०००००००७८-part-7--interview-questions--answers)
+
+---
+
+## ७.१ Pytest Setup
+
+```bash
+pip install pytest pytest-asyncio httpx
+```
+
+### প্রথম Test
+
+```python
+# tests/test_main.py
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_read_root():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Hello"}
+
+def test_get_item():
+    response = client.get("/items/42")
+    assert response.status_code == 200
+    assert response.json()["item_id"] == 42
+```
+
+### Run Tests
+
+```bash
+pytest tests/                    # সব test চালান
+pytest tests/test_main.py        # নির্দিষ্ট file
+pytest tests/test_main.py::test_read_root  # নির্দিষ্ট test
+pytest -v                        # Verbose output
+pytest -s                        # Print statements show করুন
+pytest --cov=app                 # Code coverage
+```
+
+---
+
+## ७.२ TestClient
+
+```python
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+# GET
+response = client.get("/users/1")
+assert response.status_code == 200
+
+# POST
+response = client.post(
+    "/users",
+    json={"username": "rafi", "email": "rafi@example.com"}
+)
+assert response.status_code == 201
+
+# Headers
+response = client.get("/users/me", headers={"Authorization": "Bearer token123"})
+assert response.status_code == 200
+```
+
+---
+
+## ७.३ Fixtures
+
+Fixtures = reusable test setup।
+
+```python
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.database import Base, get_db
+from app.main import app
+from fastapi.testclient import TestClient
+
+@pytest.fixture(scope="session")
+def test_db():
+    engine = create_engine("sqlite:///./test.db")
+    Base.metadata.create_all(bind=engine)
+    yield engine
+    Base.metadata.drop_all(bind=engine)
+
+@pytest.fixture
+def db_session(test_db):
+    connection = test_db.connect()
+    transaction = connection.begin()
+    session = sessionmaker(bind=connection)()
+    
+    yield session
+    
+    session.close()
+    transaction.rollback()
+    connection.close()
+
+@pytest.fixture
+def client(db_session):
+    def override_get_db():
+        return db_session
+    
+    app.dependency_overrides[get_db] = override_get_db
+    yield TestClient(app)
+    app.dependency_overrides.clear()
+
+# ব্যবহার
+def test_create_user(client):
+    response = client.post(
+        "/users",
+        json={"username": "rafi", "email": "rafi@example.com", "password": "Secret123"}
+    )
+    assert response.status_code == 201
+    assert response.json()["username"] == "rafi"
+```
+
+---
+
+## ७.४ Mocking
+
+```python
+from unittest.mock import patch, MagicMock
+import pytest
+
+@pytest.fixture
+def mock_external_api():
+    with patch("app.services.fetch_user_from_external_api") as mock:
+        mock.return_value = {"id": 1, "name": "External User"}
+        yield mock
+
+def test_with_mocked_api(client, mock_external_api):
+    response = client.get("/users/external/1")
+    assert response.status_code == 200
+    mock_external_api.assert_called_once_with(1)
+
+@pytest.fixture
+async def mock_async_db():
+    with patch("app.database.query_user") as mock:
+        mock.return_value = {"id": 1, "username": "test"}
+        yield mock
+
+@pytest.mark.asyncio
+async def test_async_operation(mock_async_db):
+    result = await fetch_user(1)
+    assert result["username"] == "test"
+```
+
+---
+
+## ०७.५ Logging
+
+```python
+import logging
+from fastapi import FastAPI
+
+logger = logging.getLogger(__name__)
+
+app = FastAPI()
+
+@app.get("/users/{user_id}")
+def get_user(user_id: int):
+    logger.info(f"Fetching user {user_id}")
+    user = db.get_user(user_id)
+    if not user:
+        logger.warning(f"User {user_id} not found")
+        raise HTTPException(status_code=404)
+    return user
+
+def test_user_not_found(client, caplog):
+    with caplog.at_level(logging.WARNING):
+        response = client.get("/users/999")
+    assert response.status_code == 404
+    assert "not found" in caplog.text
+```
+
+---
+
+## ០ ०७.६ Debugging
+
+### pdb
+
+```python
+@app.get("/debug")
+def debug_endpoint():
+    import pdb; pdb.set_trace()  # Breakpoint
+    return {"data": "value"}
+```
+
+### Logging
+
+```python
+logger.debug(f"Variable: {var}")
+logger.info(f"Operation started")
+logger.warning(f"Deprecated method")
+logger.error(f"DB connection failed: {error}")
+```
+
+### VS Code Debugging
+
+`.vscode/launch.json`:
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "FastAPI",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": ["app.main:app", "--reload"]
+        }
+    ]
+}
+```
+
+---
+
+## ०७.७ Coverage
+
+```bash
+pytest --cov=app tests/
+pytest --cov=app --cov-report=html tests/  # HTML report
+```
+
+---
+
+## ०७.८ PART 7 — Interview Questions & Answers
+
+**Q: Unit test vs Integration test?**
+
+> Unit test: isolated function test। Integration test: multiple components together। Unit faster, integration comprehensive।
+
+---
+
+### Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|--------|----------|
+| TestClient? | Sync client for async endpoints |
+| Fixture scope? | function, class, module, session |
+| Mock purpose? | External service simulation |
+| pdb.set_trace()? | Debugging breakpoint |
+| Coverage? | Test percentage measure |
+| @pytest.mark.asyncio? | Run async tests |
+| dependency_overrides? | Fake dependency injection |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part8"></a>
+
+# PART 8: Deployment & DevOps
+
+> **📍 এই PART এর Sections:** [०८.१](#०८१-uvicorn-configuration) · [०८.२](#०८२-docker) · [०८.३](#०८३-nginx) · [०८.४](#०८४-cicd-with-github-actions) · [०८.५](#०८५-vps-deployment) · [०८.६](#०८६-production-checklist) · [०८.७](#०८७-part-8--interview-questions--answers)
+
+---
+
+## १०८.१ Uvicorn Configuration
+
+### Development
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Production
+
+```bash
+# With gunicorn (sync)
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app
+
+# Async-optimized
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4 --loop uvloop
+```
+
+---
+
+## १०८.२ Docker
+
+### Dockerfile
+
+```dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0"]
+```
+
+### docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://user:pass@db:5432/myapp
+      SECRET_KEY: secret
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: myapp
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+---
+
+## १०८.३ Nginx
+
+```nginx
+upstream fastapi {
+    server 127.0.0.1:8000;
+}
+
+server {
+    listen 80;
+    server_name myapp.com;
+
+    location / {
+        proxy_pass http://fastapi;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+
+    location /ws {
+        proxy_pass http://fastapi;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+---
+
+## १०८.४ CI/CD with GitHub Actions
+
+### .github/workflows/tests.yml
+
+```yaml
+name: Tests
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+      
+      - name: Run tests
+        run: pytest tests/
+```
+
+---
+
+## १०८.५ VPS Deployment
+
+### Setup
+
+```bash
+ssh root@vps-ip
+
+apt update && apt upgrade -y
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+git clone https://github.com/user/app.git /var/www/myapp
+cd /var/www/myapp
+nano .env
+docker-compose up -d
+```
+
+### SSL
+
+```bash
+apt install certbot python3-certbot-nginx
+certbot certonly --standalone -d myapp.com
+```
+
+---
+
+## १०८.६ Production Checklist
+
+- [ ] DEBUG = False
+- [ ] SECRET_KEY random
+- [ ] Database backups setup
+- [ ] CORS configured
+- [ ] HTTPS enabled
+- [ ] Rate limiting enabled
+- [ ] Logging configured
+- [ ] Health check endpoint
+- [ ] Database migrations automated
+- [ ] Error monitoring (Sentry)
+
+---
+
+## ०८.७ PART 8 — Interview Questions & Answers
+
+**Q: Multiple Uvicorn workers কেন?**
+
+> Single worker = single event loop। High concurrency এর জন্য multiple workers parallel processing।
+
+---
+
+### Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|--------|----------|
+| Uvicorn port? | 8000 (default) |
+| Gunicorn role? | Process manager |
+| Nginx role? | Reverse proxy |
+| Docker benefit? | Environment consistency |
+| Health check? | `/health` endpoint |
+| Workers count? | CPU cores × 2 (approx) |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 9 — System Design *(Coming Soon)*
 >
-> PART 7 তে থাকবে: Pytest, TestClient, Fixtures, Mocking, Debugging।
+> PART 9 তে থাকবে: Microservices, Message Queues, API Gateway, Caching।
 
 ---
 
