@@ -8000,4 +8000,1619 @@ if __name__ == "__main__":
 
 ---
 
-> **📌 পরবর্তী:** PART 11 — Python Interview Questions Bank *(Next request এ লিখব)*
+<a id="part11"></a>
+
+## 📋 PART 11 সূচিপত্র — Python Interview Questions Bank
+
+| # | Section | Questions |
+|---|---|---|
+| 1 | [Theoretical Questions](#p11-theory) | 60 প্রশ্ন — সব topic cover |
+| 2 | [Coding Questions](#p11-coding) | 30 প্রশ্ন — easy/medium/hard with solutions |
+| 3 | [Tricky Python Questions](#p11-tricky) | 20 gotcha questions |
+| 4 | [Rapid-fire Q&A](#p11-rapid) | 20 one-liner answers |
+| 5 | [Scenario-based Questions](#p11-scenario) | 20 real project situations |
+
+---
+
+<a id="p11-theory"></a>
+
+## 1. Theoretical Questions (60টি)
+
+**Python Basics (১–১০)**
+
+**1. Python-এ `is` আর `==` পার্থক্য কী?**
+> `==` value comparison করে, `is` identity comparison করে (same object কিনা memory-তে)। `a = [1,2]; b = [1,2]` → `a == b` True কিন্তু `a is b` False।
+
+**2. Mutable আর Immutable type-এর পার্থক্য বলুন। উদাহরণ দিন।**
+> Mutable: list, dict, set — পরিবর্তন করা যায়। Immutable: int, str, tuple, frozenset — পরিবর্তন করলে নতুন object তৈরি হয়। String immutable বলেই string concatenation loop-এ slow।
+
+**3. `*args` আর `**kwargs` কী?**
+> `*args` variable positional arguments tuple হিসেবে নেয়। `**kwargs` variable keyword arguments dict হিসেবে নেয়। Function signature: `def func(*args, **kwargs)`।
+
+**4. Python-এ `None` কী? কখন use করবেন?**
+> `None` হলো Python-এর null value। Type: `NoneType`। Function কিছু return না করলে implicitly `None` return করে। Optional value indicate করতে use করি। Check: `if x is None` (not `if x == None`)।
+
+**5. List comprehension আর `map()` কখন use করবেন?**
+> Readable, simple transformation-এ list comprehension। Complex function বা existing function apply করতে `map()`। Performance প্রায় same। Comprehension generally more Pythonic।
+
+**6. `__init__` আর `__new__` পার্থক্য?**
+> `__new__` object তৈরি করে (allocate memory), `__init__` সেই object initialize করে। সাধারণত শুধু `__init__` override করি। Singleton pattern বা immutable type subclass করতে `__new__` দরকার।
+
+**7. Python-এ `global` আর `nonlocal` keyword কী?**
+> `global` function-এর ভেতর থেকে module-level variable modify করতে। `nonlocal` nested function-এর ভেতর থেকে enclosing scope-এর variable modify করতে।
+
+**8. `del` keyword কী করে?**
+> Object-এর reference delete করে। `del x` মানে `x` নামের reference সরে যায়। যদি কোনো reference না থাকে, garbage collector memory free করে। List-এ `del lst[2]` element delete করে।
+
+**9. Python-এ truthiness rules কী কী?**
+> Falsy: `None`, `False`, `0`, `0.0`, `""`, `[]`, `{}`, `set()`, `()`. বাকি সব Truthy। `bool([])` → False, `bool([0])` → True।
+
+**10. `__slots__` কী এবং কখন use করবেন?**
+> Class-এ `__slots__ = ['x','y']` দিলে per-instance `__dict__` তৈরি হয় না — memory বাঁচে। Millions of instances তৈরি হলে use করুন। Downside: dynamic attribute add করা যায় না।
+
+---
+
+**OOP (১১–২০)**
+
+**11. Python-এ MRO (Method Resolution Order) কী?**
+> Multiple inheritance-এ Python C3 Linearization algorithm দিয়ে কোন class-এর method আগে check করবে তা ঠিক করে। `ClassName.__mro__` বা `mro()` দিয়ে দেখা যায়।
+
+**12. `@classmethod` আর `@staticmethod` পার্থক্য?**
+> `@classmethod` first argument `cls` নেয় — class access করতে পারে, subclass-এ override হয়। `@staticmethod` কোনো implicit argument নেয় না — utility function। `@classmethod` alternative constructor pattern-এ use হয়।
+
+**13. Abstract class কী? কীভাবে বানাবেন?**
+> Abstract class directly instantiate করা যায় না — subclass-এ implement বাধ্যতামূলক। `from abc import ABC, abstractmethod`। `@abstractmethod` decorator দিয়ে abstract method define করি।
+
+**14. Python-এ `super()` কী করে?**
+> Parent class-এর method call করে। Multiple inheritance-এ MRO অনুযায়ী সঠিক parent call করে। `super().__init__()` child class-এর `__init__`-এ parent initialization করে।
+
+**15. Dunder/magic method কী? কয়েকটি উদাহরণ দিন।**
+> `__str__`, `__repr__`, `__len__`, `__eq__`, `__lt__`, `__add__`, `__iter__`, `__next__`, `__enter__`, `__exit__`, `__getitem__`. Operator overloading এবং protocol implementation-এ use হয়।
+
+**16. Composition আর Inheritance পার্থক্য? কখন কোনটি?**
+> Inheritance: "is-a" relationship। Composition: "has-a" relationship। Composition more flexible — runtime-এ behavior swap করা যায়। Rule: "Favor composition over inheritance"।
+
+**17. Encapsulation Python-এ কীভাবে implement করবেন?**
+> `_single` = convention-based protected। `__double` = name mangling (actual private-ish)। `@property` দিয়ে getter/setter। Python-এ true private নেই — সব accessible।
+
+**18. Duck typing কী?**
+> "If it walks like a duck and quacks like a duck, it's a duck." Python-এ object-এর type check না করে behavior check করা। `hasattr()` বা try/except দিয়ে check করা। Protocol-based programming।
+
+**19. Mixin কী?**
+> Multiple inheritance-এর একটি pattern — small reusable class যা single specific behavior add করে। Mixin class সাধারণত standalone instantiate হয় না। Example: `LogMixin`, `JSONMixin`, `TimestampMixin`।
+
+**20. `__repr__` আর `__str__` পার্থক্য?**
+> `__repr__` developer-friendly (eval করলে object recreate হওয়া উচিত)। `__str__` user-friendly readable string। `print()` `__str__` call করে। Console-এ `repr()` call হয়। Always `__repr__` define করুন।
+
+---
+
+**Functional Python (২১–৩০)**
+
+**21. Closure কী? Example দিন।**
+> Inner function outer function-এর variable remember করে enclosing scope। Variable সেই function return হওয়ার পরেও বেঁচে থাকে।
+```python
+def counter(start=0):
+    count = [start]
+    def increment():
+        count[0] += 1
+        return count[0]
+    return increment
+c = counter(10)
+print(c())  # 11
+```
+
+**22. Decorator কীভাবে কাজ করে?**
+> Function take করে, নতুন wrapped function return করে। `@decorator` syntax sugar for `func = decorator(func)`। `functools.wraps` দিয়ে metadata preserve করি।
+
+**23. Generator আর Iterator পার্থক্য?**
+> Iterator: `__iter__` + `__next__` implement করা যেকোনো object। Generator: `yield` ব্যবহার করে lazy evaluation করে — automatically iterator। `yield from` দিয়ে sub-generator delegate করা যায়।
+
+**24. `map()`, `filter()`, `reduce()` কীভাবে কাজ করে?**
+> `map(func, iter)` — প্রতিটি element-এ function apply। `filter(func, iter)` — True return করা elements রাখে। `reduce(func, iter)` — cumulative result (from `functools`)।
+
+**25. Lambda function কী? সীমাবদ্ধতা?**
+> Anonymous single-expression function। `lambda x: x*2`। Limitation: শুধু single expression, no statements (no `if/else` as statement, no loops), no docstring। Complex logic-এ regular function use করুন।
+
+**26. `any()` আর `all()` কীভাবে কাজ করে?**
+> `any(iter)` — কোনো একটি Truthy হলে True। `all(iter)` — সব Truthy হলে True। Empty iterable-এ: `any([])` → False, `all([])` → True। Generator expression-এ efficiently use করা যায়।
+
+**27. `zip()` কী করে? `zip_longest` কখন?**
+> Multiple iterables একসাথে iterate করে tuple pair বানায়। Shortest iterable-এ stop করে। `itertools.zip_longest(fill_value=None)` different length handle করে।
+
+**28. Partial function কী?**
+> `functools.partial(func, arg)` — function-এর কিছু argument pre-fill করে নতুন callable তৈরি করে।
+```python
+from functools import partial
+power_of_2 = partial(pow, 2)
+print(power_of_2(10))  # 1024
+```
+
+**29. `enumerate()` কখন use করবেন?**
+> Index আর value দুটোই দরকার হলে। `for i, val in enumerate(lst):` — range(len()) এর চেয়ে Pythonic। `start` parameter দিয়ে index শুরু customize করা যায়।
+
+**30. Comprehension কি সবসময় list-এর জন্য? Set, Dict comprehension কীভাবে?**
+> List: `[x for x in iter]`, Dict: `{k: v for k, v in pairs}`, Set: `{x for x in iter}`, Generator: `(x for x in iter)` — parentheses, no square brackets।
+
+---
+
+**Data Structures & Algorithms (৩১–৪০)**
+
+**31. Python-এ `list` vs `tuple` কখন কোনটি?**
+> List: mutable collection, data যখন change হবে। Tuple: immutable, dict key হিসেবে use, function থেকে multiple return, record-like data। Tuple slightly faster।
+
+**32. `dict` এর time complexity কী?**
+> Average case: get/set/delete O(1)। Worst case: O(n) (hash collision)। Python 3.7+ dict insertion order maintain করে। `collections.OrderedDict` explicitly ordered।
+
+**33. `set` কীভাবে কাজ করে? কখন use করবেন?**
+> Hash table — O(1) lookup। Duplicate remove, membership test (`in`), set operations (union/intersection/difference)। Unhashable type (list) element হিসেবে রাখা যায় না।
+
+**34. `defaultdict` আর `Counter` কীভাবে কাজ করে?**
+> `defaultdict(list)` — missing key-এ default value। `Counter(seq)` — frequency counting। `counter.most_common(n)` top-n elements। Both from `collections`।
+
+**35. Heap/Priority Queue Python-এ কীভাবে use করবেন?**
+> `import heapq` — min-heap by default। `heapq.heappush(h, item)`, `heapq.heappop(h)`। Max-heap: negate values। `heapq.nlargest(n, iter)`, `heapq.nsmallest(n, iter)`।
+
+**36. Python-এ stack আর queue কীভাবে implement করবেন?**
+> Stack: `list` — `append()` push, `pop()` pop। Queue: `collections.deque` — `append()` enqueue, `popleft()` dequeue। List-এ `pop(0)` O(n) — deque O(1)।
+
+**37. Binary search Python-এ?**
+> `bisect` module — `bisect.bisect_left(sorted_list, x)` index returns। Manual: classic while loop with `mid = (lo+hi)//2`।
+
+**38. Sorting Python-এ — `sort()` vs `sorted()`?**
+> `list.sort()` in-place, returns None। `sorted(iter)` নতুন list return করে, কোনো iterable নিতে পারে। `key=` parameter দিয়ে custom sort। Stable sort (equal elements relative order maintain করে)।
+
+**39. String-এর `join()` কেন concatenation `+` চেয়ে better?**
+> `+` string immutable বলে প্রতিবার নতুন string তৈরি করে — O(n²)। `"".join(list)` একবারে করে — O(n)। `"sep".join(["a","b","c"])` → `"a,b,c"` (sep কোনো string)।
+
+**40. Python-এ recursion limit কত? কীভাবে change করবেন?**
+> Default 1000। `sys.getrecursionlimit()`। `sys.setrecursionlimit(10000)` বাড়ানো যায়। Deep recursion-এ stack overflow। Iterative বা tail recursion optimization prefer করুন।
+
+---
+
+**Advanced Python (৪১–৫০)**
+
+**41. GIL (Global Interpreter Lock) কী? CPython-এ কী effect?**
+> GIL একটি mutex যা CPython-এ একসময় শুধু একটি thread Python bytecode execute করতে দেয়। CPU-bound task-এ multithreading সাহায্য করে না — `multiprocessing` use করুন। I/O-bound task-এ threading effective।
+
+**42. `threading` vs `multiprocessing` vs `asyncio` কখন কোনটি?**
+> Threading: I/O-bound concurrent tasks (GIL issue নেই I/O-তে)। Multiprocessing: CPU-bound parallel tasks (separate Python interpreter)। Asyncio: high-concurrency I/O, single-threaded event loop — best for web servers, API calls।
+
+**43. Context manager কীভাবে কাজ করে?**
+> `with` statement — `__enter__` resource acquire, `__exit__` cleanup (error হলেও)। File `close()`, DB commit/rollback, lock release guarantee করে। `contextlib.contextmanager` দিয়ও বানানো যায়।
+
+**44. `async/await` কীভাবে কাজ করে?**
+> `async def` coroutine define করে। `await` expression coroutine suspend করে event loop-এ control ফিরিয়ে দেয়। `asyncio.run()` entry point। `asyncio.gather()` multiple coroutine parallel চালায়।
+
+**45. Python memory management কীভাবে কাজ করে?**
+> Reference counting — object-এর ref count 0 হলে free। Cyclic garbage collector — circular reference handle করে। `gc` module। Small integer (-5 to 256) আর common string interned হয়।
+
+**46. Descriptor protocol কী?**
+> Object যদি `__get__`, `__set__`, `__delete__` implement করে — descriptor। `@property` internally descriptor। Django ORM field, SQLAlchemy column — সব descriptor।
+
+**47. `__call__` কী?**
+> Class-এ `__call__` define করলে instance-কে function-এর মতো call করা যায়। `obj()` → `obj.__call__()` invoke হয়। Decorator class, callable object বানাতে use হয়।
+
+**48. Metaclass কী?**
+> Class-এর class। সাধারণত `type` metaclass। Custom metaclass দিয়ে class creation control করা যায়। ORM (Django), API framework-এ use হয়। `class Meta:` আর metaclass আলাদা জিনিস।
+
+**49. `__getattr__` vs `__getattribute__` পার্থক্য?**
+> `__getattribute__` প্রতিটি attribute access-এ call হয়। `__getattr__` শুধু তখন call হয় যখন normal mechanism attribute খুঁজে পায় না। `__getattr__` overriding safer।
+
+**50. `dataclass` vs `NamedTuple` কখন কোনটি?**
+> `dataclass`: mutable, methods add করা যায়, inheritance support, default values, `__post_init__`। `NamedTuple`: immutable, tuple-compatible (unpack, index), slightly faster। Immutable record-এ `NamedTuple`, mutable data model-এ `dataclass`।
+
+---
+
+**Testing, Tools & Web (৫১–৬০)**
+
+**51. Unit test vs Integration test vs E2E test পার্থক্য?**
+> Unit: একটি function/method isolated। Integration: multiple component একসাথে (DB + service)। E2E: পুরো system (browser থেকে DB)। Fast unit → slower integration → slowest E2E।
+
+**52. pytest fixture `scope` কী কী আছে?**
+> `function` (default), `class`, `module`, `package`, `session`। Scope বড় হলে fixture কম বার create হয় — expensive setup (DB) session scope ব্যবহার করি।
+
+**53. `pip` আর `pip3` পার্থক্য?**
+> System-এ Python 2/3 দুটো থাকলে `pip3` explicitly Python 3-এর। Virtual environment activate করার পর `pip` সেই env-এর Python-এর। Best practice: always use venv।
+
+**54. `requirements.txt` আর `pyproject.toml` পার্থক্য?**
+> `requirements.txt` simple package list with pins — deployment। `pyproject.toml` modern PEP 517/518 standard — project metadata, build system, tool config (black, pytest, mypy) সব এক জায়গায়।
+
+**55. Type hints Python-এ কীভাবে কাজ করে?**
+> Runtime-এ enforce হয় না — documentation এবং static analysis (`mypy`, `pyright`) এর জন্য। `def greet(name: str) -> str:`. `Optional[str]` বা `str | None` (3.10+)।
+
+**56. FastAPI-তে dependency injection কীভাবে কাজ করে?**
+> `Depends(func)` — FastAPI automatically `func` call করে result inject করে। DB session, auth, config — সব dependency হিসেবে define করা যায়। Testable, reusable।
+
+**57. SQLAlchemy-তে lazy loading vs eager loading?**
+> Lazy: relationship first access-এ additional query। Eager: `joinedload()` বা `selectinload()` — main query-তেই relationship load করে N+1 problem সমাধান করে।
+
+**58. REST API-তে idempotency কী?**
+> Same request multiple times করলে same result। GET, PUT, DELETE idempotent। POST generally not idempotent। Idempotent design retry-safe করে।
+
+**59. JWT (JSON Web Token) কীভাবে কাজ করে?**
+> Header + Payload + Signature (base64url encoded, `.` separated)। Signature secret key দিয়ে verify করা হয়। Stateless — server session রাখে না। Expiry (`exp` claim) দিয়ে security।
+
+**60. Pydantic validation কীভাবে কাজ করে?**
+> Class define করলে `__init__` runtime-এ type coerce + validate করে। Invalid data → `ValidationError`। `@field_validator` custom validation। `model_dump()` dict-এ convert।
+
+---
+
+<a id="p11-coding"></a>
+
+## 2. Coding Questions with Solutions (30টি)
+
+**Easy (১–১০)**
+
+**1. List-এর duplicate remove করুন, order maintain করে।**
+```python
+def remove_duplicates(lst: list) -> list:
+    seen = set()
+    return [x for x in lst if not (x in seen or seen.add(x))]
+
+# Test
+print(remove_duplicates([3, 1, 4, 1, 5, 9, 2, 6, 5, 3]))
+# [3, 1, 4, 5, 9, 2, 6]
+```
+
+**2. String-এ প্রতিটি word-এর প্রথম letter capital করুন।**
+```python
+def title_case(sentence: str) -> str:
+    return " ".join(word.capitalize() for word in sentence.split())
+
+print(title_case("hello world from bangladesh"))
+# Hello World From Bangladesh
+```
+
+**3. Number factorial বের করুন (iterative)।**
+```python
+def factorial(n: int) -> int:
+    if n < 0:
+        raise ValueError("Negative input")
+    result = 1
+    for i in range(2, n + 1):
+        result *= i
+    return result
+```
+
+**4. List-এ দুটো number যোগ করলে target হয় কিনা চেক করুন (Two Sum)।**
+```python
+def two_sum(nums: list[int], target: int) -> list[int]:
+    seen = {}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []
+
+print(two_sum([2, 7, 11, 15], 9))  # [0, 1]
+```
+
+**5. String palindrome কিনা check করুন।**
+```python
+def is_palindrome(s: str) -> bool:
+    cleaned = "".join(c.lower() for c in s if c.isalnum())
+    return cleaned == cleaned[::-1]
+
+print(is_palindrome("A man a plan a canal Panama"))  # True
+```
+
+**6. List-এর second largest element বের করুন।**
+```python
+def second_largest(nums: list[int]) -> int | None:
+    unique = list(set(nums))
+    if len(unique) < 2:
+        return None
+    unique.sort(reverse=True)
+    return unique[1]
+```
+
+**7. Dict-এর value দিয়ে sort করুন।**
+```python
+scores = {"Rahim": 85, "Karim": 92, "Salam": 78}
+sorted_scores = dict(sorted(scores.items(), key=lambda x: x[1], reverse=True))
+# {'Karim': 92, 'Rahim': 85, 'Salam': 78}
+```
+
+**8. FizzBuzz।**
+```python
+def fizzbuzz(n: int) -> list[str]:
+    return [
+        "FizzBuzz" if i % 15 == 0
+        else "Fizz" if i % 3 == 0
+        else "Buzz" if i % 5 == 0
+        else str(i)
+        for i in range(1, n + 1)
+    ]
+```
+
+**9. String-এর anagram কিনা check করুন।**
+```python
+from collections import Counter
+
+def is_anagram(s1: str, s2: str) -> bool:
+    return Counter(s1.lower()) == Counter(s2.lower())
+
+print(is_anagram("listen", "silent"))  # True
+```
+
+**10. List-এর running sum বের করুন।**
+```python
+from itertools import accumulate
+
+def running_sum(nums: list[int]) -> list[int]:
+    return list(accumulate(nums))
+
+print(running_sum([1, 2, 3, 4]))  # [1, 3, 6, 10]
+```
+
+---
+
+**Medium (১১–২০)**
+
+**11. Linked list reverse করুন।**
+```python
+class Node:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+def reverse_linked_list(head: Node) -> Node:
+    prev = None
+    curr = head
+    while curr:
+        next_node = curr.next
+        curr.next = prev
+        prev = curr
+        curr = next_node
+    return prev
+```
+
+**12. Binary search implement করুন।**
+```python
+def binary_search(arr: list[int], target: int) -> int:
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
+```
+
+**13. Stack দিয়ে balanced parentheses check করুন।**
+```python
+def is_balanced(s: str) -> bool:
+    stack = []
+    pairs = {")": "(", "]": "[", "}": "{"}
+    for ch in s:
+        if ch in "([{":
+            stack.append(ch)
+        elif ch in ")]}":
+            if not stack or stack[-1] != pairs[ch]:
+                return False
+            stack.pop()
+    return len(stack) == 0
+
+print(is_balanced("({[]})"))   # True
+print(is_balanced("({[})"))    # False
+```
+
+**14. LRU Cache implement করুন।**
+```python
+from collections import OrderedDict
+
+class LRUCache:
+    def __init__(self, capacity: int):
+        self.cache = OrderedDict()
+        self.capacity = capacity
+
+    def get(self, key: int) -> int:
+        if key not in self.cache:
+            return -1
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def put(self, key: int, value: int) -> None:
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        self.cache[key] = value
+        if len(self.cache) > self.capacity:
+            self.cache.popitem(last=False)
+```
+
+**15. Flatten nested list করুন (recursive)।**
+```python
+def flatten(nested: list) -> list:
+    result = []
+    for item in nested:
+        if isinstance(item, list):
+            result.extend(flatten(item))
+        else:
+            result.append(item)
+    return result
+
+print(flatten([1, [2, [3, 4]], [5, 6]]))  # [1, 2, 3, 4, 5, 6]
+```
+
+**16. Group anagrams একসাথে করুন।**
+```python
+from collections import defaultdict
+
+def group_anagrams(words: list[str]) -> list[list[str]]:
+    groups = defaultdict(list)
+    for word in words:
+        key = tuple(sorted(word))
+        groups[key].append(word)
+    return list(groups.values())
+
+print(group_anagrams(["eat","tea","tan","ate","nat","bat"]))
+# [['eat', 'tea', 'ate'], ['tan', 'nat'], ['bat']]
+```
+
+**17. Merge two sorted arrays।**
+```python
+def merge_sorted(a: list[int], b: list[int]) -> list[int]:
+    result, i, j = [], 0, 0
+    while i < len(a) and j < len(b):
+        if a[i] <= b[j]:
+            result.append(a[i]); i += 1
+        else:
+            result.append(b[j]); j += 1
+    result.extend(a[i:])
+    result.extend(b[j:])
+    return result
+```
+
+**18. Word frequency counter বানান।**
+```python
+from collections import Counter
+import re
+
+def word_frequency(text: str) -> Counter:
+    words = re.findall(r'\b[a-z]+\b', text.lower())
+    return Counter(words)
+
+freq = word_frequency("the quick brown fox jumps over the lazy dog the fox")
+print(freq.most_common(3))  # [('the', 3), ('fox', 2), ...]
+```
+
+**19. Fibonacci generator বানান (infinite)।**
+```python
+from typing import Generator
+
+def fibonacci() -> Generator[int, None, None]:
+    a, b = 0, 1
+    while True:
+        yield a
+        a, b = b, a + b
+
+gen = fibonacci()
+first_10 = [next(gen) for _ in range(10)]
+# [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]
+```
+
+**20. Decorator implement করুন যা function execution time measure করে।**
+```python
+import time
+import functools
+
+def timer(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        elapsed = time.perf_counter() - start
+        print(f"{func.__name__} took {elapsed:.4f}s")
+        return result
+    return wrapper
+
+@timer
+def slow_function():
+    time.sleep(0.1)
+    return "done"
+```
+
+---
+
+**Hard (২১–৩০)**
+
+**21. Longest substring without repeating characters।**
+```python
+def length_of_longest_substring(s: str) -> int:
+    char_index = {}
+    max_len = left = 0
+    for right, char in enumerate(s):
+        if char in char_index and char_index[char] >= left:
+            left = char_index[char] + 1
+        char_index[char] = right
+        max_len = max(max_len, right - left + 1)
+    return max_len
+
+print(length_of_longest_substring("abcabcbb"))  # 3 ("abc")
+```
+
+**22. Implement `@retry` decorator with exponential backoff।**
+```python
+import time
+import functools
+import random
+
+def retry(max_attempts: int = 3, base_delay: float = 1.0, exceptions=(Exception,)):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    if attempt == max_attempts:
+                        raise
+                    delay = base_delay * (2 ** (attempt - 1)) + random.uniform(0, 0.1)
+                    print(f"Attempt {attempt} failed: {e}. Retrying in {delay:.2f}s")
+                    time.sleep(delay)
+        return wrapper
+    return decorator
+
+@retry(max_attempts=3, base_delay=0.5, exceptions=(ConnectionError,))
+def fetch_data(url: str):
+    # simulated unstable network
+    if random.random() < 0.7:
+        raise ConnectionError("Network error")
+    return {"data": "success"}
+```
+
+**23. Thread-safe counter implement করুন।**
+```python
+import threading
+
+class ThreadSafeCounter:
+    def __init__(self):
+        self._count = 0
+        self._lock = threading.Lock()
+
+    def increment(self, amount: int = 1):
+        with self._lock:
+            self._count += amount
+
+    def decrement(self, amount: int = 1):
+        with self._lock:
+            self._count -= amount
+
+    @property
+    def value(self) -> int:
+        with self._lock:
+            return self._count
+```
+
+**24. Observer pattern implement করুন।**
+```python
+from typing import Callable, Any
+
+class EventEmitter:
+    def __init__(self):
+        self._listeners: dict[str, list[Callable]] = {}
+
+    def on(self, event: str, handler: Callable):
+        self._listeners.setdefault(event, []).append(handler)
+        return self  # fluent interface
+
+    def off(self, event: str, handler: Callable):
+        if event in self._listeners:
+            self._listeners[event].remove(handler)
+
+    def emit(self, event: str, *args, **kwargs):
+        for handler in self._listeners.get(event, []):
+            handler(*args, **kwargs)
+
+# Usage
+emitter = EventEmitter()
+emitter.on("user_registered", lambda user: print(f"Welcome, {user}!"))
+emitter.on("user_registered", lambda user: print(f"Sending email to {user}"))
+emitter.emit("user_registered", "Rahim")
+```
+
+**25. Async concurrent API calls।**
+```python
+import asyncio
+import aiohttp
+from typing import Any
+
+async def fetch(session: aiohttp.ClientSession, url: str) -> dict:
+    async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+        resp.raise_for_status()
+        return await resp.json()
+
+async def fetch_all(urls: list[str]) -> list[Any]:
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch(session, url) for url in urls]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+    return results
+
+# urls = ["https://api.example.com/1", "https://api.example.com/2"]
+# results = asyncio.run(fetch_all(urls))
+```
+
+**26. Rate limiter decorator বানান।**
+```python
+import time
+import functools
+from collections import deque
+
+def rate_limit(calls: int, period: float):
+    """Allow `calls` calls per `period` seconds."""
+    def decorator(func):
+        timestamps = deque()
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            now = time.monotonic()
+            # remove old timestamps
+            while timestamps and timestamps[0] <= now - period:
+                timestamps.popleft()
+            if len(timestamps) >= calls:
+                sleep_for = period - (now - timestamps[0])
+                time.sleep(sleep_for)
+            timestamps.append(time.monotonic())
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+@rate_limit(calls=5, period=1.0)
+def api_call():
+    return "OK"
+```
+
+**27. JSON-like deep merge করুন।**
+```python
+def deep_merge(base: dict, override: dict) -> dict:
+    result = base.copy()
+    for key, value in override.items():
+        if (key in result and isinstance(result[key], dict)
+                and isinstance(value, dict)):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+print(deep_merge(
+    {"db": {"host": "localhost", "port": 5432}, "debug": True},
+    {"db": {"port": 5433, "name": "prod"}, "env": "prod"}
+))
+# {'db': {'host': 'localhost', 'port': 5433, 'name': 'prod'}, 'debug': True, 'env': 'prod'}
+```
+
+**28. Trie data structure implement করুন।**
+```python
+class TrieNode:
+    def __init__(self):
+        self.children: dict[str, TrieNode] = {}
+        self.is_end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word: str):
+        node = self.root
+        for char in word:
+            node = node.children.setdefault(char, TrieNode())
+        node.is_end = True
+
+    def search(self, word: str) -> bool:
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+        return node.is_end
+
+    def starts_with(self, prefix: str) -> bool:
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+        return True
+```
+
+**29. Producer-Consumer pattern asyncio দিয়ে।**
+```python
+import asyncio
+import random
+
+async def producer(queue: asyncio.Queue, n: int):
+    for i in range(n):
+        await asyncio.sleep(random.uniform(0.01, 0.05))
+        item = f"task-{i}"
+        await queue.put(item)
+        print(f"Produced: {item}")
+    await queue.put(None)  # sentinel
+
+async def consumer(queue: asyncio.Queue):
+    while True:
+        item = await queue.get()
+        if item is None:
+            break
+        await asyncio.sleep(random.uniform(0.02, 0.08))
+        print(f"Consumed: {item}")
+        queue.task_done()
+
+async def main():
+    queue = asyncio.Queue(maxsize=10)
+    await asyncio.gather(producer(queue, 10), consumer(queue))
+
+asyncio.run(main())
+```
+
+**30. Dependency injection container বানান।**
+```python
+from typing import Type, TypeVar, Callable, Any
+
+T = TypeVar("T")
+
+class Container:
+    def __init__(self):
+        self._factories: dict[type, Callable] = {}
+        self._singletons: dict[type, Any] = {}
+
+    def register(self, interface: type, factory: Callable, singleton=False):
+        self._factories[interface] = (factory, singleton)
+
+    def resolve(self, interface: Type[T]) -> T:
+        if interface in self._singletons:
+            return self._singletons[interface]
+        factory, singleton = self._factories[interface]
+        instance = factory(self)
+        if singleton:
+            self._singletons[interface] = instance
+        return instance
+
+# Usage
+container = Container()
+container.register(str, lambda c: "Hello, DI!", singleton=True)
+print(container.resolve(str))  # Hello, DI!
+```
+
+---
+
+<a id="p11-tricky"></a>
+
+## 3. Tricky Python Questions (20টি)
+
+**1. এই code-এর output কী?**
+```python
+x = [1, 2, 3]
+y = x
+y.append(4)
+print(x)  # [1, 2, 3, 4] — x আর y একই object!
+```
+> List assignment reference copy করে — deep copy না। `y = x.copy()` বা `y = x[:]` দিয়ে shallow copy করুন।
+
+**2. Default mutable argument trap।**
+```python
+def add_item(item, lst=[]):  # ❌ BAD
+    lst.append(item)
+    return lst
+
+print(add_item(1))  # [1]
+print(add_item(2))  # [1, 2] — same list!
+
+# ✅ Fix:
+def add_item(item, lst=None):
+    if lst is None:
+        lst = []
+    lst.append(item)
+    return lst
+```
+
+**3. Late binding closure trap।**
+```python
+funcs = [lambda: i for i in range(5)]
+print([f() for f in funcs])  # [4, 4, 4, 4, 4] — সব 4!
+
+# Fix — capture current value:
+funcs = [lambda i=i: i for i in range(5)]
+print([f() for f in funcs])  # [0, 1, 2, 3, 4]
+```
+
+**4. `is` operator integer trap।**
+```python
+a = 256
+b = 256
+print(a is b)  # True — integer caching (-5 to 256)
+
+a = 257
+b = 257
+print(a is b)  # False (বা True — implementation dependent!)
+# Always use == for value comparison!
+```
+
+**5. String multiplication trap।**
+```python
+matrix = [[0] * 3] * 3
+matrix[0][0] = 1
+print(matrix)  # [[1, 0, 0], [1, 0, 0], [1, 0, 0]] — সব row একই object!
+
+# Fix:
+matrix = [[0] * 3 for _ in range(3)]
+matrix[0][0] = 1
+print(matrix)  # [[1, 0, 0], [0, 0, 0], [0, 0, 0]] ✅
+```
+
+**6. `==` vs `is` None comparison।**
+```python
+x = None
+print(x == None)   # True (works but not Pythonic)
+print(x is None)   # True (Pythonic — PEP 8 recommend করে)
+# None singleton তাই 'is' safe
+```
+
+**7. Augmented assignment আর immutable।**
+```python
+t = (1, [2, 3])
+try:
+    t[1] += [4, 5]   # Exception raise করে...
+except TypeError:
+    pass
+print(t)  # (1, [2, 3, 4, 5]) — tuple unchanged, কিন্তু list modified!
+# tuple immutable কিন্তু element মুতুব্য
+```
+
+**8. `for-else` আর `while-else`।**
+```python
+for i in range(5):
+    if i == 10:
+        break
+else:
+    print("No break!")  # এটি print হবে — break হয়নি
+
+# else block: loop normally শেষ হলে run হয়, break-এ run হয় না
+```
+
+**9. Chained comparison।**
+```python
+print(1 < 2 < 3)     # True (mathematical: 1<2 AND 2<3)
+print(1 < 2 > 0)     # True
+print(1 == 1.0 == True)  # True (True == 1 == 1.0)
+```
+
+**10. Dictionary key-এ float trap।**
+```python
+d = {}
+d[1] = "one"
+d[1.0] = "one-float"
+print(len(d))  # 1! — 1 == 1.0 == True, hash same
+print(d)       # {1: 'one-float'}
+```
+
+**11. `sort()` vs `sorted()` return value।**
+```python
+lst = [3, 1, 2]
+result = lst.sort()
+print(result)   # None — sort() in-place, returns None
+print(lst)      # [1, 2, 3]
+# Mistake: sorted_lst = lst.sort() → sorted_lst is None!
+```
+
+**12. Generator exhaustion।**
+```python
+gen = (x for x in range(5))
+print(list(gen))  # [0, 1, 2, 3, 4]
+print(list(gen))  # [] — generator exhausted!
+# Generator একবারই iterate করা যায়
+```
+
+**13. String `+` vs `join()` performance।**
+```python
+import timeit
+# Bad O(n²)
+t1 = timeit.timeit('result = ""; [result.__add__(str(i)) for i in range(1000)]', number=1000)
+# Good O(n)
+t2 = timeit.timeit('"".join(str(i) for i in range(1000))', number=1000)
+# join significantly faster for large lists
+```
+
+**14. `__del__` reliable না।**
+```python
+class Resource:
+    def __del__(self):
+        print("Cleaning up!")  # কখন call হবে guarantee নেই
+
+# Context manager use করুন:
+class Resource:
+    def __enter__(self): return self
+    def __exit__(self, *args): print("Cleaning up!")  # guaranteed!
+```
+
+**15. Walrus operator `:=` (Python 3.8+)।**
+```python
+import re
+text = "User: Rahim, Age: 25"
+if m := re.search(r"User: (\w+)", text):
+    print(m.group(1))  # Rahim
+# := assigns and evaluates in one step
+```
+
+**16. `dict.get()` vs `dict[]`।**
+```python
+d = {"a": 1}
+print(d["b"])        # KeyError!
+print(d.get("b"))    # None (no error)
+print(d.get("b", 0)) # 0 (default value)
+```
+
+**17. `any()` short-circuit।**
+```python
+def side_effect(x):
+    print(f"Checking {x}")
+    return x > 3
+
+print(any(side_effect(x) for x in [1, 2, 5, 6, 7]))
+# Checking 1, Checking 2, Checking 5 — stops at 5! Short-circuit.
+```
+
+**18. Shallow copy trap।**
+```python
+import copy
+original = [[1, 2], [3, 4]]
+shallow = copy.copy(original)     # or original[:]
+deep = copy.deepcopy(original)
+
+shallow[0][0] = 99
+print(original)   # [[99, 2], [3, 4]] — affected!
+print(deep)       # [[1, 2], [3, 4]] — safe!
+```
+
+**19. `*` unpacking।**
+```python
+first, *rest = [1, 2, 3, 4, 5]
+print(first)  # 1
+print(rest)   # [2, 3, 4, 5]
+
+*init, last = [1, 2, 3, 4, 5]
+print(last)   # 5
+
+a, *_, b = [1, 2, 3, 4, 5]
+print(a, b)   # 1 5
+```
+
+**20. `exec()` আর `eval()` — security risk।**
+```python
+# NEVER do this with user input:
+user_code = input("Enter code: ")
+exec(user_code)    # Arbitrary code execution!
+eval(user_code)    # Same risk!
+
+# Safe alternative: use ast.literal_eval for data only
+import ast
+safe_data = ast.literal_eval("[1, 2, 3]")  # Only literals
+```
+
+---
+
+<a id="p11-rapid"></a>
+
+## 4. Rapid-fire Q&A (20টি)
+
+| # | প্রশ্ন | উত্তর |
+|---|---|---|
+| 1 | Python-এ `pass` কী করে? | Placeholder — empty block syntax-এর জন্য |
+| 2 | `break` vs `continue` vs `pass`? | break: loop exit, continue: next iteration, pass: nothing |
+| 3 | `list` vs `array` (numpy)? | list heterogeneous, array homogeneous + fast math |
+| 4 | Python 2 vs 3 প্রধান পার্থক্য? | print function, unicode default, integer division, range |
+| 5 | `int`, `float` precision issue? | `0.1 + 0.2 != 0.3` — floating point binary representation |
+| 6 | `str.format()` vs f-string? | f-string (3.6+) faster, readable; format backward-compatible |
+| 7 | `os.path` vs `pathlib`? | pathlib OOP, cross-platform, preferred (3.4+) |
+| 8 | `json.dumps()` vs `json.dump()`? | dumps → string, dump → file write |
+| 9 | `pickle` কী? | Python object serialization (binary) — security risk with untrusted data |
+| 10 | `__name__ == "__main__"` কেন? | Import হলে run না করতে, direct execute হলে run করতে |
+| 11 | List vs Deque prepend speed? | list.insert(0,x) O(n), deque.appendleft() O(1) |
+| 12 | `setdefault()` কী করে? | Key না থাকলে default set করে এবং value return করে |
+| 13 | `vars()` কী? | Object-এর `__dict__` return করে |
+| 14 | `dir()` কী? | Object-এর all attributes/methods list করে |
+| 15 | `isinstance()` vs `type()`? | isinstance inheritance check করে, type exact type only |
+| 16 | Python-এ `//` operator? | Floor division — integer result |
+| 17 | `@property` কী করে? | Method-কে attribute-এর মতো access করতে দেয় |
+| 18 | Walrus operator কখন? | Loop/condition-এ assign + check একসাথে (Python 3.8+) |
+| 19 | `NotImplemented` vs `NotImplementedError`? | NotImplemented: operator method return value, Error: abstract method |
+| 20 | `__all__` কী? | Module-এ `from module import *` কী export হবে তা define করে |
+
+---
+
+<a id="p11-scenario"></a>
+
+## 5. Scenario-based Questions (20টি)
+
+**1. আপনার FastAPI app-এ production-এ N+1 query problem দেখছেন। কীভাবে diagnose আর fix করবেন?**
+> Diagnose: `sqlalchemy-utils` বা `flask-sqlalchemy` query logging enable করুন — কতটি query হচ্ছে দেখুন। Fix: `joinedload()` বা `selectinload()` দিয়ে eager loading। একটি query-তেই related data আনুন।
+
+**2. API-তে memory leak দেখছেন — RAM ক্রমাগত বাড়ছে। কীভাবে debug করবেন?**
+> `tracemalloc` module দিয়ে memory snapshot নিন। `objgraph` library দিয়ে object count দেখুন। Common cause: circular reference, unbounded cache, event listener যা detach হয়নি। `gc.collect()` force করুন।
+
+**3. একটি Python script 10 মিনিট ধরে চলছে। কীভাবে optimize করবেন?**
+> Step 1: Profile — `cProfile` বা `line_profiler` দিয়ে hotspot find করুন। Step 2: Algorithm improve করুন। Step 3: `numpy`/`pandas` vectorization। Step 4: Caching (`lru_cache`)। Step 5: Multiprocessing CPU-bound task-এ।
+
+**4. 1 million records CSV process করতে হবে। কীভাবে করবেন memory-efficiently?**
+> Generator + chunked processing। `pandas` chunking: `pd.read_csv(file, chunksize=10000)`। বা pure Python: CSV reader line by line, never load all in memory। Database bulk insert।
+
+**5. Third-party API 30% time timeout করে। কীভাবে handle করবেন?**
+> Retry with exponential backoff + jitter। Circuit breaker pattern। Timeout set করুন (`requests timeout=5`)। Fallback value বা cached response return করুন। Alert/log প্রতিটি failure।
+
+**6. Team-এর নতুন developer বারবার mutable default argument bug করছেন। কীভাবে prevent করবেন?**
+> `flake8` + `flake8-bugbear` plugin — B006 rule এই bug detect করে। Pre-commit hook-এ add করুন। Code review checklist-এ রাখুন।
+
+**7. Production-এ অচানক 500 error। Log দেখছেন `RecursionError: maximum recursion depth exceeded`। কী করবেন?**
+> Immediate: `sys.setrecursionlimit()` বাড়ানো temporary fix। Root cause: infinite recursion — base case missing বা circular reference। Refactor করুন iterative approach-এ অথবা memoization দিয়ে।
+
+**8. JWT token expire হওয়ার পরে user-এর session lost হচ্ছে। UX improve করবেন কীভাবে?**
+> Refresh token pattern implement করুন। Short-lived access token (15 min) + long-lived refresh token (7 days)। Frontend silent refresh করবে। Refresh token rotation security-র জন্য।
+
+**9. Concurrent user-রা একই database row update করছে। Race condition prevent করবেন কীভাবে?**
+> Optimistic locking: version column — update-এর আগে version check করুন। Pessimistic locking: `SELECT FOR UPDATE`। SQLAlchemy-তে `with_for_update()`।
+
+**10. Python script-এ credentials hardcode হয়ে গেছে production-এ। কী করবেন?**
+> Immediate: git history rewrite করুন (`git filter-branch` বা BFG Repo Cleaner), credentials rotate করুন। Prevention: `.env` file + `python-dotenv`, `.gitignore`-এ `.env`, `git-secrets` pre-commit hook।
+
+**11. pytest suite আগে 2 মিনিটে চলত, এখন 15 মিনিট লাগছে। কীভাবে debug করবেন?**
+> `pytest --durations=10` — slowest 10 test দেখান। DB call করছে এমন test mock করুন। `pytest-xdist` দিয়ে parallel run (`pytest -n auto`)।
+
+**12. Deployed app-এ একটি bug শুধু production-এ হচ্ছে, local-এ হচ্ছে না। কী হতে পারে?**
+> Environment variables different। Database data different (edge case)। Python/library version different। Race condition — local single process, prod multiple workers। Log level different।
+
+**13. API endpoint-এ same data বারবার DB থেকে fetch হচ্ছে। কীভাবে optimize করবেন?**
+> In-memory cache: `functools.lru_cache` বা `cachetools`। Redis cache: `redis-py` + TTL set। HTTP cache headers: `Cache-Control`, `ETag`। CDN-এ cache।
+
+**14. 100+ microservices-এর Python project-এ shared code manage করবেন কীভাবে?**
+> Internal Python package তৈরি করুন — private PyPI (Nexus/Artifactory) বা Git package। Shared models, utilities, clients। Version properly।
+
+**15. বড় Python project-এ circular import এর কীভাবে সমাধান করবেন?**
+> Import function-এর ভেতরে move করুন (local import)। Module restructure করুন — circular dependency সাধারণত design problem। Shared code আলাদা module-এ move করুন।
+
+**16. Python-এ একটি function 500ms নেয় কিন্তু সেটা 1000 concurrent request handle করতে হবে। কী করবেন?**
+> `asyncio` + `async def` যদি I/O-bound হয়। CPU-bound হলে `multiprocessing.Pool` বা Celery task queue। Redis queue + worker pool। Horizontal scaling।
+
+**17. Pydantic model validation-এ custom error message দিতে চান। কীভাবে?**
+```python
+from pydantic import field_validator
+
+class User(BaseModel):
+    age: int
+
+    @field_validator("age")
+    @classmethod
+    def age_must_be_positive(cls, v):
+        if v < 0:
+            raise ValueError("বয়স negaitive হতে পারে না")
+        return v
+```
+
+**18. একটি Python web scraper IP block হচ্ছে। কীভাবে handle করবেন?**
+> Polite delay (`time.sleep`), `User-Agent` rotate, proxy rotation। `Scrapy` middleware। Respect `robots.txt`। Rate limiting।
+
+**19. DB migration করতে গিয়ে production-এ data loss হওয়ার ঝুঁকি আছে। কীভাবে safe করবেন?**
+> Backup নিন আগে। Alembic migration script review করুন। Staging-এ আগে test করুন। Rollback migration তৈরি করুন। Zero-downtime migration: additive changes (add column) → deploy → remove old।
+
+**20. Interview-এ "আপনার সবচেয়ে কঠিন bug" জিজ্ঞেস করলে কীভাবে উত্তর দেবেন?**
+> STAR method: Situation (project context), Task (কী করতে হয়েছিল), Action (কীভাবে debug করলেন — tools, steps), Result (কীভাবে solve হলো, কী শিখলেন)। Honest, specific, learning-focused উত্তর দিন।
+
+---
+
+## PART 11 Quick Revision Table
+
+| Section | Key Points |
+|---|---|
+| Theoretical (60) | Basics → OOP → Functional → DS → Advanced → Web stack |
+| Coding (30) | Easy: fundamentals, Medium: data structures, Hard: patterns |
+| Tricky (20) | Mutable default, late binding, `is` vs `==`, generator exhaustion |
+| Rapid-fire (20) | One-liner concept checks |
+| Scenario (20) | Real project problems: N+1, memory leak, race condition |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part12"></a>
+
+## 📋 PART 12 সূচিপত্র — Bangladeshi Interview Preparation
+
+| # | Topic | What's Inside |
+|---|---|---|
+| 1 | [BD Company Interview Patterns](#p12-companies) | Brain Station 23, BJIT, Pathao, bKash, Nagad |
+| 2 | [Mock Interview Script](#p12-mock) | Bangla conversation format — full simulation |
+| 3 | [Common Rejection Reasons](#p12-rejection) | কেন fail করেন, কীভাবে avoid করবেন |
+| 4 | [Salary Negotiation](#p12-salary) | BDT context, Junior SWE salary range |
+| 5 | [Resume Tips](#p12-resume) | Python developer CV — do's and don'ts |
+| 6 | [Practice Resources](#p12-resources) | LeetCode, HackerRank, BD job sites |
+| 7 | [Final Checklist](#p12-checklist) | Interview-এর আগের দিন সব check |
+
+---
+
+<a id="p12-companies"></a>
+
+## 1. Bangladesh Company Interview Patterns
+
+### Brain Station 23
+
+**প্রোফাইল:** Large software firm, outsourcing + product। ~2000+ engineers।
+
+**Interview Process (Python/Backend):**
+1. CV Screening (ATS — keyword: Python, Django/FastAPI, REST, SQL)
+2. Online Assessment — HackerRank (2 coding problems, 45 min)
+3. Technical Phone Screen (30 min — basics, OOP, SQL)
+4. Technical Interview Round 1 (1 hr — coding + design)
+5. Technical Interview Round 2 (1 hr — system design light, project discussion)
+6. HR Round (salary, notice period)
+
+**প্রায়ই আসা topics:**
+- OOP — `__init__`, inheritance, polymorphism
+- Python basics — list/dict operations, generators
+- SQL — JOIN, GROUP BY, subquery
+- REST API concepts — HTTP methods, status codes
+- Git — basic workflow
+- একটি project নিয়ে বিস্তারিত আলোচনা
+
+**Tips:** GitHub profile clean করুন। Project-এ README ভালো লিখুন। HackerRank practice করুন।
+
+---
+
+### BJIT Limited
+
+**প্রোফাইল:** Japanese partnership, formal process, quality-focused।
+
+**Interview Process:**
+1. Written Test (aptitude + programming fundamentals)
+2. Technical Interview (2-3 rounds)
+3. HR + Management Interview
+
+**প্রায়ই আসা topics:**
+- Strong OOP — Design patterns (Factory, Singleton, Observer)
+- Testing — unit testing, TDD concept
+- Code quality — clean code, SOLID principles
+- Database — normalization, indexing, query optimization
+- Japanese work culture fit (communication, punctuality)
+
+**Tips:** Problem-solving approach explain করুন clearly। Communication skill important।
+
+---
+
+### Pathao
+
+**প্রোফাইল:** Ride-sharing/delivery startup, fast-paced, tech-first।
+
+**Interview Process:**
+1. Take-home assignment (real feature implementation, 48-72 hrs)
+2. Technical deep-dive (code review of assignment, 1 hr)
+3. System Design Interview (scale: millions of rides)
+4. Culture fit + behavioral
+
+**প্রায়ই আসা topics:**
+- System design — location tracking, real-time matching
+- Scalability — caching, message queue (Kafka/RabbitMQ)
+- Python async — asyncio, Celery
+- Database — PostgreSQL, Redis, optimization
+- API design — versioning, rate limiting
+- Microservices — service communication
+
+**Tips:** Take-home assignment-এ production-quality code দিন — tests, error handling, README। System design-এ tradeoffs বলুন।
+
+---
+
+### bKash
+
+**প্রোফাইল:** FinTech leader, security-critical, compliance-heavy।
+
+**Interview Process:**
+1. HR Pre-screening
+2. Technical Written Test
+3. Technical Interview (multiple rounds)
+4. Security/Compliance awareness check
+5. Senior Management Interview
+
+**প্রায়ই আসা topics:**
+- Security — OWASP Top 10, SQL injection, XSS prevention
+- Financial transactions — ACID properties, idempotency
+- API security — JWT, OAuth2, rate limiting
+- Encryption — at rest, in transit
+- Audit logging, compliance
+- Python — strong fundamentals + security
+
+**Tips:** Security consciousness দেখান সব answer-এ। "এটি কি secure?" নিজেই জিজ্ঞেস করুন।
+
+---
+
+### Nagad
+
+**প্রোফাইল:** Digital financial service, growing fast, competitive।
+
+**Interview Process:**
+1. Online Coding Test
+2. Technical Interview (2 rounds)
+3. HR Interview
+
+**প্রায়ই আসা topics:**
+- Python backend — Django/FastAPI
+- Database — PostgreSQL, query optimization
+- API design — REST, documentation
+- Security basics — authentication, authorization
+- Problem-solving coding
+
+**Tips:** MFS (Mobile Financial Service) domain knowledge থাকলে plus point।
+
+---
+
+### General Tips for BD Market
+
+**Preparation Timeline:**
+- **3 months before:** DSA foundation, Python deep dive
+- **2 months before:** Projects build করুন, system design শুরু
+- **1 month before:** Mock interviews, company-specific research
+- **1 week before:** Revision, portfolio clean করুন
+
+**Salary Benchmark (2025-2026, Dhaka):**
+| Level | Range (BDT/month) |
+|---|---|
+| Junior Python Developer (0–1 yr) | 25,000 – 50,000 |
+| Mid-level (2–4 yr) | 50,000 – 1,20,000 |
+| Senior (5+ yr) | 1,00,000 – 2,50,000+ |
+| Tech Lead / Architect | 2,00,000+ |
+
+---
+
+<a id="p12-mock"></a>
+
+## 2. Mock Interview Script (Python Junior Developer)
+
+**Scenario:** Brain Station 23-এর Technical Round 1। Interviewer: Senior Engineer। Candidate: Rahim (1 year experience)।
+
+---
+
+**Interviewer:** আপনার সম্পর্কে বলুন।
+
+**Rahim:** আমি Rahim। Computer Science-এ graduate করেছি 2023 সালে। Last 1 year একটি software company-তে Python developer হিসেবে কাজ করেছি। Django আর FastAPI দিয়ে REST API তৈরি করেছি। PostgreSQL, Redis আর Git নিয়মিত use করি। আমার GitHub-এ কয়েকটি personal project আছে — একটি FastAPI-based e-commerce API যেটিতে JWT auth, Celery task queue, আর Redis caching implement করেছি।
+
+---
+
+**Interviewer:** Python-এ `list` আর `tuple`-এর পার্থক্য বলুন।
+
+**Rahim:** দুটো ordered sequence। পার্থক্য হলো mutability। List mutable — পরে add, remove, change করা যায়। Tuple immutable — একবার তৈরি হলে change করা যায় না।
+
+আমি tuple use করি যখন data fixed থাকে — যেমন database record return করার সময়, বা function থেকে multiple value return করতে। Tuple slightly faster এবং dictionary key হিসেবে use করা যায়, list যায় না কারণ list unhashable।
+
+---
+
+**Interviewer:** OOP-এ polymorphism কী? Python-এ কীভাবে implement করবেন?
+
+**Rahim:** Polymorphism মানে "many forms" — একই interface দিয়ে different types handle করা।
+
+Python-এ দুভাবে: Method overriding — child class parent-এর method নিজের মতো করে implement করে। আর duck typing — Python type check করে না, শুধু দেখে object-এর সেই method আছে কিনা।
+
+উদাহরণ: একটি `Payment` base class, তার from `bKashPayment` আর `NagadPayment` child। দুটোই `process()` method implement করে কিন্তু আলাদাভাবে। আমি একই `payment.process()` call করি — কোন provider সেটা caller জানে না।
+
+---
+
+**Interviewer:** একটি coding problem দিচ্ছি। একটি list-এ সব duplicate element remove করুন কিন্তু insertion order maintain করতে হবে।
+
+**Rahim:** *(চিন্তা করুন জোরে)* Okay, সবচেয়ে simple approach হলো `list(set())` কিন্তু এটি order maintain করে না।
+
+Order maintain করতে আমি `seen` set use করব — O(1) lookup। যা already দেখেছি সেটা skip, বাকিগুলো রাখব।
+
+```python
+def remove_duplicates(lst):
+    seen = set()
+    result = []
+    for item in lst:
+        if item not in seen:
+            result.append(item)
+            seen.add(item)
+    return result
+```
+
+Alternatively, list comprehension দিয়ে:
+```python
+def remove_duplicates(lst):
+    seen = set()
+    return [x for x in lst if not (x in seen or seen.add(x))]
+```
+
+Time complexity O(n), space O(n)।
+
+---
+
+**Interviewer:** আপনার project-এ সবচেয়ে challenging কী ছিল?
+
+**Rahim:** আমার e-commerce project-এ payment processing-এ একটি race condition ছিল। দুটি concurrent request একই order-এ double charge করছিল।
+
+আমি diagnose করলাম logs দিয়ে — দেখলাম দুটো request microsecond-এর পার্থক্যে একই payment ID create করছে।
+
+Solution: Database-এ optimistic locking implement করলাম। Order table-এ `version` column add করলাম। Payment process করার আগে version check করি — যদি changed হয়ে যায়, transaction rollback করে error return করি। Frontend retry করে।
+
+এটি থেকে শিখলাম: concurrent system-এ race condition assume করতে হবে, test করতে হবে।
+
+---
+
+**Interviewer:** REST API-তে HTTP status code 400 আর 422 পার্থক্য?
+
+**Rahim:** দুটোই client error কিন্তু context আলাদা।
+
+400 Bad Request — general client error, request malformed বা invalid।
+
+422 Unprocessable Entity — request structure correct কিন্তু semantic validation fail — যেমন email format wrong, age negative। FastAPI automatically 422 return করে Pydantic validation fail হলে। এটি আরো specific, client-এর জন্য better error message।
+
+---
+
+**Interviewer:** আর কোনো প্রশ্ন আছে আমার জন্য?
+
+**Rahim:** হ্যাঁ, কয়েকটি জিজ্ঞেস করতে চাই। Team-এ কতজন Python developer আছেন? আমি কোন project-এ কাজ করব? Code review process কেমন? আর আপনারা কোন Python version আর কোন framework use করছেন production-এ?
+
+---
+
+<a id="p12-rejection"></a>
+
+## 3. Common Rejection Reasons — এবং কীভাবে Avoid করবেন
+
+**Technical Reasons:**
+
+**1. Fundamentals দুর্বল**
+- ❌ Basic OOP, Python data structures জিজ্ঞেস করলে uncertain
+- ✅ Fix: PART 1–6 পুরোটা পড়ুন, flashcard বানান
+
+**2. Coding problem solve করতে পারছেন না under pressure**
+- ❌ চুপ করে আছেন, approach বলছেন না
+- ✅ Fix: Think aloud করুন। "আমি প্রথমে brute force দিয়ে শুরু করব, তারপর optimize করব।"
+
+**3. Project নিজে তৈরি করেননি**
+- ❌ Tutorial project copy করেছেন, কিছু জিজ্ঞেস করলে জানেন না
+- ✅ Fix: একটি হলেও নিজে build করুন — feature add করুন, bug fix করুন
+
+**4. SQL দুর্বল**
+- ❌ JOIN, GROUP BY জিজ্ঞেস করলে struggle
+- ✅ Fix: SQLZoo, LeetCode SQL section practice করুন
+
+**5. No testing knowledge**
+- ❌ "Testing করিনি" — automatic red flag
+- ✅ Fix: যেকোনো project-এ কমপক্ষে basic pytest লিখুন
+
+---
+
+**Communication Reasons:**
+
+**6. উত্তর অনেক ছোট বা অনেক বড়**
+- ❌ "হ্যাঁ, জানি" বা 10 মিনিট বলতে থাকা
+- ✅ Fix: 2–3 sentence answer। Interviewer যদি detail চায়, তখন বিস্তারিত বলুন
+
+**7. "জানি না" বলে থেমে যাওয়া**
+- ❌ আটকে গেলে complete silence
+- ✅ Fix: "এই exact term জানি না, কিন্তু এই concept টা আমার মনে হয় এভাবে কাজ করে..."
+
+**8. Question না করা**
+- ❌ "আর কোনো প্রশ্ন নেই।" — disengaged মনে হয়
+- ✅ Fix: Team, tech stack, learning opportunities — genuine question করুন
+
+---
+
+**Attitude Reasons:**
+
+**9. Overconfidence বা underconfidence**
+- ❌ "এটা সহজ" বা extremely nervous
+- ✅ Fix: Honest আর curious হন। "আমি এটা exactly জানি না, কিন্তু শিখতে আগ্রহী।"
+
+**10. Previous job/employer সম্পর্কে negative**
+- ❌ "আগের company horrible ছিল"
+- ✅ Fix: Neutral বা positive frame করুন — "আমি নতুন challenge খুঁজছিলাম"
+
+---
+
+<a id="p12-salary"></a>
+
+## 4. Salary Negotiation Tips (BDT Context)
+
+**Research আগে:**
+- glassdoor.com, linkedin.com salary insights
+- BD tech community (Facebook groups: "Software Engineers of Bangladesh")
+- বন্ধু/senior যারা target company-তে আছেন
+
+**Negotiation Script:**
+
+**যখন HR জিজ্ঞেস করে "আপনার expected salary কত?"**
+
+> "আমি এই role-এর জন্য market rate-এ interested। আমার research অনুযায়ী এই position-এ [range] offer হয়। আমার skills আর experience বিবেচনায় [specific amount] expect করছি। এটা কি আপনাদের budget-এর মধ্যে?"
+
+**Offer পেয়ে negotiate করতে হলে:**
+
+> "আপনার offer-এর জন্য ধন্যবাদ। এই role নিয়ে আমি genuinely excited। আমার current compensation আর market research-এর ভিত্তিতে [higher amount]-এ কি বিবেচনা করা সম্ভব?"
+
+**Tips:**
+- সবসময় range দিন, single number নয়
+- Benefits negotiate করুন — work from home, learning budget, flexible hours
+- "Is this negotiable?" জিজ্ঞেস করুন সরাসরি
+- Written offer আসার আগে কিছু accept করবেন না verbally-এর বাইরে
+- Counter-offer দিলে 24-48 hrs time নিন — impulsive হবেন না
+
+**Counter-offer trap:**
+বর্তমান employer counter-offer দিলে সাবধান — raise দিলেও underlying reason (growth, culture) change হয় না। Statistics: 80% who accept counter-offer within 6 months চলে যায়।
+
+---
+
+<a id="p12-resume"></a>
+
+## 5. Resume Tips — Python Developer
+
+**Resume Structure:**
+
+```
+[Name] | [Phone] | [Email] | [LinkedIn] | [GitHub]
+
+SUMMARY (2–3 lines)
+Python developer with X years of experience building scalable
+REST APIs using FastAPI/Django. Strong in PostgreSQL, Redis, Docker.
+
+SKILLS
+Languages: Python, SQL, JavaScript (basic)
+Frameworks: FastAPI, Django REST Framework, SQLAlchemy
+Databases: PostgreSQL, MySQL, Redis, MongoDB
+Tools: Git, Docker, Linux, Celery, pytest
+
+EXPERIENCE
+Company Name | Python Developer | Jan 2024 – Present
+• Built REST API for X feature using FastAPI, serving 50K+ daily requests
+• Reduced API response time by 40% using Redis caching
+• Wrote pytest test suite with 80% coverage
+• Collaborated in Agile team of 8 engineers
+
+PROJECTS
+Project Name | GitHub Link
+• FastAPI e-commerce API with JWT auth, Celery background tasks, PostgreSQL
+• Web scraper using BeautifulSoup that collected 100K+ records
+
+EDUCATION
+B.Sc. in CSE | University Name | 2023
+```
+
+**DO:**
+- Quantify achievements — "50K requests/day", "40% faster", "80% coverage"
+- GitHub link দিন — recruiter check করবে
+- Tech stack clearly list করুন — ATS (Automated Tracking System) keyword match করে
+- Active verb use করুন — "built", "reduced", "implemented"
+- 1 page (0–2 years experience)
+
+**DON'T:**
+- "Proficient in all programming languages" — credibility হারাবেন
+- Objective statement পুরানো format — summary ব্যবহার করুন
+- Photo দেওয়া নিয়ে: international job avoid করুন, BD local companies-এ optional
+- `hello123@gmail.com` type email — professional email রাখুন
+- Tutorial project copy করে রাখবেন না — interview-এ ধরা পড়বেন
+
+**ATS Keywords (Python Backend):**
+`Python`, `FastAPI`, `Django`, `REST API`, `PostgreSQL`, `Redis`, `Docker`, `Git`, `pytest`, `SQLAlchemy`, `JWT`, `Celery`, `microservices`, `agile`, `CI/CD`
+
+---
+
+<a id="p12-resources"></a>
+
+## 6. Practice Resources
+
+**Coding Practice:**
+
+| Platform | Focus | Link |
+|---|---|---|
+| LeetCode | DSA — FAANG style | leetcode.com |
+| HackerRank | Python domain, certifications | hackerrank.com |
+| Codeforces | Competitive — logic | codeforces.com |
+| Project Euler | Math + Python | projecteuler.net |
+| Exercism | Python idiomatic code | exercism.org/tracks/python |
+
+**Target for Junior BD Job:**
+- LeetCode: 50+ Easy, 20+ Medium (Arrays, Strings, HashMap, Stack)
+- HackerRank Python: Silver badge minimum
+
+---
+
+**System Design:**
+
+| Resource | What |
+|---|---|
+| "Designing Data-Intensive Applications" — Martin Kleppmann | Best book on distributed systems |
+| System Design Primer (GitHub) | Free, comprehensive |
+| ByteByteGo (YouTube) | Visual explanations |
+
+---
+
+**BD Job Boards:**
+
+| Site | সেরা জন্য |
+|---|---|
+| bdjobs.com | Large companies, corporate |
+| linkedin.com | Startups + multinational |
+| chakri.com | BD tech focus |
+| jobsbd.com | General + tech |
+| Facebook: "Job Circular BD IT" | Community, startup |
+
+**Community:**
+- Facebook: "Software Engineers of Bangladesh" — 70K+ members
+- Discord: BD Tech Community
+- LinkedIn: BD Python developers follow করুন
+
+---
+
+**Learning Resources:**
+
+| Resource | কী শিখবেন |
+|---|---|
+| Real Python (realpython.com) | Practical Python articles |
+| FastAPI docs | Best framework documentation |
+| SQLAlchemy docs | ORM deep dive |
+| TestDriven.io | TDD with Python/FastAPI |
+| Arjan Codes (YouTube) | Clean code, design patterns |
+| Corey Schafer (YouTube) | Python fundamentals |
+
+---
+
+<a id="p12-checklist"></a>
+
+## 7. Final Checklist — Interview-এর আগে
+
+**১ সপ্তাহ আগে:**
+- [ ] GitHub profile clean করুন — pinned projects readable README সহ
+- [ ] Interview company research করুন — product, tech stack, recent news
+- [ ] PART 1–11 quick revision করুন
+- [ ] 2–3 mock interview practice করুন (friend বা mirror-এ)
+- [ ] Target questions prepare করুন interviewer-এর জন্য
+
+**১ দিন আগে:**
+- [ ] Interview time, location/video link confirm করুন
+- [ ] Outfit prepare করুন (smart casual — jeans + formal shirt okay)
+- [ ] পথের route জানুন — 30 min আগে পৌঁছানোর plan করুন
+- [ ] Resume/CV print করুন 2-3 copies (in-person হলে)
+- [ ] Portfolio/GitHub খুলে রাখুন browser-এ
+- [ ] রাত 11টার আগে ঘুমাতে যান
+
+**Interview-এর দিন:**
+- [ ] সময় মেনে যান — 10–15 min আগে
+- [ ] Phone silent করুন
+- [ ] Water bottle সাথে রাখুন
+- [ ] Deep breath — nervous হলেও okay
+
+**Interview-এর সময়:**
+- [ ] Interviewer-এর নাম জানুন আগে, সম্বোধন করুন
+- [ ] Think aloud করুন coding-এ
+- [ ] "জানি না" বললে approach বলুন
+- [ ] প্রশ্ন করুন শেষে
+- [ ] Thank you বলুন শেষে
+
+**Interview-এর পরে:**
+- [ ] 24 ঘণ্টার মধ্যে thank-you email পাঠান (LinkedIn বা email)
+- [ ] কী ভালো হলো, কী improve করা দরকার — note করুন
+- [ ] পরের সুযোগের জন্য ready থাকুন
+
+---
+
+## PART 12 Quick Revision Table
+
+| Topic | Key Takeaway | Action |
+|---|---|---|
+| BD Company Patterns | Brain Station 23 online test, BJIT formal, Pathao take-home, bKash security-focus | Research target company |
+| Mock Interview | Think aloud, honest, question করুন | 3+ mock practices |
+| Rejection Reasons | Fundamentals, communication, project ownership | Identify weak area |
+| Salary Negotiation | Research → range → counter → written | Never accept verbally first |
+| Resume | Quantify, ATS keywords, GitHub | 1 page, active verbs |
+| Resources | LeetCode 50+ Easy, HackerRank Python | 30 min/day consistent |
+| Checklist | 1 week → 1 day → day-of → after | Follow systematically |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **🎉 সম্পূর্ণ হয়েছে!**
+> এই Python Junior Engineer Interview Handbook-এর সব **12টি PART** সম্পূর্ণ।
+>
+> **PART 1** — Python Basics | **PART 2** — Data Structures | **PART 3** — OOP | **PART 4** — Functional Python | **PART 5** — File & Exception Handling | **PART 6** — Modules & Standard Library | **PART 7** — Database & ORM | **PART 8** — Web Development & API | **PART 9** — Testing & Best Practices | **PART 10** — Python Projects | **PART 11** — Interview Questions Bank | **PART 12** — Bangladeshi Interview Preparation
+>
+> **শুভকামনা তোমার interview-এ!** 🐍
