@@ -190,7 +190,16 @@
 <summary><strong>🇧🇩 PART 12 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-*(শীঘ্রই আসছে)*
+- [১২.১ BD Job Market Overview](#১২১-bd-job-market-overview)
+- [১২.২ Fresher Interview Pattern](#১২২-fresher-interview-pattern)
+- [১২.৩ BD Company-Specific Questions](#১২৩-bd-company-specific-questions)
+- [১২.৪ Mock Interview Script](#১২৪-mock-interview-script)
+- [১২.৫ Resume Tips for JS Developers](#১২৫-resume-tips-for-js-developers)
+- [১২.৬ Portfolio ও GitHub Profile](#১২৬-portfolio-ও-github-profile)
+- [১২.৭ Salary Negotiation](#১২৭-salary-negotiation)
+- [১২.৮ Common Mistakes to Avoid](#১২৮-common-mistakes-to-avoid)
+- [১২.৯ 30-Day Preparation Plan](#১২৯-30-day-preparation-plan)
+- [১২.১০ Final Revision Checklist](#১২১০-final-revision-checklist)
 
 </details>
 
@@ -12191,3 +12200,745 @@ function onRenderCallback(id, phase, actualDuration, baseDuration) {
 > **🚀 PART 12 আসছে (শেষ PART):** BD Interview Preparation — Fresher Interview Patterns, BD Company-specific Questions, Mock Interview Script, Resume Tips, Salary Negotiation।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 12 দাও" লিখুন।
+
+
+---
+
+<a id="part12"></a>
+
+# PART 12 — BD Interview Preparation (চূড়ান্ত প্রস্তুতি)
+
+> **📍 এই PART-এর Sections:** [১২.১ BD Job Market Overview](#১২১-bd-job-market-overview) · [১২.২ Fresher Interview Pattern](#১২২-fresher-interview-pattern) · [১২.৩ BD Company-Specific Questions](#১২৩-bd-company-specific-questions) · [১২.৪ Mock Interview Script](#১২৪-mock-interview-script) · [১২.৫ Resume Tips for JS Developers](#১২৫-resume-tips-for-js-developers) · [১২.৬ Portfolio ও GitHub Profile](#১২৬-portfolio-ও-github-profile) · [১২.৭ Salary Negotiation](#১২৭-salary-negotiation) · [১২.৮ Common Mistakes to Avoid](#১২৮-common-mistakes-to-avoid) · [১২.৯ 30-Day Preparation Plan](#১২৯-30-day-preparation-plan) · [১২.১০ Final Revision Checklist](#১২১০-final-revision-checklist)
+
+---
+
+## ১২.১ BD Job Market Overview
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📊 Bangladesh-এ JS Developer Demand (2025-2026)
+
+| Company Type | Stack | Salary Range (Fresher) | Interview Focus |
+|-------------|-------|------------------------|-----------------|
+| **Product Company** | React, Node.js, MongoDB | 40k–80k BDT | DSA, System Design, Deep JS |
+| **Software House** | React/Vue, Laravel/Node | 25k–55k BDT | Project skills, practical coding |
+| **IT Consultancy** | Varies | 30k–60k BDT | Communication, client handling |
+| **Startup** | Any modern stack | 35k–70k BDT | Speed, versatility, ownership |
+| **Outsourcing/Freelance** | React, Next.js | Market rate | Portfolio, English communication |
+| **Remote (Foreign Client)** | React, Node, TypeScript | USD 800–2000 | Strong fundamentals + communication |
+
+### 🏢 Top BD Companies Hiring JS Developers
+
+```
+Product Companies:      Software Houses:
+• Shajgoj               • Brain Station 23
+• Shohoz                • Kona Software Lab
+• Pathao                • TigerIT Bangladesh
+• bKash (tech team)     • Enosis Solutions
+• Chaldal               • Apurba Technologies
+• Augmedix BD           • Therap Services
+
+Startups & Others:      Outsourcing:
+• 10 Minute School      • BJIT Group
+• Shikho                • SJ Innovation
+• Maya                  • Nascenia
+• Sheba.xyz             • Optimizely BD
+```
+
+### 📋 BD Fresher Interview Format (Most Common)
+
+```
+১. Online Assessment / Aptitude Test (MCQ)
+   — 30-60 min, JS fundamentals, basic algorithms
+
+২. Technical Phone/Video Screening
+   — 30 min, 5-10 questions, CV discussion
+
+৩. Technical Interview Round 1
+   — 60-90 min, coding problems, JS concepts
+
+৪. Technical Interview Round 2 (Product companies)
+   — System design, project discussion, architecture
+
+৫. HR / Managerial Round
+   — Culture fit, salary discussion, career goals
+```
+
+---
+
+## ১২.২ Fresher Interview Pattern
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 🎯 সবচেয়ে বেশি জিজ্ঞেস করা Topics (BD Context)
+
+<details>
+<summary><strong>🔹 Tier 1 — প্রায় সব interview-এ আসে</strong></summary>
+<br>
+
+```
+✅ var/let/const পার্থক্য
+✅ Hoisting কী?
+✅ Closure কী? উদাহরণ দাও
+✅ == vs === পার্থক্য
+✅ this keyword কীভাবে কাজ করে
+✅ Arrow function vs Regular function পার্থক্য
+✅ Promise কী? async/await কীভাবে কাজ করে
+✅ Event Loop explain করো
+✅ DOM manipulation (getElementById, querySelector)
+✅ Array methods: map, filter, reduce উদাহরণ সহ
+✅ Object destructuring, Spread operator
+✅ Local Storage vs Session Storage
+✅ React: useState, useEffect কীভাবে কাজ করে
+✅ props vs state পার্থক্য
+✅ HTTP methods: GET, POST, PUT, DELETE
+✅ REST API কী?
+```
+
+</details>
+
+<details>
+<summary><strong>🔹 Tier 2 — Product company বা mid-level-এ আসে</strong></summary>
+<br>
+
+```
+✅ Prototype chain
+✅ call, apply, bind পার্থক্য
+✅ Debounce vs Throttle
+✅ Currying
+✅ Generator function
+✅ WeakMap vs Map
+✅ Event delegation
+✅ Virtual DOM কীভাবে কাজ করে
+✅ React hooks: useCallback, useMemo, useRef
+✅ Context API
+✅ JWT authentication flow
+✅ CORS কী?
+✅ SQL vs NoSQL
+✅ Indexing কী?
+✅ Big O Notation (basic)
+```
+
+</details>
+
+<details>
+<summary><strong>🔹 Tier 3 — Senior/Lead position বা top product company</strong></summary>
+<br>
+
+```
+✅ System design basics
+✅ Microservices vs Monolith
+✅ WebSocket vs HTTP
+✅ Redis caching
+✅ Load balancing
+✅ CI/CD pipeline
+✅ Design patterns (Singleton, Observer, Factory)
+✅ SOLID principles with examples
+✅ TypeScript generics
+✅ Testing strategies (unit, integration, e2e)
+```
+
+</details>
+
+### 💡 BD Interview-এ কোড লেখার Tips
+
+```javascript
+// Interview-এ সাধারণত যা করতে বলা হয়:
+
+// ১. String/Array manipulation
+// "abcabc" — unique characters count করো
+function countUnique(str) {
+  return new Set(str).size;
+}
+
+// ২. Object transformation
+// [{name:"A",score:80},{name:"B",score:90}] → average বের করো
+const avg = arr => arr.reduce((sum, x) => sum + x.score, 0) / arr.length;
+
+// ৩. Async handling
+async function getUser(id) {
+  try {
+    const res = await fetch(`/api/users/${id}`);
+    if (!res.ok) throw new Error("User not found");
+    return await res.json();
+  } catch (err) {
+    console.error(err.message);
+    return null;
+  }
+}
+
+// ৪. Recursion
+function fibonacci(n, memo = {}) {
+  if (n in memo) return memo[n];
+  if (n <= 1) return n;
+  return (memo[n] = fibonacci(n - 1, memo) + fibonacci(n - 2, memo));
+}
+
+// ৫. Interview-এ কোড লেখার আগে বলুন:
+// "আমি প্রথমে input/output বুঝতে চাই।
+//  Edge cases: empty array? negative numbers? null?
+//  আমি O(n) solution করব।"
+```
+
+---
+
+## ১২.৩ BD Company-Specific Questions
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Real Questions from BD Interviews (Community Reported)</strong></summary>
+<br>
+
+**Brain Station 23 / Kona:**
+- "React-এ component re-render কখন হয়? কীভাবে prevent করবেন?"
+- "Node.js-এ 10,000 concurrent request কীভাবে handle হয়?"
+- "Database indexing explain করুন — কখন index কাজ করে না?"
+- "JWT-এর payload কি encrypted? কেন না?"
+
+**Pathao / Shohoz (Product):**
+- "আপনার শেষ project-এর architecture explain করুন।"
+- "একটি ride-sharing app-এর database design করুন।"
+- "Real-time location tracking কীভাবে implement করবেন?"
+- "Microservice-এ authentication কীভাবে handle করবেন?"
+
+**Software Houses:**
+- "REST API design করুন একটি e-commerce site-এর জন্য।"
+- "React-এ global state management কোনটি ব্যবহার করেন? কেন?"
+- "Git workflow টিমে কীভাবে manage করেন?"
+- "Testing কীভাবে করেন? Jest ব্যবহার করেছেন?"
+
+**Startup:**
+- "একটি নতুন feature এক সপ্তাহে deliver করতে হবে — কীভাবে approach করবেন?"
+- "আপনি কীভাবে নতুন technology শেখেন?"
+- "আগের project-এ কোনো বড় bug fix করেছেন? কীভাবে?"
+
+**Common HR Questions (Bengali context):**
+- "৫ বছর পরে নিজেকে কোথায় দেখতে চান?"
+- "Teamwork-এ কোনো conflict হলে কীভাবে handle করেন?"
+- "Overtime করতে রাজি আছেন?"
+- "কেন এই company-তে কাজ করতে চান?"
+
+</details>
+
+<details>
+<summary><strong>🔹 Technical MCQ — BD Online Tests-এ বেশি আসে</strong></summary>
+<br>
+
+```javascript
+// Q: Output কী?
+var x = 1;
+function test() {
+  console.log(x); // ?
+  var x = 2;
+}
+test();
+// Answer: undefined (hoisting — var x declared but not initialized)
+
+// Q: Output কী?
+console.log(typeof NaN);
+// Answer: "number"
+
+// Q: কোনটি falsy নয়?
+// A) 0  B) ""  C) []  D) null
+// Answer: C) [] — empty array is TRUTHY
+
+// Q: Output কী?
+const arr = [1, 2, 3];
+console.log(arr.indexOf(4));
+// Answer: -1
+
+// Q: Output কী?
+console.log("5" - 3);
+console.log("5" + 3);
+// Answer: 2, "53"
+
+// Q: Promise.all-এ একটি reject হলে কী হয়?
+// Answer: পুরো Promise.all reject হয়
+
+// Q: useEffect-এ empty dependency array [] মানে কী?
+// Answer: শুধু component mount-এ একবার চলবে
+
+// Q: React-এ key prop কেন দরকার?
+// Answer: List re-render-এ কোন item changed তা identify করতে
+
+// Q: localStorage-এ object store করবেন কীভাবে?
+// Answer: JSON.stringify() করে store, JSON.parse() করে read
+
+// Q: async function-এ return value কী?
+// Answer: সবসময় Promise
+```
+
+</details>
+
+---
+
+## ১২.৪ Mock Interview Script
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 🎭 Full Mock Interview — Junior JS Developer
+
+<details>
+<summary><strong>📋 Mock Interview (বাংলায় answer করার template)</strong></summary>
+<br>
+
+**Interviewer: "নিজের সম্পর্কে বলুন।"**
+> **Template Answer:**
+> "আমার নাম [নাম]। আমি [বিশ্ববিদ্যালয়] থেকে CSE/[subject] সম্পন্ন করেছি।
+> JavaScript ও React দিয়ে frontend development-এ আমার [X মাস/বছর] অভিজ্ঞতা আছে।
+> আমি [project name] তৈরি করেছি যেখানে [main feature] implement করেছি।
+> আমি currently [কী শিখছেন] নিয়ে কাজ করছি।"
+
+---
+
+**Interviewer: "Closure কী? একটি real-world example দিন।"**
+> **Template Answer:**
+> "Closure হলো JavaScript-এর এমন একটি feature যেখানে inner function, outer function-এর variables মনে রাখে — এমনকি outer function execute শেষ হয়ে গেলেও।
+>
+> Real-world example হলো counter:
+> ```javascript
+> function makeCounter() {
+>   let count = 0;
+>   return {
+>     increment: () => ++count,
+>     getValue: () => count
+>   };
+> }
+> const counter = makeCounter();
+> counter.increment(); // 1
+> counter.increment(); // 2
+> ```
+> এখানে `count` variable-টি closure-এর মাধ্যমে protected — বাইরে থেকে directly access করা যায় না। এটি private variable-এর মতো কাজ করে।"
+
+---
+
+**Interviewer: "Event Loop explain করুন।"**
+> **Template Answer:**
+> "JavaScript single-threaded — একটি Call Stack। কিন্তু browser-এ Web APIs আছে যেমন setTimeout, fetch। এগুলো async।
+>
+> একটি setTimeout দিলে browser সেটা Web API-তে দেয়। Call Stack clear হলে Event Loop Callback Queue থেকে function নিয়ে Stack-এ দেয়।
+>
+> Microtask Queue (Promise) সবসময় Macrotask Queue (setTimeout)-এর আগে process হয়।
+>
+> তাই `Promise.resolve().then()` সবসময় `setTimeout(fn, 0)`-এর আগে চলে।"
+
+---
+
+**Interviewer: "আপনার project-এ কোনো challenging problem ছিল?"**
+> **Template Answer:**
+> "হ্যাঁ, আমার [project name]-এ search feature-এ প্রতিটি keystroke-এ API call হচ্ছিল। এতে server-এ অনেক বেশি load পড়ছিল এবং race condition-ও হচ্ছিল।
+>
+> আমি debounce implement করলাম — 400ms পরে API call যাবে। এর সাথে AbortController ব্যবহার করলাম যাতে পুরনো request cancel হয়।
+>
+> এতে API call 90% কমে গেল এবং race condition সমাধান হলো।"
+
+---
+
+**Interviewer: "আপনার weakness কী?"**
+> **Template Answer:**
+> "আমি কখনো কখনো একটি problem-এর perfect solution খুঁজতে গিয়ে বেশি সময় নিয়ে ফেলি। তবে আমি এখন 'good enough to ship, then iterate' approach অনুসরণ করছি — প্রথমে working solution deliver করি, তারপর optimize করি।"
+
+---
+
+**Interviewer: "আপনার expected salary কত?"**
+> **Template Answer:**
+> "আমি বাজারে junior JS developer-দের জন্য [X–Y] TK range দেখেছি। আমার skills ও project experience বিবেচনায় আমি [X] TK আশা করি, তবে এটি negotiable — আপনার package structure জানলে ভালো হতো।"
+
+</details>
+
+---
+
+## ১২.৫ Resume Tips for JS Developers
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📄 Resume Structure
+
+```
+┌──────────────────────────────────────────────────┐
+│  [নাম] | [Email] | [Phone] | [GitHub] | [Portfolio]│
+├──────────────────────────────────────────────────┤
+│  SUMMARY (2-3 lines)                             │
+│  "Passionate JS developer with X months exp..."  │
+├──────────────────────────────────────────────────┤
+│  TECHNICAL SKILLS                                │
+│  Languages:   JavaScript (ES6+), HTML5, CSS3     │
+│  Frontend:    React.js, Redux, Tailwind CSS      │
+│  Backend:     Node.js, Express.js                │
+│  Database:    MongoDB, MySQL                     │
+│  Tools:       Git, VS Code, Postman, Figma       │
+├──────────────────────────────────────────────────┤
+│  PROJECTS (2-3 best projects)                    │
+│  • Project Name — [Live Link] | [GitHub Link]    │
+│    Tech stack: React, Node.js, MongoDB           │
+│    - Feature 1 (quantify: "handles 100+ users")  │
+│    - Feature 2                                   │
+│    - Challenging thing you solved                │
+├──────────────────────────────────────────────────┤
+│  EDUCATION                                       │
+│  BSc in CSE, [University], [Year], CGPA: X.XX    │
+├──────────────────────────────────────────────────┤
+│  EXPERIENCE (internship, part-time, freelance)   │
+│  CERTIFICATIONS (if any)                         │
+└──────────────────────────────────────────────────┘
+```
+
+### ✅ Resume Do's & Don'ts
+
+| ✅ করুন | ❌ করবেন না |
+|--------|------------|
+| Action verbs: "Built", "Implemented", "Optimized" | "Responsible for", "Helped with" |
+| Quantify: "Reduced load time by 40%" | "Improved performance" (vague) |
+| Live project link দিন | Broken GitHub link |
+| 1 page (fresher) | 3-4 page CV |
+| ATS-friendly format | Heavy design/table |
+| Relevant skills highlight | "MS Word", "Internet" |
+| Recent projects (2023-2025) | 5-year-old coursework |
+
+---
+
+## ১২.৬ Portfolio ও GitHub Profile
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 GitHub Profile README (Template)
+
+```markdown
+# Hi, I'm [নাম] 👋
+
+JavaScript Developer | React | Node.js | MongoDB
+
+## 🚀 About Me
+- 🔭 Working on: [Current Project]
+- 🌱 Learning: TypeScript, Next.js
+- 💼 Open to: Junior Frontend/Fullstack opportunities
+- 📍 Based in: Dhaka, Bangladesh
+
+## 🛠️ Tech Stack
+![JavaScript](https://img.shields.io/badge/-JavaScript-F7DF1E?logo=javascript&logoColor=black)
+![React](https://img.shields.io/badge/-React-61DAFB?logo=react&logoColor=black)
+![Node.js](https://img.shields.io/badge/-Node.js-339933?logo=node.js&logoColor=white)
+![MongoDB](https://img.shields.io/badge/-MongoDB-47A248?logo=mongodb&logoColor=white)
+
+## 📌 Featured Projects
+| Project | Description | Tech | Live |
+|---------|-------------|------|------|
+| [Todo App](link) | Full-stack todo with auth | React, Node, MongoDB | [Demo](link) |
+| [Weather App](link) | Real-time weather | React, OpenWeatherMap API | [Demo](link) |
+| [E-commerce](link) | Product CRUD + cart | React, Express, MongoDB | [Demo](link) |
+
+## 📊 GitHub Stats
+![Stats](https://github-readme-stats.vercel.app/api?username=YOUR_USERNAME&show_icons=true&theme=radical)
+```
+
+### 📋 Portfolio Website Checklist
+
+```
+✅ Hero section — নাম, title, CTA ("Hire Me" / "View Projects")
+✅ Projects section — screenshot, live link, GitHub link, tech stack
+✅ Skills section — icon-based, grouped by category
+✅ About section — brief, professional tone
+✅ Contact section — email form বা direct email link
+✅ Responsive design — mobile-first
+✅ Fast loading — optimized images
+✅ Custom domain (optional কিন্তু impressive)
+✅ Google Analytics — visitor tracking
+```
+
+---
+
+## ১২.৭ Salary Negotiation
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💰 BD 2025-2026 Market Rates (Junior JS Developer)
+
+| Level | Experience | Salary Range (BDT/month) |
+|-------|-----------|--------------------------|
+| Fresher | 0-6 months | 20,000 – 40,000 |
+| Junior | 6-18 months | 35,000 – 65,000 |
+| Junior+ | 1.5-3 years | 60,000 – 1,00,000 |
+| Mid-level | 3-5 years | 90,000 – 1,80,000 |
+| Remote/Foreign Client | Any | USD 800 – 2,500 |
+
+### 💡 Negotiation Tips
+
+```
+১. Research first:
+   • LinkedIn Jobs, glassdoor, BD job portals দেখুন
+   • Tech community (Facebook groups) থেকে range জানুন
+   • Company size বিবেচনা করুন
+
+২. Never be the first to give a number:
+   "আপনাদের package structure কী ধরনের?"
+   "এই role-এর জন্য budget range কত?"
+
+৩. Give a range, not a number:
+   "আমি [X – Y] BDT range আশা করি"
+   (Lower end যতটুকু নেবেন, upper end ২০% বেশি)
+
+৪. Other benefits negotiate করুন:
+   • Remote work option
+   • Learning budget
+   • Flexible hours
+   • Insurance
+
+৫. Counter offer script:
+   "আমি অফারটির জন্য ধন্যবাদ জানাই। আমার skills ও
+   [উল্লেখযোগ্য project/achievement] বিবেচনায় আমি
+   [X] TK নিয়ে ভাবছিলাম — এটা কি সম্ভব?"
+```
+
+---
+
+## ১২.৮ Common Mistakes to Avoid
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### ❌ Technical Mistakes
+
+```javascript
+// ১. Memory leak — interval পরিষ্কার না করা
+// ❌
+setInterval(fetchData, 5000); // কখনো বন্ধ হবে না
+
+// ✅
+const id = setInterval(fetchData, 5000);
+// Cleanup-এ: clearInterval(id)
+
+// ২. Mutation — state directly modify করা
+// ❌ React-এ
+state.items.push(newItem); // direct mutation
+setState(state);
+
+// ✅
+setState(prev => ({ ...prev, items: [...prev.items, newItem] }));
+
+// ৩. Callback hell
+fetch(url1, result1 => {
+  fetch(url2 + result1, result2 => {
+    fetch(url3 + result2, result3 => {
+      // pyramid of doom
+    });
+  });
+});
+
+// ✅ Async/await
+const result1 = await fetch(url1).then(r => r.json());
+const result2 = await fetch(url2 + result1).then(r => r.json());
+
+// ৪. Missing error handling
+// ❌
+const data = await fetch(url).then(r => r.json());
+
+// ✅
+try {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+} catch (err) {
+  handleError(err);
+}
+
+// ৫. Array index as key in React
+// ❌
+items.map((item, index) => <Item key={index} />);
+
+// ✅
+items.map(item => <Item key={item.id} />);
+```
+
+### ❌ Interview Mistakes
+
+| Mistake | Better Approach |
+|---------|----------------|
+| "জানি না" বলে থামা | "এটা আমার পরিচিত নয়, কিন্তু আমি মনে করি এটা... কারণ..." |
+| Code লেখা শুরু করা সাথে সাথে | প্রথমে প্রশ্ন বুঝুন, edge cases জিজ্ঞেস করুন |
+| মুখস্থ উত্তর দেওয়া | নিজের ভাষায় example দিন |
+| Interviewer-এর সাথে তর্ক করা | "আপনার point valid, আমি আগে এভাবে ভাবিনি" |
+| Salary-র কথা প্রথমে তোলা | Technical round শেষে HR-এর প্রশ্নে |
+| Project-এর সব কিছু না জানা | নিজের project সব দিক থেকে জানুন |
+| Negative body language | Eye contact, সোজা হয়ে বসা, হাসি |
+
+---
+
+## ১২.৯ 30-Day Preparation Plan
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📅 Week 1 — Foundation Solidify
+
+```
+Day 1-2: JS Core — var/let/const, hoisting, closure, scope, this
+Day 3-4: Functions — arrow, HOF, currying, debounce, throttle
+Day 5-6: Async — Promise, async/await, event loop, fetch API
+Day 7:   Array & Object methods — map/filter/reduce, destructuring
+```
+
+### 📅 Week 2 — Advanced JS + React
+
+```
+Day 8-9:  OOP — prototype, class, inheritance, SOLID
+Day 10-11: DOM — manipulation, events, delegation, storage
+Day 12-13: React fundamentals — hooks (useState, useEffect, useRef)
+Day 14:    React advanced — useMemo, useCallback, Context, lazy
+```
+
+### 📅 Week 3 — Backend + Problem Solving
+
+```
+Day 15-16: Node.js, Express.js, REST API
+Day 17:    JWT, middleware, error handling
+Day 18-19: Coding problems — array, string, recursion
+Day 20:    Data structures — Stack, Queue, Linked List basic
+Day 21:    Tricky JS questions + output questions
+```
+
+### 📅 Week 4 — Mock Interviews + Polish
+
+```
+Day 22-23: Performance optimization, Web Vitals
+Day 24:    System design basics
+Day 25:    Resume/GitHub/Portfolio finalize
+Day 26-27: Mock interview practice (record yourself)
+Day 28:    BD company research, common HR questions
+Day 29:    Full revision — this PART-এর checklist
+Day 30:    Rest + light review, confident থাকুন 🎯
+```
+
+### ⏰ Daily Schedule (2-3 hours/day)
+
+```
+সকাল 30 min:  আগের দিনের revision
+দুপুর 60 min: নতুন topic পড়া + code করা
+বিকেল 30 min: 2-3 টা practice problem
+রাত 30 min:   Output questions / rapid-fire practice
+```
+
+---
+
+## ১২.১০ Final Revision Checklist
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### ✅ PART 1 — JS Basics
+- [ ] var/let/const scope ও hoisting
+- [ ] Data types ও type coercion
+- [ ] Operators ও conditional
+- [ ] Loops ও iteration
+- [ ] Function types ও arrow function
+- [ ] Scope chain ও closure
+- [ ] Template literals
+
+### ✅ PART 2 — Advanced JS
+- [ ] Execution context ও call stack
+- [ ] Event loop (microtask vs macrotask)
+- [ ] Promise ও async/await
+- [ ] `this`, call/apply/bind
+- [ ] Prototype ও inheritance
+- [ ] Modules (ESM/CJS)
+- [ ] Debounce, throttle, currying, memoization
+
+### ✅ PART 3 — DOM & Browser
+- [ ] DOM manipulation methods
+- [ ] Event handling ও delegation
+- [ ] Bubbling vs capturing
+- [ ] localStorage vs sessionStorage
+- [ ] Form validation
+
+### ✅ PART 4 — Modern JS (ES6+)
+- [ ] Destructuring, spread, rest
+- [ ] Optional chaining, nullish coalescing
+- [ ] Map, Set, WeakMap, WeakSet
+- [ ] Array methods (full table)
+- [ ] Generators ও iterators
+
+### ✅ PART 5 — Async Deep Dive
+- [ ] Promise combinators (all/allSettled/race/any)
+- [ ] Error handling patterns
+- [ ] AbortController
+- [ ] Real API integration
+
+### ✅ PART 6 — OOP
+- [ ] Encapsulation, inheritance, polymorphism, abstraction
+- [ ] ES6 class, private fields, static
+- [ ] SOLID principles (at least S, O, L)
+
+### ✅ PART 7 — Frontend
+- [ ] SPA vs MPA
+- [ ] Virtual DOM ও reconciliation
+- [ ] React hooks (useState, useEffect, useRef, useMemo, useCallback)
+- [ ] Context API ও useReducer
+- [ ] React Router
+
+### ✅ PART 8 — Node.js & Backend
+- [ ] Event-driven architecture
+- [ ] Express.js routing ও middleware
+- [ ] REST API design
+- [ ] JWT authentication
+- [ ] Error handling
+
+### ✅ PART 9 — Interview Q&A
+- [ ] 30 theoretical questions review
+- [ ] 10 coding problems practice
+- [ ] 20 tricky questions
+- [ ] 25 output questions
+
+### ✅ PART 10 — Projects
+- [ ] নিজের project কোড ভালো করে জানুন
+- [ ] Architecture, decisions explain করতে পারুন
+- [ ] Live link ready আছে?
+
+### ✅ PART 11 — Performance
+- [ ] Reflow vs Repaint
+- [ ] LCP, CLS, INP জানুন
+- [ ] Lazy loading, code splitting
+- [ ] React.memo, useMemo, useCallback কখন ব্যবহার করবেন
+
+### ✅ PART 12 — BD Preparation
+- [ ] Resume আপডেট করা হয়েছে?
+- [ ] GitHub profile clean?
+- [ ] Portfolio live?
+- [ ] Mock interview practice করেছেন?
+- [ ] Target company research করেছেন?
+
+---
+
+## 🎯 শেষ কথা
+
+<div align="right"><a href="#part12">⬆ PART 12 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+```
+"Confidence comes from preparation, not talent."
+
+এই handbook-এর সব PART মনোযোগ দিয়ে পড়লে এবং
+প্রতিটি code নিজে run করলে আপনি BD-র যেকোনো
+junior JS developer interview-এর জন্য প্রস্তুত।
+
+মনে রাখবেন:
+• জানলে clearly বলুন
+• না জানলে সৎভাবে বলুন ও কীভাবে শিখবেন তা বলুন
+• Communication গুরুত্বপূর্ণ — technical skill-এর মতোই
+• প্রতিটি rejection = একটি lesson
+
+শুভকামনা! 🇧🇩
+```
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🎉 JavaScript Interview Handbook সম্পূর্ণ!**
+>
+> সব 12টি PART এখন available। GitHub-এ star দিতে ভুলবেন না! 🌟
+>
+> **📚 অন্যান্য Handbooks:**
+> - [OOP Interview Handbook](OOP_Junior_Engineer_BD_QA.md)
+> - [DSA Interview Handbook](DSA_Junior_Engineer_BD_QA.md)
+> - [Database Interview Handbook](Database_Junior_Engineer_BD_QA.md)
+> - [System Design Interview Handbook](SystemDesign_Junior_Engineer_BD_QA.md)
