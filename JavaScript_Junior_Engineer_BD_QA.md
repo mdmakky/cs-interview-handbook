@@ -26,7 +26,7 @@
 | 📔 | [**PART 6** — Object-Oriented JavaScript](#part6) | OOP, Classes, Prototypes, SOLID | 🔜 |
 | 📒 | [**PART 7** — Frontend Development](#part7) | SPA, Virtual DOM, React Basics, State Management | 🔜 |
 | 📃 | [**PART 8** — Node.js & Backend](#part8) | Express.js, REST API, JWT, Streams, Middleware | 🔜 |
-| 📑 | [**PART 9** — Coding Interview Q&A](#part9) | 150 Theoretical + 100 Coding + 30 Tricky Questions | 🔜 |
+| 📑 | [**PART 9** — Coding Interview Q&A](#part9) | 150 Theoretical + 100 Coding + 30 Tricky Questions | ✅ |
 | 🗂️ | [**PART 10** — Mini Projects](#part10) | Todo App, Weather App, Calculator, Auth System, CRUD | 🔜 |
 | ⚡ | [**PART 11** — Performance & Optimization](#part11) | Lazy Loading, Memory Leaks, Code Splitting, Tree Shaking | 🔜 |
 | 🇧🇩 | [**PART 12** — BD Interview Prep](#part12) | Mock Interview, Company Patterns, Fresher Tips, Rapid-fire | 🔜 |
@@ -145,7 +145,12 @@
 <summary><strong>📑 PART 9 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-*(শীঘ্রই আসছে)*
+- [৯.১ JavaScript Theoretical Q&A](#৯১-javascript-theoretical-qa)
+- [৯.২ Common Coding Problems](#৯২-common-coding-problems)
+- [৯.৩ Tricky JavaScript Questions](#৯৩-tricky-javascript-questions)
+- [৯.৪ Rapid-Fire Viva](#৯৪-rapid-fire-viva)
+- [৯.৫ Scenario-Based Questions](#৯৫-scenario-based-questions)
+- [৯.৬ Output বলো Questions](#৯৬-output-বলো-questions)
 
 </details>
 
@@ -8926,3 +8931,1131 @@ app.get("/users", asyncHandler(async (req, res) => {
 > **🚀 PART 9 আসছে:** Coding Interview Preparation — 150 Theoretical Questions, 100 Coding Questions, 30 Tricky Questions, 20 Rapid-fire Viva, 30 Scenario-based Questions (সব উত্তর সহ)।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 9 দাও" লিখুন।
+
+
+---
+
+<a id="part9"></a>
+
+# PART 9 — Coding Interview Preparation
+
+> **📍 এই PART-এর Sections:** [৯.১ JavaScript Theoretical Q&A](#৯১-javascript-theoretical-qa) · [৯.২ Common Coding Problems](#৯২-common-coding-problems) · [৯.৩ Tricky JavaScript Questions](#৯৩-tricky-javascript-questions) · [৯.৪ Rapid-Fire Viva](#৯৪-rapid-fire-viva) · [৯.৫ Scenario-Based Questions](#৯৫-scenario-based-questions) · [৯.৬ Output বলো Questions](#৯৬-output-বলো-questions)
+
+---
+
+## ৯.১ JavaScript Theoretical Q&A
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 JS Core — Variables, Types, Scope (Q1–Q15)</strong></summary>
+<br>
+
+**Q1: `var`, `let`, `const`-এর পার্থক্য কী?**
+> **A:**
+> | | `var` | `let` | `const` |
+> |--|-------|-------|---------|
+> | Scope | Function | Block | Block |
+> | Hoisting | হয় (undefined) | হয় (TDZ) | হয় (TDZ) |
+> | Re-declare | ✅ | ❌ | ❌ |
+> | Re-assign | ✅ | ✅ | ❌ |
+> | Global prop | ✅ | ❌ | ❌ |
+>
+> TDZ (Temporal Dead Zone) — declare-এর আগে access করলে ReferenceError।
+
+**Q2: Hoisting কী? কোনটি কোনটি hoist হয়?**
+> **A:** Compilation phase-এ declarations memory-তে উঠে যায়। `var` → undefined দিয়ে, `function declaration` → সম্পূর্ণ function দিয়ে। `let`/`const` → TDZ-এ (access করলে error)। `function expression`/`arrow function` → variable-এর মতো।
+
+**Q3: Closure কী? কোথায় ব্যবহার হয়?**
+> **A:** Inner function outer function-এর variables মনে রাখে — বাইরে চলে গেলেও। Private variables, factory functions, memoization, event handlers, setTimeout callback-এ ব্যবহার হয়।
+
+**Q4: Prototype chain কীভাবে কাজ করে?**
+> **A:** কোনো property/method পাওয়া না গেলে JS স্বয়ংক্রিয়ভাবে `__proto__` দিয়ে উপরে যায় — শেষে `Object.prototype` → `null`। `hasOwnProperty()` দিয়ে নিজের property check করা যায়।
+
+**Q5: `==` এবং `===`-এর পার্থক্য?**
+> **A:** `==` — type coercion করে (`"5" == 5` → true)। `===` — type ও value উভয় check (`"5" === 5` → false)। সবসময় `===` ব্যবহার করুন।
+
+**Q6: Event Loop কী?**
+> **A:** JS single-threaded। Call stack, Web APIs, Callback Queue/Microtask Queue। Stack empty হলে event loop microtask queue (Promises) প্রথমে, তারপর callback queue (setTimeout) process করে। Microtask সবসময় macrotask-এর আগে।
+
+**Q7: `this` কীভাবে নির্ধারণ হয়?**
+> **A:** Regular function-এ: caller অনুযায়ী। Arrow function-এ: lexical (define করার সময়ের context)। `call/apply/bind`-এ: explicitly set। Class method-এ: instance। Global (non-strict): `window`। Strict mode: `undefined`।
+
+**Q8: Promise ও async/await-এর পার্থক্য?**
+> **A:** Promise: `.then().catch()` chaining — কম readable। async/await: synchronous-এর মতো দেখতে — more readable। async/await নিচে Promise-ই — syntactic sugar। Error: Promise-এ `.catch()`, async/await-এ `try/catch`।
+
+**Q9: Spread ও Rest operator-এর পার্থক্য?**
+> **A:** Spread (`...`): array/object spread out করে। Rest (`...`): multiple values একটি array-তে collect করে। Position অনুযায়ী বোঝা যায় — function param-এ rest, call site-এ spread।
+
+**Q10: Deep copy ও Shallow copy-এর পার্থক্য?**
+> **A:** Shallow: top-level copy, nested objects — same reference। Deep: সব level-এর copy। Shallow: `{...obj}`, `Object.assign()`, `[...arr]`। Deep: `structuredClone()`, `JSON.parse(JSON.stringify())` (limitation আছে), lodash `_.cloneDeep()`।
+
+**Q11: Memoization কী?**
+> **A:** Function-এর result cache করা — same input-এ পুনরায় calculate না করে cache থেকে return। Expensive computation বা recursive functions (Fibonacci)-এ কার্যকর।
+
+**Q12: Currying কী?**
+> **A:** Multiple arguments-এর function-কে একটি করে argument নেওয়া nested functions-এ convert করা। `add(1)(2)(3)` → `6`। Partial application, reusable function তৈরিতে ব্যবহার।
+
+**Q13: Generator function কী?**
+> **A:** `function*` দিয়ে define, `yield` দিয়ে pause/resume করা যায়। `next()` call করলে পরবর্তী `yield` পর্যন্ত চলে। Lazy evaluation, infinite sequence, async control flow-এ ব্যবহার।
+
+**Q14: WeakMap ও Map-এর পার্থক্য?**
+> **A:** WeakMap: keys object only, garbage collected হয় (no memory leak), non-iterable। Map: যেকোনো key, iterable, size property আছে। Private data storage-এ WeakMap, general key-value store-এ Map।
+
+**Q15: Temporal Dead Zone কী?**
+> **A:** `let`/`const` variable-এর declaration থেকে initialization পর্যন্ত সময়। এই zone-এ access করলে `ReferenceError`। `var`-এ TDZ নেই — `undefined` পাওয়া যায়।
+
+</details>
+
+<details>
+<summary><strong>🔹 Functions, OOP, Async (Q16–Q30)</strong></summary>
+<br>
+
+**Q16: Higher-Order Function কী?**
+> **A:** Function যে অন্য function argument হিসেবে নেয় বা return করে। `map`, `filter`, `reduce`, `forEach` — সবই HOF। Custom HOF: `const multiplier = (n) => (x) => x * n`।
+
+**Q17: `call`, `apply`, `bind` কী?**
+> **A:** তিনটিই `this` manually set করে। `call(thisArg, a, b)` — immediately call, args comma-separated। `apply(thisArg, [a, b])` — immediately call, args array। `bind(thisArg, a)` — নতুন function return করে, পরে call করা যায়।
+
+**Q18: Promise.all, Promise.allSettled, Promise.race, Promise.any-এর পার্থক্য?**
+> **A:**
+> - `all`: সব resolve হলে resolve, একটি reject হলে reject
+> - `allSettled`: সব settle হওয়া পর্যন্ত wait, কোনো reject নেই
+> - `race`: প্রথমটি resolve/reject হলেই সেটি return
+> - `any`: প্রথম resolve-টি return, সব reject হলে AggregateError
+
+**Q19: JavaScript-এর Event Delegation কী?**
+> **A:** Parent element-এ event listener দিয়ে child-এর events handle করা — event bubbling ব্যবহার করে। Dynamic elements, performance optimization-এ ব্যবহার। `event.target` দিয়ে actual clicked element জানা যায়।
+
+**Q20: Debounce ও Throttle কী?**
+> **A:** Debounce: নির্দিষ্ট সময় idle থাকলে execute — search input-এ। Throttle: নির্দিষ্ট interval-এ একবার execute — scroll/resize-এ। উভয়ই frequent function call কমায়।
+
+**Q21: Null, Undefined, NaN-এর পার্থক্য?**
+> **A:** `undefined` — declare হয়েছে কিন্তু value নেই। `null` — explicitly কোনো value নেই (intentional)। `NaN` — Not a Number, numeric operation fail-এ। `NaN !== NaN` (true!) — check: `Number.isNaN()`।
+
+**Q22: ES6 Class আসলে কী?**
+> **A:** Prototype-based inheritance-এর syntactic sugar। Under the hood — constructor function ও prototype। `class` keyword-এ cleaner syntax, private fields (`#`), static methods, getter/setter।
+
+**Q23: Module system কেন দরকার?**
+> **A:** Code organize করতে, namespace collision এড়াতে, reusability বাড়াতে, dependency management করতে। ESM (import/export) tree-shakable — unused code bundle-এ যায় না।
+
+**Q24: Symbol কী?**
+> **A:** Unique ও immutable primitive। `Symbol("desc")` — প্রতিটি unique। Object-এর non-enumerable property key হিসেবে ব্যবহার — collision নেই। `Symbol.iterator`, `Symbol.toPrimitive` — built-in symbols।
+
+**Q25: Proxy ও Reflect কী?**
+> **A:** Proxy: object-এর operations (get, set, delete) intercept করা। Reflect: Proxy-র সাথে কাজ করার জন্য built-in object। Validation, logging, reactive systems (Vue 3-এ) তৈরিতে ব্যবহার।
+
+**Q26: IIFE কী?**
+> **A:** Immediately Invoked Function Expression — define হওয়ার সাথে সাথে execute। `(function() { /* code */ })()` — নিজস্ব scope, global namespace pollute করে না। Module pattern-এ, variable isolation-এ।
+
+**Q27: `typeof` এর সীমাবদ্ধতা?**
+> **A:** `typeof null === "object"` (historical bug), `typeof function === "function"` কিন্তু Array-ও `"object"`, `typeof NaN === "number"`। Better: `Array.isArray()`, `instanceof`, `Object.prototype.toString.call()`।
+
+**Q28: Optional Chaining ও Nullish Coalescing?**
+> **A:** `?.` — null/undefined হলে error throw না করে undefined return। `obj?.a?.b?.c`। `??` — null/undefined হলে right side return, অন্যান্য falsy (0, "") হলে left side। `||` সব falsy-তে fallback দেয়।
+
+**Q29: Async Iterator কী?**
+> **A:** `for await...of` দিয়ে iterate করা যায় এমন object। `[Symbol.asyncIterator]()` method থাকে। Stream, paginated API-তে ব্যবহার।
+
+**Q30: `Object.freeze()` ও `Object.seal()`-এর পার্থক্য?**
+> **A:** `freeze()`: কোনো change নেই — add/delete/modify সব blocked। `seal()`: modify করা যাবে, add/delete blocked। উভয়ই shallow।
+
+</details>
+
+---
+
+## ৯.২ Common Coding Problems
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Array Problems (P1–P10)</strong></summary>
+<br>
+
+**P1: Array-এর duplicate বের করো**
+```javascript
+// Method 1: Set
+function findDuplicates(arr) {
+  const seen = new Set();
+  return arr.filter(item => {
+    if (seen.has(item)) return true;
+    seen.add(item);
+    return false;
+  });
+}
+console.log(findDuplicates([1, 2, 3, 2, 4, 3, 5])); // [2, 3]
+
+// Method 2: filter + indexOf
+const dups = arr.filter((item, idx) => arr.indexOf(item) !== idx);
+```
+
+**P2: Array flatten করো (recursive)**
+```javascript
+function flatten(arr, depth = Infinity) {
+  return arr.reduce((acc, item) => {
+    if (Array.isArray(item) && depth > 0) {
+      return acc.concat(flatten(item, depth - 1));
+    }
+    return [...acc, item];
+  }, []);
+}
+console.log(flatten([1, [2, [3, [4]]]])); // [1, 2, 3, 4]
+
+// Built-in (modern JS):
+[1, [2, [3]]].flat(Infinity);
+```
+
+**P3: Two Sum — দুটি সংখ্যার যোগফল target**
+```javascript
+function twoSum(nums, target) {
+  const map = new Map(); // value → index
+
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (map.has(complement)) {
+      return [map.get(complement), i];
+    }
+    map.set(nums[i], i);
+  }
+  return [];
+}
+console.log(twoSum([2, 7, 11, 15], 9)); // [0, 1]
+```
+
+**P4: Array rotate করো (k steps)**
+```javascript
+function rotateArray(arr, k) {
+  const n = arr.length;
+  k = k % n; // k > n হলে
+  return [...arr.slice(n - k), ...arr.slice(0, n - k)];
+}
+console.log(rotateArray([1,2,3,4,5], 2)); // [4, 5, 1, 2, 3]
+```
+
+**P5: Maximum subarray (Kadane's Algorithm)**
+```javascript
+function maxSubarray(nums) {
+  let maxSum = nums[0];
+  let currentSum = nums[0];
+
+  for (let i = 1; i < nums.length; i++) {
+    currentSum = Math.max(nums[i], currentSum + nums[i]);
+    maxSum = Math.max(maxSum, currentSum);
+  }
+  return maxSum;
+}
+console.log(maxSubarray([-2,1,-3,4,-1,2,1,-5,4])); // 6
+```
+
+**P6: Array intersection**
+```javascript
+function intersection(a, b) {
+  const setB = new Set(b);
+  return [...new Set(a.filter(x => setB.has(x)))];
+}
+console.log(intersection([1,2,3,4], [3,4,5,6])); // [3, 4]
+```
+
+**P7: Group by category**
+```javascript
+const products = [
+  { name: "A", category: "electronics" },
+  { name: "B", category: "food" },
+  { name: "C", category: "electronics" }
+];
+
+const grouped = products.reduce((acc, item) => {
+  const key = item.category;
+  (acc[key] = acc[key] || []).push(item);
+  return acc;
+}, {});
+// { electronics: [A, C], food: [B] }
+
+// Modern: Object.groupBy (ES2024)
+const grouped2 = Object.groupBy(products, p => p.category);
+```
+
+**P8: Array-এর সব permutation**
+```javascript
+function permutations(arr) {
+  if (arr.length <= 1) return [arr];
+  return arr.flatMap((item, i) =>
+    permutations([...arr.slice(0, i), ...arr.slice(i + 1)])
+      .map(perm => [item, ...perm])
+  );
+}
+console.log(permutations([1, 2, 3]).length); // 6
+```
+
+**P9: Chunk array into groups**
+```javascript
+function chunk(arr, size) {
+  const result = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
+console.log(chunk([1,2,3,4,5], 2)); // [[1,2],[3,4],[5]]
+```
+
+**P10: Merge sorted arrays**
+```javascript
+function mergeSorted(a, b) {
+  const result = [];
+  let i = 0, j = 0;
+
+  while (i < a.length && j < b.length) {
+    if (a[i] <= b[j]) result.push(a[i++]);
+    else result.push(b[j++]);
+  }
+  return [...result, ...a.slice(i), ...b.slice(j)];
+}
+console.log(mergeSorted([1, 3, 5], [2, 4, 6])); // [1,2,3,4,5,6]
+```
+
+</details>
+
+<details>
+<summary><strong>🔹 String Problems (P11–P18)</strong></summary>
+<br>
+
+**P11: String reverse করো**
+```javascript
+// Method 1
+const reverse = str => str.split("").reverse().join("");
+
+// Method 2 (Unicode safe)
+const reverse2 = str => [...str].reverse().join("");
+
+// Method 3 (no built-in)
+function reverseManual(str) {
+  let result = "";
+  for (let i = str.length - 1; i >= 0; i--) result += str[i];
+  return result;
+}
+```
+
+**P12: Palindrome check করো**
+```javascript
+function isPalindrome(str) {
+  const clean = str.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return clean === clean.split("").reverse().join("");
+}
+console.log(isPalindrome("A man, a plan, a canal: Panama")); // true
+```
+
+**P13: Anagram check করো**
+```javascript
+function isAnagram(s, t) {
+  if (s.length !== t.length) return false;
+  const count = {};
+  for (const ch of s) count[ch] = (count[ch] || 0) + 1;
+  for (const ch of t) {
+    if (!count[ch]) return false;
+    count[ch]--;
+  }
+  return true;
+}
+console.log(isAnagram("listen", "silent")); // true
+```
+
+**P14: String-এ সবচেয়ে বেশিবার আসা character**
+```javascript
+function mostFrequentChar(str) {
+  const freq = {};
+  for (const ch of str) freq[ch] = (freq[ch] || 0) + 1;
+  return Object.entries(freq).reduce((a, b) => b[1] > a[1] ? b : a)[0];
+}
+console.log(mostFrequentChar("hello world")); // "l"
+```
+
+**P15: Title Case করো**
+```javascript
+const titleCase = str =>
+  str.toLowerCase().replace(/\w/g, ch => ch.toUpperCase());
+console.log(titleCase("hello world from bangladesh")); // "Hello World From Bangladesh"
+```
+
+**P16: Longest Common Prefix**
+```javascript
+function longestCommonPrefix(strs) {
+  if (!strs.length) return "";
+  let prefix = strs[0];
+
+  for (let i = 1; i < strs.length; i++) {
+    while (!strs[i].startsWith(prefix)) {
+      prefix = prefix.slice(0, -1);
+      if (!prefix) return "";
+    }
+  }
+  return prefix;
+}
+console.log(longestCommonPrefix(["flower","flow","flight"])); // "fl"
+```
+
+**P17: Valid parentheses**
+```javascript
+function isValid(s) {
+  const stack = [];
+  const map = { ")": "(", "]": "[", "}": "{" };
+
+  for (const ch of s) {
+    if ("([{".includes(ch)) stack.push(ch);
+    else if (stack.pop() !== map[ch]) return false;
+  }
+  return stack.length === 0;
+}
+console.log(isValid("({[]})")); // true
+console.log(isValid("([)]"));   // false
+```
+
+**P18: Count vowels**
+```javascript
+const countVowels = str =>
+  (str.match(/[aeiouAEIOU]/g) || []).length;
+```
+
+</details>
+
+<details>
+<summary><strong>🔹 Object & Function Problems (P19–P25)</strong></summary>
+<br>
+
+**P19: Object deep clone করো**
+```javascript
+// Modern (recommended):
+const clone = structuredClone(obj);
+
+// JSON method (limitations: functions, undefined, Date, RegExp হারায়):
+const clone2 = JSON.parse(JSON.stringify(obj));
+
+// Recursive deep clone:
+function deepClone(obj) {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (obj instanceof Date) return new Date(obj);
+  if (obj instanceof Array) return obj.map(deepClone);
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k, deepClone(v)])
+  );
+}
+```
+
+**P20: Implement `debounce`**
+```javascript
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+const search = debounce((query) => {
+  console.log("Searching:", query);
+}, 500);
+```
+
+**P21: Implement `memoize`**
+```javascript
+function memoize(fn) {
+  const cache = new Map();
+  return function (...args) {
+    const key = JSON.stringify(args);
+    if (cache.has(key)) return cache.get(key);
+    const result = fn.apply(this, args);
+    cache.set(key, result);
+    return result;
+  };
+}
+
+const expensiveFn = memoize((n) => {
+  console.log("Computing...");
+  return n * n;
+});
+expensiveFn(5); // Computing... 25
+expensiveFn(5); // 25 (cached)
+```
+
+**P22: Implement `pipe` ও `compose`**
+```javascript
+// pipe: left to right
+const pipe = (...fns) => x => fns.reduce((v, f) => f(v), x);
+
+// compose: right to left
+const compose = (...fns) => x => fns.reduceRight((v, f) => f(v), x);
+
+const add10 = x => x + 10;
+const double = x => x * 2;
+const square = x => x * x;
+
+const transform = pipe(add10, double, square);
+console.log(transform(5)); // ((5+10)*2)^2 = 900
+```
+
+**P23: Implement `Promise.all` manually**
+```javascript
+function myPromiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let completed = 0;
+
+    if (promises.length === 0) return resolve([]);
+
+    promises.forEach((promise, i) => {
+      Promise.resolve(promise).then(value => {
+        results[i] = value;
+        completed++;
+        if (completed === promises.length) resolve(results);
+      }).catch(reject);
+    });
+  });
+}
+```
+
+**P24: Flatten nested object**
+```javascript
+function flattenObject(obj, prefix = "") {
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    const newKey = prefix ? `${prefix}.${key}` : key;
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+      Object.assign(acc, flattenObject(value, newKey));
+    } else {
+      acc[newKey] = value;
+    }
+    return acc;
+  }, {});
+}
+
+console.log(flattenObject({ a: { b: { c: 1 } }, d: 2 }));
+// { "a.b.c": 1, "d": 2 }
+```
+
+**P25: EventEmitter implement করো**
+```javascript
+class EventEmitter {
+  constructor() {
+    this.events = {};
+  }
+
+  on(event, listener) {
+    (this.events[event] = this.events[event] || []).push(listener);
+    return this;
+  }
+
+  off(event, listener) {
+    this.events[event] = (this.events[event] || []).filter(l => l !== listener);
+    return this;
+  }
+
+  emit(event, ...args) {
+    (this.events[event] || []).forEach(l => l(...args));
+    return this;
+  }
+
+  once(event, listener) {
+    const wrapper = (...args) => {
+      listener(...args);
+      this.off(event, wrapper);
+    };
+    return this.on(event, wrapper);
+  }
+}
+```
+
+</details>
+
+---
+
+## ৯.৩ Tricky JavaScript Questions
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Top 20 Tricky Questions</strong></summary>
+<br>
+
+**T1: `typeof null === "object"` কেন?**
+> **A:** JavaScript-এর historical bug (1995 থেকে)। Fix করলে পুরনো code break হবে — তাই রাখা হয়েছে। `null` check করতে: `value === null`।
+
+**T2: `0.1 + 0.2 === 0.3` কেন false?**
+> **A:** IEEE 754 floating-point representation-এর limitation। `0.1 + 0.2 = 0.30000000000000004`। Fix: `Math.abs(a - b) < Number.EPSILON` বা `toFixed()`।
+
+**T3: `[] + []` কত?**
+> **A:** `""` — empty string। Array → string: `""`. `"" + "" = ""`।
+
+**T4: `[] + {}` কত?**
+> **A:** `"[object Object]"` — Array "" + Object "[object Object]"।
+
+**T5: `{} + []` কত?**
+> **A:** `0` — `{}` statement হিসেবে parse, `+[]` = `+""` = `0`। কিন্তু `({}) + []` হলে `"[object Object]"`।
+
+**T6: `NaN === NaN` কেন false?**
+> **A:** NaN-এর IEEE 754 definition। "Not a Number" — কোনটির সাথেই equal নয়, নিজেও না। Check: `Number.isNaN(value)`।
+
+**T7: এই code-এর output কী?**
+```javascript
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);
+}
+```
+> **A:** `3, 3, 3` — `var` function-scoped, loop শেষে i=3। Fix: `let` ব্যবহার করুন (block-scoped) অথবা IIFE।
+
+**T8: এই code-এর output কী?**
+```javascript
+console.log(1);
+setTimeout(() => console.log(2), 0);
+Promise.resolve().then(() => console.log(3));
+console.log(4);
+```
+> **A:** `1, 4, 3, 2` — sync প্রথমে, তারপর microtask (Promise), তারপর macrotask (setTimeout)।
+
+**T9: `==` coercion:**
+```javascript
+console.log(false == "0");  // ?
+console.log(false == 0);    // ?
+console.log("" == 0);       // ?
+console.log(null == undefined); // ?
+```
+> **A:** `true, true, true, true` — type coercion-এর কারণে। `false → 0`, `"0" → 0`, `"" → 0`। `null == undefined` special case।
+
+**T10: Arguments object vs Rest parameter:**
+```javascript
+function a() { console.log(typeof arguments); }
+const b = () => { console.log(typeof arguments); }
+a(); // ?
+b(); // ?
+```
+> **A:** `"object"`, `"undefined"` — Arrow function-এ `arguments` নেই।
+
+**T11: এই output কী?**
+```javascript
+const obj = { a: 1 };
+const arr = [1, 2, 3];
+delete obj.a;
+delete arr[1];
+console.log(obj);    // ?
+console.log(arr);    // ?
+console.log(arr.length); // ?
+```
+> **A:** `{}`, `[1, empty, 3]`, `3` — array-এ delete করলে hole তৈরি হয়, length বদলায় না।
+
+**T12: Short-circuit evaluation:**
+```javascript
+let x = 0;
+const result = (x++ || "default") && x;
+console.log(result); // ?
+console.log(x);      // ?
+```
+> **A:** `1`, `1` — `x++` returns 0 (falsy), তাই `||` right side (`"default"`) নেয়। `&&` "default" truthy তাই right (`x` = 1) নেয়।
+
+**T13: Spread + Mutation:**
+```javascript
+const original = { a: 1, nested: { b: 2 } };
+const copy = { ...original };
+copy.a = 99;
+copy.nested.b = 99;
+console.log(original.a);        // ?
+console.log(original.nested.b); // ?
+```
+> **A:** `1`, `99` — Spread shallow copy। primitive `a` নতুন, কিন্তু `nested` object same reference।
+
+**T14: `this` in class method:**
+```javascript
+class Counter {
+  count = 0;
+  increment() { this.count++; }
+}
+const c = new Counter();
+const fn = c.increment;
+fn(); // Error? কেন?
+```
+> **A:** `TypeError: Cannot set properties of undefined` — method detach হলে `this` হারায়। Fix: `c.increment.bind(c)` বা arrow function class field।
+
+**T15: Prototype mutation:**
+```javascript
+function Animal(name) { this.name = name; }
+const dog = new Animal("Rex");
+Animal.prototype.speak = function() { return `${this.name} says woof`; };
+console.log(dog.speak()); // ?
+```
+> **A:** `"Rex says woof"` — Instance তৈরির পরেও prototype-এ method add করা যায়, সব instances পাবে।
+
+**T16: Closure counter:**
+```javascript
+function makeCounter() {
+  let count = 0;
+  return {
+    increment: () => ++count,
+    decrement: () => --count,
+    value: () => count
+  };
+}
+const counter = makeCounter();
+counter.increment();
+counter.increment();
+counter.decrement();
+console.log(counter.value()); // ?
+```
+> **A:** `1` — Closure-এ `count` share হচ্ছে।
+
+**T17: Array destructuring swap:**
+```javascript
+let a = 1, b = 2;
+[a, b] = [b, a];
+console.log(a, b); // ?
+```
+> **A:** `2, 1` — Temp variable ছাড়াই swap।
+
+**T18: Generator infinite sequence:**
+```javascript
+function* naturals() {
+  let n = 1;
+  while (true) yield n++;
+}
+const gen = naturals();
+console.log(gen.next().value); // ?
+console.log(gen.next().value); // ?
+```
+> **A:** `1`, `2` — Infinite generator, প্রতি `next()` call-এ পরের value।
+
+**T19: Tagged template literal:**
+```javascript
+function tag(strings, ...values) {
+  return strings.raw[0] + values.join("");
+}
+console.log(tag`Hello
+World ${1 + 2}`); // ?
+```
+> **A:** `"Hello\nWorld 3"` — `raw` দিয়ে escape process হয় না।
+
+**T20: Promise order:**
+```javascript
+const p = new Promise((resolve) => {
+  console.log("A");
+  resolve("B");
+  console.log("C");
+});
+p.then(v => console.log(v));
+console.log("D");
+```
+> **A:** `A, C, D, B` — Executor sync, `.then()` async (microtask)।
+
+</details>
+
+---
+
+## ৯.৪ Rapid-Fire Viva
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 40 Rapid-Fire Questions & One-Line Answers</strong></summary>
+<br>
+
+| # | প্রশ্ন | উত্তর |
+|---|--------|-------|
+| 1 | JS কোন engine ব্যবহার করে Chrome? | V8 |
+| 2 | `typeof undefined` কী? | `"undefined"` |
+| 3 | `typeof null` কী? | `"object"` (bug) |
+| 4 | Array-এর শেষে add করার method? | `push()` |
+| 5 | Array-এর প্রথমে add করার method? | `unshift()` |
+| 6 | Array-এর শেষ element remove? | `pop()` |
+| 7 | Array-এর প্রথম element remove? | `shift()` |
+| 8 | Object-এর keys পাওয়ার method? | `Object.keys()` |
+| 9 | String-কে number করার way? | `Number()`, `parseInt()`, `+str` |
+| 10 | Falsy values কতটি? | 6টি: `false, 0, "", null, undefined, NaN` |
+| 11 | `===` full name? | Strict equality operator |
+| 12 | Arrow function-এ `this`? | Lexical (outer scope-এর) |
+| 13 | `const` মানে কী immutable? | না — object/array-এর contents change হয় |
+| 14 | Default parameter কীভাবে দেয়? | `function fn(a = 10)` |
+| 15 | Promises-এর 3 state? | Pending, Fulfilled, Rejected |
+| 16 | `async` function কী return করে? | সবসময় Promise |
+| 17 | `await` ছাড়া `async`? | Promise object পাবে, unwrapped না |
+| 18 | DOM full form? | Document Object Model |
+| 19 | `event.preventDefault()` কী করে? | Default browser behavior বন্ধ করে |
+| 20 | `event.stopPropagation()` কী করে? | Event bubbling বন্ধ করে |
+| 21 | localStorage vs sessionStorage? | Local persistent, Session tab বন্ধে মোছে |
+| 22 | `JSON.stringify()` limitations? | function, undefined, circular reference হারায় |
+| 23 | Shallow copy method? | `{...obj}`, `Object.assign()` |
+| 24 | Deep copy method? | `structuredClone()` |
+| 25 | `Array.isArray([])` কী? | `true` |
+| 26 | `Array.from("hello")` কী? | `["h","e","l","l","o"]` |
+| 27 | `Set`-এ duplicate? | থাকে না |
+| 28 | Map-এ key? | যেকোনো type |
+| 29 | `delete` operator কী করে? | Object property remove করে |
+| 30 | `void 0` কী? | `undefined` |
+| 31 | `!!value` মানে? | Boolean conversion (double negation) |
+| 32 | Template literal কী দিয়ে? | Backtick (`) |
+| 33 | Nullish coalescing operator? | `??` |
+| 34 | Optional chaining operator? | `?.` |
+| 35 | `for...of` কীসের জন্য? | Iterable (array, string, Set, Map) |
+| 36 | `for...in` কীসের জন্য? | Object keys enumerate করতে |
+| 37 | `Symbol.iterator` কী? | Custom iterable তৈরির protocol |
+| 38 | Microtask queue-এ কী থাকে? | Promise callbacks, `queueMicrotask()` |
+| 39 | `requestAnimationFrame` কেন? | 60fps animation, repaint-এর আগে |
+| 40 | `instanceof` কীভাবে কাজ করে? | Prototype chain-এ constructor আছে কিনা check |
+
+</details>
+
+---
+
+## ৯.৫ Scenario-Based Questions
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Real-World Scenarios (S1–S15)</strong></summary>
+<br>
+
+**S1: একটি search box-এ প্রতি keystroke-এ API call হচ্ছে — কীভাবে optimize করবেন?**
+> **A:** Debounce ব্যবহার করুন (300-500ms delay)। User টাইপ থামলে একবার API call। AbortController দিয়ে পুরনো request cancel করুন।
+```javascript
+const debouncedSearch = debounce(async (query) => {
+  if (!query.trim()) return;
+  const data = await searchAPI(query);
+  renderResults(data);
+}, 400);
+input.addEventListener("input", e => debouncedSearch(e.target.value));
+```
+
+**S2: Page scroll করলে জানতে চান — কীভাবে efficient করবেন?**
+> **A:** Throttle ব্যবহার করুন — প্রতি 100ms-এ একবার execute। `Intersection Observer API` আরও efficient — scroll event-ই লাগে না।
+
+**S3: 1000টি list item render করতে হবে — performance কীভাবে বাড়াবেন?**
+> **A:** Virtual scrolling — শুধু visible items render। `react-window` বা `react-virtual` library। DocumentFragment দিয়ে batch DOM update।
+
+**S4: Multiple API call করতে হবে — কীভাবে parallel করবেন?**
+> **A:** `Promise.all()` — সব একসাথে। একটি fail হলে সব fail। `Promise.allSettled()` — সব result পাবেন, fail হলেও।
+```javascript
+const [users, products, orders] = await Promise.all([
+  fetchUsers(),
+  fetchProducts(),
+  fetchOrders()
+]);
+```
+
+**S5: JWT token expire হয়ে গেলে কী করবেন?**
+> **A:** Axios interceptor দিয়ে 401 response catch → refresh token দিয়ে নতুন access token নিন → original request retry।
+
+**S6: Memory leak কোথায় হয়? কীভাবে ঠেকাবেন?**
+> **A:** Detached DOM node reference, remove না করা event listeners, বন্ধ না করা setInterval, unbounded cache, global variable-এ data accumulate। Cleanup: `removeEventListener`, `clearInterval`, `AbortController`।
+
+**S7: Form validation কীভাবে করবেন?**
+> **A:** HTML5 constraint validation (`required`, `pattern`), custom JS validation, error messages। Submit-এ validate, onBlur-এ field-specific। Library: Zod, Yup, React Hook Form।
+
+**S8: CORS error হলে কী করবেন?**
+> **A:** Server-এ `Access-Control-Allow-Origin` header add করুন। Browser-এর security — client-side fix নেই। Development-এ proxy ব্যবহার করুন।
+
+**S9: XSS attack থেকে কীভাবে রক্ষা করবেন?**
+> **A:** User input sanitize করুন, `innerHTML` এড়িয়ে `textContent` ব্যবহার করুন, CSP header set করুন, template engine auto-escape ব্যবহার করুন।
+
+**S10: একটি form-এ data submit হওয়ার পরে button disable করবেন — কেন?**
+> **A:** Double submit রোধ করতে। Submit হলে button disabled করুন, response এলে enable করুন। Loading state UI-তে দেখান।
+
+**S11: localStorage কতটুকু data রাখতে পারে?**
+> **A:** বেশিরভাগ browser-এ 5-10MB per origin। JSON stringify করে store করুন। Sensitive data রাখবেন না — XSS-এ accessible।
+
+**S12: একটি component বারবার re-render হচ্ছে — কীভাবে fix করবেন?**
+> **A:** React DevTools Profiler দিয়ে identify। `React.memo`, `useMemo`, `useCallback` ব্যবহার করুন। Object/array dependency সাবধানে — reference equality।
+
+**S13: একটি API rate limit করতে হবে — কীভাবে implement করবেন?**
+> **A:** Token bucket বা sliding window algorithm। `express-rate-limit` package। Redis-এ count store (distributed)। Response: 429 Too Many Requests + `Retry-After` header।
+
+**S14: Page load slow — কীভাবে optimize করবেন?**
+> **A:** Lazy loading (images, routes), code splitting, caching, CDN, minification/compression, WebP images, preload critical resources, reduce render-blocking JS।
+
+**S15: একটি component-এ data fetch করবেন — error ও loading state কীভাবে handle করবেন?**
+> **A:**
+```javascript
+function useData(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+
+    fetch(url, { signal: controller.signal })
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(setData)
+      .catch(err => {
+        if (err.name !== "AbortError") setError(err.message);
+      })
+      .finally(() => setLoading(false));
+
+    return () => controller.abort();
+  }, [url]);
+
+  return { data, loading, error };
+}
+```
+
+</details>
+
+---
+
+## ৯.৬ Output বলো Questions
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 25 Output Questions</strong></summary>
+<br>
+
+**O1:**
+```javascript
+console.log(typeof typeof 1);
+```
+> **A:** `"string"` — `typeof 1` = `"number"`, `typeof "number"` = `"string"`
+
+**O2:**
+```javascript
+const a = [1, 2, 3];
+const b = a;
+b.push(4);
+console.log(a);
+```
+> **A:** `[1, 2, 3, 4]` — reference copy
+
+**O3:**
+```javascript
+console.log(0.1 + 0.2 == 0.3);
+console.log(0.1 + 0.2 === 0.3);
+```
+> **A:** `false, false` — floating point precision
+
+**O4:**
+```javascript
+(function() {
+  var x = y = 5;
+})();
+console.log(y);
+console.log(typeof x);
+```
+> **A:** `5`, `"undefined"` — `y` implicit global, `x` function-scoped
+
+**O5:**
+```javascript
+const obj = { x: 1 };
+Object.freeze(obj);
+obj.x = 999;
+console.log(obj.x);
+```
+> **A:** `1` — frozen object, silent fail (strict mode-এ Error)
+
+**O6:**
+```javascript
+let x = 1;
+{
+  let x = 2;
+  console.log(x);
+}
+console.log(x);
+```
+> **A:** `2, 1` — block scope
+
+**O7:**
+```javascript
+console.log([] == false);
+console.log([] == ![]);
+```
+> **A:** `true, true` — `[]` → `""` → `0`, `![]` → `false` → `0`, `0 == 0`
+
+**O8:**
+```javascript
+function foo() {
+  return
+  {
+    value: 42
+  };
+}
+console.log(foo());
+```
+> **A:** `undefined` — ASI (Automatic Semicolon Insertion), `return;` হয়ে যায়
+
+**O9:**
+```javascript
+const arr = [1, 2, 3, 4, 5];
+console.log(arr.slice(1, 3));
+console.log(arr.splice(1, 3));
+console.log(arr);
+```
+> **A:** `[2, 3]`, `[2, 3, 4]`, `[1, 5]` — slice non-mutating, splice mutating
+
+**O10:**
+```javascript
+let a = { n: 1 };
+let b = a;
+a.x = a = { n: 2 };
+console.log(a.x);
+console.log(b.x);
+```
+> **A:** `undefined`, `{ n: 2 }` — assignment right-to-left, `a.x` evaluated before `a` reassigned
+
+**O11:**
+```javascript
+const fn = (a, b, ...rest) => rest;
+console.log(fn(1, 2, 3, 4, 5));
+```
+> **A:** `[3, 4, 5]`
+
+**O12:**
+```javascript
+const promise = new Promise((resolve, reject) => {
+  reject(new Error("oops"));
+  resolve("ok");
+});
+promise.then(console.log).catch(err => console.log(err.message));
+```
+> **A:** `"oops"` — একবার settled, পরের call ignored
+
+**O13:**
+```javascript
+console.log(+"3" + +"4");
+console.log("3" + "4");
+```
+> **A:** `7`, `"34"` — unary `+` converts string to number
+
+**O14:**
+```javascript
+const obj = { a: 1, b: 2, c: 3 };
+const { a, ...rest } = obj;
+console.log(rest);
+```
+> **A:** `{ b: 2, c: 3 }` — rest in destructuring
+
+**O15:**
+```javascript
+class A {
+  constructor() { this.x = 1; }
+}
+class B extends A {
+  constructor() {
+    super();
+    this.y = 2;
+  }
+}
+const b = new B();
+console.log(b instanceof A);
+console.log(b instanceof B);
+```
+> **A:** `true, true`
+
+**O16:**
+```javascript
+const map = new Map();
+map.set(NaN, "not a number");
+console.log(map.get(NaN));
+```
+> **A:** `"not a number"` — Map-এ NaN key হিসেবে ব্যবহার করা যায়
+
+**O17:**
+```javascript
+function* gen() {
+  yield 1;
+  yield 2;
+  return 3;
+  yield 4;
+}
+console.log([...gen()]);
+```
+> **A:** `[1, 2]` — `return` generator শেষ করে, `return` value spread-এ আসে না
+
+**O18:**
+```javascript
+const arr = [1, , 3];
+console.log(arr.length);
+console.log(arr[1]);
+```
+> **A:** `3`, `undefined` — sparse array
+
+**O19:**
+```javascript
+Promise.resolve(1)
+  .then(x => x + 1)
+  .then(x => { throw new Error(x) })
+  .catch(err => err.message)
+  .then(console.log);
+```
+> **A:** `"2"` — catch returns value, chaining continues
+
+**O20:**
+```javascript
+const x = 10;
+function outer() {
+  const x = 20;
+  function inner() {
+    console.log(x);
+  }
+  return inner;
+}
+outer()(); // ?
+```
+> **A:** `20` — closure captures outer x
+
+**O21:**
+```javascript
+const arr = Array(3).fill(0);
+console.log(arr);
+```
+> **A:** `[0, 0, 0]`
+
+**O22:**
+```javascript
+console.log(1 < 2 < 3);
+console.log(3 > 2 > 1);
+```
+> **A:** `true`, `false` — `1 < 2` = `true` = `1`, `1 < 3` = `true`। `3 > 2` = `true` = `1`, `1 > 1` = `false`
+
+**O23:**
+```javascript
+const set = new Set([1, 2, 3, 2, 1]);
+console.log(set.size);
+console.log([...set]);
+```
+> **A:** `3`, `[1, 2, 3]`
+
+**O24:**
+```javascript
+async function main() {
+  console.log("start");
+  await null;
+  console.log("middle");
+  return "end";
+}
+main().then(console.log);
+console.log("after");
+```
+> **A:** `start, after, middle, end`
+
+**O25:**
+```javascript
+const obj = {
+  name: "BD",
+  greet() { return `Hello from ${this.name}`; },
+  greetArrow: () => `Hello from ${this.name}`
+};
+console.log(obj.greet());
+console.log(obj.greetArrow());
+```
+> **A:** `"Hello from BD"`, `"Hello from undefined"` — arrow function lexical `this` (global/undefined)
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 10 আসছে:** Problem Solving & Mini Projects — Todo App, Weather App, Calculator, Authentication System, Full CRUD App with Express।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 10 দাও" লিখুন।
