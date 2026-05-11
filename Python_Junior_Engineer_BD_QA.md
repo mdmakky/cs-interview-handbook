@@ -1664,4 +1664,1615 @@ print(top2)
 
 ---
 
-> **📌 পরবর্তী:** PART 3 — Object-Oriented Programming in Python *(Next request এ লিখব)*
+<a id="part3"></a>
+
+## 📋 PART 3 সূচিপত্র — Object-Oriented Programming in Python
+
+| # | Topic | What You Will Learn |
+|---|---|---|
+| 1 | [Class & Object](#p3-class-object) | Blueprint ও instance |
+| 2 | [Constructor](#p3-constructor) | `__init__`, object initialization |
+| 3 | [Destructor](#p3-destructor) | `__del__`, cleanup |
+| 4 | [Encapsulation](#p3-encapsulation) | Private, protected, public |
+| 5 | [Abstraction](#p3-abstraction) | Hide complexity, ABC module |
+| 6 | [Inheritance](#p3-inheritance) | Single, multiple, MRO |
+| 7 | [Polymorphism](#p3-polymorphism) | Same interface, different behavior |
+| 8 | [Method Overloading](#p3-overloading) | Python approach with default args |
+| 9 | [Method Overriding](#p3-overriding) | Child class re-defines parent method |
+| 10 | [Abstract Class](#p3-abstract-class) | ABC, `@abstractmethod` |
+| 11 | [Magic / Dunder Methods](#p3-dunder) | `__str__`, `__len__`, `__eq__` etc. |
+| 12 | [SOLID Principles](#p3-solid) | 5 principles, Python examples |
+
+---
+
+<a id="p3-class-object"></a>
+
+## 1. Class & Object
+
+**Definition:**
+**Class** হলো object-এর blueprint বা template। **Object** হলো সেই class-এর একটি instance — actual data সহ।
+
+**Real-life Analogy:**
+Class হলো **building plan** (নকশা), Object হলো সেই নকশা অনুযায়ী **তৈরি বাড়ি**। একই plan থেকে অনেক বাড়ি বানানো যায়।
+
+**Practical Use Case:**
+- User, Product, Order, Transaction — এসব real-world entity কে class দিয়ে model করা হয়
+
+**Interview-style Explanation:**
+> "Class হলো একটি custom data type যা attributes (data) এবং methods (behavior) define করে। Object হলো সেই class-এর একটি specific instance। Python-এ সবকিছুই object — numbers, strings, functions সব।"
+
+**Common Mistakes:**
+- class আর object কে একই মনে করা
+- `self` কেন দরকার না বোঝা
+- class variable আর instance variable confuse করা
+
+**Class Variable vs Instance Variable:**
+
+| | Class Variable | Instance Variable |
+|---|---|---|
+| Define করা হয় | class body-তে directly | `__init__` এর ভিতরে `self.` দিয়ে |
+| Shared? | সব instance share করে | প্রতিটি instance এর নিজস্ব |
+| Access | `ClassName.var` বা `self.var` | `self.var` |
+
+**Follow-up Interview Questions:**
+1. `self` কী? কেন প্রথম parameter?
+2. Class variable আর instance variable পার্থক্য?
+3. Python-এ সবকিছু object — মানে কী?
+
+**Code Example:**
+```python
+class Student:
+    school = "BUET"  # class variable — shared
+
+    def __init__(self, name, age):
+        self.name = name    # instance variable
+        self.age = age
+
+    def introduce(self):
+        return f"I am {self.name}, age {self.age}, from {self.school}"
+
+s1 = Student("Rahim", 22)
+s2 = Student("Amina", 23)
+
+print(s1.introduce())
+print(s2.introduce())
+
+# Class variable change affects all
+Student.school = "CUET"
+print(s1.school)   # CUET
+print(s2.school)   # CUET
+```
+
+---
+
+<a id="p3-constructor"></a>
+
+## 2. Constructor
+
+**Definition:**
+Constructor হলো `__init__` method যা object তৈরির সময় automatically call হয়। এটি object-এর initial state set করে।
+
+**Real-life Analogy:**
+Constructor কে **নতুন employee-এর joining kit** হিসেবে ভাবুন। যোগ দেওয়ার সময়ই ID card, laptop, email — সব দেওয়া হয়।
+
+**Practical Use Case:**
+- object initialization
+- required attribute validation
+- dependency injection
+
+**Interview-style Explanation:**
+> "`__init__` Python-এ constructor হিসেবে কাজ করে। এটি automatically execute হয় যখন object তৈরি হয়। Python-এ constructor overloading সরাসরি নেই — default arguments বা `*args` দিয়ে flexible constructor বানানো হয়।"
+
+**Common Mistakes:**
+- `__init__` return করার চেষ্টা করা — `None` return করতে হবে, অন্যথায় error
+- constructor-এ too much logic রাখা
+
+**Follow-up Interview Questions:**
+1. `__init__` এবং `__new__` পার্থক্য কী?
+2. Constructor overloading Python-এ কীভাবে করবেন?
+3. `__new__` কখন দরকার হয়?
+
+**Code Example:**
+```python
+class BankAccount:
+    def __init__(self, owner, balance=0):
+        self.owner = owner
+        self.balance = balance
+        self.transactions = []
+
+    def deposit(self, amount):
+        self.balance += amount
+        self.transactions.append(f"+{amount}")
+
+    def __repr__(self):
+        return f"BankAccount(owner={self.owner}, balance={self.balance})"
+
+acc = BankAccount("Rahim", 5000)
+acc.deposit(1000)
+print(acc)
+print(acc.transactions)
+```
+
+---
+
+<a id="p3-destructor"></a>
+
+## 3. Destructor
+
+**Definition:**
+Destructor হলো `__del__` method যা object garbage collected হওয়ার আগে call হয়। Resource cleanup এর জন্য use করা হয়।
+
+**Real-life Analogy:**
+Destructor কে **অফিস থেকে বিদায়** হিসেবে ভাবুন। চলে যাওয়ার আগে laptop ফেরত দেওয়া, access card জমা দেওয়া।
+
+**Interview-style Explanation:**
+> "Python-এ `__del__` আছে কিন্তু এর উপর নির্ভর করা উচিত নয় কারণ কখন call হবে তা guaranteed না। Resource cleanup এর জন্য `with` statement এবং context manager best practice।"
+
+**Common Mistakes:**
+- destructor-এ critical cleanup রাখা — call হওয়ার guarantee নেই
+- `del obj` মানে destructor call নয়, reference কমানো
+
+**Follow-up Interview Questions:**
+1. `__del__` কি সবসময় call হয়?
+2. `del obj` কী করে?
+3. Context manager কেন destructor-এর চেয়ে better?
+
+**Code Example:**
+```python
+class FileHandler:
+    def __init__(self, filename):
+        self.filename = filename
+        print(f"Opening {filename}")
+
+    def __del__(self):
+        print(f"Closing {self.filename}")
+
+fh = FileHandler("data.txt")
+del fh   # triggers __del__ (usually)
+```
+
+---
+
+<a id="p3-encapsulation"></a>
+
+## 4. Encapsulation
+
+**Definition:**
+Encapsulation মানে object-এর data এবং method একসাথে bundle করা এবং direct access restrict করা। Python-এ naming convention দিয়ে এটি করা হয়।
+
+**Real-life Analogy:**
+Encapsulation কে **ATM machine** হিসেবে ভাবুন। আপনি শুধু card insert করেন, PIN দেন। ভিতরের mechanism দেখেন না বা সরাসরি cash কাউন্ট করতে পারেন না।
+
+**Access Level Conventions:**
+
+| Prefix | Type | Access |
+|---|---|---|
+| `name` | Public | সবখান থেকে accessible |
+| `_name` | Protected | Convention — class ও subclass |
+| `__name` | Private | Name mangling — class-এর বাইরে directly accessible নয় |
+
+**Practical Use Case:**
+- sensitive data hide করা (password, balance)
+- validation enforce করা
+- internal implementation change করা externally-visible interface ঠিক রেখে
+
+**Interview-style Explanation:**
+> "Python-এ strict private নেই Java-এর মতো। `__` prefix দিলে name mangling হয় — `_ClassName__attr` হিসেবে store হয়। তবে convention হিসেবে `_` protected এবং `__` private ব্যবহার করি।"
+
+**Common Mistakes:**
+- `__` prefix মানে সম্পূর্ণ private ভাবা — technically access করা যায় name mangling দিয়ে
+- getter/setter না বানিয়ে সরাসরি `__attr` access করার চেষ্টা করা
+
+**Follow-up Interview Questions:**
+1. Python-এ private attribute কীভাবে করেন?
+2. Name mangling কী?
+3. `@property` কেন use করি?
+
+**Code Example:**
+```python
+class Employee:
+    def __init__(self, name, salary):
+        self.name = name
+        self.__salary = salary   # private
+
+    @property
+    def salary(self):
+        return self.__salary
+
+    @salary.setter
+    def salary(self, amount):
+        if amount < 0:
+            raise ValueError("Salary cannot be negative")
+        self.__salary = amount
+
+    def __repr__(self):
+        return f"Employee({self.name}, {self.__salary})"
+
+emp = Employee("Karim", 50000)
+print(emp.salary)           # 50000 — via getter
+emp.salary = 60000          # via setter
+print(emp.salary)
+
+# Name mangling — technically accessible but discouraged
+print(emp._Employee__salary)
+```
+
+---
+
+<a id="p3-abstraction"></a>
+
+## 5. Abstraction
+
+**Definition:**
+Abstraction মানে complex implementation hide করে শুধু necessary interface expose করা। Python-এ `abc` module দিয়ে abstract class তৈরি করা হয়।
+
+**Real-life Analogy:**
+Abstraction কে **car driving** এর মতো ভাবুন। আপনি gear shift করেন, accelerator চাপেন — engine-এর ভিতরে কী হচ্ছে জানতে হয় না।
+
+**Practical Use Case:**
+- common interface define করা multiple class-এর জন্য
+- plugin / strategy pattern
+- code contract enforce করা
+
+**Interview-style Explanation:**
+> "Abstraction implementation details hide করে। Abstract class define করি যেখানে subclass-গুলো specific method implement করতে বাধ্য থাকে। এটি team-এ coding contract হিসেবে কাজ করে।"
+
+**Common Mistakes:**
+- abstract class directly instantiate করার চেষ্টা করা
+- abstract method implement না করে subclass বানানো
+
+**Follow-up Interview Questions:**
+1. Abstract class আর Interface-এর পার্থক্য?
+2. Python-এ interface কীভাবে করবেন?
+3. `ABCMeta` কী?
+
+**Code Example:**
+```python
+from abc import ABC, abstractmethod
+
+class Shape(ABC):
+    @abstractmethod
+    def area(self) -> float:
+        pass
+
+    @abstractmethod
+    def perimeter(self) -> float:
+        pass
+
+    def describe(self):
+        return f"Area={self.area():.2f}, Perimeter={self.perimeter():.2f}"
+
+class Circle(Shape):
+    def __init__(self, radius):
+        self.radius = radius
+
+    def area(self):
+        return 3.14159 * self.radius ** 2
+
+    def perimeter(self):
+        return 2 * 3.14159 * self.radius
+
+class Rectangle(Shape):
+    def __init__(self, w, h):
+        self.w, self.h = w, h
+
+    def area(self):
+        return self.w * self.h
+
+    def perimeter(self):
+        return 2 * (self.w + self.h)
+
+shapes = [Circle(5), Rectangle(4, 6)]
+for s in shapes:
+    print(s.describe())
+
+# shape = Shape()  → TypeError: Can't instantiate abstract class
+```
+
+---
+
+<a id="p3-inheritance"></a>
+
+## 6. Inheritance
+
+**Definition:**
+Inheritance মানে একটি class অন্য class-এর attributes ও methods inherit করে। Parent (base) class-এর সব feature child (derived) class পায়।
+
+**Real-life Analogy:**
+Inheritance কে **পারিবারিক বৈশিষ্ট্য** হিসেবে ভাবুন। সন্তান বাবার কিছু বৈশিষ্ট্য পায়, প্রয়োজনে নিজস্ব বৈশিষ্ট্যও যোগ করে।
+
+**Types:**
+
+| Type | Example | Python Support |
+|---|---|---|
+| Single | `class B(A)` | ✅ |
+| Multiple | `class C(A, B)` | ✅ |
+| Multilevel | `class C(B)` where `B(A)` | ✅ |
+| Hierarchical | Multiple child from one parent | ✅ |
+| Hybrid | Mix of above | ✅ (MRO handles) |
+
+**MRO (Method Resolution Order):**
+Multiple inheritance এ Python **C3 linearization** algorithm use করে। `ClassName.__mro__` দিয়ে দেখা যায়।
+
+**Practical Use Case:**
+- User → AdminUser, RegularUser
+- Vehicle → Car, Truck, Motorcycle
+- BaseModel → UserModel, ProductModel
+
+**Interview-style Explanation:**
+> "Inheritance code reuse এর tool। Parent class-এ common logic রাখি, child class-এ specific behavior add করি। Multiple inheritance-এ Python C3 MRO algorithm use করে conflict resolve করে।"
+
+**Common Mistakes:**
+- `super()` ভুল জায়গায় call করা
+- MRO না বুঝে multiple inheritance করা
+- deep inheritance chain তৈরি করা — composition often better
+
+**Follow-up Interview Questions:**
+1. `super()` কী করে?
+2. MRO কী এবং কীভাবে কাজ করে?
+3. Diamond problem কী? Python কীভাবে solve করে?
+
+**Code Example:**
+```python
+class Animal:
+    def __init__(self, name):
+        self.name = name
+
+    def speak(self):
+        return f"{self.name} makes a sound"
+
+class Dog(Animal):
+    def speak(self):
+        return f"{self.name} says Woof!"
+
+class Cat(Animal):
+    def speak(self):
+        return f"{self.name} says Meow!"
+
+# Multilevel
+class GuideDog(Dog):
+    def guide(self):
+        return f"{self.name} is guiding"
+
+# Multiple inheritance
+class Pet:
+    def pet_info(self):
+        return "I am a pet"
+
+class PetDog(Dog, Pet):
+    pass
+
+animals = [Dog("Rex"), Cat("Whiskers"), GuideDog("Buddy")]
+for a in animals:
+    print(a.speak())
+
+pd = PetDog("Max")
+print(pd.speak())
+print(pd.pet_info())
+print(PetDog.__mro__)
+
+# super()
+class Manager(Animal):
+    def __init__(self, name, department):
+        super().__init__(name)   # parent __init__
+        self.department = department
+```
+
+---
+
+<a id="p3-polymorphism"></a>
+
+## 7. Polymorphism
+
+**Definition:**
+Polymorphism মানে same interface বা method name দিয়ে different behavior। "Many forms" — একই নামের method different class-এ different কাজ করে।
+
+**Real-life Analogy:**
+Polymorphism কে **"speak" button** এর মতো ভাবুন। Dog-এ চাপলে "woof", Cat-এ চাপলে "meow", Human-এ চাপলে কথা বলে।
+
+**Types:**
+
+| Type | Description |
+|---|---|
+| Duck Typing | Object-এর type না দেখে method আছে কিনা দেখা |
+| Method Overriding | Child class parent method replace করে |
+| Operator Overloading | `+`, `==` etc. custom behavior |
+
+**Interview-style Explanation:**
+> "Python-এ polymorphism duck typing দিয়ে আসে। কোনো object-এর type check না করে শুধু দেখি সে নির্দিষ্ট method সাপোর্ট করে কিনা। `if it walks like a duck and quacks like a duck, it's a duck.`"
+
+**Common Mistakes:**
+- polymorphism শুধু inheritance মনে করা
+- duck typing এর concept না বোঝা
+
+**Follow-up Interview Questions:**
+1. Duck typing কী?
+2. Compile-time এবং runtime polymorphism পার্থক্য?
+3. Python-এ operator overloading কীভাবে করবেন?
+
+**Code Example:**
+```python
+# Method overriding (runtime polymorphism)
+class Shape:
+    def area(self):
+        return 0
+
+class Circle(Shape):
+    def __init__(self, r): self.r = r
+    def area(self): return 3.14 * self.r ** 2
+
+class Rectangle(Shape):
+    def __init__(self, w, h): self.w, self.h = w, h
+    def area(self): return self.w * self.h
+
+shapes = [Circle(5), Rectangle(4, 6)]
+for s in shapes:
+    print(s.area())   # polymorphic call
+
+# Duck typing
+class Dog:
+    def sound(self): return "Woof"
+
+class Cat:
+    def sound(self): return "Meow"
+
+class Robot:
+    def sound(self): return "Beep"
+
+def make_sound(thing):
+    print(thing.sound())   # type না জেনেই call
+
+for obj in [Dog(), Cat(), Robot()]:
+    make_sound(obj)
+```
+
+---
+
+<a id="p3-overloading"></a>
+
+## 8. Method Overloading
+
+**Definition:**
+Method overloading মানে same name কিন্তু different parameters দিয়ে multiple method define করা। Python directly support করে না — `default arguments` বা `*args` দিয়ে simulate করা হয়।
+
+**Real-life Analogy:**
+একই restaurant-এ "coffee দিন" বললে — আপনি specify করলে black coffee, না করলে default milk coffee দেবে।
+
+**Interview-style Explanation:**
+> "Python-এ same name দিয়ে দুটো function লিখলে দ্বিতীয়টি প্রথমটি overwrite করে। Overloading simulate করতে `default arguments`, `*args`, বা `isinstance()` check use করি।"
+
+**Common Mistakes:**
+- Java-এর মতো Python-এ দুটো same-name function ভাবা — দ্বিতীয়টি প্রথমটি replace করে
+- `functools.singledispatch` না জানা
+
+**Follow-up Interview Questions:**
+1. Python কি method overloading support করে?
+2. `@singledispatch` কী?
+3. Overloading simulate করার best way কী?
+
+**Code Example:**
+```python
+# Default arguments দিয়ে simulate
+class Calculator:
+    def add(self, a, b=0, c=0):
+        return a + b + c
+
+calc = Calculator()
+print(calc.add(5))         # 5
+print(calc.add(5, 3))      # 8
+print(calc.add(5, 3, 2))   # 10
+
+# functools.singledispatch
+from functools import singledispatch
+
+@singledispatch
+def process(value):
+    raise NotImplementedError(f"Unsupported type: {type(value)}")
+
+@process.register(int)
+def _(value):
+    return f"Integer: {value * 2}"
+
+@process.register(str)
+def _(value):
+    return f"String: {value.upper()}"
+
+print(process(10))
+print(process("hello"))
+```
+
+---
+
+<a id="p3-overriding"></a>
+
+## 9. Method Overriding
+
+**Definition:**
+Method overriding হলো child class-এ parent class-এর same-name method নতুনভাবে define করা। Runtime-এ child-এর version call হয়।
+
+**Real-life Analogy:**
+Parent বলেন "greeting হলো নমস্কার"। Child বলেন "আমার কাছে greeting হলো সালাম"। একই concept, নিজস্ব implementation।
+
+**Practical Use Case:**
+- animal hierarchy-তে `speak()` method
+- payment system-এ `process()` method
+- serializer-এ `to_json()` method
+
+**Interview-style Explanation:**
+> "Method overriding runtime polymorphism-এর মূল mechanism। `super()` call করে parent-এর version চালানো যায়, তারপর extra behavior add করা যায়।"
+
+**Common Mistakes:**
+- `super()` call ভুলে যাওয়া — parent initialization skip হওয়া
+- overriding করতে গিয়ে parent interface ভাঙা
+
+**Follow-up Interview Questions:**
+1. Overloading আর overriding পার্থক্য কী?
+2. `super()` কীভাবে কাজ করে?
+3. Python-এ runtime method dispatch কীভাবে হয়?
+
+**Code Example:**
+```python
+class Notification:
+    def send(self, message):
+        print(f"[Base] Sending: {message}")
+
+class EmailNotification(Notification):
+    def send(self, message):
+        super().send(message)   # parent call
+        print(f"[Email] Emailing: {message}")
+
+class SMSNotification(Notification):
+    def send(self, message):
+        print(f"[SMS] Texting: {message}")
+
+notifications = [EmailNotification(), SMSNotification()]
+for n in notifications:
+    n.send("Your OTP is 1234")
+    print()
+```
+
+---
+
+<a id="p3-abstract-class"></a>
+
+## 10. Abstract Class
+
+**Definition:**
+Abstract class হলো এমন class যেটি directly instantiate করা যায় না। এতে abstract method থাকে যেগুলো subclass-কে implement করতে হবে।
+
+**Real-life Analogy:**
+Abstract class কে **job description template** হিসেবে ভাবুন। Template বলে কী কী skills দরকার, কিন্তু template নিজে কাজ করে না।
+
+**Practical Use Case:**
+- plugin interface define করা
+- team-এর common API contract
+- framework base class
+
+**Interview-style Explanation:**
+> "Abstract class define করলে subclass-গুলো নির্দিষ্ট method implement করতে বাধ্য হয়। এটি compile-time contract-এর Python equivalent। `ABCMeta` বা `ABC` use করি।"
+
+**Common Mistakes:**
+- abstract method implement না করলে object তৈরিতে `TypeError` হবে — এটা intended
+- concrete method-ও abstract class-এ রাখা যায়, সব method abstract হতে হয় না
+
+**Follow-up Interview Questions:**
+1. Abstract class কি instantiate করা যায়?
+2. Abstract class এবং interface-এর পার্থক্য?
+3. Python-এ interface simulate কীভাবে করবেন?
+
+**Code Example:**
+```python
+from abc import ABC, abstractmethod
+
+class PaymentGateway(ABC):
+    @abstractmethod
+    def charge(self, amount: float) -> bool:
+        pass
+
+    @abstractmethod
+    def refund(self, amount: float) -> bool:
+        pass
+
+    def receipt(self, amount):   # concrete method — subclass পাবে
+        return f"Receipt for BDT {amount}"
+
+class BkashGateway(PaymentGateway):
+    def charge(self, amount):
+        print(f"Charging BDT {amount} via bKash")
+        return True
+
+    def refund(self, amount):
+        print(f"Refunding BDT {amount} via bKash")
+        return True
+
+class NagadGateway(PaymentGateway):
+    def charge(self, amount):
+        print(f"Charging BDT {amount} via Nagad")
+        return True
+
+    def refund(self, amount):
+        print(f"Refunding BDT {amount} via Nagad")
+        return True
+
+gateways = [BkashGateway(), NagadGateway()]
+for gw in gateways:
+    gw.charge(500)
+    print(gw.receipt(500))
+```
+
+---
+
+<a id="p3-dunder"></a>
+
+## 11. Magic / Dunder Methods
+
+**Definition:**
+Dunder (double underscore) methods হলো Python-এর special methods যা built-in operations override করে। `__init__`, `__str__`, `__len__`, `__eq__`, `__add__` — এগুলো magic methods।
+
+**Real-life Analogy:**
+Magic methods কে **universal remote control button** হিসেবে ভাবুন। `+` button চাপলে custom behavior — number হলে যোগ, string হলে concatenation।
+
+**Key Dunder Methods:**
+
+| Method | কখন call হয় |
+|---|---|
+| `__init__` | Object তৈরির সময় |
+| `__str__` | `str(obj)` বা `print(obj)` |
+| `__repr__` | `repr(obj)`, debugging |
+| `__len__` | `len(obj)` |
+| `__eq__` | `obj1 == obj2` |
+| `__lt__` | `obj1 < obj2` |
+| `__add__` | `obj1 + obj2` |
+| `__getitem__` | `obj[key]` |
+| `__contains__` | `item in obj` |
+| `__iter__` | `for item in obj` |
+| `__enter__`/`__exit__` | `with` statement |
+
+**Interview-style Explanation:**
+> "Dunder methods Python-এর operator overloading mechanism। Class-এ `__add__` implement করলে `+` operator কাজ করে। `__str__` implement করলে `print()` readable output দেয়।"
+
+**Common Mistakes:**
+- `__str__` আর `__repr__` confuse করা — `__repr__` debugging, `__str__` user-facing
+- Dunder method directly call করার চেষ্টা — `obj.__str__()` নয়, `str(obj)` ব্যবহার করুন
+
+**Follow-up Interview Questions:**
+1. `__str__` এবং `__repr__` পার্থক্য কী?
+2. Operator overloading কীভাবে করবেন?
+3. `__eq__` implement করলে `__hash__` কেন affect হয়?
+
+**Code Example:**
+```python
+class Vector:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+
+    def __str__(self):
+        return f"Vector({self.x}, {self.y})"
+
+    def __repr__(self):
+        return f"Vector(x={self.x}, y={self.y})"
+
+    def __add__(self, other):
+        return Vector(self.x + other.x, self.y + other.y)
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
+
+    def __len__(self):
+        return int((self.x**2 + self.y**2) ** 0.5)
+
+v1 = Vector(1, 2)
+v2 = Vector(3, 4)
+
+print(v1)           # __str__
+print(v1 + v2)      # __add__
+print(v1 == v2)     # __eq__
+print(len(v2))      # __len__
+
+# Context manager with __enter__/__exit__
+class ManagedFile:
+    def __init__(self, name):
+        self.name = name
+
+    def __enter__(self):
+        self.file = open(self.name, "w")
+        return self.file
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.file.close()
+        return False
+
+with ManagedFile("test.txt") as f:
+    f.write("Hello")
+```
+
+---
+
+<a id="p3-solid"></a>
+
+## 12. SOLID Principles
+
+**Definition:**
+SOLID হলো 5টি OOP design principle যা maintainable, scalable code লেখার guideline দেয়।
+
+| Letter | Principle | মানে |
+|---|---|---|
+| **S** | Single Responsibility | একটি class-এর একটিই কাজ থাকবে |
+| **O** | Open/Closed | Extension-এর জন্য open, modification-এর জন্য closed |
+| **L** | Liskov Substitution | Subclass parent-এর জায়গায় use করা যাবে |
+| **I** | Interface Segregation | ছোট specific interface বানানো |
+| **D** | Dependency Inversion | Abstraction-এর উপর depend করা, concrete-এর নয় |
+
+**Real-life Analogy:**
+SOLID হলো **engineering best practices** — যেমন building এ load-bearing wall আলাদা রাখা, electrical wiring আলাদা রাখা।
+
+**Interview-style Explanation:**
+> "SOLID principles follow করলে code সহজে test করা যায়, extend করা যায়, এবং team-এ work করা সহজ হয়। Junior developer হিসেবে অন্তত S এবং O ভালোভাবে explain করতে পারা দরকার।"
+
+**S — Single Responsibility:**
+```python
+# ❌ Bad — একটি class দুটো কাজ করছে
+class UserService:
+    def get_user(self, uid): ...
+    def send_email(self, email): ...   # email পাঠানো এর কাজ না
+
+# ✅ Good
+class UserService:
+    def get_user(self, uid): ...
+
+class EmailService:
+    def send_email(self, email): ...
+```
+
+**O — Open/Closed:**
+```python
+# ✅ Good — new gateway add করতে UserService বদলাতে হবে না
+class PaymentGateway(ABC):
+    @abstractmethod
+    def pay(self, amount): pass
+
+class BkashGateway(PaymentGateway):
+    def pay(self, amount): print(f"bKash: {amount}")
+
+class NagadGateway(PaymentGateway):
+    def pay(self, amount): print(f"Nagad: {amount}")
+
+def process_payment(gateway: PaymentGateway, amount):
+    gateway.pay(amount)
+```
+
+**L — Liskov Substitution:**
+```python
+class Bird:
+    def fly(self): return "Flying"
+
+class Sparrow(Bird):
+    def fly(self): return "Sparrow flying"
+
+# ✅ Sparrow can replace Bird anywhere
+def make_fly(bird: Bird):
+    print(bird.fly())
+
+make_fly(Sparrow())
+```
+
+**D — Dependency Inversion:**
+```python
+# ✅ Good — depend on abstraction, not concrete
+class Database(ABC):
+    @abstractmethod
+    def save(self, data): pass
+
+class PostgreSQL(Database):
+    def save(self, data): print(f"Saved in PostgreSQL: {data}")
+
+class UserRepo:
+    def __init__(self, db: Database):   # injected abstraction
+        self.db = db
+
+    def create_user(self, user):
+        self.db.save(user)
+
+repo = UserRepo(PostgreSQL())
+repo.create_user({"name": "Rahim"})
+```
+
+**Common Mistakes:**
+- SOLID শুধু theory মুখস্থ করা, code example না দেখানো
+- L (Liskov) কে সবচেয়ে কম explain করা
+- একটি project-এ সব SOLID apply করার চেষ্টা করা — pragmatic হতে হবে
+
+**Follow-up Interview Questions:**
+1. SOLID-এর S কী? Code দিয়ে বোঝান।
+2. Open/Closed principle কেন দরকার?
+3. Dependency Injection আর Dependency Inversion পার্থক্য কী?
+
+---
+
+## PART 3 Quick Revision Table
+
+| Concept | Key Takeaway | Interview Must-Know |
+|---|---|---|
+| Class & Object | Blueprint vs instance | class variable vs instance variable |
+| Constructor | `__init__` auto-called | `__init__` vs `__new__` |
+| Destructor | `__del__` — unreliable | Use context manager instead |
+| Encapsulation | `_` protected, `__` private | `@property` for getter/setter |
+| Abstraction | ABC + `@abstractmethod` | Can't instantiate abstract class |
+| Inheritance | Reuse + extend, MRO | `super()`, Diamond problem |
+| Polymorphism | Same interface, different behavior | Duck typing |
+| Overloading | Simulate with defaults/`*args` | No native overloading in Python |
+| Overriding | Child replaces parent method | `super()` to keep parent logic |
+| Abstract Class | Contract for subclasses | `ABC` from `abc` module |
+| Dunder Methods | Operator overloading | `__str__` vs `__repr__` |
+| SOLID | S, O, L, I, D | S and O most commonly asked |
+
+---
+
+## PART 3 Interview Common Traps
+
+**Trap 1:** "Python-এ method overloading আছে?"
+> নেই। Same name দুটো function লিখলে দ্বিতীয়টি প্রথমটি replace করে।
+
+**Trap 2:** "`__del__` দিয়ে file close করা safe?"
+> না। `with` statement / context manager use করুন।
+
+**Trap 3:** "Abstract class instantiate করা যায়?"
+> না, `TypeError` দেবে।
+
+**Trap 4:** "Encapsulation আর Abstraction একই?"
+> না। Encapsulation = data hide করা। Abstraction = complexity hide করা।
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part4"></a>
+
+## 📋 PART 4 সূচিপত্র — Advanced Python
+
+| # | Topic | What You Will Learn |
+|---|---|---|
+| 1 | [Decorators](#p4-decorators) | Function wrapping, `@` syntax, use cases |
+| 2 | [Closures](#p4-closures) | Inner function + outer scope, factory pattern |
+| 3 | [Generators](#p4-generators-adv) | Advanced generator patterns, `send()`, `yield from` |
+| 4 | [Iterators (Custom)](#p4-iterators-adv) | Iterator protocol deep dive |
+| 5 | [Context Managers](#p4-context-managers) | `with`, `__enter__`/`__exit__`, `contextlib` |
+| 6 | [*args & **kwargs](#p4-args-kwargs) | Flexible function signatures, unpacking |
+| 7 | [Deep vs Shallow Copy](#p4-copy) | `copy.copy()` vs `copy.deepcopy()` |
+| 8 | [Mutable vs Immutable](#p4-mutable-immutable) | Memory model, gotchas |
+| 9 | [Memory Management](#p4-memory) | Reference counting, garbage collection |
+| 10 | [GIL](#p4-gil) | Global Interpreter Lock, threading impact |
+| 11 | [Multithreading](#p4-threading) | `threading` module, I/O-bound tasks |
+| 12 | [Multiprocessing](#p4-multiprocessing) | `multiprocessing` module, CPU-bound tasks |
+| 13 | [Asyncio](#p4-asyncio) | async/await, event loop, concurrent I/O |
+| 14 | [Type Hinting](#p4-type-hinting) | `typing` module, annotations, `mypy` |
+
+---
+
+<a id="p4-decorators"></a>
+
+## 1. Decorators
+
+**Definition:**
+Decorator হলো এমন function যা অন্য function-কে wrap করে extra behavior যোগ করে, original function modify না করে।
+
+**Real-life Analogy:**
+Decorator কে **coffee-তে extra toppings** হিসেবে ভাবুন। Plain coffee-তে whipped cream, chocolate add করছেন — coffee-র core recipe বদলাচ্ছেন না।
+
+**Internal Working:**
+```text
+@my_decorator
+def func(): ...
+
+এটি equivalent to:
+func = my_decorator(func)
+```
+
+**Practical Use Case:**
+- logging
+- authentication check
+- caching / memoization
+- execution time measurement
+- retry logic
+
+**Interview-style Explanation:**
+> "Decorator Python-এর metaprogramming feature। একটি function-কে argument হিসেবে নিয়ে modified version return করে। `@` syntax syntactic sugar। FastAPI, Flask-এর route decorator এই concept-এর উপর built।"
+
+**Common Mistakes:**
+- `functools.wraps` না দেওয়া — decorated function-এর `__name__`, `__doc__` হারিয়ে যায়
+- decorator vs decorator factory confuse করা
+
+**Follow-up Interview Questions:**
+1. Decorator কীভাবে internally কাজ করে?
+2. `functools.wraps` কেন দরকার?
+3. Decorator stack করলে কী হয়?
+4. Class-based decorator কীভাবে বানাবেন?
+
+**Code Example:**
+```python
+import functools
+import time
+
+# Basic decorator
+def timer(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"{func.__name__} took {end-start:.4f}s")
+        return result
+    return wrapper
+
+@timer
+def heavy_task(n):
+    return sum(range(n))
+
+print(heavy_task(1_000_000))
+
+# Decorator with arguments (decorator factory)
+def repeat(times):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            for _ in range(times):
+                result = func(*args, **kwargs)
+            return result
+        return wrapper
+    return decorator
+
+@repeat(times=3)
+def greet(name):
+    print(f"Hello {name}")
+
+greet("Rahim")
+
+# Stacking decorators
+def bold(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return f"**{func(*args, **kwargs)}**"
+    return wrapper
+
+def exclaim(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return f"{func(*args, **kwargs)}!"
+    return wrapper
+
+@bold
+@exclaim
+def say(msg):
+    return msg
+
+print(say("Hello"))   # **Hello!**
+```
+
+---
+
+<a id="p4-closures"></a>
+
+## 2. Closures
+
+**Definition:**
+Closure হলো inner function যা outer function-এর variable মনে রাখে — outer function শেষ হয়ে যাওয়ার পরেও।
+
+**Real-life Analogy:**
+Closure কে **backpack** হিসেবে ভাবুন। School শেষ হয়ে গেলেও backpack-এর বইগুলো থেকে যায়।
+
+**Internal Working:**
+Python closure `__closure__` attribute এ outer scope variable store করে। এই mechanism-টিকে বলে **free variable capture**।
+
+**Practical Use Case:**
+- factory function
+- configuration-based function generator
+- state সহ lightweight object
+
+**Interview-style Explanation:**
+> "Closure তখন তৈরি হয় যখন inner function outer function-এর variable use করে। Decorator-এর foundation এই closure। Class না বানিয়ে state maintain করতে closure elegant solution।"
+
+**Common Mistakes:**
+- loop-এ closure তৈরির classic bug — সব closure শেষ value দেখে
+- `nonlocal` ছাড়া outer variable modify করার চেষ্টা
+
+**Follow-up Interview Questions:**
+1. Closure কীভাবে outer variable মনে রাখে?
+2. `nonlocal` কী?
+3. Loop-এ closure bug কেন হয়?
+
+**Code Example:**
+```python
+# Basic closure
+def make_multiplier(factor):
+    def multiply(x):
+        return x * factor   # factor remembered from outer scope
+    return multiply
+
+double = make_multiplier(2)
+triple = make_multiplier(3)
+print(double(5))   # 10
+print(triple(5))   # 15
+
+# Inspect closure
+print(double.__closure__[0].cell_contents)   # 2
+
+# Loop closure bug and fix
+# Bug:
+funcs_bug = [lambda: i for i in range(3)]
+print([f() for f in funcs_bug])   # [2, 2, 2] — all see last i
+
+# Fix with default argument:
+funcs_ok = [lambda i=i: i for i in range(3)]
+print([f() for f in funcs_ok])    # [0, 1, 2]
+
+# Counter with nonlocal
+def make_counter():
+    count = 0
+    def increment():
+        nonlocal count
+        count += 1
+        return count
+    return increment
+
+counter = make_counter()
+print(counter())   # 1
+print(counter())   # 2
+print(counter())   # 3
+```
+
+---
+
+<a id="p4-generators-adv"></a>
+
+## 3. Advanced Generators
+
+**Definition:**
+Generator-এর advanced features: `send()`, `throw()`, `close()`, `yield from` এবং generator pipeline।
+
+**Practical Use Case:**
+- data pipeline
+- coroutine (asyncio-এর predecessor)
+- infinite stream processing
+
+**Interview-style Explanation:**
+> "`send()` দিয়ে generator-এ value পাঠানো যায়, যা generator কে bidirectional করে। `yield from` দিয়ে sub-generator delegate করা যায়।"
+
+**Code Example:**
+```python
+# send() — bidirectional generator
+def accumulator():
+    total = 0
+    while True:
+        value = yield total
+        if value is None:
+            break
+        total += value
+
+gen = accumulator()
+next(gen)          # prime the generator
+print(gen.send(10))   # 10
+print(gen.send(20))   # 30
+print(gen.send(5))    # 35
+
+# Generator pipeline
+def integers(start=1):
+    while True:
+        yield start
+        start += 1
+
+def take(n, iterable):
+    for i, val in enumerate(iterable):
+        if i >= n: break
+        yield val
+
+def square(iterable):
+    for val in iterable:
+        yield val ** 2
+
+pipeline = square(take(5, integers()))
+print(list(pipeline))   # [1, 4, 9, 16, 25]
+```
+
+---
+
+<a id="p4-context-managers"></a>
+
+## 4. Context Managers
+
+**Definition:**
+Context manager `with` statement-এর সাথে কাজ করে। `__enter__` শুরুতে এবং `__exit__` শেষে (error হলেও) call হয়।
+
+**Real-life Analogy:**
+Context manager কে **hotel check-in/check-out** হিসেবে ভাবুন। ঢুকলেই room পান, বেরোলে auto-checkout হয়।
+
+**Practical Use Case:**
+- file handling
+- database transaction
+- lock acquire/release
+- test setup/teardown
+
+**Interview-style Explanation:**
+> "Context manager resource management guarantee করে। File open করলে close করতে ভুলে গেলেও `with` block automatically close করে। Error হলেও `__exit__` call হয়।"
+
+**Code Example:**
+```python
+# Class-based context manager
+class DatabaseConnection:
+    def __init__(self, db_name):
+        self.db_name = db_name
+
+    def __enter__(self):
+        print(f"Connecting to {self.db_name}")
+        return self   # 'as' variable পাবে
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print(f"Closing connection to {self.db_name}")
+        if exc_type:
+            print(f"Error occurred: {exc_val}")
+        return False   # exception suppress না করা
+
+with DatabaseConnection("users_db") as db:
+    print(f"Using {db.db_name}")
+
+# contextlib decorator
+from contextlib import contextmanager
+
+@contextmanager
+def timer_ctx(label):
+    import time
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        elapsed = time.perf_counter() - start
+        print(f"{label}: {elapsed:.4f}s")
+
+with timer_ctx("My task"):
+    result = sum(range(1_000_000))
+    print(result)
+```
+
+---
+
+<a id="p4-args-kwargs"></a>
+
+## 5. *args & **kwargs
+
+**Definition:**
+`*args` function-এ variable number of positional arguments নেয় (tuple)। `**kwargs` variable number of keyword arguments নেয় (dict)।
+
+**Interview-style Explanation:**
+> "`*args` আর `**kwargs` flexible function signature-এর জন্য। Decorator wrapper-এ `*args, **kwargs` use করি যাতে যেকোনো function wrap করা যায়। Unpacking-এ `*list` এবং `**dict` use করি।"
+
+**Common Mistakes:**
+- parameter order ভুল: `def f(a, *args, **kwargs)` — এই order mandatory
+- `*args` কে list মনে করা — tuple
+
+**Code Example:**
+```python
+def log(level, *messages, **meta):
+    print(f"[{level}]", " ".join(messages))
+    for k, v in meta.items():
+        print(f"  {k}={v}")
+
+log("INFO", "User", "logged in", user_id=42, ip="192.168.1.1")
+
+# Unpacking
+def add(a, b, c):
+    return a + b + c
+
+nums = [1, 2, 3]
+print(add(*nums))   # unpacking list
+
+config = {"a": 10, "b": 20, "c": 30}
+print(add(**config))   # unpacking dict
+
+# Merge dicts
+d1 = {"x": 1, "y": 2}
+d2 = {"y": 99, "z": 3}
+merged = {**d1, **d2}
+print(merged)   # {"x": 1, "y": 99, "z": 3}
+```
+
+---
+
+<a id="p4-copy"></a>
+
+## 6. Deep Copy vs Shallow Copy
+
+**Definition:**
+**Shallow copy** — নতুন object কিন্তু nested objects-এর reference share করে। **Deep copy** — সম্পূর্ণ independent copy, nested objects সহ।
+
+**Real-life Analogy:**
+Shallow copy কে **folder shortcut** হিসেবে ভাবুন — folder নতুন, কিন্তু ফাইলগুলো same। Deep copy কে **সম্পূর্ণ নতুন folder** — সব ফাইলও copied।
+
+**Visualization:**
+```text
+Original:  [ [1,2], [3,4] ]
+             ↓       ↓
+Shallow:   [ ref1,  ref2  ]   ← নতুন outer list, same inner lists
+
+Deep:      [ [1,2], [3,4] ]   ← সব নতুন
+```
+
+**Interview-style Explanation:**
+> "Nested mutable objects নিয়ে কাজ করার সময় shallow copy trap-এ পড়া সহজ। Inner list modify করলে original-ও বদলে যায়। Deep copy দরকার হলে `copy.deepcopy()` use করি।"
+
+**Code Example:**
+```python
+import copy
+
+original = {"name": "Rahim", "scores": [80, 90, 95]}
+
+shallow = copy.copy(original)
+deep = copy.deepcopy(original)
+
+# Shallow: nested list shared
+shallow["scores"].append(100)
+print(original["scores"])   # [80, 90, 95, 100] — affected!
+
+# Deep: completely independent
+deep["scores"].append(200)
+print(original["scores"])   # [80, 90, 95, 100] — NOT affected
+```
+
+---
+
+<a id="p4-mutable-immutable"></a>
+
+## 7. Mutable vs Immutable
+
+**Definition:**
+**Mutable** object তৈরির পর বদলানো যায়। **Immutable** object তৈরির পর বদলানো যায় না — নতুন object তৈরি হয়।
+
+**Quick Reference:**
+
+| Immutable | Mutable |
+|---|---|
+| `int`, `float`, `str` | `list`, `dict`, `set` |
+| `tuple`, `bool` | Custom class (usually) |
+| `frozenset` | `bytearray` |
+
+**Interview-style Explanation:**
+> "Immutability Python-এর memory optimization-এ help করে। Python ছোট integer (-5 থেকে 256) এবং string interning cache করে। Mutable default argument Python-এর classic bug।"
+
+**Common Mistakes:**
+- Mutable default argument bug — সব call-এ same object share হয়
+- String immutable মানে variable কে নতুন value দেওয়া যাবে না ভাবা
+
+**Code Example:**
+```python
+# Mutable default argument bug
+def add_item(item, lst=[]):   # ❌ খুব common bug
+    lst.append(item)
+    return lst
+
+print(add_item(1))   # [1]
+print(add_item(2))   # [1, 2] — পুরনো list-এ যোগ হয়েছে!
+
+# Fix
+def add_item_fixed(item, lst=None):   # ✅
+    if lst is None:
+        lst = []
+    lst.append(item)
+    return lst
+
+# Integer caching
+a = 100; b = 100
+print(a is b)   # True — cached
+
+a = 300; b = 300
+print(a is b)   # False (usually) — not cached
+```
+
+---
+
+<a id="p4-memory"></a>
+
+## 8. Memory Management
+
+**Definition:**
+Python automatic memory management করে **reference counting** এবং **garbage collector** দিয়ে।
+
+**Internal Working:**
+- প্রতিটি object-এর একটি **reference count** আছে
+- count 0 হলে memory deallocate হয়
+- **Cyclic reference** (A → B → A) reference counting দিয়ে clean হয় না — GC (generational garbage collector) এটা handle করে
+
+**Interview-style Explanation:**
+> "Python reference counting দিয়ে memory manage করে। `gc` module cyclic reference deal করে। Memory leak সাধারণত circular reference বা global variable accumulation থেকে হয়।"
+
+**Code Example:**
+```python
+import sys
+
+x = [1, 2, 3]
+print(sys.getrefcount(x))   # reference count
+
+# Manual check
+import gc
+gc.collect()   # force garbage collection
+
+# id() — memory address
+a = 10
+b = 10
+print(id(a) == id(b))   # True — same cached object
+```
+
+---
+
+<a id="p4-gil"></a>
+
+## 9. GIL (Global Interpreter Lock)
+
+**Definition:**
+GIL হলো CPython-এর একটি mutex lock যা একসাথে মাত্র একটি thread Python bytecode execute করতে দেয়।
+
+**Real-life Analogy:**
+GIL কে **একটি office building-এ একটিই chabi** এর মতো ভাবুন। যে chabi ধরবে সে-ই কাজ করতে পারবে।
+
+**Impact:**
+
+| Task Type | GIL Impact |
+|---|---|
+| I/O-bound (network, file) | Threading কাজ করে — thread wait করার সময় GIL ছাড়ে |
+| CPU-bound (computation) | Threading help করে না — multiprocessing ব্যবহার করুন |
+
+**Interview-style Explanation:**
+> "GIL থাকার কারণে Python multi-threaded হলেও CPU-bound কাজে true parallelism নেই। তবে I/O-bound task এ threading ভালো কাজ করে কারণ I/O wait করার সময় GIL release হয়।"
+
+**Common Mistakes:**
+- সব কাজে threading মনে করা — CPU-bound কাজে multiprocessing দরকার
+- GIL মানে threading একদম useless ভাবা
+
+**Follow-up Interview Questions:**
+1. GIL কেন আছে?
+2. GIL remove করলে কী হবে?
+3. CPU-bound কাজে কোনটি ব্যবহার করবেন?
+
+---
+
+<a id="p4-threading"></a>
+
+## 10. Multithreading
+
+**Definition:**
+Multithreading দিয়ে একসাথে multiple thread চালানো যায়। Python-এ `threading` module use হয়। GIL-এর কারণে I/O-bound task-এ বেশি useful।
+
+**Practical Use Case:**
+- multiple API call একসাথে করা
+- file download
+- concurrent user request handle করা
+
+**Code Example:**
+```python
+import threading
+import time
+
+def fetch_data(url, results, index):
+    time.sleep(1)   # Simulate I/O
+    results[index] = f"Data from {url}"
+
+urls = ["url1", "url2", "url3"]
+results = [None] * len(urls)
+threads = []
+
+for i, url in enumerate(urls):
+    t = threading.Thread(target=fetch_data, args=(url, results, i))
+    threads.append(t)
+    t.start()
+
+for t in threads:
+    t.join()
+
+print(results)
+
+# Thread lock for shared resource
+counter = 0
+lock = threading.Lock()
+
+def increment():
+    global counter
+    with lock:
+        counter += 1
+
+threads = [threading.Thread(target=increment) for _ in range(1000)]
+for t in threads: t.start()
+for t in threads: t.join()
+print(counter)   # 1000
+```
+
+---
+
+<a id="p4-multiprocessing"></a>
+
+## 11. Multiprocessing
+
+**Definition:**
+Multiprocessing দিয়ে আলাদা OS process চালানো যায় — প্রতিটির নিজস্ব Python interpreter ও memory। CPU-bound কাজে GIL bypass করা যায়।
+
+**Threading vs Multiprocessing:**
+
+| | Threading | Multiprocessing |
+|---|---|---|
+| Memory | Shared | Separate |
+| GIL | Bound | Free |
+| Best for | I/O-bound | CPU-bound |
+| Overhead | Low | Higher |
+
+**Code Example:**
+```python
+from multiprocessing import Pool
+import time
+
+def cpu_task(n):
+    return sum(i * i for i in range(n))
+
+if __name__ == "__main__":
+    numbers = [1_000_000] * 4
+
+    # Sequential
+    start = time.time()
+    results = [cpu_task(n) for n in numbers]
+    print(f"Sequential: {time.time()-start:.2f}s")
+
+    # Parallel
+    start = time.time()
+    with Pool(4) as pool:
+        results = pool.map(cpu_task, numbers)
+    print(f"Parallel: {time.time()-start:.2f}s")
+```
+
+---
+
+<a id="p4-asyncio"></a>
+
+## 12. Asyncio
+
+**Definition:**
+`asyncio` Python-এর standard async library। Single thread-এ concurrent I/O করা যায় **event loop** দিয়ে।
+
+**Real-life Analogy:**
+Asyncio কে **একজন efficient waiter** হিসেবে ভাবুন। একসাথে ১০ টেবিলের order নেয়, kitchen wait করার সময় অন্য টেবিলে যায়।
+
+**Async vs Threading vs Multiprocessing:**
+
+| | Asyncio | Threading | Multiprocessing |
+|---|---|---|---|
+| Model | Cooperative | Preemptive | Parallel |
+| Best for | I/O-bound | I/O-bound | CPU-bound |
+| Overhead | Minimal | Medium | High |
+| Python GIL | One thread | GIL-bound | GIL-free |
+
+**Interview-style Explanation:**
+> "Asyncio single thread-এ concurrent I/O করতে পারে। `await` দিয়ে coroutine suspend করি, event loop অন্য coroutine চালায়। FastAPI internally asyncio use করে।"
+
+**Code Example:**
+```python
+import asyncio
+import time
+
+async def fetch(url):
+    print(f"Fetching {url}...")
+    await asyncio.sleep(1)   # Simulate I/O
+    return f"Data from {url}"
+
+async def main():
+    urls = ["api/users", "api/products", "api/orders"]
+
+    # Sequential
+    start = time.time()
+    for url in urls:
+        await fetch(url)
+    print(f"Sequential: {time.time()-start:.2f}s")
+
+    # Concurrent with gather
+    start = time.time()
+    results = await asyncio.gather(*[fetch(url) for url in urls])
+    print(f"Concurrent: {time.time()-start:.2f}s")
+    print(results)
+
+asyncio.run(main())
+```
+
+---
+
+<a id="p4-type-hinting"></a>
+
+## 13. Type Hinting
+
+**Definition:**
+Type hint হলো Python-এর optional annotation যা variable ও function-এর expected type describe করে। Runtime এ enforce হয় না, কিন্তু IDE এবং `mypy` tool check করতে পারে।
+
+**Practical Use Case:**
+- codebase readability বাড়ানো
+- IDE autocomplete improve করা
+- `mypy` static analysis
+- FastAPI/Pydantic type validation
+
+**Interview-style Explanation:**
+> "Type hints Python কোডকে self-documenting করে। আমি সব function-এ parameter ও return type annotate করি — এতে team-এর অন্য developer দ্রুত বোঝে এবং bug early catch হয়।"
+
+**Common Mistakes:**
+- type hint মানে runtime enforcement ভাবা
+- `Optional[str]` এবং `str | None` পার্থক্য না জানা
+
+**Code Example:**
+```python
+from typing import Optional, Union, List, Dict, Tuple
+
+def greet(name: str, age: int = 18) -> str:
+    return f"Hello {name}, age {age}"
+
+def get_user(uid: int) -> Optional[Dict[str, str]]:
+    if uid == 1:
+        return {"name": "Rahim"}
+    return None
+
+def process_scores(scores: List[int]) -> Tuple[float, int, int]:
+    return sum(scores)/len(scores), min(scores), max(scores)
+
+# Python 3.10+ union syntax
+def format_value(value: int | float | str) -> str:
+    return str(value)
+
+# TypedDict for structured dicts
+from typing import TypedDict
+
+class UserProfile(TypedDict):
+    name: str
+    age: int
+    email: str
+
+def display(user: UserProfile) -> None:
+    print(user["name"])
+```
+
+---
+
+## PART 4 Quick Revision Table
+
+| Topic | Key Concept | Interview Tip |
+|---|---|---|
+| **Decorators** | `func = wrapper(func)`, `@` sugar | `functools.wraps` — must use |
+| **Closures** | Inner function captures outer vars | Loop closure bug |
+| **Generators (adv)** | `send()`, `yield from`, pipeline | Bidirectional with `send()` |
+| **Context Managers** | `__enter__`/`__exit__`, cleanup guarantee | `@contextmanager` shortcut |
+| **`*args`/`**kwargs`** | tuple / dict collection | Order: positional, `*args`, keyword, `**kwargs` |
+| **Copy** | Shallow shares nested refs, deep independent | `copy.deepcopy()` for nested mutable |
+| **Mutable/Immutable** | Immutable: int, str, tuple | Mutable default argument bug |
+| **Memory** | Reference counting + GC | `sys.getrefcount()`, cyclic refs |
+| **GIL** | One thread runs at a time | I/O-bound → threading, CPU-bound → multiprocessing |
+| **Threading** | I/O concurrent, shared memory | Use `Lock` for shared resource |
+| **Multiprocessing** | CPU parallel, separate memory | `Pool.map()` for batch |
+| **Asyncio** | Event loop, cooperative concurrency | `await`, `asyncio.gather()` |
+| **Type Hinting** | Optional annotation, IDE/mypy | `Optional`, `List`, `Dict`, `|` syntax |
+
+---
+
+## PART 4 Interview Comparison
+
+**কোন concurrency tool কখন:**
+```text
+I/O-bound (API calls, DB, file): asyncio > threading
+CPU-bound (math, processing):    multiprocessing
+Mixed simple cases:               threading (simpler to implement)
+```
+
+**Decorator mental model:**
+```text
+@decorator
+def func(): ...
+
+≡ func = decorator(func)
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 5 — File Handling & Exception Handling *(Next request এ লিখব)*
