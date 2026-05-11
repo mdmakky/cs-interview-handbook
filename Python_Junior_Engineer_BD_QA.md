@@ -4639,4 +4639,1639 @@ Raw SQL:  Faster, full control, harder to maintain, DB-specific
 
 ---
 
-> **📌 পরবর্তী:** PART 7 — Python for Automation & Scripting *(Next request এ লিখব)*
+<a id="part7"></a>
+
+## 📋 PART 7 সূচিপত্র — Python for Automation & Scripting
+
+| # | Topic | What You Will Learn |
+|---|---|---|
+| 1 | [os & sys Module](#p7-os-sys) | File system, environment, path operations |
+| 2 | [subprocess Module](#p7-subprocess) | Run shell commands from Python |
+| 3 | [shutil Module](#p7-shutil) | File copy, move, delete, archive |
+| 4 | [File & Directory Automation](#p7-file-auto) | Auto-organize files, batch rename |
+| 5 | [requests Module](#p7-requests) | HTTP GET/POST, API calls, headers |
+| 6 | [Web Scraping — BeautifulSoup](#p7-bs4) | Parse HTML, extract data |
+| 7 | [Selenium Basics](#p7-selenium) | Browser automation, dynamic content |
+| 8 | [Schedule & Cron Jobs](#p7-schedule) | Automate recurring tasks |
+
+---
+
+<a id="p7-os-sys"></a>
+
+## 1. os & sys Module
+
+**Definition:**
+`os` module OS-level operations করে — file system, environment variables, path manipulation। `sys` module Python interpreter-এর সাথে interact করে — arguments, path, exit।
+
+**Real-life Analogy:**
+`os` হলো **file manager** — folder তৈরি, file সরানো, path জানা। `sys` হলো **Python runtime control panel** — version দেখা, arguments পড়া, program exit করা।
+
+**Key Functions:**
+
+| Module | Function | কাজ |
+|---|---|---|
+| `os` | `os.getcwd()` | Current working directory |
+| `os` | `os.listdir(path)` | Directory contents list |
+| `os` | `os.makedirs(path, exist_ok=True)` | Nested directory তৈরি |
+| `os` | `os.rename(src, dst)` | Rename/move file |
+| `os` | `os.remove(path)` | File delete |
+| `os` | `os.environ.get(key)` | Environment variable read |
+| `os.path` | `os.path.join(a, b)` | OS-safe path join |
+| `os.path` | `os.path.exists(path)` | Path exists check |
+| `os.path` | `os.path.splitext(file)` | Extension separate |
+| `sys` | `sys.argv` | Command-line arguments list |
+| `sys` | `sys.exit(code)` | Program exit |
+| `sys` | `sys.path` | Module search paths |
+| `sys` | `sys.version` | Python version string |
+
+**Interview-style Explanation:**
+> "Automation script-এ `os` এবং `pathlib` দুটোই ব্যবহার করি। `pathlib` modern এবং object-oriented — cross-platform সহজ। `sys.argv` দিয়ে command-line tool বানাই যেখানে user argument pass করতে পারে।"
+
+**Common Mistakes:**
+- Windows-এ `\\` backslash hardcode করা — `os.path.join()` বা `pathlib` ব্যবহার করুন
+- `os.remove()` দিয়ে directory delete করার চেষ্টা — `shutil.rmtree()` দরকার
+
+**Follow-up Interview Questions:**
+1. `os.path` আর `pathlib` পার্থক্য কী?
+2. `sys.argv` কী? Script-এ কীভাবে use করবেন?
+3. Environment variable কীভাবে read করবেন?
+
+**Code Example:**
+```python
+import os
+import sys
+from pathlib import Path
+
+# Current working directory
+print(os.getcwd())
+print(Path.cwd())   # pathlib equivalent
+
+# Directory listing
+for item in Path(".").iterdir():
+    print(f"{'DIR' if item.is_dir() else 'FILE'}: {item.name}")
+
+# Create nested directories
+Path("output/reports/2026").mkdir(parents=True, exist_ok=True)
+
+# Path operations
+file_path = Path("data/users.csv")
+print(file_path.stem)        # users
+print(file_path.suffix)      # .csv
+print(file_path.parent)      # data
+print(file_path.absolute())  # absolute path
+
+# Walk directory tree
+for root, dirs, files in os.walk("output"):
+    for f in files:
+        full_path = os.path.join(root, f)
+        print(full_path)
+
+# sys.argv — command-line script
+# Run: python script.py Rahim 25
+if len(sys.argv) >= 3:
+    name = sys.argv[1]
+    age = sys.argv[2]
+    print(f"Hello {name}, age {age}")
+else:
+    print("Usage: script.py <name> <age>")
+    sys.exit(1)   # non-zero exit = error
+```
+
+---
+
+<a id="p7-subprocess"></a>
+
+## 2. subprocess Module
+
+**Definition:**
+`subprocess` module দিয়ে Python script থেকে shell command, external program চালানো যায়। Output capture করা এবং return code check করা যায়।
+
+**Real-life Analogy:**
+Subprocess হলো **Python-এর terminal access** — যেন Python থেকে directly terminal-এ command টাইপ করছেন।
+
+**Practical Use Case:**
+- git operations automate করা
+- shell script চালানো
+- ffmpeg/imagemagick এর মতো tool invoke করা
+- system info collect করা
+
+**Interview-style Explanation:**
+> "`subprocess.run()` modern এবং recommended। `capture_output=True` দিলে stdout/stderr capture হয়। `check=True` দিলে non-zero exit code-এ exception raise হয়। Security-র জন্য `shell=True` avoid করি — এতে shell injection vulnerable।"
+
+**Common Mistakes:**
+- `shell=True` ব্যবহার করা user input দিয়ে — shell injection risk
+- old `os.system()` use করা — subprocess prefer করুন
+- encoding না দেওয়া — bytes পাওয়া যায়, `text=True` দিন
+
+**Follow-up Interview Questions:**
+1. `subprocess.run()` আর `os.system()` পার্থক্য?
+2. `shell=True` কেন risky?
+3. Command output কীভাবে capture করবেন?
+
+**Code Example:**
+```python
+import subprocess
+
+# Run command and capture output
+result = subprocess.run(
+    ["ls", "-la"],
+    capture_output=True,
+    text=True,           # string output (not bytes)
+    check=True           # raise CalledProcessError on failure
+)
+print(result.stdout)
+print("Return code:", result.returncode)
+
+# Git automation
+def git_log(n=5):
+    result = subprocess.run(
+        ["git", "log", f"--oneline", f"-n{n}"],
+        capture_output=True,
+        text=True,
+        cwd="/home/musematrix/Desktop/cs-interview-handbook"
+    )
+    return result.stdout.strip()
+
+print(git_log())
+
+# Handle errors
+try:
+    subprocess.run(
+        ["nonexistent-command"],
+        capture_output=True,
+        text=True,
+        check=True
+    )
+except subprocess.CalledProcessError as e:
+    print(f"Command failed: {e.returncode}")
+    print(e.stderr)
+except FileNotFoundError:
+    print("Command not found")
+
+# Pipe — like shell pipe
+ps = subprocess.run(["ps", "aux"], capture_output=True, text=True)
+grep = subprocess.run(
+    ["grep", "python"],
+    input=ps.stdout,
+    capture_output=True,
+    text=True
+)
+print(grep.stdout)
+```
+
+---
+
+<a id="p7-shutil"></a>
+
+## 3. shutil Module
+
+**Definition:**
+`shutil` (shell utilities) module high-level file operations করে — copy, move, delete, archive। `os` এর চেয়ে বেশি feature।
+
+**Key Functions:**
+
+| Function | কাজ |
+|---|---|
+| `shutil.copy(src, dst)` | File copy (permissions ছাড়া) |
+| `shutil.copy2(src, dst)` | File copy (metadata সহ) |
+| `shutil.copytree(src, dst)` | Entire directory copy |
+| `shutil.move(src, dst)` | File/directory move/rename |
+| `shutil.rmtree(path)` | Directory + contents delete |
+| `shutil.make_archive(name, fmt, root)` | zip/tar archive তৈরি |
+| `shutil.unpack_archive(file, dest)` | Archive extract |
+| `shutil.disk_usage(path)` | Disk usage info |
+
+**Interview-style Explanation:**
+> "`shutil.rmtree()` non-empty directory delete করতে পারে। Production-এ delete করার আগে confirm বা backup নেওয়া best practice। `shutil.make_archive()` দিয়ে backup automation করা যায়।"
+
+**Common Mistakes:**
+- `shutil.rmtree()` accidentally wrong path-এ call করা — irreversible!
+- `shutil.copy()` vs `shutil.copy2()` পার্থক্য না জানা (metadata)
+
+**Code Example:**
+```python
+import shutil
+from pathlib import Path
+
+# Copy file
+shutil.copy2("report.csv", "backup/report_backup.csv")
+
+# Copy entire directory
+shutil.copytree("src_project", "src_project_backup")
+
+# Move file
+shutil.move("old_location/file.txt", "new_location/file.txt")
+
+# Delete directory (careful!)
+if Path("temp_dir").exists():
+    shutil.rmtree("temp_dir")
+
+# Create zip backup
+shutil.make_archive(
+    "backup_2026_05_12",   # archive name (no extension)
+    "zip",                  # format: zip, tar, gztar
+    "output"               # directory to archive
+)
+# → creates backup_2026_05_12.zip
+
+# Extract
+shutil.unpack_archive("backup_2026_05_12.zip", "extracted/")
+
+# Disk usage
+usage = shutil.disk_usage("/")
+print(f"Total: {usage.total // (1024**3)} GB")
+print(f"Used:  {usage.used  // (1024**3)} GB")
+print(f"Free:  {usage.free  // (1024**3)} GB")
+```
+
+---
+
+<a id="p7-file-auto"></a>
+
+## 4. File & Directory Automation
+
+**Definition:**
+File automation হলো repetitive file operation Python দিয়ে automate করা — file organize করা, batch rename, cleanup, report generate করা।
+
+**Real-life Analogy:**
+File automation কে **office peon** হিসেবে ভাবুন — প্রতিদিন একই কাজ (file sort, backup) করে, কিন্তু এখন Python সেটা automatically করে।
+
+**Practical Use Case:**
+- Download folder organize করা (extension অনুযায়ী)
+- পুরনো log file archive করা
+- batch image rename করা
+- report folder-এ daily backup নেওয়া
+
+**Code Example:**
+```python
+import shutil
+from pathlib import Path
+from datetime import datetime
+
+def organize_downloads(download_dir: str):
+    """
+    File extension অনুযায়ী Downloads folder organize করা।
+    .pdf → PDFs/, .jpg/.png → Images/, .csv/.xlsx → Data/ etc.
+    """
+    folder_map = {
+        "Images":    [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"],
+        "Documents": [".pdf", ".docx", ".doc", ".txt", ".pptx"],
+        "Data":      [".csv", ".xlsx", ".xls", ".json", ".xml"],
+        "Code":      [".py", ".js", ".html", ".css", ".java", ".cpp"],
+        "Archives":  [".zip", ".tar", ".gz", ".rar", ".7z"],
+        "Videos":    [".mp4", ".mkv", ".avi", ".mov"],
+    }
+
+    # Extension → folder lookup
+    ext_to_folder = {}
+    for folder, exts in folder_map.items():
+        for ext in exts:
+            ext_to_folder[ext] = folder
+
+    base = Path(download_dir)
+    moved = 0
+
+    for file in base.iterdir():
+        if not file.is_file():
+            continue
+        ext = file.suffix.lower()
+        dest_folder = ext_to_folder.get(ext, "Others")
+        dest_dir = base / dest_folder
+        dest_dir.mkdir(exist_ok=True)
+
+        dest_path = dest_dir / file.name
+        # Handle duplicate names
+        counter = 1
+        while dest_path.exists():
+            dest_path = dest_dir / f"{file.stem}_{counter}{file.suffix}"
+            counter += 1
+
+        shutil.move(str(file), str(dest_path))
+        moved += 1
+        print(f"Moved: {file.name} → {dest_folder}/")
+
+    print(f"\nTotal moved: {moved} files")
+
+def daily_backup(source: str, backup_root: str):
+    """Daily timestamped backup"""
+    today = datetime.now().strftime("%Y-%m-%d")
+    archive_name = f"backup_{today}"
+    dest = Path(backup_root) / archive_name
+
+    if dest.with_suffix(".zip").exists():
+        print(f"Backup already exists: {archive_name}.zip")
+        return
+
+    Path(backup_root).mkdir(parents=True, exist_ok=True)
+    shutil.make_archive(str(dest), "zip", source)
+    print(f"Backup created: {archive_name}.zip")
+
+def clean_old_logs(log_dir: str, days_old: int = 30):
+    """30 দিনের পুরনো log file delete করা"""
+    import time
+    cutoff = time.time() - (days_old * 86400)
+    deleted = 0
+    for log_file in Path(log_dir).glob("*.log"):
+        if log_file.stat().st_mtime < cutoff:
+            log_file.unlink()
+            deleted += 1
+    print(f"Deleted {deleted} old log files")
+```
+
+---
+
+<a id="p7-requests"></a>
+
+## 5. requests Module
+
+**Definition:**
+`requests` হলো HTTP library for Python। API call, web page download, form submit — সব সহজে করা যায়।
+
+**Real-life Analogy:**
+`requests` হলো **Python-এর browser** — URL দিলে response নিয়ে আসে।
+
+**Practical Use Case:**
+- REST API consume করা
+- external service integration (bKash API, Google Maps API)
+- data scraping (static page)
+- webhook call করা
+
+**HTTP Methods:**
+
+| Method | Code |
+|---|---|
+| GET | `requests.get(url)` |
+| POST | `requests.post(url, json=data)` |
+| PUT | `requests.put(url, json=data)` |
+| PATCH | `requests.patch(url, json=data)` |
+| DELETE | `requests.delete(url)` |
+
+**Interview-style Explanation:**
+> "`requests` synchronous — FastAPI/asyncio project-এ `httpx` (async) better। Error handling করতে `response.raise_for_status()` call করি — 4xx/5xx-এ exception raise হয়। Session object দিয়ে connection reuse এবং persistent headers set করা যায়।"
+
+**Common Mistakes:**
+- `response.status_code` check না করে data use করা
+- timeout না দেওয়া — network hang হতে পারে
+- sensitive data (API key) URL-এ রাখা — headers-এ রাখুন
+
+**Follow-up Interview Questions:**
+1. `requests.Session()` কেন use করবেন?
+2. `raise_for_status()` কী করে?
+3. API key কীভাবে securely pass করবেন?
+
+**Code Example:**
+```python
+import requests
+from requests.exceptions import RequestException, Timeout, HTTPError
+
+BASE_URL = "https://jsonplaceholder.typicode.com"
+
+# GET request
+def get_users():
+    try:
+        response = requests.get(
+            f"{BASE_URL}/users",
+            timeout=10   # seconds — always set timeout
+        )
+        response.raise_for_status()   # raises HTTPError on 4xx/5xx
+        return response.json()
+    except Timeout:
+        print("Request timed out")
+    except HTTPError as e:
+        print(f"HTTP error: {e.response.status_code}")
+    except RequestException as e:
+        print(f"Request failed: {e}")
+    return []
+
+# POST request
+def create_post(title: str, body: str, user_id: int):
+    payload = {"title": title, "body": body, "userId": user_id}
+    response = requests.post(
+        f"{BASE_URL}/posts",
+        json=payload,          # auto-serializes dict + sets Content-Type
+        timeout=10
+    )
+    response.raise_for_status()
+    return response.json()
+
+# Session — persistent headers, connection reuse
+def fetch_with_auth(api_key: str, endpoint: str):
+    with requests.Session() as session:
+        session.headers.update({
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json",
+        })
+        session.timeout = 10   # default timeout for all requests
+
+        response = session.get(endpoint)
+        response.raise_for_status()
+        return response.json()
+
+# Example usage
+users = get_users()
+for u in users[:3]:
+    print(f"{u['id']}: {u['name']} — {u['email']}")
+
+new_post = create_post("Python Tutorial", "Learn Python in Bangla", 1)
+print(new_post)
+```
+
+---
+
+<a id="p7-bs4"></a>
+
+## 6. Web Scraping — BeautifulSoup
+
+**Definition:**
+`BeautifulSoup` HTML/XML parse করে data extract করতে দেয়। `requests` দিয়ে page download করি, `bs4` দিয়ে parse করি।
+
+**Real-life Analogy:**
+BeautifulSoup হলো **HTML-এর চিরুনি তল্লাশি** — একটি বড় HTML page থেকে দরকারি তথ্য খুঁজে বের করা।
+
+**Practical Use Case:**
+- news headline collect করা
+- product price monitor করা
+- job listing aggregate করা
+- research data collection
+
+**Important:**
+> Scraping করার আগে website-এর `robots.txt` এবং Terms of Service দেখুন। Rate limit দিন — server overload করবেন না।
+
+**Interview-style Explanation:**
+> "Static page scraping-এ `requests + BeautifulSoup`। Dynamic content (JavaScript render) হলে `Selenium` বা `Playwright` দরকার। `find()` first match, `find_all()` সব match return করে। CSS selector-এ `select()` use করি।"
+
+**Common Mistakes:**
+- JavaScript-rendered content BeautifulSoup দিয়ে scrape করার চেষ্টা
+- no delay — server IP ban করে দিতে পারে
+- HTML structure change হলে scraper break হয়
+
+**Follow-up Interview Questions:**
+1. Static এবং dynamic page scraping-এর পার্থক্য?
+2. `find()` আর `find_all()` পার্থক্য?
+3. `robots.txt` কেন check করবেন?
+
+**Code Example:**
+```python
+import requests
+from bs4 import BeautifulSoup
+import time
+
+def scrape_quotes():
+    """http://quotes.toscrape.com থেকে quotes scrape"""
+    url = "http://quotes.toscrape.com"
+    quotes = []
+
+    while url:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Extract quotes
+        for quote_div in soup.find_all("div", class_="quote"):
+            text = quote_div.find("span", class_="text").get_text(strip=True)
+            author = quote_div.find("small", class_="author").get_text(strip=True)
+            tags = [t.get_text() for t in quote_div.find_all("a", class_="tag")]
+            quotes.append({"text": text, "author": author, "tags": tags})
+
+        # Pagination
+        next_btn = soup.find("li", class_="next")
+        url = "http://quotes.toscrape.com" + next_btn.find("a")["href"] if next_btn else None
+
+        time.sleep(1)   # polite delay — server-কে চাপ দেবেন না
+
+    return quotes
+
+def extract_table(html_content: str) -> list[dict]:
+    """HTML table → list of dicts"""
+    soup = BeautifulSoup(html_content, "html.parser")
+    table = soup.find("table")
+    if not table:
+        return []
+
+    headers = [th.get_text(strip=True) for th in table.find_all("th")]
+    rows = []
+    for tr in table.find("tbody").find_all("tr"):
+        cells = [td.get_text(strip=True) for td in tr.find_all("td")]
+        if cells:
+            rows.append(dict(zip(headers, cells)))
+    return rows
+
+# CSS selector approach
+def get_all_links(url: str) -> list[str]:
+    response = requests.get(url, timeout=10)
+    soup = BeautifulSoup(response.text, "html.parser")
+    return [
+        a["href"] for a in soup.select("a[href]")
+        if a["href"].startswith("http")
+    ]
+```
+
+---
+
+<a id="p7-selenium"></a>
+
+## 7. Selenium Basics
+
+**Definition:**
+Selenium browser automate করে — real browser (Chrome/Firefox) control করা যায়। JavaScript-rendered dynamic content scrape করা এবং web UI testing-এ use হয়।
+
+**Real-life Analogy:**
+Selenium হলো **robot user** — browser open করে, click করে, form fill করে, result পড়ে।
+
+**Practical Use Case:**
+- login-protected site scraping
+- JavaScript-rendered content
+- automated UI testing (browser-based)
+- form submission automation
+- screenshot capture
+
+**selenium vs playwright:**
+
+| | Selenium | Playwright |
+|---|---|---|
+| Speed | Moderate | Faster |
+| Async | Limited | Native async |
+| Browser | Chrome, Firefox, Edge | Chromium, Firefox, WebKit |
+| API | Verbose | Cleaner |
+| Use case | Legacy, widespread | Modern projects |
+
+**Interview-style Explanation:**
+> "Selenium দিয়ে real browser control করি — dynamic page, JavaScript-rendered content scrape করার সময় দরকার হয়। Modern project-এ `playwright` prefer করি — faster এবং async-friendly। QA automation-এ Selenium widely used।"
+
+**Common Mistakes:**
+- hardcoded `time.sleep()` — `WebDriverWait` use করুন
+- `driver.quit()` ভুলে যাওয়া — zombie browser process থেকে যায়
+- headless mode না দেওয়া production/server-এ
+
+**Follow-up Interview Questions:**
+1. Selenium আর BeautifulSoup-এর পার্থক্য কী?
+2. `implicitly_wait()` আর `WebDriverWait` পার্থক্য?
+3. Headless mode কী? কখন use করবেন?
+
+**Code Example:**
+```python
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+
+def setup_driver(headless: bool = True) -> webdriver.Chrome:
+    options = Options()
+    if headless:
+        options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    return webdriver.Chrome(options=options)
+
+def scrape_dynamic_page(url: str) -> list[dict]:
+    driver = setup_driver(headless=True)
+    results = []
+
+    try:
+        driver.get(url)
+
+        # Wait for element to appear (up to 10s)
+        wait = WebDriverWait(driver, timeout=10)
+        wait.until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".results"))
+        )
+
+        # Extract data
+        items = driver.find_elements(By.CSS_SELECTOR, ".item")
+        for item in items:
+            title = item.find_element(By.CSS_SELECTOR, ".title").text
+            price = item.find_element(By.CSS_SELECTOR, ".price").text
+            results.append({"title": title, "price": price})
+
+    except TimeoutException:
+        print("Element not found within timeout")
+    finally:
+        driver.quit()   # always quit — release browser process
+
+    return results
+
+def fill_form(url: str, name: str, email: str):
+    driver = setup_driver(headless=False)
+    try:
+        driver.get(url)
+        wait = WebDriverWait(driver, 10)
+
+        # Fill form
+        name_field = wait.until(EC.presence_of_element_located((By.ID, "name")))
+        name_field.clear()
+        name_field.send_keys(name)
+
+        email_field = driver.find_element(By.ID, "email")
+        email_field.send_keys(email)
+
+        submit_btn = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        submit_btn.click()
+
+        # Wait for success message
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "success")))
+        print("Form submitted successfully")
+    finally:
+        driver.quit()
+```
+
+---
+
+<a id="p7-schedule"></a>
+
+## 8. Schedule & Cron Jobs
+
+**Definition:**
+Recurring task automate করার দুটো approach: Python-এ `schedule` library অথবা OS-level `cron` (Linux/macOS) বা Task Scheduler (Windows)।
+
+**Real-life Analogy:**
+Schedule হলো **alarm clock** — নির্দিষ্ট সময়ে নির্দিষ্ট কাজ automatically করে।
+
+**Practical Use Case:**
+- daily report generate করা
+- hourly data sync করা
+- weekly backup নেওয়া
+- periodic health check করা
+
+**cron expression:**
+```text
+* * * * *  command
+│ │ │ │ └─ Day of week (0–7, 0=Sun)
+│ │ │ └─── Month (1–12)
+│ │ └───── Day of month (1–31)
+│ └─────── Hour (0–23)
+└───────── Minute (0–59)
+
+Examples:
+0 9 * * 1-5   → Every weekday at 9:00 AM
+*/30 * * * *   → Every 30 minutes
+0 0 * * 0      → Every Sunday at midnight
+```
+
+**Interview-style Explanation:**
+> "Production-এ cron job বা Celery beat use করি। Development/simple automation-এ Python `schedule` library সহজ। Long-running background task-এর জন্য Celery + Redis production standard।"
+
+**Common Mistakes:**
+- script-এ `schedule` run না করে block হওয়া — `while True` loop দরকার
+- timezone handle না করা — UTC vs BDT (UTC+6)
+- cron job-এ absolute path না দেওয়া — relative path error হয়
+
+**Follow-up Interview Questions:**
+1. `schedule` library আর cron-এর পার্থক্য?
+2. Production-এ periodic task কীভাবে করবেন?
+3. Celery কী? কখন দরকার?
+
+**Code Example:**
+```python
+import schedule
+import time
+import logging
+from datetime import datetime
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+logger = logging.getLogger(__name__)
+
+# Tasks
+def generate_daily_report():
+    logger.info("Generating daily sales report...")
+    # DB query, CSV export, email send...
+    with open(f"reports/report_{datetime.now().date()}.csv", "w") as f:
+        f.write("date,sales,orders\n")
+        f.write(f"{datetime.now().date()},150000,45\n")
+    logger.info("Report generated")
+
+def sync_data():
+    logger.info("Syncing data from external API...")
+    # requests.get(), save to DB...
+
+def cleanup_temp_files():
+    import shutil
+    from pathlib import Path
+    for f in Path("temp").glob("*.tmp"):
+        f.unlink()
+    logger.info("Temp files cleaned")
+
+def health_check():
+    logger.info(f"Health check: {datetime.now()} — OK")
+
+# Schedule
+schedule.every().day.at("09:00").do(generate_daily_report)
+schedule.every(30).minutes.do(sync_data)
+schedule.every().monday.at("00:00").do(cleanup_temp_files)
+schedule.every(5).minutes.do(health_check)
+
+# Run loop
+logger.info("Scheduler started...")
+while True:
+    schedule.run_pending()
+    time.sleep(30)   # check every 30 seconds
+```
+
+---
+
+## PART 7 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Know |
+|---|---|---|
+| os & sys | `os.path`, `pathlib`, `sys.argv` | pathlib over os.path |
+| subprocess | `subprocess.run()`, capture output | `shell=True` security risk |
+| shutil | Copy/move/delete/archive | `rmtree()` irreversible |
+| File Automation | Pattern: walk → categorize → move | Duplicate name handling |
+| requests | GET/POST, timeout, raise_for_status | `Session()` for reuse |
+| BeautifulSoup | `find()`, `find_all()`, `select()` | Dynamic page → Selenium |
+| Selenium | Browser automation, `WebDriverWait` | Always `driver.quit()` |
+| Schedule | `schedule` library + `while True` | Production → Celery/cron |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part8"></a>
+
+## 📋 PART 8 সূচিপত্র — Python DSA & Problem Solving
+
+| # | Topic | What You Will Learn |
+|---|---|---|
+| 1 | [Big O Notation](#p8-bigo) | Time & space complexity analysis |
+| 2 | [Arrays & Lists](#p8-arrays) | Operations, complexity, patterns |
+| 3 | [Stack](#p8-stack) | LIFO, implementation, use cases |
+| 4 | [Queue](#p8-queue) | FIFO, deque, priority queue |
+| 5 | [Linked List](#p8-linked-list) | Singly/doubly, traversal, reversal |
+| 6 | [Trees](#p8-trees) | BST, traversal (inorder/preorder/postorder) |
+| 7 | [Graphs](#p8-graphs) | BFS, DFS, adjacency list |
+| 8 | [Recursion](#p8-recursion) | Base case, call stack, memoization |
+| 9 | [Sorting Algorithms](#p8-sorting) | Bubble, merge, quick sort |
+| 10 | [Searching Algorithms](#p8-searching) | Linear, binary search |
+| 11 | [Dynamic Programming](#p8-dp) | Memoization, tabulation, common patterns |
+| 12 | [Common Patterns](#p8-patterns) | Two pointers, sliding window, hash map |
+
+---
+
+<a id="p8-bigo"></a>
+
+## 1. Big O Notation
+
+**Definition:**
+Big O Notation হলো algorithm-এর time/space complexity describe করার standard। Input size বাড়লে runtime কতটা বাড়ে তা measure করে।
+
+**Common Complexities (Best → Worst):**
+
+| Notation | নাম | Example |
+|---|---|---|
+| O(1) | Constant | Array index access, hash map get |
+| O(log n) | Logarithmic | Binary search, BST operations |
+| O(n) | Linear | List traversal, linear search |
+| O(n log n) | Linearithmic | Merge sort, heap sort |
+| O(n²) | Quadratic | Bubble sort, nested loops |
+| O(2ⁿ) | Exponential | Recursive fibonacci (naive) |
+| O(n!) | Factorial | Permutations |
+
+**Interview-style Explanation:**
+> "Big O worst-case scenario describe করে। n=1000-এ O(n²) = 1,000,000 operations, O(log n) = ~10 operations। Interview-এ যেকোনো solution-এর time complexity বলতে পারা mandatory।"
+
+**Common Mistakes:**
+- Best case আর worst case confuse করা — Big O is worst case
+- Constants drop করতে ভুলে যাওয়া: O(2n) = O(n)
+- Space complexity ভুলে যাওয়া
+
+**Follow-up Interview Questions:**
+1. O(n) আর O(n²) solution-এর পার্থক্য কি practically গুরুত্বপূর্ণ?
+2. Space complexity কীভাবে calculate করবেন?
+3. `in` operator list-এ O(n), set-এ O(1) — কেন?
+
+---
+
+<a id="p8-arrays"></a>
+
+## 2. Arrays & Lists
+
+**Definition:**
+Python `list` dynamic array — random access O(1), append amortized O(1), insert/delete middle O(n)।
+
+**List Complexity:**
+
+| Operation | Complexity |
+|---|---|
+| `lst[i]` (access) | O(1) |
+| `lst.append()` | O(1) amortized |
+| `lst.insert(i, x)` | O(n) |
+| `lst.remove(x)` | O(n) |
+| `x in lst` | O(n) |
+| `len(lst)` | O(1) |
+| `lst.sort()` | O(n log n) |
+
+**Common Interview Patterns:**
+- Two pointers
+- Sliding window
+- Prefix sum
+- Kadane's algorithm (max subarray)
+
+**Code Example:**
+```python
+from typing import List
+
+# Two Sum — O(n) with hash map
+def two_sum(nums: List[int], target: int) -> List[int]:
+    seen = {}   # value → index
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []
+
+print(two_sum([2, 7, 11, 15], 9))   # [0, 1]
+
+# Maximum subarray sum — Kadane's O(n)
+def max_subarray(nums: List[int]) -> int:
+    max_sum = current = nums[0]
+    for num in nums[1:]:
+        current = max(num, current + num)
+        max_sum = max(max_sum, current)
+    return max_sum
+
+print(max_subarray([-2, 1, -3, 4, -1, 2, 1, -5, 4]))   # 6
+
+# Rotate array k steps — O(n), O(1) space
+def rotate(nums: List[int], k: int) -> None:
+    n = len(nums)
+    k %= n
+    nums[:] = nums[-k:] + nums[:-k]
+
+nums = [1, 2, 3, 4, 5, 6, 7]
+rotate(nums, 3)
+print(nums)   # [5, 6, 7, 1, 2, 3, 4]
+
+# Prefix sum — range sum query O(1)
+def range_sum(nums: List[int], l: int, r: int) -> int:
+    prefix = [0] * (len(nums) + 1)
+    for i, n in enumerate(nums):
+        prefix[i+1] = prefix[i] + n
+    return prefix[r+1] - prefix[l]
+
+print(range_sum([1, 2, 3, 4, 5], 1, 3))   # 2+3+4 = 9
+```
+
+---
+
+<a id="p8-stack"></a>
+
+## 3. Stack
+
+**Definition:**
+Stack হলো **LIFO** (Last In First Out) data structure। Python-এ `list` অথবা `collections.deque` দিয়ে implement করা হয়।
+
+**Real-life Analogy:**
+Stack হলো **থালা-বাসনের stack** — উপরে রাখা, উপর থেকে নেওয়া।
+
+**Operations:**
+
+| Operation | List (Python) | Complexity |
+|---|---|---|
+| Push | `lst.append(x)` | O(1) |
+| Pop | `lst.pop()` | O(1) |
+| Peek | `lst[-1]` | O(1) |
+| Empty check | `not lst` | O(1) |
+
+**Use Cases:**
+- undo/redo functionality
+- function call stack
+- balanced parentheses check
+- expression evaluation
+- browser back button
+
+**Code Example:**
+```python
+from collections import deque
+from typing import Optional
+
+# Stack using deque (thread-safe, efficient)
+class Stack:
+    def __init__(self):
+        self._data = deque()
+
+    def push(self, item): self._data.append(item)
+    def pop(self) -> Optional[any]: return self._data.pop() if self._data else None
+    def peek(self) -> Optional[any]: return self._data[-1] if self._data else None
+    def is_empty(self) -> bool: return not self._data
+    def size(self) -> int: return len(self._data)
+
+# Classic interview problem: Balanced Parentheses — O(n)
+def is_balanced(s: str) -> bool:
+    stack = []
+    pairs = {")": "(", "]": "[", "}": "{"}
+    for ch in s:
+        if ch in "([{":
+            stack.append(ch)
+        elif ch in ")]}":
+            if not stack or stack[-1] != pairs[ch]:
+                return False
+            stack.pop()
+    return not stack
+
+print(is_balanced("({[]})"))     # True
+print(is_balanced("({[})"))      # False
+print(is_balanced("((()))"))     # True
+
+# Next Greater Element — O(n) with stack
+def next_greater(nums: list[int]) -> list[int]:
+    result = [-1] * len(nums)
+    stack = []   # indices
+    for i, num in enumerate(nums):
+        while stack and nums[stack[-1]] < num:
+            result[stack.pop()] = num
+        stack.append(i)
+    return result
+
+print(next_greater([4, 5, 2, 10, 8]))   # [5, 10, 10, -1, -1]
+```
+
+---
+
+<a id="p8-queue"></a>
+
+## 4. Queue
+
+**Definition:**
+Queue হলো **FIFO** (First In First Out) data structure। Python-এ `collections.deque` অথবা `queue.Queue` use করা হয়।
+
+**Real-life Analogy:**
+Queue হলো **bank counter-এর লাইন** — যে আগে আসে, আগে সেবা পায়।
+
+**Types:**
+
+| Type | Python | Use Case |
+|---|---|---|
+| Simple Queue | `deque` | FIFO processing |
+| Priority Queue | `heapq` / `queue.PriorityQueue` | Task priority |
+| Double-ended | `deque` | Sliding window |
+
+**Code Example:**
+```python
+from collections import deque
+import heapq
+
+# Queue with deque
+queue = deque()
+queue.append("task1")      # enqueue
+queue.append("task2")
+queue.append("task3")
+print(queue.popleft())     # dequeue → "task1"
+
+# BFS uses queue
+def bfs_level_order(root):
+    if not root: return []
+    result, queue = [], deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:  queue.append(node.left)
+            if node.right: queue.append(node.right)
+        result.append(level)
+    return result
+
+# Priority Queue with heapq (min-heap)
+tasks = []
+heapq.heappush(tasks, (3, "low priority task"))
+heapq.heappush(tasks, (1, "high priority task"))
+heapq.heappush(tasks, (2, "medium priority task"))
+
+while tasks:
+    priority, task = heapq.heappop(tasks)
+    print(f"[{priority}] {task}")
+
+# Sliding Window Maximum — deque O(n)
+def max_sliding_window(nums: list[int], k: int) -> list[int]:
+    dq = deque()   # stores indices
+    result = []
+    for i, num in enumerate(nums):
+        # remove indices outside window
+        while dq and dq[0] < i - k + 1:
+            dq.popleft()
+        # remove smaller elements
+        while dq and nums[dq[-1]] < num:
+            dq.pop()
+        dq.append(i)
+        if i >= k - 1:
+            result.append(nums[dq[0]])
+    return result
+
+print(max_sliding_window([1,3,-1,-3,5,3,6,7], 3))   # [3,3,5,5,6,7]
+```
+
+---
+
+<a id="p8-linked-list"></a>
+
+## 5. Linked List
+
+**Definition:**
+Linked List হলো nodes-এর chain, প্রতিটি node data ও next pointer ধরে। Array-এর alternative — insert/delete O(1) কিন্তু random access নেই।
+
+**Array vs Linked List:**
+
+| | Array (List) | Linked List |
+|---|---|---|
+| Access | O(1) | O(n) |
+| Insert/Delete (middle) | O(n) | O(1) (node known) |
+| Memory | Contiguous | Non-contiguous |
+| Cache friendly | ✅ | ❌ |
+
+**Singly Linked List Operations:**
+
+```python
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+# Build: 1 → 2 → 3 → 4 → 5
+def build_list(values: list) -> ListNode:
+    dummy = ListNode(0)
+    curr = dummy
+    for v in values:
+        curr.next = ListNode(v)
+        curr = curr.next
+    return dummy.next
+
+def to_list(head: ListNode) -> list:
+    result = []
+    while head:
+        result.append(head.val)
+        head = head.next
+    return result
+
+# Reverse Linked List — O(n), O(1)
+def reverse_list(head: ListNode) -> ListNode:
+    prev, curr = None, head
+    while curr:
+        next_node = curr.next
+        curr.next = prev
+        prev = curr
+        curr = next_node
+    return prev
+
+# Detect cycle — Floyd's algorithm O(n), O(1)
+def has_cycle(head: ListNode) -> bool:
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            return True
+    return False
+
+# Find middle — slow/fast pointer O(n)
+def find_middle(head: ListNode) -> ListNode:
+    slow = fast = head
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+    return slow
+
+# Merge two sorted lists — O(n+m)
+def merge_sorted(l1: ListNode, l2: ListNode) -> ListNode:
+    dummy = ListNode(0)
+    curr = dummy
+    while l1 and l2:
+        if l1.val <= l2.val:
+            curr.next, l1 = l1, l1.next
+        else:
+            curr.next, l2 = l2, l2.next
+        curr = curr.next
+    curr.next = l1 or l2
+    return dummy.next
+
+# Test
+head = build_list([1, 2, 3, 4, 5])
+print(to_list(reverse_list(head)))    # [5, 4, 3, 2, 1]
+head2 = build_list([1, 2, 3, 4, 5])
+print(find_middle(head2).val)         # 3
+```
+
+---
+
+<a id="p8-trees"></a>
+
+## 6. Trees
+
+**Definition:**
+Tree হলো hierarchical data structure। **Binary Search Tree (BST)** — left < root < right। Balanced BST-এ search O(log n)।
+
+**Traversal Types:**
+
+| Traversal | Order | Use Case |
+|---|---|---|
+| Inorder (LNR) | Left → Node → Right | BST → sorted output |
+| Preorder (NLR) | Node → Left → Right | Tree copy, serialize |
+| Postorder (LRN) | Left → Right → Node | Delete tree, evaluate |
+| Level Order | Level by level (BFS) | Shortest path, level info |
+
+**Code Example:**
+```python
+from collections import deque
+from typing import Optional
+
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# Build BST
+def insert_bst(root: Optional[TreeNode], val: int) -> TreeNode:
+    if not root: return TreeNode(val)
+    if val < root.val:
+        root.left = insert_bst(root.left, val)
+    else:
+        root.right = insert_bst(root.right, val)
+    return root
+
+# Traversals
+def inorder(root: Optional[TreeNode]) -> list:
+    if not root: return []
+    return inorder(root.left) + [root.val] + inorder(root.right)
+
+def preorder(root: Optional[TreeNode]) -> list:
+    if not root: return []
+    return [root.val] + preorder(root.left) + preorder(root.right)
+
+def level_order(root: Optional[TreeNode]) -> list[list]:
+    if not root: return []
+    result, queue = [], deque([root])
+    while queue:
+        level = []
+        for _ in range(len(queue)):
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left: queue.append(node.left)
+            if node.right: queue.append(node.right)
+        result.append(level)
+    return result
+
+# Max depth — O(n)
+def max_depth(root: Optional[TreeNode]) -> int:
+    if not root: return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))
+
+# Validate BST — O(n)
+def is_valid_bst(root, min_val=float('-inf'), max_val=float('inf')) -> bool:
+    if not root: return True
+    if not (min_val < root.val < max_val): return False
+    return (is_valid_bst(root.left, min_val, root.val) and
+            is_valid_bst(root.right, root.val, max_val))
+
+# Test
+root = None
+for val in [5, 3, 7, 2, 4, 6, 8]:
+    root = insert_bst(root, val)
+
+print("Inorder (sorted):", inorder(root))    # [2,3,4,5,6,7,8]
+print("Level order:", level_order(root))
+print("Max depth:", max_depth(root))
+print("Valid BST:", is_valid_bst(root))
+```
+
+---
+
+<a id="p8-graphs"></a>
+
+## 7. Graphs
+
+**Definition:**
+Graph হলো nodes (vertices) এবং edges-এর collection। Directed/undirected, weighted/unweighted হতে পারে।
+
+**Representation:**
+
+| Type | কখন use |
+|---|---|
+| Adjacency List | Sparse graph (most common) |
+| Adjacency Matrix | Dense graph, edge existence O(1) |
+
+**BFS vs DFS:**
+
+| | BFS | DFS |
+|---|---|---|
+| Data structure | Queue | Stack/Recursion |
+| Use case | Shortest path (unweighted) | Cycle detection, path finding |
+| Complexity | O(V + E) | O(V + E) |
+
+**Code Example:**
+```python
+from collections import defaultdict, deque
+from typing import Optional
+
+class Graph:
+    def __init__(self):
+        self.adj = defaultdict(list)   # adjacency list
+
+    def add_edge(self, u, v, directed=False):
+        self.adj[u].append(v)
+        if not directed:
+            self.adj[v].append(u)
+
+    # BFS — shortest path (unweighted)
+    def bfs(self, start) -> list:
+        visited = set([start])
+        queue = deque([start])
+        order = []
+        while queue:
+            node = queue.popleft()
+            order.append(node)
+            for neighbor in self.adj[node]:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(neighbor)
+        return order
+
+    # DFS — iterative
+    def dfs(self, start) -> list:
+        visited = set()
+        stack = [start]
+        order = []
+        while stack:
+            node = stack.pop()
+            if node not in visited:
+                visited.add(node)
+                order.append(node)
+                stack.extend(self.adj[node])
+        return order
+
+    # Shortest path with BFS
+    def shortest_path(self, start, end) -> Optional[list]:
+        if start == end: return [start]
+        visited = {start: None}   # node → parent
+        queue = deque([start])
+        while queue:
+            node = queue.popleft()
+            for neighbor in self.adj[node]:
+                if neighbor not in visited:
+                    visited[neighbor] = node
+                    if neighbor == end:
+                        # Reconstruct path
+                        path = []
+                        curr = end
+                        while curr is not None:
+                            path.append(curr)
+                            curr = visited[curr]
+                        return path[::-1]
+                    queue.append(neighbor)
+        return None   # no path
+
+# Test
+g = Graph()
+for u, v in [("A","B"),("A","C"),("B","D"),("C","D"),("D","E")]:
+    g.add_edge(u, v)
+
+print("BFS:", g.bfs("A"))
+print("DFS:", g.dfs("A"))
+print("Path A→E:", g.shortest_path("A", "E"))
+```
+
+---
+
+<a id="p8-recursion"></a>
+
+## 8. Recursion
+
+**Definition:**
+Recursion হলো function নিজেকে নিজে call করা। প্রতিটি recursive function-এ **base case** (termination) এবং **recursive case** থাকতে হবে।
+
+**Real-life Analogy:**
+Recursion কে **Russian nesting doll** এর মতো ভাবুন — খুললে আরেকটি, সবশেষে সবচেয়ে ছোটটি (base case)।
+
+**Call Stack visualization:**
+```text
+factorial(4)
+  └── 4 * factorial(3)
+          └── 3 * factorial(2)
+                  └── 2 * factorial(1)
+                              └── 1  (base case)
+```
+
+**Code Example:**
+```python
+import sys
+from functools import lru_cache
+
+# Factorial
+def factorial(n: int) -> int:
+    if n <= 1: return 1          # base case
+    return n * factorial(n - 1)  # recursive case
+
+# Fibonacci — naive O(2ⁿ)
+def fib_naive(n: int) -> int:
+    if n <= 1: return n
+    return fib_naive(n-1) + fib_naive(n-2)
+
+# Fibonacci — memoized O(n) with lru_cache
+@lru_cache(maxsize=None)
+def fib(n: int) -> int:
+    if n <= 1: return n
+    return fib(n-1) + fib(n-2)
+
+print(fib(50))   # instant
+
+# Power — O(log n) divide and conquer
+def power(base: float, exp: int) -> float:
+    if exp == 0: return 1
+    if exp % 2 == 0:
+        half = power(base, exp // 2)
+        return half * half
+    return base * power(base, exp - 1)
+
+# Flatten nested list (recursive)
+def flatten(nested: list) -> list:
+    result = []
+    for item in nested:
+        if isinstance(item, list):
+            result.extend(flatten(item))
+        else:
+            result.append(item)
+    return result
+
+print(flatten([1, [2, [3, 4], 5], [6, 7]]))   # [1,2,3,4,5,6,7]
+```
+
+---
+
+<a id="p8-sorting"></a>
+
+## 9. Sorting Algorithms
+
+**Comparison:**
+
+| Algorithm | Best | Average | Worst | Space | Stable? |
+|---|---|---|---|---|---|
+| Bubble Sort | O(n) | O(n²) | O(n²) | O(1) | ✅ |
+| Merge Sort | O(n log n) | O(n log n) | O(n log n) | O(n) | ✅ |
+| Quick Sort | O(n log n) | O(n log n) | O(n²) | O(log n) | ❌ |
+| Python `sort()` | O(n) | O(n log n) | O(n log n) | O(n) | ✅ |
+
+**Interview-style Explanation:**
+> "Python-এ `sorted()` এবং `.sort()` Timsort algorithm use করে — merge sort + insertion sort-এর hybrid। Interview-এ merge sort বা quick sort implement করতে বলা হয়।"
+
+**Code Example:**
+```python
+# Merge Sort — O(n log n), stable
+def merge_sort(arr: list) -> list:
+    if len(arr) <= 1:
+        return arr
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)
+
+def merge(left: list, right: list) -> list:
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i]); i += 1
+        else:
+            result.append(right[j]); j += 1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+# Quick Sort — O(n log n) average
+def quick_sort(arr: list) -> list:
+    if len(arr) <= 1: return arr
+    pivot = arr[len(arr) // 2]
+    left   = [x for x in arr if x < pivot]
+    middle = [x for x in arr if x == pivot]
+    right  = [x for x in arr if x > pivot]
+    return quick_sort(left) + middle + quick_sort(right)
+
+arr = [64, 34, 25, 12, 22, 11, 90]
+print(merge_sort(arr))
+print(quick_sort(arr))
+print(sorted(arr))   # Python built-in Timsort
+```
+
+---
+
+<a id="p8-searching"></a>
+
+## 10. Searching Algorithms
+
+**Binary Search — O(log n):**
+```python
+def binary_search(arr: list, target: int) -> int:
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = left + (right - left) // 2   # overflow safe
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1   # not found
+
+# Binary search variants
+def search_insert_position(arr: list, target: int) -> int:
+    """Find index to insert target (leftmost position)"""
+    left, right = 0, len(arr)
+    while left < right:
+        mid = (left + right) // 2
+        if arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid
+    return left
+
+# Python bisect module
+import bisect
+
+arr = [1, 3, 5, 7, 9, 11]
+print(binary_search(arr, 7))                   # 3
+print(bisect.bisect_left(arr, 6))              # 3 (insert position)
+print(bisect.bisect_right(arr, 7))             # 4
+```
+
+---
+
+<a id="p8-dp"></a>
+
+## 11. Dynamic Programming
+
+**Definition:**
+Dynamic Programming (DP) complex problem-কে overlapping subproblem-এ ভেঙে solve করে এবং result cache করে।
+
+**Two Approaches:**
+
+| Approach | মানে | Implementation |
+|---|---|---|
+| Memoization | Top-down, cache recursion | `@lru_cache` বা dict |
+| Tabulation | Bottom-up, iterative table | Array/2D array |
+
+**Common DP Patterns:**
+- Fibonacci sequence
+- 0/1 Knapsack
+- Coin change
+- Longest Common Subsequence
+- Climbing stairs
+
+**Code Example:**
+```python
+from functools import lru_cache
+
+# Climbing Stairs — O(n)
+# n stairs, 1 or 2 steps at a time — how many ways?
+def climb_stairs(n: int) -> int:
+    if n <= 2: return n
+    dp = [0] * (n + 1)
+    dp[1], dp[2] = 1, 2
+    for i in range(3, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    return dp[n]
+
+print(climb_stairs(10))   # 89
+
+# Coin Change — minimum coins — O(amount * len(coins))
+def coin_change(coins: list[int], amount: int) -> int:
+    dp = [float("inf")] * (amount + 1)
+    dp[0] = 0
+    for coin in coins:
+        for x in range(coin, amount + 1):
+            dp[x] = min(dp[x], dp[x - coin] + 1)
+    return dp[amount] if dp[amount] != float("inf") else -1
+
+print(coin_change([1, 5, 10, 25], 36))   # 3 (25+10+1)
+
+# Longest Common Subsequence — O(m*n)
+def lcs(s1: str, s2: str) -> int:
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if s1[i-1] == s2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+    return dp[m][n]
+
+print(lcs("ABCBDAB", "BDCABA"))   # 4
+
+# 0/1 Knapsack — O(n * capacity)
+def knapsack(weights: list, values: list, capacity: int) -> int:
+    n = len(weights)
+    dp = [[0] * (capacity + 1) for _ in range(n + 1)]
+    for i in range(1, n + 1):
+        for w in range(capacity + 1):
+            dp[i][w] = dp[i-1][w]
+            if weights[i-1] <= w:
+                dp[i][w] = max(dp[i][w], dp[i-1][w-weights[i-1]] + values[i-1])
+    return dp[n][capacity]
+
+print(knapsack([2, 3, 4, 5], [3, 4, 5, 6], 8))   # 10
+```
+
+---
+
+<a id="p8-patterns"></a>
+
+## 12. Common Patterns
+
+**Definition:**
+Interview-এ বারবার দেখা যায় এমন problem-solving patterns — এগুলো চেনা থাকলে নতুন problem-ও দ্রুত solve করা যায়।
+
+**Pattern 1 — Two Pointers:**
+```python
+# Pair with given sum in sorted array — O(n)
+def two_sum_sorted(arr: list[int], target: int) -> tuple:
+    l, r = 0, len(arr) - 1
+    while l < r:
+        s = arr[l] + arr[r]
+        if s == target: return (l, r)
+        elif s < target: l += 1
+        else: r -= 1
+    return (-1, -1)
+
+# Remove duplicates in-place — O(n)
+def remove_duplicates(nums: list[int]) -> int:
+    if not nums: return 0
+    slow = 0
+    for fast in range(1, len(nums)):
+        if nums[fast] != nums[slow]:
+            slow += 1
+            nums[slow] = nums[fast]
+    return slow + 1
+```
+
+**Pattern 2 — Sliding Window:**
+```python
+# Max sum subarray of size k — O(n)
+def max_sum_subarray(nums: list[int], k: int) -> int:
+    window_sum = sum(nums[:k])
+    max_sum = window_sum
+    for i in range(k, len(nums)):
+        window_sum += nums[i] - nums[i - k]
+        max_sum = max(max_sum, window_sum)
+    return max_sum
+
+# Longest substring without repeating — O(n)
+def length_of_longest_substring(s: str) -> int:
+    char_index = {}
+    max_len = start = 0
+    for i, ch in enumerate(s):
+        if ch in char_index and char_index[ch] >= start:
+            start = char_index[ch] + 1
+        char_index[ch] = i
+        max_len = max(max_len, i - start + 1)
+    return max_len
+
+print(length_of_longest_substring("abcabcbb"))   # 3 (abc)
+```
+
+**Pattern 3 — Hash Map for O(1) lookup:**
+```python
+# Frequency counter — anagram check O(n)
+def is_anagram(s: str, t: str) -> bool:
+    from collections import Counter
+    return Counter(s) == Counter(t)
+
+# Group anagrams — O(n * k log k)
+def group_anagrams(words: list[str]) -> list[list[str]]:
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for word in words:
+        key = tuple(sorted(word))
+        groups[key].append(word)
+    return list(groups.values())
+
+print(group_anagrams(["eat","tea","tan","ate","nat","bat"]))
+```
+
+---
+
+## PART 8 Quick Revision Table
+
+| Topic | Key Concept | Interview Must-Know |
+|---|---|---|
+| Big O | Worst-case time/space | O(1) < O(log n) < O(n) < O(n log n) < O(n²) |
+| Arrays | Dynamic array, index O(1) | `in` list = O(n), `in` set = O(1) |
+| Stack | LIFO, `deque` | Balanced parentheses, monotonic stack |
+| Queue | FIFO, `deque` | BFS uses queue |
+| Linked List | Node chain, no random access | Reverse, cycle detection, two pointer |
+| Trees | BST, traversals | Inorder BST = sorted, BFS = level order |
+| Graphs | BFS (shortest), DFS (explore) | Adjacency list, visited set |
+| Recursion | Base case + recursive case | Stack overflow, memoize |
+| Sorting | Merge O(n log n) stable | Quick sort avg O(n log n), worst O(n²) |
+| Binary Search | Sorted array, O(log n) | `left + (right-left)//2` overflow safe |
+| DP | Cache overlapping subproblems | Memoization vs tabulation |
+| Patterns | Two pointer, sliding window, hash map | Recognize pattern → apply template |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 9 — Testing & Best Practices *(Next request এ লিখব)*
