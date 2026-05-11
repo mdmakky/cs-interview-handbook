@@ -227,7 +227,7 @@
 
 ## ১.১ Database কী?
 
-### সংজ্ঞা (Definition)
+**সংজ্ঞা (Definition)**
 
 **Database** হলো একটি **সংগঠিত তথ্যভান্ডার (organized collection of data)** যেখানে structured আকারে data সংরক্ষণ করা হয় এবং সহজে access, manage ও update করা যায়।
 
@@ -252,14 +252,14 @@
 - **Hospital:** Patient records, prescription, appointment
 - **Social Media:** User profiles, posts, comments, likes
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "Database কী? কেন আমরা Database ব্যবহার করি?"
 
 **আদর্শ উত্তর:**
 > "Database হলো একটি organized data collection যেখানে structured আকারে data store করা হয়। আমরা Database ব্যবহার করি কারণ flat file-এ data রাখলে duplicate হয়, search করা কঠিন হয়, এবং multiple user একসাথে access করতে পারে না। Database এই সমস্যাগুলো সমাধান করে — data redundancy কমায়, fast querying enable করে, এবং data security নিশ্চিত করে।"
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ Database মানেই শুধু MySQL — Oracle, PostgreSQL, MongoDB সবই database
 - ❌ Excel spreadsheet = Database — Excel structured কিন্তু proper DBMS নয়
@@ -275,7 +275,7 @@
 
 ## ১.২ DBMS vs RDBMS
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **DBMS (Database Management System)** হলো একটি **software system** যা database তৈরি, manage, এবং control করে।
 
@@ -309,14 +309,14 @@ Oracle     → Banking, telecom (Grameenphone, bKash)
 SQL Server → Microsoft stack companies
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "DBMS এবং RDBMS এর মধ্যে পার্থক্য কী?"
 
 **আদর্শ উত্তর:**
 > "DBMS হলো যেকোনো software যা data manage করে। RDBMS হলো DBMS এর একটি specific type যেখানে data tables এ stored থাকে এবং tables গুলো relationships দিয়ে connected। RDBMS এর মূল বৈশিষ্ট্য হলো — SQL support, ACID compliance, এবং referential integrity। MySQL, PostgreSQL হলো RDBMS এর উদাহরণ।"
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ "DBMS মানে শুধু MySQL" — MySQL হলো RDBMS, DBMS এর একটি type
 - ❌ সব database ACID compliant — NoSQL database সাধারণত fully ACID নয়
@@ -353,7 +353,7 @@ SQL Server → Microsoft stack companies
 | নির্দিষ্ট record খুঁজতে পুরো ফাইল scan | Index দিয়ে O(log n) তে খোঁজা |
 | কে access করতে পারবে নিয়ন্ত্রণ নেই | Role-based Access Control (RBAC) |
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "কেন আমরা simple file এর বদলে Database ব্যবহার করি?"
 
@@ -413,7 +413,7 @@ Database এর প্রকারভেদ
 
 ## ১.৫ Relational Database
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Relational Database** হলো একটি database যেখানে data **tables (relations)** আকারে সংরক্ষিত হয় এবং tables গুলো **keys** এর মাধ্যমে একে অপরের সাথে **সম্পর্কিত (related)**।
 
@@ -455,7 +455,7 @@ Enrollment Table (সম্পর্ক)
 
 ## ১.৬ Table, Row, Column
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 | Term | সংজ্ঞা | উদাহরণ |
 |------|--------|--------|
@@ -500,7 +500,7 @@ SELECT * FROM students;
 
 ## ১.৭ Primary Key
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Primary Key** হলো একটি column বা columns এর সমষ্টি যা table এর প্রতিটি row কে **uniquely identify** করে।
 
@@ -538,14 +538,14 @@ CREATE TABLE enrollment (
 );
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "Primary Key কী? কেন দরকার?"
 
 **আদর্শ উত্তর:**
 > "Primary Key হলো একটি column বা column combination যা প্রতিটি row কে uniquely identify করে। এটি NOT NULL এবং UNIQUE হতে বাধ্য। Primary Key ছাড়া আমরা নির্দিষ্ট একটি record খুঁজে পাব না। উদাহরণ — দুজন student এর নাম 'Rafi' হতে পারে, কিন্তু তাদের `student_id` আলাদা। তাই `student_id` primary key হওয়া উচিত।"
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ Name কে Primary Key করা — নাম duplicate হতে পারে
 - ❌ Email কে Primary Key করা — email পরিবর্তন হতে পারে, আর PK stable হওয়া উচিত
@@ -561,7 +561,7 @@ CREATE TABLE enrollment (
 
 ## ১.৮ Foreign Key
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Foreign Key** হলো একটি table এর column যা **অন্য table এর Primary Key কে reference** করে। এটি দুটি table এর মধ্যে **সম্পর্ক (relationship)** তৈরি করে এবং **Referential Integrity** নিশ্চিত করে।
 
@@ -600,14 +600,14 @@ CREATE TABLE students (
 | `NO ACTION` | RESTRICT এর মতোই (default) |
 | `SET DEFAULT` | Parent delete হলে child এর FK = default value |
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "Foreign Key কী? Referential Integrity বলতে কী বোঝায়?"
 
 **আদর্শ উত্তর:**
 > "Foreign Key হলো একটি column যা অন্য table এর Primary Key কে reference করে এবং দুটি table এর মধ্যে logical relationship তৈরি করে। Referential Integrity মানে হলো — child table এ এমন কোনো value থাকবে না যা parent table এ exist করে না। যেমন, `students` table এ `dept_id = 99` থাকতে পারবে না যদি `departments` table এ `id = 99` না থাকে।"
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ Foreign Key ছাড়া join করা — logically হয় কিন্তু integrity নিশ্চিত হয় না
 - ❌ Foreign Key column এ Index না দেওয়া — performance hit
@@ -623,7 +623,7 @@ CREATE TABLE students (
 
 ## ১.৯ Candidate Key
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Candidate Key** হলো একটি table এর সেই column বা column combination যা **Primary Key হওয়ার যোগ্য** — অর্থাৎ UNIQUE এবং NOT NULL।
 
@@ -657,7 +657,7 @@ Alternate Keys: roll_number, email
 
 ## ১.১০ Super Key
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Super Key** হলো যেকোনো column বা column combination যা দিয়ে table এর প্রতিটি row কে **uniquely identify** করা যায়। Candidate Key হলো **Minimum Super Key** (অপ্রয়োজনীয় column বাদ দিলে)।
 
@@ -688,7 +688,7 @@ Super Key (সবচেয়ে বড় সেট)
 
 ## ১.১১ Composite Key
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Composite Key** হলো **দুই বা তার বেশি columns** এর সমষ্টি যা মিলে একটি table এর rows কে uniquely identify করে। একটি single column এ uniqueness না থাকলে multiple columns মিলে Composite Key তৈরি করা হয়।
 
@@ -709,7 +709,7 @@ CREATE TABLE enrollment (
 );
 ```
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ Composite key এর মানে দুটো আলাদা primary key — না, একসাথে একটি key
 - ✅ Many-to-Many relationship এ composite key সবচেয়ে বেশি দরকার
@@ -718,7 +718,7 @@ CREATE TABLE enrollment (
 
 ## ১.১২ Unique Key
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Unique Key** হলো একটি constraint যা নিশ্চিত করে যে একটি column এর সব value **unique** হবে। Primary Key এর মতোই, তবে **NULL ধারণ করতে পারে**।
 
@@ -749,7 +749,7 @@ CREATE TABLE users (
 
 ## ১.১৩ NULL
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **NULL** হলো database এ **অজানা বা অনুপস্থিত মানের** প্রতীক। এটি **0 (শূন্য)** বা **empty string ('')** নয় — এটি সম্পূর্ণ আলাদা একটি বিশেষ state।
 
@@ -775,14 +775,14 @@ SELECT NULL * 0;  -- Result: NULL (0 নয়!)
 - কোনো student এর phone number না জানলে NULL
 - কোনো employee এর manager না থাকলে (CEO) manager_id = NULL
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "NULL কী? NULL = 0 কি সত্য?"
 
 **আদর্শ উত্তর:**
 > "NULL মানে 'unknown' বা 'missing value' — এটি 0 বা empty string নয়। `NULL = NULL` এমনকি FALSE নয়, এটি NULL। তাই NULL check করতে `= NULL` ব্যবহার করলে কাজ হয় না, `IS NULL` বা `IS NOT NULL` ব্যবহার করতে হয়। এটি Three-Valued Logic (TRUE, FALSE, NULL) এর অংশ।"
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ `WHERE column = NULL` — এটি কাজ করে না
 - ✅ `WHERE column IS NULL` — সঠিক পদ্ধতি
@@ -792,7 +792,7 @@ SELECT NULL * 0;  -- Result: NULL (0 নয়!)
 
 ## ১.১৪ Constraints
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Constraints** হলো database এ **নিয়মকানুন (rules)** যা data এর **integrity এবং validity** নিশ্চিত করে। এগুলো table define করার সময় set করা হয়।
 
@@ -828,7 +828,7 @@ CREATE TABLE employees (
 -- salary = -5000 দিলে: ERROR — Check constraint violated
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "Database Constraints কী? কেন দরকার?"
 
@@ -953,7 +953,7 @@ WHERE s.student_id = 1;
 | One-to-Many | Dept → Employees | Foreign Key (child তে) |
 | Many-to-Many | Students ↔ Courses | Junction Table |
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "Many-to-Many relationship কীভাবে implement করবেন?"
 
@@ -964,7 +964,7 @@ WHERE s.student_id = 1;
 
 ## ১.১৬ ER Diagram
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **ER Diagram (Entity-Relationship Diagram)** হলো database design এর একটি **visual representation** যেখানে entities, তাদের attributes, এবং তাদের মধ্যে relationships চিত্রের মাধ্যমে দেখানো হয়। **Peter Chen** ১৯৭৬ সালে এটি প্রবর্তন করেন।
 
@@ -1000,7 +1000,7 @@ Student ||──── ENROLLS ────|| Course
         M                   N
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "ER Diagram কী? কীভাবে তৈরি করেন?"
 
@@ -1011,7 +1011,7 @@ Student ||──── ENROLLS ────|| Course
 
 ## ১.১৭ Schema vs Instance
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 | Term | সংজ্ঞা | উদাহরণ |
 |------|--------|--------|
@@ -1048,7 +1048,7 @@ Instance (প্রতিনিয়ত পরিবর্তন হয়):
 
 ## ১.১৮ Data Integrity
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Data Integrity** মানে হলো database এ সংরক্ষিত data **সঠিক, সামঞ্জস্যপূর্ণ এবং নির্ভরযোগ্য** থাকা।
 
@@ -1087,7 +1087,7 @@ CREATE TABLE order_items (
 
 ## ১.১৯ Normalization Overview
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Normalization** হলো database design এর একটি প্রক্রিয়া যেখানে **data redundancy (পুনরাবৃত্তি) কমানো** এবং **data integrity বাড়ানো** হয় — table গুলোকে সুশৃঙ্খলভাবে ভাগ করে।
 
@@ -1281,7 +1281,7 @@ INSERT INTO projects (project_name, budget, dept_id) VALUES
 
 ## ২.১ SELECT
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **SELECT** হলো SQL এর সবচেয়ে মৌলিক ও সবচেয়ে বেশি ব্যবহৃত command। এটি দিয়ে database থেকে data **পড়া (read)** হয়। SELECT **DQL (Data Query Language)** এর অন্তর্গত।
 
@@ -1319,7 +1319,7 @@ SELECT name,
 FROM employees;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "`SELECT *` production code এ ব্যবহার করা উচিত নয় — (১) অপ্রয়োজনীয় data transfer, (২) নতুন column যোগ হলে application break হতে পারে, (৩) Index ভালোভাবে ব্যবহার হয় না।"
 
@@ -1329,7 +1329,7 @@ FROM employees;
 
 ## ২.২ WHERE
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **WHERE** clause দিয়ে নির্দিষ্ট **শর্তে** data filter করা হয়। SELECT, UPDATE, DELETE সব এ ব্যবহার হয়।
 
@@ -1361,7 +1361,7 @@ SELECT name FROM employees WHERE manager_id IS NOT NULL;
 | `IS NULL` | NULL | `WHERE manager_id IS NULL` |
 | `IS NOT NULL` | NULL নয় | `WHERE email IS NOT NULL` |
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ `WHERE salary = NULL` → কাজ করে না
 - ✅ `WHERE salary IS NULL` → সঠিক
@@ -1372,7 +1372,7 @@ SELECT name FROM employees WHERE manager_id IS NOT NULL;
 
 ## ২.৩ ORDER BY
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **ORDER BY** দিয়ে result **ascending (ASC)** বা **descending (DESC)** order এ সাজানো হয়। Default হলো ASC।
 
@@ -1388,7 +1388,7 @@ FROM employees
 ORDER BY dept_id ASC, salary DESC;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "ORDER BY ছাড়া SELECT এর result order গ্যারান্টিড নয়। Consistent result চাইলে সবসময় ORDER BY দিন।"
 
@@ -1398,7 +1398,7 @@ ORDER BY dept_id ASC, salary DESC;
 
 ## ২.৪ GROUP BY
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **GROUP BY** দিয়ে একই value এর rows কে **group এ** আনা হয় এবং প্রতিটি group এ **aggregate function** apply করা হয়।
 
@@ -1442,7 +1442,7 @@ GROUP BY d.dept_id, d.dept_name
 ORDER BY avg_salary DESC;
 ```
 
-### Common Mistakes
+**Common Mistakes**
 
 ```sql
 -- ❌ name GROUP BY তে নেই
@@ -1459,7 +1459,7 @@ SELECT dept_id, COUNT(*) FROM employees GROUP BY dept_id;
 
 ## ২.৫ HAVING
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **HAVING** হলো GROUP BY এর পরের **group-level filter**।
 
@@ -1495,7 +1495,7 @@ GROUP BY dept_id
 HAVING AVG(salary) > 55000;
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "WHERE এবং HAVING এর মধ্যে পার্থক্য কী?"
 
@@ -1508,7 +1508,7 @@ HAVING AVG(salary) > 55000;
 
 ## ২.৬ DISTINCT
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **DISTINCT** দিয়ে result এ **duplicate values বাদ** দেওয়া হয়।
 
@@ -1529,7 +1529,7 @@ SELECT DISTINCT salary FROM employees ORDER BY salary;
 
 ## ২.৭ LIMIT
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **LIMIT** দিয়ে কতটি rows return হবে তা নির্ধারণ হয়। Pagination এ LIMIT + **OFFSET** ব্যবহার হয়।
 
@@ -1546,7 +1546,7 @@ SELECT name, salary FROM employees LIMIT 5 OFFSET 5;  -- Page 2
 SELECT name, salary FROM employees LIMIT 5 OFFSET 10; -- Page 3
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "Large table এ `OFFSET 999995 LIMIT 5` করলে প্রথম ১০ লাখ rows skip করে — slow। Production এ **Keyset/Cursor-based pagination** ব্যবহার করুন।"
 
@@ -1556,7 +1556,7 @@ SELECT name, salary FROM employees LIMIT 5 OFFSET 10; -- Page 3
 
 ## ২.৮ INSERT
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **INSERT** দিয়ে table এ **নতুন row যোগ** করা হয়। এটি **DML** এর অংশ।
 
@@ -1584,7 +1584,7 @@ VALUES (2, 'Rafi Hasan', 65000)
 ON DUPLICATE KEY UPDATE salary = 65000;
 ```
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ Column names ছাড়া insert — structure পরিবর্তন হলে break হবে
 - ✅ সবসময় column names explicitly লিখুন
@@ -1595,7 +1595,7 @@ ON DUPLICATE KEY UPDATE salary = 65000;
 
 ## ২.৯ UPDATE
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **UPDATE** দিয়ে বিদ্যমান rows এর **data পরিবর্তন** করা হয়।
 
@@ -1632,7 +1632,7 @@ UPDATE employees SET salary = 70000 WHERE emp_id = 2;
 
 ## ২.১০ DELETE
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **DELETE** দিয়ে table থেকে **row মুছে ফেলা** হয়।
 
@@ -1663,7 +1663,7 @@ TRUNCATE TABLE employees;  -- fast, no rollback
 DROP TABLE employees;      -- table সহ সব
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "DELETE, TRUNCATE, DROP এর পার্থক্য?"
 
@@ -1676,7 +1676,7 @@ DROP TABLE employees;      -- table সহ সব
 
 ## ২.১১ LIKE
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **LIKE** দিয়ে **pattern matching** করা হয়।
 - `%` → যেকোনো সংখ্যক character
@@ -1692,7 +1692,7 @@ SELECT name FROM employees WHERE name NOT LIKE 'K%';
 SELECT name, email FROM employees WHERE email LIKE '%@company.com';
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "`LIKE '%keyword%'` — leading wildcard থাকলে index ব্যবহার হয় না, full table scan হয়। Large table এ slow। Full-text search এর জন্য `FULLTEXT INDEX` বা Elasticsearch ব্যবহার করুন।"
 
@@ -1702,7 +1702,7 @@ SELECT name, email FROM employees WHERE email LIKE '%@company.com';
 
 ## ২.১২ IN
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **IN** দিয়ে একটি column এ **list এর মধ্যে** value match করা হয়। Multiple OR এর shortcut।
 
@@ -1740,7 +1740,7 @@ WHERE NOT EXISTS (
 
 ## ২.১৩ BETWEEN
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **BETWEEN** দিয়ে একটি **range এর মধ্যে** value খোঁজা হয়। **Inclusive** — উভয় প্রান্ত সহ।
 
@@ -1757,7 +1757,7 @@ SELECT name, salary FROM employees
 WHERE salary NOT BETWEEN 50000 AND 70000;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "BETWEEN সবসময় inclusive। DateTime এ `< '2022-01-01'` বেশি safe।"
 
@@ -1767,7 +1767,7 @@ WHERE salary NOT BETWEEN 50000 AND 70000;
 
 ## ২.১৪ INNER JOIN
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **INNER JOIN** দুটো table এর **matching rows** return করে। Non-matching rows বাদ যায়।
 
@@ -1789,7 +1789,7 @@ INNER JOIN departments d ON e.dept_id = d.dept_id
 INNER JOIN projects    p ON p.dept_id = d.dept_id;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "`JOIN` লিখলেই INNER JOIN বোঝায়। কিন্তু explicit `INNER JOIN` লেখা readability বাড়ায়।"
 
@@ -1799,7 +1799,7 @@ INNER JOIN projects    p ON p.dept_id = d.dept_id;
 
 ## ২.১৫ LEFT JOIN
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **LEFT JOIN** — বাম table এর **সব rows** return করে। ডান table এ match না থাকলে **NULL** আসে।
 
@@ -1830,7 +1830,7 @@ GROUP BY d.dept_id, d.dept_name;
 
 ## ২.১৬ RIGHT JOIN
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **RIGHT JOIN** — ডান table এর **সব rows** return করে। বাম table এ match না থাকলে NULL।
 
@@ -1847,7 +1847,7 @@ FROM departments d
 LEFT JOIN employees e ON d.dept_id = e.dept_id;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "`A RIGHT JOIN B` = `B LEFT JOIN A` — Most developers LEFT JOIN prefer করেন।"
 
@@ -1857,7 +1857,7 @@ LEFT JOIN employees e ON d.dept_id = e.dept_id;
 
 ## ২.১৭ FULL JOIN
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **FULL JOIN** — উভয় table এর **সব rows** return করে। MySQL এ সরাসরি নেই।
 
@@ -1877,7 +1877,7 @@ SELECT e.name, d.dept_name
 FROM employees e RIGHT JOIN departments d ON e.dept_id = d.dept_id;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "MySQL এ FULL OUTER JOIN নেই। `LEFT JOIN UNION RIGHT JOIN` দিয়ে simulate করতে হয়।"
 
@@ -1887,7 +1887,7 @@ FROM employees e RIGHT JOIN departments d ON e.dept_id = d.dept_id;
 
 ## ২.১৮ SELF JOIN
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **SELF JOIN** হলো একটি table কে **নিজের সাথেই join** করা। Hierarchical data এর জন্য ব্যবহৃত।
 
@@ -1903,7 +1903,7 @@ LEFT JOIN employees m ON e.manager_id = m.emp_id
 ORDER BY m.name;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "SELF JOIN এ table একটাই কিন্তু alias দুটো (`e` এবং `m`) — SQL দুটো আলাদা table মনে করে।"
 
@@ -1913,7 +1913,7 @@ ORDER BY m.name;
 
 ## ২.১৯ UNION vs UNION ALL
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 | Keyword | কাজ | Duplicate |
 |---------|-----|----------|
@@ -1938,7 +1938,7 @@ SELECT name, salary FROM employees WHERE dept_id = 2
 ORDER BY salary DESC;
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "UNION এবং UNION ALL এর পার্থক্য? কোনটি দ্রুত?"
 
@@ -1951,7 +1951,7 @@ ORDER BY salary DESC;
 
 ## ২.২০ Subquery ও Nested Query
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Subquery** হলো একটি query এর **ভেতরে আরেকটি query**।
 
@@ -2016,7 +2016,7 @@ WHERE NOT EXISTS (
 | Multiple columns | কঠিন | ভালো |
 | Performance | ধীর হতে পারে | সাধারণত দ্রুত |
 
-### Common Mistakes
+**Common Mistakes**
 
 ```sql
 -- ❌ Scalar subquery তে multiple rows — error
@@ -2160,7 +2160,7 @@ ORDER BY team_size DESC;
 
 ## ৩.১ Indexing
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Index** হলো database এর একটি **data structure** যা table এর নির্দিষ্ট column(s) এর উপর তৈরি করা হয় যাতে query **দ্রুততর** হয়। Index ছাড়া database পুরো table scan করে (Full Table Scan) — Index থাকলে সরাসরি সঠিক location এ যায়।
 
@@ -2238,7 +2238,7 @@ EXPLAIN SELECT * FROM employees WHERE salary > 60000;
 └──────────────────────────────────────────────────┘
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "Index কী? কীভাবে কাজ করে? কখন দেওয়া উচিত নয়?"
 
@@ -2251,7 +2251,7 @@ EXPLAIN SELECT * FROM employees WHERE salary > 60000;
 
 ## ৩.২ Clustered vs Non-clustered Index
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 | বিষয় | Clustered Index | Non-clustered Index |
 |------|----------------|---------------------|
@@ -2299,7 +2299,7 @@ CREATE INDEX idx_dept_sal ON employees(dept_id, salary);
 SELECT dept_id, salary FROM employees WHERE dept_id = 1;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "MySQL (InnoDB) এ Primary Key সবসময় Clustered Index। UUID বা random PK ব্যবহার করলে নতুন row insert এ B-Tree rebalance হয় — performance hit। Sequential INT বা BIGINT AUTO_INCREMENT best practice।"
 
@@ -2309,7 +2309,7 @@ SELECT dept_id, salary FROM employees WHERE dept_id = 1;
 
 ## ৩.৩ Transactions
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Transaction** হলো একটি **logical unit of work** যা এক বা একাধিক SQL operations ধারণ করে। হয় সব operations সফলভাবে execute হবে (**COMMIT**), নাহয় কোনোটাই হবে না (**ROLLBACK**)।
 
@@ -2391,7 +2391,7 @@ COMMIT;  -- এখন permanent
 
 ## ৩.৪ ACID Properties
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **ACID** হলো Transaction এর চারটি মূল বৈশিষ্ট্য যা data integrity নিশ্চিত করে:
 
@@ -2453,7 +2453,7 @@ COMMIT হওয়ার পর:
   → Server restart হলেও data পাওয়া যাবে
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "ACID কী? Real-life উদাহরণ দিয়ে বোঝান।"
 
@@ -2466,7 +2466,7 @@ COMMIT হওয়ার পর:
 
 ## ৩.৫ Isolation Levels
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Isolation Level** নির্ধারণ করে concurrent transactions একে অপরের changes কতটুকু দেখতে পাবে।
 
@@ -2515,7 +2515,7 @@ SELECT salary FROM employees WHERE emp_id = 1;
 COMMIT;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "বাংলাদেশের interview এ সাধারণত Isolation Level এর নাম ও Dirty/Non-Repeatable/Phantom Read এর definition জিজ্ঞেস করা হয়। MySQL এর default REPEATABLE READ মনে রাখুন।"
 
@@ -2525,7 +2525,7 @@ COMMIT;
 
 ## ৩.৬ Deadlock
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Deadlock** হলো এমন পরিস্থিতি যেখানে দুটি বা তার বেশি transaction একে অপরের **lock release এর জন্য অপেক্ষা** করছে — ফলে কেউই এগোতে পারছে না।
 
@@ -2578,7 +2578,7 @@ COMMIT;
 SET innodb_lock_wait_timeout = 5;  -- ৫ সেকেন্ড পর timeout
 ```
 
-### Interview-Style Explanation
+**Interview-Style Explanation**
 
 **প্রশ্ন:** "Deadlock কী? কীভাবে prevent করবেন?"
 
@@ -2591,7 +2591,7 @@ SET innodb_lock_wait_timeout = 5;  -- ৫ সেকেন্ড পর timeout
 
 ## ৩.৭ Views
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **View** হলো একটি **virtual table** যা একটি stored SELECT query থেকে তৈরি হয়। View এ actual data store হয় না — প্রতিবার query করলে underlying table থেকে data আনে।
 
@@ -2662,7 +2662,7 @@ SHOW CREATE VIEW engineering_employees;
 
 ## ৩.৮ Stored Procedure
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Stored Procedure** হলো database এ সংরক্ষিত **pre-compiled SQL statements এর সমষ্টি** যা একটি নামে call করা যায়। এটি database এর function এর মতো।
 
@@ -2744,7 +2744,7 @@ SHOW PROCEDURE STATUS WHERE Db = 'company_db';
 DROP PROCEDURE IF EXISTS GetEmployeesByDept;
 ```
 
-### Common Mistakes
+**Common Mistakes**
 
 - ❌ Complex business logic সব stored procedure এ রাখা — maintainability কঠিন
 - ✅ Simple, reusable operation এর জন্য stored procedure ভালো
@@ -2756,7 +2756,7 @@ DROP PROCEDURE IF EXISTS GetEmployeesByDept;
 
 ## ৩.৯ Trigger
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Trigger** হলো database এ একটি **automatic action** যা নির্দিষ্ট event (INSERT, UPDATE, DELETE) এর আগে বা পরে **automatically execute** হয়।
 
@@ -2855,7 +2855,7 @@ DROP TRIGGER IF EXISTS trg_salary_audit;
 
 ## ৩.১০ Cursor
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Cursor** হলো একটি database object যা **result set এর rows একটি একটি করে** process করতে দেয়। Set-based operation সম্ভব না হলে cursor ব্যবহার করা হয়।
 
@@ -2909,7 +2909,7 @@ END //
 DELIMITER ;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "Cursor সাধারণত **avoid** করা উচিত — row-by-row processing SET-based SQL এর চেয়ে অনেক ধীর। বেশিরভাগ cursor logic একটি single UPDATE বা INSERT...SELECT দিয়ে করা যায়। Cursor শুধু যখন row-by-row logic unavoidable তখন ব্যবহার করুন।"
 
@@ -2919,7 +2919,7 @@ DELIMITER ;
 
 ## ৩.১১ Functions (User-Defined)
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **User-Defined Function (UDF)** হলো Stored Procedure এর মতো কিন্তু একটি **single value return** করে এবং SELECT এ সরাসরি ব্যবহার করা যায়।
 
@@ -2998,7 +2998,7 @@ DROP FUNCTION IF EXISTS GetSalaryGrade;
 
 ## ৩.১২ Query Optimization
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Query Optimization** হলো SQL query কে **দ্রুততর এবং কম resource-consuming** করার প্রক্রিয়া।
 
@@ -3098,7 +3098,7 @@ SELECT * FROM employees WHERE dept_id IN (1, 2, 3);
 
 ## ৩.১৩ Query Execution Plan
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **EXPLAIN** statement দিয়ে MySQL দেখায় কীভাবে একটি query execute হবে — কোন index ব্যবহার হচ্ছে, কতটি rows scan হবে, join order কী।
 
@@ -3148,7 +3148,7 @@ EXPLAIN SELECT * FROM employees WHERE salary > 60000;
 EXPLAIN ANALYZE SELECT * FROM employees WHERE dept_id = 1;
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "EXPLAIN এ `type: ALL` দেখলে সেটি full table scan — সমস্যার লক্ষণ। Index যোগ করুন বা query rewrite করুন। `rows` column এর value কম হওয়া ভালো।"
 
@@ -3158,7 +3158,7 @@ EXPLAIN ANALYZE SELECT * FROM employees WHERE dept_id = 1;
 
 ## ৩.১৪ Partitioning
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Partitioning** হলো একটি বড় table কে **physically আলাদা ছোট অংশে** ভাগ করা — logically এটি একটি table থাকে, কিন্তু data আলাদা আলাদা partition এ store হয়।
 
@@ -3214,7 +3214,7 @@ ALTER TABLE orders DROP PARTITION p2022;
 
 ## ৩.১৫ Sharding
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Sharding** হলো database কে **আলাদা servers এ** horizontal ভাবে ভাগ করা। Partitioning একটি server এ, Sharding **multiple servers** এ।
 
@@ -3256,7 +3256,7 @@ Shard Key: user_id
   → Facebook, Twitter, Pathao scale এ
 ```
 
-### Interview Trick
+**Interview Trick**
 
 > "Junior level interview এ Sharding এর concept জানলেই যথেষ্ট। Real implementation খুব complex। বলুন: Sharding হলো data horizontally multiple servers এ distribute করা। Shard key এর choice critical — hotspot avoid করতে হবে।"
 
@@ -3266,7 +3266,7 @@ Shard Key: user_id
 
 ## ৩.১৬ Replication
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Replication** হলো এক database server এর data **অন্য server(s) এ automatically copy** করা। এতে High Availability এবং Read Scalability নিশ্চিত হয়।
 
@@ -3404,7 +3404,7 @@ SHOW SLAVE STATUS\G
 
 ## ৪.১ Normalization কী?
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Normalization** হলো relational database design এর একটি প্রক্রিয়া যেখানে table কে systematic ভাবে organize করা হয় যাতে:
 
@@ -3662,7 +3662,7 @@ CREATE TABLE employees (
 
 ## ৪.৫ BCNF — Boyce-Codd Normal Form
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **BCNF (বা 3.5NF)** হলো 3NF এর আরও কঠোর রূপ। 3NF এর সব নিয়ম পালন করে এবং:
 
@@ -3772,7 +3772,7 @@ Real-world interview এ 4NF ও 5NF খুব কম জিজ্ঞেস ক�
 
 ## ৪.৭ Denormalization
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Denormalization** হলো ইচ্ছাকৃতভাবে **redundancy যোগ** করা — Read performance উন্নত করতে। Normalization এর বিপরীত দিক।
 
@@ -4526,7 +4526,7 @@ CREATE INDEX idx_order_items_prod ON order_items(product_id);
 
 ## ৫.১ ORM কী?
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **ORM (Object-Relational Mapping)** হলো একটি programming technique যা database table এবং application এর object এর মধ্যে **bridge** হিসেবে কাজ করে। SQL লেখার বদলে programming language এর code দিয়ে database operation করা যায়।
 
@@ -4683,7 +4683,7 @@ print(qs.query)
 
 ## ৫.৩ Database Migration
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Database Migration** হলো database schema এর **version-controlled পরিবর্তন** — table তৈরি, column যোগ/বাদ দেওয়া, index পরিবর্তন করা — এমনভাবে যা track করা যায় এবং rollback করা যায়।
 
@@ -4768,7 +4768,7 @@ SELECT * FROM flyway_schema_history;
 
 ## ৫.৪ Connection Pooling
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Connection Pooling** হলো database connections এর একটি **cache** যা reuse করা যায়। প্রতিটি request এ নতুন connection তৈরি না করে pool থেকে existing connection নেওয়া হয়।
 
@@ -4853,7 +4853,7 @@ Rule of thumb:
 
 ## ৫.৫ N+1 Query Problem
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **N+1 Query Problem** হলো ORM এর সবচেয়ে সাধারণ performance problem। N টি record এর জন্য N+1 টি query চলে (1টি list query + N টি detail query)।
 
@@ -4938,7 +4938,7 @@ print(len(connection.queries))  # Query count দেখুন
 
 ## ৫.৬ Database Caching
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Database Caching** হলো frequently accessed data কে **fast storage (RAM)** এ রাখা যাতে database এ বারবার query করতে না হয়।
 
@@ -5106,7 +5106,7 @@ WHERE TABLE_NAME = 'orders';
 
 ## ৫.৮ Soft Delete Pattern
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Soft Delete** হলো data physically delete না করে **একটি flag দিয়ে** deleted হিসেবে mark করা।
 
@@ -5217,7 +5217,7 @@ Employee.all_objects.all()      # All including deleted
 
 ## ৫.৯ Audit Trail Pattern
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Audit Trail** হলো database এ কী পরিবর্তন হয়েছে, কে করেছে, কখন করেছে তার **সম্পূর্ণ ইতিহাস** রাখার pattern।
 
@@ -5302,7 +5302,7 @@ def log_change(instance, action, old_data=None):
 
 ## ৫.১০ Multi-tenancy Design
 
-### সংজ্ঞা
+**সংজ্ঞা**
 
 **Multi-tenancy** হলো একটি application **একাধিক client (tenant)** কে serve করা যেখানে প্রতিটি tenant এর data আলাদা থাকে। SaaS product এর মূল ভিত্তি।
 

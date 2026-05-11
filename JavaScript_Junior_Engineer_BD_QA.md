@@ -269,7 +269,7 @@
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা (Definition)
+**📖 সংজ্ঞা (Definition)**
 
 **JavaScript** হলো একটি **high-level, interpreted, dynamic programming language** যা মূলত ওয়েব ব্রাউজারে ওয়েবপেজকে interactive করার জন্য তৈরি হয়েছিল। বর্তমানে এটি **frontend, backend (Node.js), mobile apps (React Native), desktop apps (Electron)** সহ প্রায় সব জায়গায় ব্যবহৃত হয়।
 
@@ -314,13 +314,13 @@ function validateEmail(email) {
 }
 ```
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "JavaScript কী এবং কেন এটি important?"
 >
 > **আদর্শ উত্তর:** "JavaScript একটি high-level, interpreted, dynamic scripting language যা originally Brendan Eich 1995 সালে মাত্র 10 দিনে তৈরি করেছিলেন। এটি web browser-এ run হওয়ার জন্য design করা হয়েছিল — webpage-কে interactive করতে। বর্তমানে JavaScript সবচেয়ে popular programming language কারণ এটি দিয়ে frontend (React, Vue), backend (Node.js), mobile (React Native), এবং desktop (Electron) সব ধরনের application তৈরি করা যায়। এটি single-threaded কিন্তু Event Loop-এর মাধ্যমে asynchronous operation handle করতে পারে।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 - ❌ JavaScript ও Java এক মনে করা — এরা সম্পূর্ণ আলাদা ভাষা
 - ❌ JavaScript শুধু ব্রাউজারে চলে — ভুল, Node.js দিয়ে server-এও চলে
@@ -363,7 +363,7 @@ function validateEmail(email) {
 | **2016+** | প্রতি বছর নতুন ES version (ES2016, ES2017, ...) |
 | **বর্তমান** | JavaScript বিশ্বের **সবচেয়ে popular** programming language (Stack Overflow Survey) |
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "ECMAScript কী?"
 >
@@ -432,13 +432,13 @@ JS Code (Source)
 **Node.js Runtime:**
 - V8 Engine + **libuv** (file system, network, timers)
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Browser-এ JavaScript কীভাবে execute হয়?"
 >
 > **আদর্শ উত্তর:** "Browser-এ JavaScript execute করার জন্য একটি JS Engine থাকে — Chrome-এ V8। Engine প্রথমে source code parse করে AST (Abstract Syntax Tree) তৈরি করে। তারপর Interpreter সেটাকে Bytecode-এ convert করে। Frequently used code-কে JIT Compiler optimize করে machine code-এ convert করে CPU execute করে। Browser-এ DOM, fetch, setTimeout এগুলো Web APIs — JS Engine এর বাইরে। এগুলো শেষ হলে callback queue-তে যায়, Event Loop সেটাকে Call Stack-এ push করে।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 - ❌ মনে করা JS Engine এবং JS Runtime একই — Engine হলো Runtime-এর একটি অংশ
 - ❌ setTimeout মনে করা JS Engine-এর অংশ — এটি Web API (Browser-এর অংশ)
@@ -449,7 +449,7 @@ JS Code (Source)
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Variable** হলো data store করার একটি named container। JavaScript-এ variable declare করার তিনটি উপায়: `var`, `let`, `const`।
 
@@ -532,7 +532,7 @@ const myConst = "!";
 
 > **TDZ কী?** Variable declare হওয়ার আগে যে zone-এ সে থাকে সেখানে access করা যায় না — এটাই **Temporal Dead Zone**।
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "var, let, এবং const-এর মধ্যে পার্থক্য কী? কোনটি কখন ব্যবহার করবেন?"
 >
@@ -542,7 +542,7 @@ const myConst = "!";
 > `const` block-scoped এবং re-assign করা যায় না। তবে মনে রাখতে হবে `const` object বা array-এর ক্ষেত্রে variable-কে re-assign থেকে রোধ করে, কিন্তু object-এর property পরিবর্তন করা যায়।  
 > Best practice হলো: সবসময় `const` দিয়ে শুরু করুন, যদি re-assign দরকার হয় তাহলে `let` ব্যবহার করুন, `var` ব্যবহার করবেন না।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ Mistake 1: const মানে immutable value মনে করা
@@ -590,7 +590,7 @@ console.log(window.notGlobal); // undefined
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 JavaScript-এ দুই ধরনের data type আছে:
 
@@ -660,14 +660,14 @@ let x = null;
 console.log(x === null); // true (সঠিক উপায়)
 ```
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Primitive এবং Reference type-এর পার্থক্য কী?"
 >
 > **আদর্শ উত্তর:** "Primitive types হলো: Number, String, Boolean, Undefined, Null, Symbol, BigInt। এগুলো **value by value** copy হয় — মানে একটি variable থেকে অন্যটিতে assign করলে আলাদা copy তৈরি হয়। তাই একটা পরিবর্তন করলে অন্যটা প্রভাবিত হয় না।  
 > Reference types হলো Object, Array, Function। এগুলো **memory-তে** store থাকে এবং variable-এ সেই memory-র address (reference) store হয়। তাই একটি variable থেকে অন্যটিতে assign করলে দুজনেই same memory-r দিকে point করে — একটা পরিবর্তন করলে দুজনেই দেখতে পায়।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ Mistake 1: typeof null === "object" — এটা JS bug
@@ -711,7 +711,7 @@ console.log(Array.isArray([])); // true
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 | | ব্যাখ্যা |
 |--|---------|
@@ -788,7 +788,7 @@ null == 0;      // false (!)
 >
 > বাকি সব **truthy** — `[]`, `{}`, `"0"`, `-1` সব truthy!
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "`==` এবং `===` এর পার্থক্য কী?"
 >
@@ -892,7 +892,7 @@ console.log((2 + 3) * 4);    // 20 (parentheses first)
 console.log(true || false && false); // true (&& > ||)
 ```
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ = vs == vs ===
@@ -1061,7 +1061,7 @@ for (let i = 0; i < 10; i++) {
 | `for...in` | Object-এর keys |
 | `forEach` | Array — break/continue দরকার নেই |
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ for...in দিয়ে Array iterate (prototype properties আসতে পারে)
@@ -1084,7 +1084,7 @@ arr.forEach(item => {
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Function** হলো একটি reusable block of code যা একটি নির্দিষ্ট কাজ করে। JavaScript-এ function **first-class citizen** — মানে function কে variable-এ রাখা, argument হিসেবে পাঠানো, এবং return করা যায়।
 
@@ -1160,7 +1160,7 @@ showArgs(1, 2, 3);
 | **নাম** | বাধ্যতামূলক | Optional |
 | **কখন ব্যবহার** | General purpose | Callback, module, conditional |
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "First-class function বলতে কী বোঝায়?"
 >
@@ -1172,7 +1172,7 @@ showArgs(1, 2, 3);
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Arrow Function** হলো ES6-এ আসা function-এর সংক্ষিপ্ত syntax। কিন্তু শুধু syntax নয় — এর `this` binding behavior আলাদা।
 
@@ -1246,7 +1246,7 @@ console.log(arrowFn.prototype); // undefined
 | Event handler (DOM) | ✅ | ⚠️ this ভিন্ন |
 | IIFE | ✅ | ✅ |
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Arrow function কখন ব্যবহার করবেন না?"
 >
@@ -1258,7 +1258,7 @@ console.log(arrowFn.prototype); // undefined
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Scope** নির্ধারণ করে কোথায় variable accessible এবং কোথায় নয়।
 
@@ -1331,7 +1331,7 @@ Global Scope: { a }
               → Scope Chain!
 ```
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ Variable shadowing — একই নামে ভেতরে declare
@@ -1362,7 +1362,7 @@ function good() {
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Hoisting** হলো JavaScript-এর এমন একটি behavior যেখানে variable এবং function declarations execution-এর আগে তাদের scope-এর শীর্ষে "তুলে" নেওয়া হয়।
 
@@ -1419,7 +1419,7 @@ class MyClass {
 | `function` expression | আংশিক | `undefined` | ❌ নেই |
 | `class` | ✅ হ্যাঁ | — (TDZ) | ✅ আছে |
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Hoisting কী? কেন এটি জানা দরকার?"
 >
@@ -1431,7 +1431,7 @@ class MyClass {
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Closure** হলো একটি function যেটি তার **outer function-এর variables মনে রাখে**, এমনকি outer function execute শেষ হওয়ার পরেও।
 
@@ -1543,13 +1543,13 @@ console.log(fastSquare(5)); // 25 (calculated)
 console.log(fastSquare(5)); // 25 (cache থেকে!)
 ```
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Closure কী? Real-world use case কী?"
 >
 > **আদর্শ উত্তর:** "Closure হলো একটি function যেটি তার outer lexical environment-এর variables remember করে, এমনকি outer function-এর execution শেষ হওয়ার পরেও। JavaScript-এ প্রতিটি function যখন তৈরি হয়, সে তার surrounding scope-এর reference ধরে রাখে — এটাই closure। Real-world use cases: (১) Data privacy — private variables তৈরি করা (module pattern), (২) Counter, accumulator তৈরি করা, (৩) Event handlers-এ state maintain করা, (৪) Currying ও partial application, (৫) Memoization।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ Memory leak — closure unnecessarily holds references
@@ -1569,7 +1569,7 @@ function createLeak() {
 
 <div align="right"><a href="#part1">⬆ PART 1 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Template Literals** (বা Template Strings) হলো ES6-এ আসা backtick (`` ` ``) দিয়ে লেখা string যেখানে expressions embed করা যায়।
 
@@ -1776,7 +1776,7 @@ line2` `` without `\n` |
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Execution Context** হলো JavaScript code execute হওয়ার পরিবেশ (environment)। প্রতিটি JS code একটি Execution Context-এর মধ্যে চলে।
 
@@ -1841,7 +1841,7 @@ greet() শেষ → FEC destroy
 GEC চলতে থাকে
 ```
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Execution Context কী? এটি কীভাবে কাজ করে?"
 >
@@ -1853,7 +1853,7 @@ GEC চলতে থাকে
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Call Stack** হলো একটি **LIFO (Last In, First Out)** data structure যেখানে JS engine Execution Contexts track করে। JavaScript single-threaded — একসময় একটি কাজ, এই stack দিয়ে manage করা হয়।
 
@@ -1903,7 +1903,7 @@ function infinite() {
 infinite(); // Uncaught RangeError: Maximum call stack size exceeded
 ```
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Call Stack কী? Stack Overflow কেন হয়?"
 >
@@ -1915,7 +1915,7 @@ infinite(); // Uncaught RangeError: Maximum call stack size exceeded
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Memory Heap** হলো unstructured memory যেখানে JavaScript objects, arrays, functions store হয়। Stack-এ primitive values ও references store হয়, Heap-এ actual objects।
 
@@ -1956,7 +1956,7 @@ function leak() {
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Event Loop** হলো JavaScript-এর সেই mechanism যা single-threaded হওয়া সত্ত্বেও asynchronous operations handle করতে দেয়।
 
@@ -2021,13 +2021,13 @@ Output:
 4. আবার ১ থেকে শুরু
 ```
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "JavaScript single-threaded হওয়ার পরও async কাজ কীভাবে করে?"
 >
 > **আদর্শ উত্তর:** "JavaScript single-threaded — একটি Call Stack, একসময় একটি কাজ। কিন্তু async operations যেমন `setTimeout`, `fetch` ব্রাউজারের Web APIs-এ যায় — JS engine এগুলো wait করে না। Web API কাজ শেষ করলে callback Callback Queue-এ যায়। Event Loop সবসময় দেখে — Call Stack খালি কিনা। খালি হলে Microtask Queue সম্পূর্ণ drain করে (Promise callbacks), তারপর Callback Queue থেকে একটি Macrotask নেয়। এভাবে non-blocking behavior অর্জন করা হয়।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ setTimeout(fn, 0) মানে "সঙ্গে সঙ্গে" নয়
@@ -2092,7 +2092,7 @@ setTimeout     ← macrotask (সবার শেষে)
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Callback Function** হলো একটি function যেটি অন্য function-এ argument হিসেবে পাঠানো হয় এবং পরে (বা asynchronously) call করা হয়।
 
@@ -2156,7 +2156,7 @@ getUser(userId, (user) => {
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Promise** হলো future-এ complete হবে এমন একটি asynchronous operation-এর representation। এটি callback hell-এর সমাধান।
 
@@ -2259,7 +2259,7 @@ Promise.any([p3, p1])
   .then(result => console.log("First fulfilled:", result)); // "First"
 ```
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Promise কী? .then(), .catch(), .finally() কীভাবে কাজ করে?"
 >
@@ -2271,7 +2271,7 @@ Promise.any([p3, p1])
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Async/Await** হলো Promise-এর উপরে built একটি syntactic sugar যা asynchronous code-কে synchronous-এর মতো পড়তে ও লিখতে সাহায্য করে। ES2017 (ES8) এ আসে।
 
@@ -2360,7 +2360,7 @@ async function wrong() {
 }
 ```
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ Top-level await — শুধু module-এ কাজ করে
@@ -2385,7 +2385,7 @@ const [user, settings] = await Promise.all([fetchUser(id), fetchSettings(id)]);
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Fetch API** হলো browser-এর built-in API যা HTTP requests করতে ব্যবহৃত হয়। `XMLHttpRequest`-এর আধুনিক বিকল্প।
 
@@ -2462,7 +2462,7 @@ if (!response.ok) {
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **`this`** হলো JavaScript-এর একটি special keyword যা function-এর execution context-এ current object-কে refer করে। `this`-এর value নির্ধারিত হয় function **কীভাবে call হয়েছে** তার উপর।
 
@@ -2556,7 +2556,7 @@ class Animal {
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 তিনটিই `Function.prototype`-এর method যা `this`-এর value manually set করতে দেয়।
 
@@ -2623,7 +2623,7 @@ class Timer {
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 JavaScript-এ প্রতিটি object-এর একটি hidden internal property আছে — `[[Prototype]]` — যেটি অন্য একটি object-কে point করে। এই linked object-কে **prototype** বলে।
 
@@ -2733,7 +2733,7 @@ console.log(rex.type);       // "Animal" (Animal.prototype)
 // rex → Dog.prototype → Animal.prototype → Object.prototype → null
 ```
 
-### 🎤 Interview-style Explanation
+**🎤 Interview-style Explanation**
 
 > **প্রশ্ন:** "Prototype Chain কী?"
 >
@@ -2801,7 +2801,7 @@ console.log(myCar2.honk());  // "Honda Civic goes Beep!"
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 ES6 Class হলো Prototype-based inheritance-এর **syntactic sugar**। ভেতরে prototype chain-ই ব্যবহার করে, কিন্তু পরিষ্কার OOP syntax দেয়।
 
@@ -2898,7 +2898,7 @@ console.log(BankAccount.totalAccounts); // 2
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Modules** হলো code কে আলাদা আলাদা file-এ ভাগ করার পদ্ধতি। ES6 নিয়ে এসেছে native `import`/`export` syntax।
 
@@ -2957,7 +2957,7 @@ async function loadModule() {
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 দুটিই function call-এর frequency কমানোর technique — performance optimization।
 
@@ -3026,7 +3026,7 @@ window.addEventListener("scroll", handleScroll);
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Currying** হলো একটি function যেটি multiple arguments নেয় তাকে একটি chain of functions-এ রূপান্তর করা — প্রতিটি function একটি argument নেয়।
 
@@ -3097,7 +3097,7 @@ console.log(curriedMultiply(2)(3, 4)); // 24
 
 <div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Memoization** হলো একটি optimization technique যেখানে function-এর result cache করা হয়। Same input আবার এলে calculation না করে cache থেকে result দেওয়া হয়।
 
@@ -3283,7 +3283,7 @@ console.log("D");
 
 <div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **DOM (Document Object Model)** হলো HTML document-এর একটি tree-shaped representation যা browser তৈরি করে। JavaScript এই tree-এর মাধ্যমে HTML elements পড়তে, পরিবর্তন করতে, যোগ করতে ও মুছতে পারে।
 
@@ -3473,7 +3473,7 @@ for (let i = 0; i < 100; i++) {
 document.querySelector("ul").appendChild(fragment); // একবারেই DOM update
 ```
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ innerHTML দিয়ে user input
@@ -3541,7 +3541,7 @@ document.querySelector("ul").querySelectorAll("li").forEach((li, i) => {
 
 <div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Event** হলো browser-এ ঘটে যাওয়া যেকোনো ঘটনা — click, keypress, scroll, form submit। JavaScript এই events-এ **listen** করে এবং **react** করে।
 
@@ -3643,7 +3643,7 @@ window.addEventListener("scroll", onScroll, { passive: true });
 
 <div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Event Bubbling** হলো যখন কোনো element-এ event ঘটে, সেই event সেই element থেকে শুরু হয়ে parent → grandparent → document পর্যন্ত উপরে "bubble" করে।
 
@@ -3704,7 +3704,7 @@ btn.addEventListener("click", () => {
 
 <div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Event Capturing** (বা Trickling) হলো bubbling-এর বিপরীত — event document থেকে নিচের দিকে target element পর্যন্ত ভ্রমণ করে। Default-এ disabled — তৃতীয় argument `true` দিলে সক্রিয় হয়।
 
@@ -3757,7 +3757,7 @@ middle.addEventListener("click", () => console.log("Middle capture"), true);
 
 <div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Event Delegation** হলো child elements-এ আলাদা আলাদা listener না দিয়ে **parent element-এ একটি listener** দেওয়া এবং bubbling ব্যবহার করে কোন child-এ click হয়েছে বের করা।
 
@@ -3819,7 +3819,7 @@ function addItem(text) {
 
 <div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Local Storage** হলো browser-এ data store করার একটি mechanism যা **permanent** — browser বন্ধ করলেও, computer restart করলেও data থাকে। Origin-specific (same domain, same protocol, same port)।
 
@@ -3889,7 +3889,7 @@ if (savedTheme === "true") {
 
 <div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Session Storage** Local Storage-এর মতোই, কিন্তু **tab/browser বন্ধ করলে data মুছে যায়**। প্রতিটি tab-এর আলাদা session storage।
 
@@ -3933,7 +3933,7 @@ function loadProgress() {
 
 <div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Cookie** হলো server বা client থেকে set করা ছোট data যা প্রতিটি HTTP request-এ server-এ পাঠানো হয়। Authentication, session tracking-এ ব্যবহৃত।
 
@@ -4402,7 +4402,7 @@ input.setCustomValidity(""); // error clear
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Destructuring** হলো Array বা Object থেকে values বের করে আলাদা variables-এ assign করার সংক্ষিপ্ত পদ্ধতি। ES6-এর অন্যতম গুরুত্বপূর্ণ feature।
 
@@ -4510,7 +4510,7 @@ const [{ name: first }, { name: second }] = users;
 console.log(first, second); // "Rahim" "Karim"
 ```
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 
 ```javascript
 // ❌ undefined থেকে destructure করা
@@ -4536,7 +4536,7 @@ const { address: { street } = {} } = { name: "Rahim" };
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Spread Operator (`...`)** iterable (array, string, object) কে individual elements-এ ছড়িয়ে দেয়।
 
@@ -4604,7 +4604,7 @@ copy.address.city = "Ctg";    // ❌ original.address.city ও বদলে গ�
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Rest Operator (`...`)** — spread-এর বিপরীত। বাকি সব elements-কে একটি array-এ collect করে। Syntax একই (`...`) কিন্তু context আলাদা।
 
@@ -4647,7 +4647,7 @@ function correct(first, ...rest) {
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Optional Chaining (`?.`)** — ES2020। Nested object-এর property access-এ intermediate value `null` বা `undefined` হলে error না দিয়ে `undefined` return করে।
 
@@ -4705,7 +4705,7 @@ async function getUser(id) {
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Nullish Coalescing (`??`)** — ES2020। বাম দিক `null` বা `undefined` হলে ডান দিক return করে। `||` থেকে পার্থক্য: `0`, `""`, `false` এগুলো falsy কিন্তু nullish নয়।
 
@@ -4752,7 +4752,7 @@ console.log(config.port); // 3000
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Map** হলো key-value pairs-এর collection যেখানে key যেকোনো type হতে পারে (object, function, primitive)। Regular object-এর key শুধু string বা Symbol।
 
@@ -4825,7 +4825,7 @@ const configMap = new Map(Object.entries(config));
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Set** হলো **unique values-এর** collection। Duplicate automatically বাদ পড়ে।
 
@@ -4884,7 +4884,7 @@ console.log(objSet.size); // 2 (expected 1, but 2!)
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **WeakMap** ও **WeakSet** হলো Map ও Set-এর special versions যেখানে key/value শুধু object হতে পারে এবং **garbage collection** prevent করে না।
 
@@ -5226,7 +5226,7 @@ console.log(pages.next().value); // ["User 21", ..., "User 25"]
 
 <div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Dynamic Import (`import()`)** — ES2020। Module-কে runtime-এ, on-demand load করা। Static import-এর বিপরীতে lazy loading সম্ভব।
 
@@ -5377,7 +5377,7 @@ async function safeImport(path) {
 
 <div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Synchronous (Sync):** এক লাইন শেষ হলে পরের লাইন। কোনো কাজ দীর্ঘ সময় নিলে বাকি সব wait করে (blocking)।
 
@@ -5476,7 +5476,7 @@ updateClock(); // প্রথমেই একবার চালানো
 
 <div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Callback Hell** (বা Pyramid of Doom) — multiple async operations যখন nested callbacks-এ লেখা হয়, code গভীর হতে থাকে এবং পড়া ও maintain করা কঠিন হয়।
 
@@ -5531,7 +5531,7 @@ async function getShipping() {
 
 <div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Promise** হলো async operation-এর eventual result represent করা object। তিনটি state:
 - **Pending** — চলছে
@@ -5741,7 +5741,7 @@ try {
 
 <div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Async/Await** — ES2017। Promise-এর syntactic sugar — async code-কে synchronous-এর মতো লেখা যায়। `async function` সবসময় Promise return করে।
 
@@ -6214,7 +6214,7 @@ async function fetchWithState(url) {
 
 <div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 JavaScript-এ **Object** হলো key-value pairs-এর collection। Function সহ যেকোনো কিছু object হতে পারে। JS-এ প্রায় সব কিছুই (Array, Function, Date) আসলে object।
 
@@ -6290,7 +6290,7 @@ Object.defineProperty(car, "id", {
 
 <div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Constructor Function** হলো `new` keyword দিয়ে object তৈরির function। ES6 Classes-এর আগের পদ্ধতি। এখনো জানা দরকার কারণ JS-এর prototype-ভিত্তিক inheritance বোঝার জন্য।
 
@@ -6368,7 +6368,7 @@ console.log(p.greet()); // কাজ করবে!
 
 <div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 JavaScript-এ প্রতিটি object-এর একটি **prototype** আছে — এটি আরেকটি object যা থেকে properties ও methods inherit করা হয়। এটিই JS-এর inheritance-এর মূল mechanism।
 
@@ -6480,7 +6480,7 @@ console.log(rex instanceof Animal); // true
 
 <div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 ES6 **Class** হলো prototype-based inheritance-এর **syntactic sugar** — ভেতরে কিন্তু prototype-ই ব্যবহার হয়। Code আরও পরিষ্কার ও readable।
 
@@ -6549,7 +6549,7 @@ const MyClass = class {
 
 <div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Encapsulation** — data এবং methods একসাথে রাখা এবং internal implementation বাইরে থেকে লুকানো। শুধু প্রয়োজনীয় interface বাইরে expose করা।
 
@@ -6619,7 +6619,7 @@ console.log(account.getStatement());
 
 <div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Inheritance** — parent class-এর properties ও methods child class-এ পাওয়া। `extends` এবং `super` keyword ব্যবহার করা হয়।
 
@@ -6726,7 +6726,7 @@ console.log(d.speak()); // "Rex makes a sound — specifically: Woof!"
 
 <div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Polymorphism** — একই interface (method name) different classes-এ different আচরণ করা। Method overriding-এর মাধ্যমে implement হয়।
 
@@ -6797,7 +6797,7 @@ const results = notifications.map(n => n.send());
 
 <div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Abstraction** — complexity লুকিয়ে শুধু প্রয়োজনীয় details দেখানো। User জানে "কী করে" কিন্তু "কীভাবে করে" জানার দরকার নেই।
 
@@ -7140,7 +7140,7 @@ function deepFreeze(obj) {
 
 <div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **SPA (Single Page Application)** — একটিমাত্র HTML page load হয়, তারপর JavaScript dynamically content পরিবর্তন করে — page reload ছাড়াই। Facebook, Gmail, Twitter সব SPA।
 
@@ -7199,7 +7199,7 @@ document.querySelectorAll("a[data-spa]").forEach(link => {
 
 <div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Virtual DOM** — real DOM-এর একটি JavaScript object-based lightweight copy। React state পরিবর্তনে সরাসরি real DOM update না করে, Virtual DOM diff করে শুধু পরিবর্তিত অংশ update করে।
 
@@ -8124,7 +8124,7 @@ Feature-based structure বড় project-এ ভালো: `features/auth/`, `f
 
 <div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Node.js** হলো Chrome-এর V8 JavaScript engine-এর উপর তৈরি **server-side JavaScript runtime**। Browser-এর বাইরে — server, CLI, file system-এ JavaScript চালানো যায়।
 
@@ -8171,7 +8171,7 @@ process.exit(0);  // 0 = success, 1 = error
 
 <div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 Node.js **single-threaded, event-driven, non-blocking I/O** architecture ব্যবহার করে। File read, network call-এ block না করে event loop চলতে থাকে — callback দিয়ে complete হলে জানায়।
 
@@ -8340,7 +8340,7 @@ const __dirname = dirname(__filename);
 
 <div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Express.js** হলো Node.js-এর সবচেয়ে popular minimal web framework। HTTP server, routing, middleware সহজে তৈরি করা যায়।
 
@@ -8505,7 +8505,7 @@ module.exports = router;
 
 <div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Middleware** — request আসলে → response যাওয়ার আগে মাঝে যে functions চলে। Request modify, validate, log, authenticate করে। `next()` দিয়ে পরের middleware-এ pass করে।
 
@@ -8783,7 +8783,7 @@ const dir = path.dirname("/path/file.js");   // "/path"
 
 <div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Streams** — large data একসাথে memory-তে না নিয়ে chunk-by-chunk process করা। 1GB file read করতে 1GB memory লাগে না।
 
@@ -11925,7 +11925,7 @@ const state = {
 
 <div align="right"><a href="#part11">⬆ PART 11 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Web Workers** — CPU-intensive কাজ background thread-এ করা। Main thread (UI) block হয় না।
 

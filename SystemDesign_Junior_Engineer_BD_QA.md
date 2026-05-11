@@ -258,7 +258,7 @@ E-commerce App (Chaldal-এর মতো):
 > 
 > **তোমার উত্তর:** "System Design হলো একটা software system এর high-level architecture plan করা। মানে হলো — কোন component কীভাবে communicate করবে, data কোথায় store হবে, system কীভাবে scale হবে — এই সব decision নেওয়া। যেমন একটা food delivery app বানাতে হলে আমাকে আগে ঠিক করতে হবে: user service, restaurant service, order service, payment service — এগুলো কীভাবে কথা বলবে।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 - শুধু code level এ চিন্তা করা, big picture না দেখা
 - Scalability consider না করে design করা
 - Database selection এ চিন্তা না করা
@@ -307,7 +307,7 @@ BD তে যেসব companies interview নেয় (Brain Station 23, BJIT,
 
 ## 1.3 High-Level Design (HLD) vs Low-Level Design (LLD)
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **High-Level Design (HLD):**
 - System এর overall architecture
@@ -391,7 +391,7 @@ class Order:
 
 ## 1.4 Scalability
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Scalability হলো system-এর **increasing load handle করার ক্ষমতা** — user বাড়লেও, data বাড়লেও system ঠিকমতো কাজ করবে।
 
 ### 🎯 Real-Life Analogy
@@ -425,10 +425,10 @@ After:  [Server 1] [Server 2] [Server 3]
 | Latency | একটা request-এর response time | 100ms |
 | Concurrency | একসাথে কতজন user | 1 million concurrent |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Scalability মানে হলো আমার system যেন user বাড়লেও ভেঙে না পড়ে। দুইভাবে scale করা যায় — Vertical মানে একটা server কে powerful করা, Horizontal মানে অনেকগুলো server একসাথে চালানো। Production এ সাধারণত Horizontal scaling বেশি use হয় কারণ এর limit নেই এবং fault tolerant।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 - Premature optimization — আগেই over-engineer করা
 - Vertical scaling এর limit ignore করা
 - Database কে scalability bottleneck হিসেবে না দেখা
@@ -450,7 +450,7 @@ After:  [Server 1] [Server 2] [Server 3]
 
 ## 1.5 Reliability
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Reliability হলো system এর **consistently correct কাজ করার ক্ষমতা** — hardware fail করলেও, software bug হলেও, human error হলেও।
 
 ### 🎯 Real-Life Analogy
@@ -499,7 +499,7 @@ Reliability হলো system এর **consistently correct কাজ করা�
 
 ## 1.6 Availability
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Availability হলো system **কতটুকু সময় up থাকে** — accessible এবং operational।
 
 ### 📊 Availability Percentages (Nines)
@@ -551,7 +551,7 @@ Load Balancer
 
 ## 1.7 Maintainability
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Maintainability হলো system **সহজে modify, debug, update করার ক্ষমতা** — নতুন developer এসেও সহজে বুঝতে পারবে।
 
 ### 🔑 Maintainability Pillars
@@ -584,7 +584,7 @@ Maintainability হলো system **সহজে modify, debug, update করা�
 
 ## 1.8 Performance
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Performance হলো system **কতটা দ্রুত এবং efficiently কাজ করে** — CPU, memory, disk, network সব মিলিয়ে।
 
 ### 📊 Performance Metrics
@@ -617,7 +617,7 @@ Bottleneck হতে পারে:
 
 ## 1.9 Latency vs Throughput
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Latency:** একটা operation complete হতে কত সময় লাগে (ms/sec)
 **Throughput:** প্রতি unit time এ কত operation করা যায় (req/sec, MB/s)
@@ -663,7 +663,7 @@ HDD seek time                ~10 ms
 
 ## 1.10 CAP Theorem
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 CAP Theorem বলে: একটা distributed system এ তুমি **সর্বোচ্চ দুইটা** guarantee দিতে পারবে — তিনটা একসাথে possible না।
 
 - **C — Consistency:** সব node এ একই সময়ে একই data দেখাবে
@@ -709,10 +709,10 @@ CAP Triangle:
 | Redis | CP | Cache, strong consistency |
 | DynamoDB | AP | Amazon scale |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "CAP Theorem বলে distributed system এ Consistency, Availability, এবং Partition Tolerance — তিনটা একসাথে fully guarantee করা যায় না। Network partition real life এ হয়ই — তাই P বাদ দেওয়া যায় না। তাই আমাদের choose করতে হয় CP বা AP। যেমন banking system এ CP choose করবো — data inconsistency হলে বিপদ। কিন্তু social media feed এ AP choose করবো — একটু stale data চলবে, কিন্তু availability দরকার।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 - "CAP মানে তিনটাই পাবো" — ভুল!
 - P ignore করে CA system design করা (distributed এ কাজ করে না)
 - CP আর AP এর trade-off বুঝতে না পারা
@@ -736,7 +736,7 @@ CAP Triangle:
 
 ## 1.11 Monolithic vs Microservices Architecture
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Monolithic Architecture:**
 - পুরো application একটা single unit হিসেবে build হয়
@@ -813,10 +813,10 @@ Microservices বেছে নাও যখন:
 ✅ Technology flexibility দরকার
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Monolithic হলো সব কিছু একটা application এ — develop করা সহজ কিন্তু scale করা কঠিন। Microservices এ প্রতিটা feature আলাদা service — scale করা সহজ কিন্তু complexity বেশি। BD তে বেশিরভাগ small company monolithic use করে, আর বড় product company (Pathao, Chaldal) microservices এ move করছে।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 - ছোট project এ microservices নেওয়া (over-engineering)
 - Monolith কে "legacy" মনে করা — এখনো valid!
 - Microservices এ distributed transactions ignore করা
@@ -827,7 +827,7 @@ Microservices বেছে নাও যখন:
 
 ## 1.12 Stateless vs Stateful Systems
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Stateless System:**
 - প্রতিটা request independent
@@ -862,7 +862,7 @@ Microservices বেছে নাও যখন:
 
 ## 1.13 Horizontal vs Vertical Scaling
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Vertical Scaling (Scale Up):**
 - একটা server এর resources বাড়াও (CPU, RAM, SSD)
@@ -911,7 +911,7 @@ Before:                After:
 | Use case | Database, legacy apps | Web servers, APIs |
 | BD context | Small companies | Product companies |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Vertical scaling মানে একটা server কে powerful করা, horizontal মানে multiple server। Database usually vertical scale করা হয় (কারণ distributed DB জটিল), কিন্তু web application layer horizontal scale করা হয় load balancer দিয়ে। Modern cloud system এ horizontal scaling prefer করা হয় কারণ এটা fault tolerant।"
 
 ### ❓ Follow-up Questions
@@ -931,7 +931,7 @@ Before:                After:
 
 ## 1.14 PACELC Theorem
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 PACELC = **P**artition → **A**vailability vs **C**onsistency; **E**lse → **L**atency vs **C**onsistency
 
 CAP theorem এর limitation: এটা শুধু network partition এর সময়ের কথা বলে। PACELC বলে — partition না থাকলেও tradeoff আছে: **Latency vs Consistency**।
@@ -960,7 +960,7 @@ PACELC Decision:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "CAP বলে partition এর সময় C বা A choose করতে হয়। কিন্তু PACELC আরো realistic — partition না থাকলেও যদি strong consistency চাই তাহলে সব replica তে write confirm করতে হবে, latency বাড়বে। Cassandra PA/EL — availability আর low latency priority। PostgreSQL PC/EC — সবসময় consistency।"
 
 ---
@@ -969,7 +969,7 @@ PACELC Decision:
 
 ## 1.15 Consistent Hashing
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Consistent Hashing হলো একটি technique যা distributed system এ **data কোন server এ থাকবে সেটা efficiently decide করে** — server add/remove করলে minimum data movement হয়।
 
 ### 🎯 সমস্যা (ছাড়া Consistent Hashing)
@@ -1018,7 +1018,7 @@ Virtual Nodes: একটা physical server → multiple virtual positions
 - Distributed caching (Memcached clusters)
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Consistent Hashing solve করে distributed system এ dynamic server addition/removal এর সমস্যা। Regular modular hashing এ server বাড়ালে প্রায় সব data move করতে হয়। Consistent Hashing এ শুধু ১/N fraction data move হয়। Hash ring এ servers আর data দুটোই hash করা হয় — clockwise next server data owner।"
 
 ---
@@ -1213,7 +1213,7 @@ Big bang migration করবো না — too risky।
 
 ## 2.1 Client-Server Architecture
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Client-Server Architecture হলো এমন একটা model যেখানে **Client** (browser, app) **Server** এর কাছে request করে এবং Server response দেয়।
 
 ### 🔄 Request-Response Flow
@@ -1260,7 +1260,7 @@ Step 8: Browser response render করলো
 
 ## 2.2 HTTP vs HTTPS
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **HTTP (HyperText Transfer Protocol):**
 - Web এ data transfer এর protocol
@@ -1306,7 +1306,7 @@ TLS Handshake Process:
 | 4xx | Client Error | 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 429 Too Many Requests |
 | 5xx | Server Error | 500 Internal Error, 502 Bad Gateway, 503 Service Unavailable, 504 Gateway Timeout |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "HTTP আর HTTPS এর মূল পার্থক্য হলো security। HTTP তে data plain text এ যায় — যে কেউ network intercept করলে দেখতে পারবে। HTTPS এ TLS encryption থাকে — data encrypted। Production সব সময় HTTPS use করতে হবে। Let's Encrypt দিয়ে free SSL certificate পাওয়া যায়।"
 
 ### ⚠️ Security Note
@@ -1324,7 +1324,7 @@ POST /login (body: {password: "abc123"}) ← Encrypted!
 
 ## 2.3 REST API
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 REST (Representational State Transfer) হলো HTTP দিয়ে API design করার একটা **architectural style** — rules এর set।
 
 ### 🔑 REST Principles (6টি)
@@ -1387,7 +1387,7 @@ GET /api/v1/products?category=electronics&sort=price&page=1&limit=20
 | Proper status codes | 201 for created | 200 for everything |
 | Meaningful error messages | {error: "User not found"} | {error: "Error"} |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "REST API হলো HTTP দিয়ে data exchange করার একটা standard approach। URL এ noun use করি (resource), HTTP method দিয়ে action বলি। Stateless মানে server প্রতিটা request কে independent treat করে — authentication token প্রতিটা request এ পাঠাতে হয়।"
 
 ### ❓ Interview Questions
@@ -1412,7 +1412,7 @@ GET /api/v1/products?category=electronics&sort=price&page=1&limit=20
 
 ## 2.4 GraphQL Basics
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 GraphQL হলো Facebook এর তৈরি API query language — client নিজেই decide করে কোন data চাই, কতটা চাই।
 
 ### 🔄 REST vs GraphQL তুলনা
@@ -1452,7 +1452,7 @@ Response: { "data": { "user": { "name": "Rahim" } } }
 | Use case | Simple CRUD | Complex data relationships |
 | BD Interview | বেশি জিজ্ঞেস করে | Concept level জানলেই হবে |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "GraphQL REST এর under-fetching আর over-fetching সমস্যা solve করে। Client exactly কোন data চাই সেটা specify করতে পারে। একটাই endpoint থেকে যেকোনো data। কিন্তু simple CRUD app এ REST ই যথেষ্ট, GraphQL এর complexity নেওয়ার দরকার নেই।"
 
 ---
@@ -1461,7 +1461,7 @@ Response: { "data": { "user": { "name": "Rahim" } } }
 
 ## 2.5 WebSocket
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 WebSocket হলো **full-duplex, persistent connection** যেখানে client এবং server উভয়েই যেকোনো সময় message পাঠাতে পারে।
 
 ### 🔄 HTTP vs WebSocket
@@ -1519,7 +1519,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 | WebSocket | Persistent connection | Low | Efficient |
 | SSE | Server → Client only | Low | Low |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "WebSocket use করি যখন real-time bidirectional communication দরকার। Chat app এ HTTP polling use করলে প্রতি সেকেন্ডে request যাবে — server এ load বেশি, latency বেশি। WebSocket এ একটা connection open থাকে, server যেকোনো সময় push করতে পারে। Chat, notification, live update — এই সব এ WebSocket।"
 
 ---
@@ -1528,7 +1528,7 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str):
 
 ## 2.6 TCP vs UDP
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **TCP (Transmission Control Protocol):**
 - Reliable, ordered, error-checked delivery
@@ -1575,7 +1575,7 @@ Client                          Server
 > 
 > **UDP:** Normal mail — ফেলে দাও, পৌঁছালো কিনা জানো না। কিন্তু দ্রুত।
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "TCP reliable কিন্তু UDP fast। HTTP, HTTPS, database connections — সব TCP use করে কারণ data loss হলে problem। কিন্তু video streaming এ UDP use করি — একটা frame miss গেলে wait করার চেয়ে পরের frame দেখানো ভালো। DNS query তে UDP — fast response দরকার, packet ছোট।"
 
 ---
@@ -1584,7 +1584,7 @@ Client                          Server
 
 ## 2.7 DNS (Domain Name System)
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 DNS হলো internet এর **phone book** — human-readable domain name (google.com) কে machine-readable IP address (142.250.x.x) এ convert করে।
 
 ### 🔄 DNS Resolution Flow
@@ -1640,7 +1640,7 @@ Total time: ~100ms (first time), ~0ms (cached)
 
 ## 2.8 CDN (Content Delivery Network)
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 CDN হলো globally distributed servers যারা **user এর কাছের location থেকে content serve করে** — latency কমায়, speed বাড়ায়।
 
 ### 🌍 CDN Architecture
@@ -1677,7 +1677,7 @@ With CDN: BD User → Singapore CDN (~20ms) vs US User → NY CDN (~5ms)
 | Global reach | যেকোনো location এ fast |
 | Bandwidth saving | Origin থেকে কম traffic |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "CDN use করি কারণ static files (images, JS, CSS) origin server থেকে serve করলে latency বেশি হয়। CDN globally distributed servers রাখে — user এর কাছের server থেকে content serve হয়। Cloudflare, AWS CloudFront popular CDN providers। e-commerce site এ product images CDN থেকে serve করলে page load অনেক fast হয়।"
 
 ---
@@ -1686,7 +1686,7 @@ With CDN: BD User → Singapore CDN (~20ms) vs US User → NY CDN (~5ms)
 
 ## 2.9 Load Balancer
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Load Balancer হলো এমন একটা component যা incoming traffic কে **multiple servers এ distribute করে** — কোনো একটা server overloaded হয় না।
 
 ### 🏗️ Load Balancer Architecture
@@ -1739,7 +1739,7 @@ Layer 7 (Application Layer):
 - Example: AWS ALB, Nginx
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Load Balancer traffic distribute করে multiple servers এ। Round Robin সবচেয়ে simple — একটার পর একটা। কিন্তু servers যদি আলাদা powerful হয় তাহলে Weighted Round Robin। Sticky session দরকার হলে IP Hash। Layer 7 load balancer content দেখে route করে — /api requests আলাদা server এ, /static images আলাদা server এ।"
 
 ### ❓ Interview Questions
@@ -1759,7 +1759,7 @@ Layer 7 (Application Layer):
 
 ## 2.10 Reverse Proxy
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Reverse Proxy হলো এমন একটা server যা client এর request receive করে এবং backend server এ forward করে — client সরাসরি backend দেখতে পায় না।
 
 ### 🔄 Forward Proxy vs Reverse Proxy
@@ -1812,7 +1812,7 @@ server {
 
 ## 2.11 API Gateway
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 API Gateway হলো microservices system এ **single entry point** — সব client request আসে API Gateway তে, সে appropriate service এ route করে।
 
 ### 🏗️ API Gateway Architecture
@@ -1856,7 +1856,7 @@ API Gateway Pattern:
 | Caching | Response cache |
 | Protocol Translation | REST → gRPC |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "API Gateway microservices এর front door। সব request এখান দিয়ে আসে — authentication এখানেই হয়, প্রতিটা service কে আলাদাভাবে authentication করতে হয় না। Rate limiting এখানে করলে abuse prevent হয়। Kong, AWS API Gateway, Nginx — popular API Gateway tools।"
 
 ---
@@ -1865,7 +1865,7 @@ API Gateway Pattern:
 
 ## 2.12 Authentication vs Authorization
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Authentication (প্রমাণীকরণ):** তুমি কে? Identity verify করা।
 **Authorization (অনুমোদন):** তুমি কী করতে পারবে? Permission check করা।
@@ -1913,7 +1913,7 @@ Auth Flow:
 
 ## 2.13 JWT (JSON Web Token)
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 JWT হলো **compact, self-contained token** যা user information এবং claims নিরাপদে represent করে।
 
 ### 🔑 JWT Structure
@@ -2029,7 +2029,7 @@ def verify_token(token: str) -> dict:
 - localStorage (XSS vulnerable) — httpOnly cookie better
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "JWT stateless authentication এর জন্য ideal। Server কিছু store করে না — token এ ই সব information আছে। Signature দিয়ে verify করা যায়। কিন্তু একটা সমস্যা — token revoke করা কঠিন, expiry পর্যন্ত valid থাকে। সমাধান হলো short expiry (15min) + refresh token। Sensitive data payload এ রাখবো না কারণ base64 decoded করলে দেখা যায়।"
 
 ---
@@ -2038,7 +2038,7 @@ def verify_token(token: str) -> dict:
 
 ## 2.14 Session Management
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Session Management হলো user এর **login state maintain করার mechanism** — user কোন request করলে server বুঝতে পারে এটা authenticated user।
 
 ### 🔄 Session-based Auth Flow
@@ -2087,7 +2087,7 @@ Set-Cookie: session_id=abc123;
     Path=/;
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Session-based auth এ server session store করে — প্রতিটা request এ session ID check করে। এটা JWT এর চেয়ে revoke করা সহজ — session delete করলেই logout। কিন্তু horizontal scaling এ problem — server 1 এর session server 2 এ নেই। সমাধান: Redis shared session store।"
 
 ---
@@ -2096,7 +2096,7 @@ Set-Cookie: session_id=abc123;
 
 ## 2.15 gRPC Basics
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 gRPC (Google Remote Procedure Call) হলো একটি high-performance RPC framework যা **Protocol Buffers (protobuf)** use করে — JSON এর চেয়ে ৫-৭x faster।
 
 ```
@@ -2151,7 +2151,7 @@ message UserResponse {
 - Human-readable payload দরকার
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "gRPC REST এর alternative, mainly microservices internal communication এ use হয়। Protobuf binary format JSON এর চেয়ে much smaller আর faster। HTTP/2 এ চলে — multiplexing, header compression, streaming সব built-in। Public API তে REST better কারণ browser direct gRPC support করে না।"
 
 ---
@@ -2160,7 +2160,7 @@ message UserResponse {
 
 ## 2.16 OAuth 2.0 Flow
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 OAuth 2.0 হলো **authorization** protocol — "Google দিয়ে login করো" বা "Facebook এ sign in" এটাই OAuth।
 
 ```
@@ -2209,7 +2209,7 @@ Tokens:
 - ID Token: OpenID Connect (user identity)
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "OAuth 2.0 authorization এর জন্য — authentication না। 'Google দিয়ে login' এ আসলে Google আমাদের app কে user এর data access করার permission দেয়। Authorization Code Flow most secure — client_secret কখনো browser এ expose হয় না। Access token short-lived রাখা উচিত, refresh token দিয়ে নতুন token নেওয়া যায়।"
 
 ---
@@ -2557,7 +2557,7 @@ HTTP/2 এ একটা connection এ multiple request simultaneously চলে
 
 ## 3.1 SQL vs NoSQL
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **SQL (Relational Database):**
 - Structured data, predefined schema
@@ -2643,10 +2643,10 @@ Fully managed, serverless, AWS ecosystem?
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "SQL vs NoSQL একটা trade-off। আমি সবসময় SQL দিয়ে শুরু করি — data যদি structured হয়, relationships complex হয়, financial data হয়। NoSQL choose করি যখন schema flexible দরকার, horizontal scale দরকার, বা write throughput অনেক বেশি। MongoDB document store, Redis cache এর জন্য — দুটোই আলাদা purpose।"
 
-### ⚠️ Common Mistakes
+**⚠️ Common Mistakes**
 - "NoSQL মানেই fast, SQL মানেই slow" — ভুল। Context নির্ভর।
 - NoSQL এ complex relationships করার চেষ্টা
 - SQL কে scale করা যায় না ভাবা
@@ -2658,7 +2658,7 @@ Fully managed, serverless, AWS ecosystem?
 
 ## 3.2 Database Scaling
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Database scaling মানে বেশি data এবং বেশি traffic handle করার ক্ষমতা বাড়ানো।
 
 ### 🔑 Scaling Strategies
@@ -2699,7 +2699,7 @@ Database Scaling Options:
 
 ## 3.3 Replication
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Replication মানে **একই data multiple servers এ copy রাখা** — availability, reliability, এবং read performance বাড়ানো।
 
 ### 🔄 Replication Types
@@ -2732,7 +2732,7 @@ Conflict resolution দরকার
 | Asynchronous | Primary write করে, replica পরে sync | কম | সামান্য possible |
 | Semi-synchronous | কমপক্ষে একটা replica confirm | মাঝামাঝি | কম |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Replication দুই কাজে লাগে — high availability এবং read scaling। Master-Slave তে write সব master এ, read replicas এ distribute হয়। Master fail করলে slave কে promote করি — failover। কিন্তু replication lag হতে পারে asynchronous mode এ — replica তে stale data থাকতে পারে।"
 
 ### ❓ Interview Questions
@@ -2752,7 +2752,7 @@ Conflict resolution দরকার
 
 ## 3.4 Sharding
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Sharding হলো **large database কে smaller pieces (shards) এ ভাগ করা** — প্রতিটা shard আলাদা server এ থাকে।
 
 ### 🏗️ Sharding Strategies
@@ -2818,7 +2818,7 @@ Sharding এর সমস্যাগুলো:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Sharding vertical scaling এর limit হলে use করি — data কে multiple servers এ horizontally ভাগ করি। Hash-based sharding even distribution দেয়। কিন্তু সমস্যা হলো cross-shard queries — JOIN করা কঠিন, transaction manage করা কঠিন। তাই sharding এ যাওয়ার আগে read replicas, caching সব try করি।"
 
 ---
@@ -2827,7 +2827,7 @@ Sharding এর সমস্যাগুলো:
 
 ## 3.5 Partitioning
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Partitioning হলো **একটা table কে logical বা physical pieces এ ভাগ করা** — same database server এ থাকে (sharding থেকে আলাদা)।
 
 ### 📊 Partitioning Types
@@ -2860,7 +2860,7 @@ CREATE TABLE orders_2025_q1 PARTITION OF orders
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Partitioning আর Sharding সহজে confuse হয়। Partitioning একটা server এর মধ্যে — table কে ভাগ করি। Sharding multiple servers এ। Time-series data এ date-based partitioning দারুণ কাজ করে — পুরনো partition delete করা সহজ, query fast।"
 
 ---
@@ -2869,7 +2869,7 @@ CREATE TABLE orders_2025_q1 PARTITION OF orders
 
 ## 3.6 Indexing
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Index হলো database এ **extra data structure** যা queries কে fast করে — book এর সূচিপত্রের মতো।
 
 ### 🔄 Index কীভাবে কাজ করে?
@@ -2935,7 +2935,7 @@ CREATE INDEX idx_products_fts ON products USING gin(to_tsvector('english', name)
 - Too many indexes → write performance খারাপ
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Index হলো database এর সূচিপত্র — full table scan না করে সরাসরি data খুঁজে পায়। B-Tree index most common — range queries এ efficient। কিন্তু সব column এ index দিলে write operation slow হয়। Rule of thumb: WHERE, JOIN, ORDER BY column গুলোতে index দাও।"
 
 ### ❓ Interview Questions
@@ -2958,7 +2958,7 @@ CREATE INDEX idx_products_fts ON products USING gin(to_tsvector('english', name)
 
 ## 3.7 Caching (Database Level)
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Database caching মানে **frequently accessed data কে memory তে রেখে** database query এড়ানো।
 
 ### 🔄 Caching Patterns
@@ -2995,7 +2995,7 @@ Write: App → Redis (async) → Database later
 
 ## 3.8 Read-Heavy vs Write-Heavy Systems
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **Read-Heavy System:** বেশিরভাগ operation হলো read — data পড়া।
 **Write-Heavy System:** বেশিরভাগ operation হলো write — data লেখা।
@@ -3026,7 +3026,7 @@ Solutions:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "System design এ প্রথমেই জিজ্ঞেস করি — read-heavy নাকি write-heavy? Twitter feed read-heavy (1:100 write:read) — read replicas, cache use করি। IoT sensor data write-heavy — Cassandra বা Kafka use করি। Design সম্পূর্ণ আলাদা।"
 
 ---
@@ -3035,7 +3035,7 @@ Solutions:
 
 ## 3.9 Data Consistency
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Data Consistency মানে **সব nodes বা users একই time এ same data দেখবে।**
 
 ### 📊 Consistency Levels
@@ -3069,7 +3069,7 @@ Example: Facebook post — তুমি সাথে সাথে দেখো
 
 ## 3.10 Eventual Consistency
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Eventual Consistency হলো guarantee যে **সব updates propagate হলে সব nodes same value দেখাবে** — কিন্তু কতক্ষণ লাগবে সেটা নির্দিষ্ট নয়।
 
 ### 🎯 Real-Life Analogy
@@ -3085,7 +3085,7 @@ Eventual Consistency হলো guarantee যে **সব updates propagate হ�
 | User profile update | Medical records |
 | Shopping cart (sometimes) | Flight seat booking |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Eventual consistency মানে হলো system strong consistency sacrifice করে high availability আর low latency পায়। Cassandra AP database — এটা eventual consistency দেয়। Social media feed এ fine — like count ১ সেকেন্ড পরে update হলে সমস্যা নেই। কিন্তু banking তে CP database দরকার — money অনেক consistent হতে হবে।"
 
 ---
@@ -3094,7 +3094,7 @@ Eventual Consistency হলো guarantee যে **সব updates propagate হ�
 
 ## 3.11 ACID vs BASE
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 
 **ACID (SQL Databases এর guarantee):**
 - **A — Atomicity:** Transaction পুরো হয় বা একদম হয় না
@@ -3130,7 +3130,7 @@ Eventual Consistency হলো guarantee যে **সব updates propagate হ�
 | Use case | Financial, Medical | Social, Analytics |
 | Examples | PostgreSQL, MySQL | Cassandra, DynamoDB |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "ACID guarantee হলো strong consistency — banking এ এটা দরকার। BASE হলো availability কে priority দেওয়া — eventual consistency accept করা। NoSQL databases বেশিরভাগ BASE follow করে, তাই scale করা সহজ কিন্তু strong consistency নেই। Modern systems often polyglot — banking transactions PostgreSQL (ACID), user feed Cassandra (BASE)।"
 
 ### ❓ Interview Questions
@@ -3455,7 +3455,7 @@ def transfer(from_id, to_id, amount):
 
 ## 4.1 Caching কী? (What is Caching)
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Caching হলো **frequently accessed data কে fast storage এ রাখা** — পরের request এ slow source (DB, API) থেকে না নিয়ে cache থেকে serve করা।
 
 ### 🎯 Real-Life Analogy
@@ -3495,7 +3495,7 @@ DB load: High                     DB load: Minimal
 
 ## 4.2 Redis
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Redis (Remote Dictionary Server) হলো **in-memory data structure store** — cache, session store, message broker, real-time database হিসেবে use হয়।
 
 ### 🔑 Redis Data Structures
@@ -3592,7 +3592,7 @@ def get_product_list(category: str) -> list:
 | Real-time counter | INCR | Page views, likes |
 | Distributed lock | SET NX | Prevent duplicate operations |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Redis আমার go-to caching solution। In-memory তাই অনেক fast (sub-millisecond)। String, Hash, List, Set, Sorted Set — আলাদা use case এ আলাদা data structure। TTL দিয়ে cache expiry set করি। Production এ Redis Cluster use করি high availability এর জন্য।"
 
 ---
@@ -3601,7 +3601,7 @@ def get_product_list(category: str) -> list:
 
 ## 4.3 Memcached Basics
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Memcached হলো **simple distributed memory caching system** — শুধু key-value string store করে।
 
 ### 📊 Redis vs Memcached
@@ -3618,7 +3618,7 @@ Memcached হলো **simple distributed memory caching system** — শুধ�
 | Use case | Versatile, feature-rich | Simple string cache only |
 | Recommended | ✅ Modern choice | Legacy systems |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Memcached শুধু simple string caching — Redis এর subset। আজকাল নতুন project এ Redis use করি কারণ Redis এ অনেক বেশি features আছে। Memcached পুরনো systems এ দেখি।"
 
 ---
@@ -3627,7 +3627,7 @@ Memcached হলো **simple distributed memory caching system** — শুধ�
 
 ## 4.4 Cache Invalidation
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Cache Invalidation মানে **stale (outdated) data কে cache থেকে remove বা update করা** যাতে user পুরনো data না দেখে।
 
 > **বিখ্যাত quote:** "There are only two hard things in Computer Science: cache invalidation and naming things." — Phil Karlton
@@ -3699,7 +3699,7 @@ Solution:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Cache invalidation কঠিন কারণ data update হলে cache এ পুরনো data থাকে। TTL based approach simple — কিছু সময়ের জন্য stale data accept করি। Critical data এ event-based invalidation — update হলে সাথে সাথে cache delete। Cache Stampede problem এ mutex lock বা probabilistic refresh use করি।"
 
 ---
@@ -3708,7 +3708,7 @@ Solution:
 
 ## 4.5 CDN Caching
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 CDN (Content Delivery Network) globally distributed servers এ **static content cache করে** — user এর কাছের server থেকে serve করে।
 
 ### 🔄 CDN Cache Flow
@@ -3770,7 +3770,7 @@ Cache-Control: public, max-age=31536000, immutable
 
 ## 4.6 Browser Caching
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Browser user এর machine এ **files locally store করে** — পরের visit এ server থেকে না নিয়ে local থেকে load করে।
 
 ### 🔑 Browser Cache Headers
@@ -3809,7 +3809,7 @@ Benefit: Bandwidth save! File transfer না হলে শুধু headers।
 
 ## 4.7 Rate Limiting
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Rate Limiting মানে **একটা client কতবার request করতে পারবে** তার সীমা নির্ধারণ করা — abuse, DDoS, spam prevent করতে।
 
 ### 🔑 Rate Limiting Algorithms
@@ -3915,7 +3915,7 @@ X-RateLimit-Remaining: 0
 
 ## 4.8 Compression
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Compression মানে **data size কমানো** — network transfer এ কম bandwidth, faster load।
 
 ### 🔑 Compression Types
@@ -3962,7 +3962,7 @@ gzip_comp_level 6;
 
 ## 4.9 Lazy Loading
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Lazy Loading মানে **data বা resource তখনই load করো যখন actually দরকার** — আগে থেকে সব load না করা।
 
 ### 🔑 Types of Lazy Loading
@@ -4083,7 +4083,7 @@ Infrastructure Optimization:
 
 ## 4.11 Bloom Filter
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Bloom Filter হলো একটি **probabilistic data structure** যা check করে "এই element কি আগে দেখা হয়েছে?" — খুব কম memory তে, O(1) time এ।
 
 ```
@@ -4135,7 +4135,7 @@ Result types:
    → Disk read avoid করে for non-existent keys
 ```
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Bloom Filter একটা space-efficient probabilistic structure। 'এই element আগে দেখেছি কিনা' প্রশ্নের উত্তর দেয় খুব কম memory তে। False positive হতে পারে — 'হয়তো আছে' বলতে পারে ভুলভাবে। কিন্তু false negative কখনো হয় না — 'নেই' বললে সত্যিই নেই। Cache penetration solve করতে, DB lookup optimize করতে use হয়।"
 
 ---
@@ -4512,7 +4512,7 @@ Queue: Redis বা RabbitMQ। Worker: Celery (Python), Bull (Node.js), Sidekiq
 
 ## 5.1 Message Queue Basics
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Message Queue হলো **producer এবং consumer এর মধ্যে async buffer** — producer message পাঠায়, consumer নিজের সময়মতো সেটা process করে। দুজনকে একসাথে online থাকতে হয় না।
 
 ### 🎯 Real-Life Analogy
@@ -4569,7 +4569,7 @@ Order Service ──publish "order.placed"──▶ [Message Queue]
 
 ## 5.2 Apache Kafka
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Kafka হলো **distributed event streaming platform** — high-throughput, fault-tolerant, real-time data pipeline। LinkedIn তৈরি করেছে, Apache foundation এ।
 
 ### 🏗️ Kafka Architecture
@@ -4670,7 +4670,7 @@ for message in consumer:
 | Exactly-once | Exactly-once delivery semantics |
 | Stream processing | Kafka Streams, KSQL |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "Kafka high-throughput event streaming এর জন্য। Order place হলে order-events topic এ publish করি। Email service, SMS service, analytics — সবাই subscribe করে — independently consume করে। Kafka messages disk এ store করে তাই replay possible। প্রতি partition এ ordering guarantee আছে। ১ million events/sec handle করতে পারে।"
 
 ---
@@ -4679,7 +4679,7 @@ for message in consumer:
 
 ## 5.3 RabbitMQ
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 RabbitMQ হলো **traditional message broker** — complex routing, multiple messaging patterns support করে। AMQP protocol use করে।
 
 ### 🏗️ RabbitMQ Architecture
@@ -4755,7 +4755,7 @@ channel.start_consuming()
 | Complexity | Higher | Lower |
 | When to use | High volume, replay দরকার | Complex routing, lower volume |
 
-### 🎤 Interview Explanation
+**🎤 Interview Explanation**
 > "RabbitMQ traditional task queue — background job, email send, payment processing। Complex routing দরকার হলে RabbitMQ ভালো। কিন্তু high throughput বা event replay দরকার হলে Kafka। BD junior projects এ RabbitMQ বা Celery+Redis common।"
 
 ---
@@ -4764,7 +4764,7 @@ channel.start_consuming()
 
 ## 5.4 Pub/Sub Model
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Pub/Sub (Publish-Subscribe) হলো messaging pattern যেখানে **publisher নির্দিষ্ট subscriber কে চেনে না** — topic এ publish করে, interested subscriber রা receive করে।
 
 ### 🔄 Pub/Sub vs Point-to-Point
@@ -4819,7 +4819,7 @@ def listen_for_notifications(user_id):
 
 ## 5.5 Event-Driven Architecture
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Event-Driven Architecture (EDA) হলো system design approach যেখানে **components events দিয়ে communicate করে** — direct API call এর বদলে।
 
 ### 🏗️ Event-Driven Order System
@@ -4886,7 +4886,7 @@ User places order
 
 ## 5.6 Distributed Systems Basics
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Distributed System হলো **multiple computers (nodes) যারা একসাথে কাজ করে single system এর মতো** — user দেখতে পায় না যে এটা আলাদা machines।
 
 ### 🔑 Distributed System Challenges
@@ -4940,7 +4940,7 @@ Solution: Quorum (majority vote), Fencing
 
 ## 5.7 Distributed Transactions
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Distributed Transaction মানে **multiple services/databases এ একসাথে ACID guarantee করা** — সব হবে অথবা কিছুই হবে না।
 
 ### 🔄 Two-Phase Commit (2PC)
@@ -5021,7 +5021,7 @@ Failure হলে reverse/compensate করি
 
 ## 5.8 Consensus Basics
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Consensus মানে **distributed system এ সব nodes একটা value তে agree করা** — leader election, configuration management এ দরকার।
 
 ### 🔑 Raft Consensus Algorithm (Simplified)
@@ -5062,7 +5062,7 @@ Leader fail করলে:
 
 ## 5.9 Fault Tolerance
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Fault Tolerance মানে **system এর কিছু অংশ fail করলেও পুরো system কাজ করতে থাকবে** — gracefully handle করবে।
 
 ### 🔑 Fault Tolerance Patterns
@@ -7946,7 +7946,7 @@ notifier.notify(user_id=123, message="Your order is confirmed!")
 
 ## 8.1 Cloud Computing Basics
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Cloud Computing মানে **internet এর মাধ্যমে computing resources (server, storage, database, networking) on-demand ব্যবহার করা** — নিজে hardware কিনতে হয় না।
 
 ### 📊 Cloud Service Models
@@ -8136,7 +8136,7 @@ DDoS protection (AWS Shield)
 
 ## 8.3 Docker
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Docker হলো **container platform** — application ও তার dependencies একসাথে package করে portable container বানানো যায়। "My machine এ কাজ করে" সমস্যার solution।
 
 ### 🔄 Virtual Machine vs Container
@@ -8304,7 +8304,7 @@ docker compose pull           # Pull latest images
 
 ## 8.4 Kubernetes (K8s)
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Kubernetes হলো **container orchestration platform** — containers কে automatically deploy, scale, manage করে। Docker Compose production এ যথেষ্ট না — Kubernetes বড় scale এ দরকার।
 
 ### 🏗️ Kubernetes Architecture
@@ -8467,7 +8467,7 @@ Namespace: Cluster এর logical partition (dev/staging/prod)
 
 ## 8.5 CI/CD Pipeline
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 - **CI (Continuous Integration):** Code push করলে automatically build + test চলে
 - **CD (Continuous Delivery):** Staging এ automatically deploy হয়
 - **CD (Continuous Deployment):** Production এ automatically deploy হয়
@@ -8637,7 +8637,7 @@ jobs:
 
 ## 8.6 Nginx
 
-### 📖 সংজ্ঞা
+**📖 সংজ্ঞা**
 Nginx হলো **high-performance web server + reverse proxy** — static files serve করে, requests forward করে, load balance করে, SSL terminate করে।
 
 ### 📄 Nginx Configuration
