@@ -20,8 +20,8 @@
 |:-:|------|------------|
 | 📘 | [**PART 1** — FastAPI Fundamentals](#part1) | FastAPI কী, ASGI vs WSGI, Architecture, Path/Query Params, Pydantic, Validation |
 | 📗 | [**PART 2** — Routing & API Development](#part2) | APIRouter, CRUD, HTTP Methods, File Upload, Dependency Injection, Middleware |
-| 📙 | **PART 3** — Database Integration *(Coming Soon)* | SQLAlchemy, PostgreSQL, ORM, Alembic, CRUD, Transactions |
-| 📕 | **PART 4** — Authentication & Security *(Coming Soon)* | JWT, OAuth2, Password Hashing, CORS, Rate Limiting |
+| 📙 | [**PART 3** — Database Integration](#part3) | SQLAlchemy, PostgreSQL, ORM, Alembic, CRUD, Transactions |
+| 📕 | [**PART 4** — Authentication & Security](#part4) | JWT, OAuth2, Password Hashing, CORS, Rate Limiting |
 | 📓 | **PART 5** — Async Programming *(Coming Soon)* | async/await, Event Loop, Async DB, Concurrency |
 | 📔 | **PART 6** — Advanced FastAPI *(Coming Soon)* | WebSockets, Streaming, Custom Middleware, Caching |
 | 📒 | **PART 7** — Testing & Debugging *(Coming Soon)* | Pytest, TestClient, Mocking, Logging |
@@ -71,6 +71,42 @@
 - [২.১২ Middleware](#২১২-middleware)
 - [২.১৩ Background Tasks](#২১৩-background-tasks)
 - [২.১৪ PART 2 — Interview Q&A](#২১৪-part-2--interview-questions--answers)
+
+</details>
+
+<details>
+<summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৩.১ SQLAlchemy কী?](#৩১-sqlalchemy-কী)
+- [৩.২ FastAPI তে SQLAlchemy Setup](#৩২-fastapi-তে-sqlalchemy-setup)
+- [৩.৩ Database Models](#৩৩-database-models)
+- [৩.৪ Pydantic Schemas vs DB Models](#৩৪-pydantic-schemas-vs-db-models)
+- [৩.৫ Database Session Dependency](#৩৫-database-session-dependency)
+- [৩.৬ CRUD Operations with DB](#৩৬-crud-operations-with-db)
+- [৩.৭ Relationships (One-to-Many, Many-to-Many)](#৩৭-relationships)
+- [৩.৮ Alembic Migration](#৩৮-alembic-migration)
+- [৩.৯ Async SQLAlchemy](#৩৯-async-sqlalchemy)
+- [৩.১০ Connection Pooling ও Transactions](#৩১০-connection-pooling-ও-transactions)
+- [৩.১১ PART 3 — Interview Q&A](#৩১১-part-3--interview-questions--answers)
+
+</details>
+
+<details>
+<summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৪.১ Authentication vs Authorization](#৪১-authentication-vs-authorization)
+- [৪.২ Password Hashing](#৪২-password-hashing)
+- [৪.৩ JWT Authentication](#৪৩-jwt-authentication)
+- [৪.৪ OAuth2 with Password Flow](#৪৪-oauth2-with-password-flow)
+- [৪.৫ Refresh Tokens](#৪৫-refresh-tokens)
+- [৪.৬ Role-Based Access Control (RBAC)](#৪৬-role-based-access-control-rbac)
+- [৪.৭ CORS](#৪৭-cors)
+- [৪.৮ Rate Limiting](#৪৮-rate-limiting)
+- [৪.৯ Environment Variables ও Secrets](#৪৯-environment-variables-ও-secrets)
+- [৪.১০ API Security Best Practices](#৪১০-api-security-best-practices)
+- [৪.১১ PART 4 — Interview Q&A](#৪১১-part-4--interview-questions--answers)
 
 </details>
 
@@ -2502,9 +2538,1619 @@ def partial_update(id: int, product: ProductPartial):
 
 ---
 
-> **📌 পরবর্তী:** [PART 3 — Database Integration](#toc) *(Coming Soon)*
+---
+
+<a id="part3"></a>
+
+# PART 3: Database Integration
+
+> **📍 এই PART এর Sections:** [৩.১](#৩১-sqlalchemy-কী) · [৩.২](#৩২-fastapi-তে-sqlalchemy-setup) · [৩.৩](#৩৩-database-models) · [৩.৪](#৩৪-pydantic-schemas-vs-db-models) · [৩.৫](#৩৫-database-session-dependency) · [৩.৬](#৩৬-crud-operations-with-db) · [৩.৭](#৩৭-relationships) · [৩.৮](#৩৮-alembic-migration) · [৩.৯](#৩৯-async-sqlalchemy) · [৩.১০](#৩১০-connection-pooling-ও-transactions) · [৩.১১](#৩১১-part-3--interview-questions--answers)
+
+---
+
+## ৩.১ SQLAlchemy কী?
+
+**SQLAlchemy** হলো Python এর সবচেয়ে জনপ্রিয় ORM (Object Relational Mapper) library। এটি দিয়ে SQL database কে Python objects হিসেবে handle করা যায় — সরাসরি SQL লিখতে হয় না।
+
+### ORM মানে কী?
+
+```
+ORM = Object Relational Mapper
+
+Database Table  ←→  Python Class
+Table Row       ←→  Class Instance (Object)
+Table Column    ←→  Class Attribute
+SQL Query       ←→  Python Method Call
+```
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+**ORM ছাড়া (Raw SQL):**
+```python
+# সরাসরি SQL লিখতে হয়, error-prone
+cursor.execute("SELECT * FROM users WHERE id = %s AND active = %s", (user_id, True))
+row = cursor.fetchone()
+user = {"id": row[0], "name": row[1], "email": row[2]}
+```
+
+**ORM দিয়ে (SQLAlchemy):**
+```python
+# Python এর মতো, readable ও safe
+user = db.query(User).filter(User.id == user_id, User.active == True).first()
+```
+
+### SQLAlchemy এর দুটি স্তর
+
+| স্তর | নাম | ব্যবহার |
+|-----|-----|---------|
+| **Core** | SQL Expression Language | Raw SQL এর কাছাকাছি, maximum control |
+| **ORM** | Object Relational Mapper | High-level, Python class দিয়ে কাজ |
+
+FastAPI তে সাধারণত **ORM** স্তর ব্যবহার হয়।
+
+### 🎤 Interview-style Explanation
+
+**প্রশ্ন:** "ORM কী? Raw SQL এর চেয়ে ORM কেন ভালো?"
+
+**আদর্শ উত্তর:**
+> "ORM মানে Object Relational Mapper — এটি database table কে Python class এ map করে। Raw SQL এর চেয়ে ORM ভালো কারণ: ১. SQL injection এর risk কম (parameterized queries automatically), ২. Python syntax এ কাজ হয় তাই readable, ৩. Database agnostic — PostgreSQL থেকে SQLite বা MySQL এ switch করা সহজ। তবে Complex query তে Raw SQL বেশি performant হতে পারে।"
+
+---
+
+## ৩.২ FastAPI তে SQLAlchemy Setup
+
+### Installation
+
+```bash
+pip install sqlalchemy psycopg2-binary  # PostgreSQL এর জন্য
+pip install sqlalchemy                   # শুধু SQLite এর জন্য
+pip install "sqlalchemy[asyncio]" asyncpg  # Async PostgreSQL
+```
+
+### Sync SQLAlchemy Setup (SQLite দিয়ে শুরু)
+
+```python
+# app/database.py
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
+# Database URL format:
+# SQLite:     "sqlite:///./app.db"
+# PostgreSQL: "postgresql://user:password@localhost/dbname"
+# MySQL:      "mysql+pymysql://user:password@localhost/dbname"
+
+DATABASE_URL = "sqlite:///./app.db"
+
+# Engine তৈরি
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False}  # SQLite only
+    # pool_size=5,          # PostgreSQL তে connection pool
+    # max_overflow=10,
+    # echo=True             # SQL queries log করতে
+)
+
+# Session factory
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+# Base class for all models
+Base = declarative_base()
+```
+
+### PostgreSQL Connection
+
+```python
+# app/core/config.py
+from pydantic_settings import BaseSettings  # pip install pydantic-settings
+
+class Settings(BaseSettings):
+    DATABASE_URL: str = "postgresql://postgres:password@localhost:5432/myapp"
+    
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+
+# app/database.py
+from sqlalchemy import create_engine
+from app.core.config import settings
+
+engine = create_engine(
+    settings.DATABASE_URL,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True    # Connection alive কিনা check করে
+)
+```
+
+### ⚠️ Common Mistakes
+
+- ❌ `check_same_thread=False` PostgreSQL এ দেওয়া — শুধু SQLite এর জন্য
+- ❌ Engine directly endpoint এ use করা — Session dependency ব্যবহার করুন
+- ✅ Connection string কখনো code এ hardcode করবেন না — `.env` ফাইলে রাখুন
+
+---
+
+## ৩.৩ Database Models
+
+SQLAlchemy ORM Model = Database Table এর Python representation।
+
+### Basic Model
+
+```python
+# app/models/user.py
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text
+from sqlalchemy.sql import func
+from app.database import Base
+
+class User(Base):
+    __tablename__ = "users"           # Table এর নাম
+
+    # Primary Key
+    id = Column(Integer, primary_key=True, index=True)
+
+    # String columns
+    username = Column(String(50), unique=True, index=True, nullable=False)
+    email = Column(String(100), unique=True, index=True, nullable=False)
+    full_name = Column(String(100), nullable=True)
+
+    # Hashed password (plain password কখনো store করবেন না!)
+    hashed_password = Column(String(255), nullable=False)
+
+    # Boolean
+    is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False)
+
+    # Auto timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    def __repr__(self):
+        return f"<User(id={self.id}, username={self.username})>"
+```
+
+```python
+# app/models/post.py
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Boolean
+from sqlalchemy.orm import relationship
+from app.database import Base
+
+class Post(Base):
+    __tablename__ = "posts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    published = Column(Boolean, default=False)
+
+    # Foreign Key — User এর সাথে সম্পর্ক
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Relationship (Python level — SQL এ join হয়)
+    owner = relationship("User", back_populates="posts")
+```
+
+```python
+# User model এ posts relationship যোগ করুন
+class User(Base):
+    # ... আগের সব column ...
+    posts = relationship("Post", back_populates="owner")
+```
+
+### Table তৈরি করা
+
+```python
+# app/main.py
+from app.database import engine, Base
+import app.models.user    # import করলে model register হয়
+import app.models.post
+
+# সব registered model এর table তৈরি করুন
+Base.metadata.create_all(bind=engine)
+```
+
+### Column Types Reference
+
+| SQLAlchemy Type | Python Type | SQL Type |
+|-----------------|-------------|----------|
+| `Integer` | `int` | INT |
+| `String(n)` | `str` | VARCHAR(n) |
+| `Text` | `str` | TEXT |
+| `Float` | `float` | FLOAT |
+| `Boolean` | `bool` | BOOLEAN |
+| `DateTime` | `datetime` | TIMESTAMP |
+| `Date` | `date` | DATE |
+| `JSON` | `dict` | JSON |
+| `Enum` | `enum` | ENUM |
+
+---
+
+## ৩.৪ Pydantic Schemas vs DB Models
+
+এই পার্থক্যটি interview তে প্রায়ই জিজ্ঞেস করা হয়।
+
+```
+SQLAlchemy Model  →  Database Table (DB layer)
+Pydantic Schema   →  API Request/Response (API layer)
+
+এই দুটি আলাদা রাখা হয় কারণ:
+- DB model এ সব column আছে (password, internal fields)
+- API response এ সব দেখানো নিরাপদ নয়
+- Request এ কিছু field read-only (id, created_at)
+```
+
+### Schema Design Pattern
+
+```python
+# app/schemas/user.py
+from pydantic import BaseModel, EmailStr
+from datetime import datetime
+from typing import Optional
+
+# ─── Base (shared fields) ────────────────────────────
+class UserBase(BaseModel):
+    username: str
+    email: EmailStr
+    full_name: Optional[str] = None
+
+# ─── Create (client → server) ────────────────────────
+class UserCreate(UserBase):
+    password: str          # Create এ password আসে
+
+# ─── Update (partial update) ─────────────────────────
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+# ─── Response (server → client) ──────────────────────
+class UserResponse(UserBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+    # password নেই ← security!
+
+    class Config:
+        orm_mode = True    # SQLAlchemy object থেকে তৈরি হতে পারবে
+        # Pydantic v2: from_attributes = True
+```
+
+### 🎤 Interview-style Explanation
+
+**প্রশ্ন:** "SQLAlchemy model ও Pydantic schema আলাদা রাখেন কেন?"
+
+**আদর্শ উত্তর:**
+> "দুটি আলাদা রাখি কারণ তাদের দায়িত্ব ভিন্ন। SQLAlchemy model database এর সাথে কথা বলে — সব column আছে, password hash, timestamps সব। Pydantic schema API এর contract define করে — client কী পাঠাবে, server কী return করবে। যেমন UserCreate schema তে password আছে কিন্তু UserResponse এ নেই। এই separation ছাড়া accidentally password response এ পাঠানোর risk থাকে। এটি বাস্তবে separation of concerns এর একটি উদাহরণ।"
+
+---
+
+## ৩.৫ Database Session Dependency
+
+```python
+# app/database.py (আগে থেকেই আছে)
+from sqlalchemy.orm import Session
+
+def get_db():
+    """
+    Database session dependency.
+    প্রতিটি request এ নতুন session তৈরি হয়,
+    request শেষে automatically close হয়।
+    """
+    db = SessionLocal()
+    try:
+        yield db          # endpoint এ db inject হয়
+    finally:
+        db.close()        # সবসময় close হবে, error হলেও
+
+# app/api/endpoints/users.py
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models.user import User
+from app.schemas.user import UserCreate, UserResponse
+
+@router.get("/{user_id}", response_model=UserResponse)
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User পাওয়া যায়নি")
+    return user
+```
+
+---
+
+## ৩.৬ CRUD Operations with DB
+
+### CRUD Layer (Best Practice)
+
+```python
+# app/crud/user.py
+from sqlalchemy.orm import Session
+from typing import Optional, List
+from app.models.user import User
+from app.schemas.user import UserCreate, UserUpdate
+from app.core.security import get_password_hash
+
+# ─── CREATE ─────────────────────────────────────────
+def create_user(db: Session, user: UserCreate) -> User:
+    hashed_password = get_password_hash(user.password)
+    db_user = User(
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        hashed_password=hashed_password
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)   # DB থেকে id, created_at refresh করে
+    return db_user
+
+# ─── READ ────────────────────────────────────────────
+def get_user(db: Session, user_id: int) -> Optional[User]:
+    return db.query(User).filter(User.id == user_id).first()
+
+def get_user_by_email(db: Session, email: str) -> Optional[User]:
+    return db.query(User).filter(User.email == email).first()
+
+def get_users(db: Session, skip: int = 0, limit: int = 100) -> List[User]:
+    return db.query(User).offset(skip).limit(limit).all()
+
+# ─── UPDATE ──────────────────────────────────────────
+def update_user(db: Session, user_id: int, user_update: UserUpdate) -> Optional[User]:
+    db_user = get_user(db, user_id)
+    if not db_user:
+        return None
+
+    # শুধু পাঠানো fields update করুন
+    update_data = user_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_user, field, value)
+
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+# ─── DELETE ──────────────────────────────────────────
+def delete_user(db: Session, user_id: int) -> bool:
+    db_user = get_user(db, user_id)
+    if not db_user:
+        return False
+    db.delete(db_user)
+    db.commit()
+    return True
+```
+
+### Endpoint Layer (thin, uses CRUD)
+
+```python
+# app/api/endpoints/users.py
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from typing import List
+from app.database import get_db
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
+from app.crud import user as crud_user
+
+router = APIRouter()
+
+@router.post("/", response_model=UserResponse, status_code=201)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    # Email already exists?
+    if crud_user.get_user_by_email(db, user.email):
+        raise HTTPException(status_code=409, detail="Email ইতিমধ্যে registered")
+    return crud_user.create_user(db, user)
+
+@router.get("/", response_model=List[UserResponse])
+def list_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    return crud_user.get_users(db, skip=skip, limit=limit)
+
+@router.get("/{user_id}", response_model=UserResponse)
+def get_user(user_id: int, db: Session = Depends(get_db)):
+    user = crud_user.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User পাওয়া যায়নি")
+    return user
+
+@router.patch("/{user_id}", response_model=UserResponse)
+def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
+    updated = crud_user.update_user(db, user_id, user)
+    if not updated:
+        raise HTTPException(status_code=404, detail="User পাওয়া যায়নি")
+    return updated
+
+@router.delete("/{user_id}", status_code=204)
+def delete_user(user_id: int, db: Session = Depends(get_db)):
+    if not crud_user.delete_user(db, user_id):
+        raise HTTPException(status_code=404, detail="User পাওয়া যায়নি")
+```
+
+### Common SQLAlchemy Queries
+
+```python
+# সব record
+users = db.query(User).all()
+
+# Filter
+active_users = db.query(User).filter(User.is_active == True).all()
+
+# Multiple filters (AND)
+result = db.query(User).filter(
+    User.is_active == True,
+    User.is_admin == False
+).all()
+
+# OR condition
+from sqlalchemy import or_
+result = db.query(User).filter(
+    or_(User.email == email, User.username == username)
+).first()
+
+# LIKE search
+users = db.query(User).filter(User.username.like(f"%{query}%")).all()
+
+# Order by
+users = db.query(User).order_by(User.created_at.desc()).all()
+
+# Count
+count = db.query(User).filter(User.is_active == True).count()
+
+# Pagination
+users = db.query(User).offset(skip).limit(limit).all()
+
+# Join
+from sqlalchemy.orm import joinedload
+users_with_posts = db.query(User).options(joinedload(User.posts)).all()
+```
+
+---
+
+## ৩.৭ Relationships
+
+### One-to-Many (একজন User এর অনেক Post)
+
+```python
+# models/user.py
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    username = Column(String(50))
+
+    # One user → Many posts
+    posts = relationship("Post", back_populates="owner", cascade="all, delete-orphan")
+
+# models/post.py
+class Post(Base):
+    __tablename__ = "posts"
+    id = Column(Integer, primary_key=True)
+    title = Column(String(200))
+    owner_id = Column(Integer, ForeignKey("users.id"))
+
+    # Many posts → One user
+    owner = relationship("User", back_populates="posts")
+```
+
+```python
+# ব্যবহার:
+user = db.query(User).filter(User.id == 1).first()
+print(user.posts)     # User এর সব posts — lazy load হয়
+
+post = db.query(Post).filter(Post.id == 1).first()
+print(post.owner)     # Post এর owner user
+```
+
+### Many-to-Many (Student ↔ Course)
+
+```python
+# Association Table (junction table)
+from sqlalchemy import Table
+
+student_course = Table(
+    "student_course",
+    Base.metadata,
+    Column("student_id", Integer, ForeignKey("students.id"), primary_key=True),
+    Column("course_id", Integer, ForeignKey("courses.id"), primary_key=True)
+)
+
+class Student(Base):
+    __tablename__ = "students"
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    courses = relationship("Course", secondary=student_course, back_populates="students")
+
+class Course(Base):
+    __tablename__ = "courses"
+    id = Column(Integer, primary_key=True)
+    title = Column(String(200))
+    students = relationship("Student", secondary=student_course, back_populates="courses")
+```
+
+### Eager vs Lazy Loading
+
+```python
+# Lazy Loading (default) — access করলে তখন query হয়
+user = db.query(User).first()
+posts = user.posts    # এখানে DB query হবে (N+1 problem!)
+
+# Eager Loading — একসাথে join করে আনে
+from sqlalchemy.orm import joinedload, selectinload
+
+# joinedload — SQL JOIN ব্যবহার করে
+users = db.query(User).options(joinedload(User.posts)).all()
+
+# selectinload — আলাদা query কিন্তু N+1 avoid করে
+users = db.query(User).options(selectinload(User.posts)).all()
+```
+
+### 🎤 Interview-style Explanation
+
+**প্রশ্ন:** "N+1 problem কী? কীভাবে এড়াবেন?"
+
+**আদর্শ উত্তর:**
+> "N+1 problem হলো: 1টি query তে N জন user আনলাম, তারপর প্রতিটি user এর posts এর জন্য আলাদা আলাদা N টি query হয় — মোট N+1 query। 100 user হলে 101 query, 1000 user হলে 1001 query। Solution হলো eager loading — `joinedload()` দিয়ে SQL JOIN এ একসাথে আনা, অথবা `selectinload()` দিয়ে 2টি query তে সব আনা। Production এ lazy loading সাবধানে ব্যবহার করতে হয়।"
+
+---
+
+## ৩.৮ Alembic Migration
+
+**Alembic** হলো SQLAlchemy এর official database migration tool।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+আপনার production database এ 10,000 user আছে। নতুন feature এর জন্য `phone_number` column যোগ করতে হবে। পুরো DB delete করে নতুন করে তৈরি করা যাবে না — **Migration** দরকার।
+
+```
+Migration = Live database এ controlled ভাবে schema change করা
+(Table add, column add, column rename, index create ইত্যাদি)
+```
+
+### Alembic Setup
+
+```bash
+pip install alembic
+
+# Project এ initialize
+alembic init alembic
+
+# Directory structure:
+# alembic/
+# ├── env.py          ← Configure করতে হবে
+# ├── script.py.mako  ← Migration template
+# └── versions/       ← Migration files এখানে
+# alembic.ini         ← Main config
+```
+
+```python
+# alembic/env.py এ এটি configure করুন:
+from app.database import Base
+from app.models import user, post    # সব models import করুন
+
+target_metadata = Base.metadata
+
+# alembic.ini তে:
+# sqlalchemy.url = postgresql://user:pass@localhost/dbname
+```
+
+### Migration Workflow
+
+```bash
+# ১. Model change করুন (নতুন column যোগ করুন)
+# user.py তে: phone = Column(String(20), nullable=True)
+
+# ২. Auto-generate migration
+alembic revision --autogenerate -m "add phone to users"
+# Creates: alembic/versions/abc123_add_phone_to_users.py
+
+# ৩. Migration file দেখুন ও verify করুন
+# (সবসময় auto-generated migration verify করুন!)
+
+# ৪. Migration apply করুন
+alembic upgrade head
+
+# Rollback করুন
+alembic downgrade -1       # একধাপ পিছনে
+alembic downgrade base     # সব migration rollback
+
+# History দেখুন
+alembic history
+
+# Current version দেখুন
+alembic current
+```
+
+### Generated Migration File দেখতে এরকম
+
+```python
+# alembic/versions/abc123_add_phone_to_users.py
+
+def upgrade():
+    op.add_column(
+        "users",
+        sa.Column("phone", sa.String(length=20), nullable=True)
+    )
+
+def downgrade():
+    op.drop_column("users", "phone")
+```
+
+### ⚠️ Common Mistakes
+
+- ❌ Production এ `Base.metadata.create_all()` ব্যবহার করা — শুধু development এ
+- ❌ Auto-generated migration verify না করা
+- ❌ Migration file edit না করা (complex changes auto-detect হয় না)
+- ✅ CI/CD pipeline এ `alembic upgrade head` যোগ করুন
+
+---
+
+## ৩.৯ Async SQLAlchemy
+
+FastAPI async support এর পূর্ণ সুবিধা নিতে Async SQLAlchemy ব্যবহার করুন।
+
+### Setup
+
+```bash
+pip install "sqlalchemy[asyncio]" asyncpg  # PostgreSQL async driver
+# অথবা SQLite async এর জন্য:
+pip install aiosqlite
+```
+
+```python
+# app/database.py (Async version)
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+# Async database URL
+ASYNC_DATABASE_URL = "postgresql+asyncpg://user:pass@localhost/dbname"
+# SQLite: "sqlite+aiosqlite:///./app.db"
+
+# Async engine
+async_engine = create_async_engine(
+    ASYNC_DATABASE_URL,
+    pool_size=10,
+    max_overflow=20,
+    echo=False
+)
+
+# Async session factory
+AsyncSessionLocal = sessionmaker(
+    async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)
+
+Base = declarative_base()
+
+# Async dependency
+async def get_async_db():
+    async with AsyncSessionLocal() as session:
+        yield session
+```
+
+### Async CRUD Operations
+
+```python
+# app/crud/async_user.py
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update, delete
+from app.models.user import User
+from app.schemas.user import UserCreate
+
+async def get_user(db: AsyncSession, user_id: int):
+    result = await db.execute(
+        select(User).where(User.id == user_id)
+    )
+    return result.scalar_one_or_none()
+
+async def get_users(db: AsyncSession, skip: int = 0, limit: int = 10):
+    result = await db.execute(
+        select(User).offset(skip).limit(limit)
+    )
+    return result.scalars().all()
+
+async def create_user(db: AsyncSession, user: UserCreate):
+    db_user = User(**user.dict())
+    db.add(db_user)
+    await db.commit()
+    await db.refresh(db_user)
+    return db_user
+
+async def delete_user(db: AsyncSession, user_id: int):
+    await db.execute(delete(User).where(User.id == user_id))
+    await db.commit()
+```
+
+```python
+# app/api/endpoints/async_users.py
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database import get_async_db
+
+router = APIRouter()
+
+@router.get("/{user_id}")
+async def get_user(user_id: int, db: AsyncSession = Depends(get_async_db)):
+    user = await async_crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User পাওয়া যায়নি")
+    return user
+```
+
+### Sync vs Async কখন কোনটি?
+
+| পরিস্থিতি | Recommendation |
+|-----------|---------------|
+| Simple API, small traffic | Sync (সহজ, কম complexity) |
+| High concurrency, many I/O ops | Async (better performance) |
+| Existing sync codebase | Sync (mixing complex) |
+| New project, modern setup | Async |
+| Heavy CPU computation | Sync (async CPU বাঁচায় না) |
+
+---
+
+## ৩.১০ Connection Pooling ও Transactions
+
+### Connection Pooling
+
+```python
+# Connection Pool কী?
+# ─────────────────────────────────────────────────────
+# প্রতিটি request এ নতুন DB connection তৈরি করা expensive
+# Connection Pool = pre-created connections এর group
+# Request আসলে pool থেকে connection নেয়, শেষে ফেরত দেয়
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=10,          # Permanent connections সংখ্যা
+    max_overflow=20,       # Extra connections (peak load)
+    pool_timeout=30,       # Connection পেতে max wait (seconds)
+    pool_recycle=1800,     # 30 মিনিট পরে connection নতুন করে
+    pool_pre_ping=True     # Dead connection detect করে
+)
+
+# Pool status check
+print(engine.pool.status())
+```
+
+### Transactions
+
+```python
+from sqlalchemy.orm import Session
+
+def transfer_money(
+    db: Session,
+    from_user_id: int,
+    to_user_id: int,
+    amount: float
+):
+    """
+    Money transfer — atomic operation।
+    সবটুকু সফল হবে, অথবা কিছুই হবে না।
+    """
+    try:
+        # Transaction শুরু হয় db.begin() তে অথবা auto
+        from_user = db.query(User).filter(User.id == from_user_id).with_for_update().first()
+        to_user = db.query(User).filter(User.id == to_user_id).with_for_update().first()
+
+        if not from_user or not to_user:
+            raise ValueError("User পাওয়া যায়নি")
+
+        if from_user.balance < amount:
+            raise ValueError("Insufficient balance")
+
+        from_user.balance -= amount
+        to_user.balance += amount
+
+        db.commit()   # সফল হলে commit
+        return True
+
+    except Exception as e:
+        db.rollback()  # যেকোনো error এ rollback
+        raise e
+```
+
+### 🎤 Interview-style Explanation
+
+**প্রশ্ন:** "Database transaction কী? ACID properties কী?"
+
+**আদর্শ উত্তর:**
+> "Transaction হলো একটি logical unit of work — হয় সবটুকু execute হবে, অথবা কিছুই হবে না। ACID properties: **Atomicity** — সব operations এক সাথে সফল বা fail; **Consistency** — DB সবসময় valid state এ থাকবে; **Isolation** — একটি transaction অন্যটির মাঝে interfere করবে না; **Durability** — commit হলে data permanent। Bank transfer এর উদাহরণ — টাকা কাটা হলো কিন্তু জমা হয়নি এটি acceptable নয়, তাই transaction দরকার।"
+
+---
+
+## ৩.১১ PART 3 — Interview Questions & Answers
+
+### সেকশন ১: মূল প্রশ্নোত্তর
+
+**Q1: SQLAlchemy ORM ও Core এর পার্থক্য কী?**
+
+> ORM (Object Relational Mapper) level এ Python class দিয়ে কাজ হয় — `db.query(User).filter(...)`. Core level এ SQL Expression Language ব্যবহার হয় যা raw SQL এর কাছাকাছি কিন্তু Python syntax এ। ORM simple CRUD এর জন্য ভালো, Core complex queries ও performance-critical operations এর জন্য বেশি control দেয়।
+
+---
+
+**Q2: `db.commit()` ও `db.refresh()` কী করে?**
+
+> `db.commit()` pending changes database এ permanently save করে — এর আগে পর্যন্ত changes শুধু memory তে থাকে। `db.refresh(obj)` commit এর পরে database থেকে object এর latest state reload করে — এটি দরকার কারণ DB auto-generated values (id, created_at, updated_at) memory তে আপডেট হয় না commit ছাড়া।
+
+---
+
+**Q3: Alembic কি production এ use করা safe?**
+
+> হ্যাঁ, Alembic production এর জন্যই তৈরি। `alembic upgrade head` production deployment এর অংশ হওয়া উচিত। তবে auto-generated migration সবসময় manually review করুন — complex changes (column rename) সঠিকভাবে detect নাও হতে পারে। Deployment এর আগে staging environment এ test করুন।
+
+---
+
+**Q4: N+1 query problem কী এবং সমাধান কী?**
+
+> N টি parent record এনে প্রতিটির জন্য আলাদা child query হলে total N+1 queries হয়। Solution: eager loading — `joinedload()` দিয়ে SQL JOIN এ একসাথে আনা, অথবা `selectinload()` দিয়ে 2 queries তে সব আনা। ORM debug করতে `echo=True` দিয়ে SQL log দেখুন।
+
+---
+
+**Q5: Async SQLAlchemy কখন ব্যবহার করবেন?**
+
+> High concurrency API তে যেখানে অনেক I/O-bound operations (DB queries, external API calls) একসাথে হয়। Async দিলে একটি DB query এর wait এর সময় অন্য request serve করা যায়। Simple low-traffic API তে sync ই যথেষ্ট এবং simpler। নতুন project শুরু করলে async setup recommend করি।
+
+---
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|--------|-------|
+| ORM মানে কী? | Object Relational Mapper |
+| `Base.metadata.create_all()` কী করে? | সব registered model এর DB table তৈরি করে |
+| `orm_mode = True` কেন লাগে? | SQLAlchemy object থেকে Pydantic model তৈরির জন্য |
+| Alembic কী? | SQLAlchemy migration tool |
+| `yield` dependency তে কেন? | Request পরে DB session close করার জন্য |
+| Lazy loading এর সমস্যা? | N+1 query problem |
+| `with_for_update()` কী করে? | Row lock করে (concurrent update থেকে রক্ষা) |
+| `pool_pre_ping=True` কীসের জন্য? | Dead DB connection detect করে replace করে |
+| Async DB driver for PostgreSQL? | asyncpg |
+| `db.rollback()` কখন? | Error হলে transaction cancel করতে |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part4"></a>
+
+# PART 4: Authentication & Security
+
+> **📍 এই PART এর Sections:** [৪.১](#৪১-authentication-vs-authorization) · [৪.২](#৪২-password-hashing) · [৪.৩](#৪৩-jwt-authentication) · [৪.৪](#৪৪-oauth2-with-password-flow) · [৪.৫](#৪৫-refresh-tokens) · [৪.৬](#৪৬-role-based-access-control-rbac) · [৪.৭](#৪৭-cors) · [৪.৮](#৪৮-rate-limiting) · [৪.৯](#৪৯-environment-variables-ও-secrets) · [৪.১০](#৪১০-api-security-best-practices) · [৪.১১](#৪১১-part-4--interview-questions--answers)
+
+---
+
+## ৪.১ Authentication vs Authorization
+
+এই দুটির পার্থক্য interview এ প্রায়ই জিজ্ঞেস করা হয়।
+
+| বিষয় | Authentication | Authorization |
+|-------|---------------|---------------|
+| **প্রশ্ন** | "আপনি কে?" | "আপনি কী করতে পারবেন?" |
+| **কাজ** | Identity verify করা | Permission check করা |
+| **উদাহরণ** | Login করা | Admin page access করা |
+| **কখন হয়** | আগে | Authentication এর পরে |
+| **Failure code** | 401 Unauthorized | 403 Forbidden |
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+```
+একটি অফিস ভবনে প্রবেশ:
+  ১. Security গেটে ID card দেখান → Authentication (আপনি কে?)
+  ২. 5th floor এ যেতে চান → Authorization (আপনার permission আছে?)
+
+  Authentication fail → "আমি আপনাকে চিনি না" (401)
+  Authorization fail  → "আপনি এখানে যেতে পারবেন না" (403)
+```
+
+---
+
+## ৪.২ Password Hashing
+
+**Plain password কখনো database এ store করবেন না।** এটি সবচেয়ে বড় security mistake।
+
+### bcrypt দিয়ে Hashing
+
+```bash
+pip install "passlib[bcrypt]"
+```
+
+```python
+# app/core/security.py
+from passlib.context import CryptContext
+
+# bcrypt context তৈরি
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_password_hash(password: str) -> str:
+    """Plain password → hashed password"""
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Login এ verify করুন"""
+    return pwd_context.verify(plain_password, hashed_password)
+```
+
+```python
+# ব্যবহার:
+plain = "MySecret123"
+hashed = get_password_hash(plain)
+print(hashed)
+# $2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW
+
+# Verify
+print(verify_password("MySecret123", hashed))   # True
+print(verify_password("WrongPassword", hashed)) # False
+```
+
+### কেন bcrypt?
+
+```
+MD5/SHA1  → ❌ Fast hash — brute force সহজ
+SHA256    → ❌ Fast hash — rainbow table attack
+bcrypt    → ✅ Slow hash (intentionally!) — brute force কঠিন
+           → Salt automatically add করে — rainbow table আটকায়
+           → Cost factor adjust করা যায় (future-proof)
+```
+
+### 🎤 Interview-style Explanation
+
+**প্রশ্ন:** "Password কীভাবে store করেন? MD5 কি ব্যবহার করা উচিত?"
+
+**আদর্শ উত্তর:**
+> "Password plain text এ বা reversible encryption এ store করা উচিত নয়। আমি bcrypt বা argon2 দিয়ে one-way hashing করি। MD5 বা SHA-1 ব্যবহার করা উচিত নয় কারণ এগুলো fast hash — GPU দিয়ে seconds এ billions of attempts করা যায়। bcrypt intentionally slow এবং automatic salt add করে তাই rainbow table attack কাজ করে না। passlib library দিয়ে FastAPI তে সহজে implement করা যায়।"
+
+---
+
+## ৪.৩ JWT Authentication
+
+**JWT (JSON Web Token)** হলো stateless authentication এর সবচেয়ে জনপ্রিয় পদ্ধতি।
+
+### JWT Structure
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9  ← Header (Base64)
+.eyJzdWIiOiIxMjM0IiwiZXhwIjoxNjAwMDAwfQ  ← Payload (Base64)
+.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c  ← Signature (HMAC)
+
+Header:  {"alg": "HS256", "typ": "JWT"}
+Payload: {"sub": "user_id_123", "exp": 1600000, "role": "admin"}
+Signature: HMAC-SHA256(header + "." + payload, SECRET_KEY)
+```
+
+### JWT Implementation
+
+```bash
+pip install "python-jose[cryptography]"
+```
+
+```python
+# app/core/security.py
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+from typing import Optional
+
+SECRET_KEY = "your-super-secret-key-min-32-chars"  # .env থেকে নিন!
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """JWT Access Token তৈরি করুন"""
+    to_encode = data.copy()
+
+    expire = datetime.utcnow() + (
+        expires_delta if expires_delta
+        else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    to_encode.update({"exp": expire})
+
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def decode_token(token: str) -> Optional[dict]:
+    """Token decode ও verify করুন"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        return None
+```
+
+### Full Auth Flow
+
+```python
+# app/schemas/auth.py
+from pydantic import BaseModel
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+class TokenData(BaseModel):
+    user_id: Optional[int] = None
+    role: Optional[str] = None
+```
+
+```python
+# app/api/endpoints/auth.py
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.core.security import verify_password, create_access_token
+from app.crud.user import get_user_by_email
+from app.schemas.auth import Token
+
+router = APIRouter()
+
+# Token এর URL (client এখানে POST করবে)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+# ─── LOGIN ───────────────────────────────────────────
+@router.post("/login", response_model=Token)
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    # User খোঁজো
+    user = get_user_by_email(db, form_data.username)  # username field এ email
+
+    # Verify
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email বা Password ভুল",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    if not user.is_active:
+        raise HTTPException(status_code=400, detail="Account inactive")
+
+    # Token তৈরি
+    access_token = create_access_token(
+        data={"sub": str(user.id), "role": "admin" if user.is_admin else "user"}
+    )
+
+    return {"access_token": access_token, "token_type": "bearer"}
+```
+
+### Current User Dependency
+
+```python
+# app/api/deps.py
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.core.security import decode_token
+from app.crud.user import get_user
+from app.models.user import User
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token invalid বা expired",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    payload = decode_token(token)
+    if payload is None:
+        raise credentials_exception
+
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise credentials_exception
+
+    user = get_user(db, int(user_id))
+    if user is None:
+        raise credentials_exception
+
+    return user
+
+def get_current_active_user(
+    current_user: User = Depends(get_current_user)
+) -> User:
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Account inactive")
+    return current_user
+```
+
+```python
+# Protected endpoints
+@router.get("/me", response_model=UserResponse)
+def get_my_profile(current_user: User = Depends(get_current_active_user)):
+    return current_user
+
+@router.put("/me", response_model=UserResponse)
+def update_my_profile(
+    update_data: UserUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    return crud_user.update_user(db, current_user.id, update_data)
+```
+
+### JWT এর সুবিধা ও সীমাবদ্ধতা
+
+| সুবিধা | সীমাবদ্ধতা |
+|--------|-----------|
+| **Stateless** — server এ session store করতে হয় না | Token revoke করা কঠিন (expire পর্যন্ত valid) |
+| **Scalable** — multiple servers এ কাজ করে | Token size বড় (session ID এর চেয়ে) |
+| **Self-contained** — user info token এ আছে | Secret key leak হলে সব token compromise |
+| **Standard** — সব platform support করে | Sensitive info payload এ রাখা যায় না |
+
+---
+
+## ৪.৪ OAuth2 with Password Flow
+
+FastAPI তে OAuth2 Password Flow implement করা।
+
+```python
+# Complete working example:
+
+# main.py
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from pydantic import BaseModel
+from typing import Optional
+
+app = FastAPI()
+
+# Fake DB
+fake_users_db = {
+    "rafi@example.com": {
+        "id": 1,
+        "email": "rafi@example.com",
+        "full_name": "Rafi Ahmed",
+        "hashed_password": "$2b$12$...",  # bcrypt hash of "secret123"
+        "role": "user",
+        "is_active": True
+    },
+    "admin@example.com": {
+        "id": 2,
+        "email": "admin@example.com",
+        "full_name": "Admin User",
+        "hashed_password": "$2b$12$...",
+        "role": "admin",
+        "is_active": True
+    }
+}
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+@app.post("/token")
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends()
+):
+    user = fake_users_db.get(form_data.username)
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    token = create_access_token({"sub": str(user["id"]), "role": user["role"]})
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/users/me")
+async def read_users_me(token: str = Depends(oauth2_scheme)):
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return {"user_id": payload["sub"], "role": payload["role"]}
+```
+
+---
+
+## ৪.৫ Refresh Tokens
+
+Access token short-lived রাখুন এবং Refresh token দিয়ে নতুন access token নিন।
+
+```
+Access Token:  ৩০ মিনিট expire  →  API calls এর জন্য
+Refresh Token: ৭ দিন expire     →  নতুন access token নেওয়ার জন্য
+```
+
+```python
+# app/core/security.py
+REFRESH_TOKEN_EXPIRE_DAYS = 7
+
+def create_refresh_token(user_id: int) -> str:
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    data = {
+        "sub": str(user_id),
+        "exp": expire,
+        "type": "refresh"   # Token type mark করুন
+    }
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
+
+# app/api/endpoints/auth.py
+@router.post("/login", response_model=TokenPair)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    access_token = create_access_token({"sub": str(user.id)})
+    refresh_token = create_refresh_token(user.id)
+
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
+
+@router.post("/refresh", response_model=Token)
+def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
+    payload = decode_token(refresh_token)
+
+    if not payload or payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+    user_id = payload.get("sub")
+    user = get_user(db, int(user_id))
+    if not user:
+        raise HTTPException(status_code=401, detail="User পাওয়া যায়নি")
+
+    new_access_token = create_access_token({"sub": str(user.id)})
+    return {"access_token": new_access_token, "token_type": "bearer"}
+```
+
+### 🎤 Interview-style Explanation
+
+**প্রশ্ন:** "Access token ও Refresh token এর পার্থক্য কী? কেন দুটি দরকার?"
+
+**আদর্শ উত্তর:**
+> "Access token short-lived (১৫-৩০ মিনিট) — প্রতিটি API call এ পাঠানো হয়। Refresh token long-lived (৭-৩০ দিন) — শুধু নতুন access token নেওয়ার সময় ব্যবহার হয়। দুটি দরকার কারণ: শুধু long-lived access token থাকলে চুরি হলে অনেকক্ষণ attacker access পাবে। শুধু short-lived থাকলে user বারবার login করতে হবে। Refresh token server-side revoke করা যায় (DB blacklist), কিন্তু access token stateless তাই expire পর্যন্ত valid থাকে।"
+
+---
+
+## ৪.৬ Role-Based Access Control (RBAC)
+
+```python
+# app/api/deps.py
+from enum import Enum
+
+class UserRole(str, Enum):
+    user = "user"
+    moderator = "moderator"
+    admin = "admin"
+
+def require_role(*roles: UserRole):
+    """Factory function — নির্দিষ্ট role এর জন্য dependency তৈরি করে"""
+    def role_checker(current_user: User = Depends(get_current_active_user)):
+        user_role = current_user.role
+        if user_role not in [r.value for r in roles]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"এই action এর জন্য {[r.value for r in roles]} role দরকার"
+            )
+        return current_user
+    return role_checker
+
+# ব্যবহার:
+@router.get("/admin/dashboard")
+def admin_dashboard(
+    admin: User = Depends(require_role(UserRole.admin))
+):
+    return {"dashboard": "admin data"}
+
+@router.get("/reports")
+def view_reports(
+    user: User = Depends(require_role(UserRole.admin, UserRole.moderator))
+):
+    return {"reports": "data"}
+
+@router.delete("/users/{id}")
+def delete_user(
+    id: int,
+    admin: User = Depends(require_role(UserRole.admin)),
+    db: Session = Depends(get_db)
+):
+    crud_user.delete_user(db, id)
+```
+
+---
+
+## ৪.৭ CORS
+
+**CORS (Cross-Origin Resource Sharing)** — Browser এ different origin থেকে API call করার permission।
+
+```
+Origin = Protocol + Domain + Port
+http://localhost:3000  ←→  http://localhost:8000
+এই দুটি different origin → CORS লাগবে
+```
+
+```python
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+# Development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_credentials=True,                    # Cookies allow
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
+# Production — specific origins
+ALLOWED_ORIGINS = [
+    "https://myapp.com",
+    "https://www.myapp.com",
+    "https://admin.myapp.com"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ⚠️ NEVER do this in production:
+# allow_origins=["*"]  with  allow_credentials=True
+# এটি CORS misconfiguration — security vulnerability
+```
+
+### CORS কীভাবে কাজ করে
+
+```
+Browser → Preflight (OPTIONS) request → Server
+Server  → "এই origin allow" → Browser
+Browser → Actual request → Server
+Server  → Response with CORS headers
+
+CORS Headers:
+  Access-Control-Allow-Origin: https://myapp.com
+  Access-Control-Allow-Methods: GET, POST, DELETE
+  Access-Control-Allow-Headers: Authorization, Content-Type
+```
+
+---
+
+## ৪.৮ Rate Limiting
+
+```bash
+pip install slowapi  # FastAPI rate limiting
+```
+
+```python
+from fastapi import FastAPI, Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# Rate limiter setup
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Specific endpoint এ rate limit
+@app.get("/api/data")
+@limiter.limit("10/minute")         # প্রতি minute এ ১০ বার
+async def get_data(request: Request):
+    return {"data": "value"}
+
+@app.post("/auth/login")
+@limiter.limit("5/minute")          # Login এ strict limit — brute force আটকায়
+async def login(request: Request):
+    return {"token": "..."}
+
+# User-based rate limit (auth এর পরে)
+@app.get("/api/search")
+@limiter.limit("100/hour")
+async def search(request: Request, current_user = Depends(get_current_user)):
+    return {"results": []}
+```
+
+---
+
+## ৪.৯ Environment Variables ও Secrets
+
+```bash
+pip install pydantic-settings python-dotenv
+```
+
+```python
+# app/core/config.py
+from pydantic_settings import BaseSettings
+from typing import List
+
+class Settings(BaseSettings):
+    # App
+    APP_NAME: str = "My FastAPI App"
+    DEBUG: bool = False
+    API_PREFIX: str = "/api/v1"
+
+    # Security — .env থেকে লোড হবে
+    SECRET_KEY: str                    # Required — no default
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Database
+    DATABASE_URL: str                  # Required
+
+    # CORS
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000"]
+
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+# Singleton pattern
+settings = Settings()
+```
+
+```bash
+# .env file (NEVER commit to git!)
+SECRET_KEY=your-super-secret-key-minimum-32-characters-long
+DATABASE_URL=postgresql://user:password@localhost:5432/myapp
+DEBUG=False
+ALLOWED_ORIGINS=["https://myapp.com","https://www.myapp.com"]
+```
+
+```bash
+# .gitignore তে যোগ করুন:
+.env
+.env.local
+.env.production
+```
+
+```python
+# ব্যবহার:
+from app.core.config import settings
+
+engine = create_engine(settings.DATABASE_URL)
+token = jwt.encode(data, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+```
+
+### ⚠️ Security Rules
+
+- ❌ SECRET_KEY code এ hardcode করবেন না
+- ❌ .env file git এ push করবেন না
+- ❌ Production SECRET_KEY development এ ব্যবহার করবেন না
+- ✅ Production এ environment variables (server config) ব্যবহার করুন
+- ✅ SECRET_KEY কমপক্ষে 32 characters random string
+
+---
+
+## ৪.১০ API Security Best Practices
+
+### OWASP API Security Top 10 এর প্রাসঙ্গিক Items
+
+```
+১. Broken Object Level Authorization (BOLA)
+   ❌ /users/{any_id}/data → যেকোনো user এর data দেখা যায়
+   ✅ শুধু নিজের data বা admin হলে অন্যের
+
+২. Broken Authentication
+   ❌ Weak tokens, no expiry, plain password store
+   ✅ JWT + bcrypt + expiry + refresh token
+
+৩. Excessive Data Exposure
+   ❌ DB object সরাসরি return (password সহ)
+   ✅ response_model দিয়ে filter
+
+৪. Rate Limiting নেই
+   ❌ Unlimited login attempts → brute force
+   ✅ slowapi দিয়ে rate limiting
+
+৫. Security Misconfiguration
+   ❌ CORS allow_origins=["*"] with credentials
+   ✅ Specific origins, HTTPS only production
+```
+
+### Security Checklist
+
+```python
+# app/main.py — Production security setup
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+
+app = FastAPI(
+    # Production এ docs disable করুন
+    docs_url=None if settings.DEBUG == False else "/docs",
+    redoc_url=None if settings.DEBUG == False else "/redoc",
+)
+
+# HTTPS redirect (production)
+if not settings.DEBUG:
+    app.add_middleware(HTTPSRedirectMiddleware)
+
+# Trusted hosts
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["myapp.com", "www.myapp.com", "api.myapp.com"]
+)
+
+# Security headers middleware
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000"
+    return response
+```
+
+---
+
+## ৪.১১ PART 4 — Interview Questions & Answers
+
+### সেকশন ১: মূল প্রশ্নোত্তর
+
+**Q1: JWT stateless মানে কী? Session-based auth এর সাথে পার্থক্য কী?**
+
+> Session-based auth: Server database/memory তে session store করে। প্রতিটি request এ session ID DB তে lookup করতে হয়। Multiple server এ scale করা কঠিন। JWT stateless: Token এ সব info আছে, server কিছু store করে না। যেকোনো server decode করতে পারে। Scale করা সহজ। Trade-off হলো JWT revoke করা কঠিন — expire পর্যন্ত valid থাকে।
+
+---
+
+**Q2: JWT এর payload এ কোন ধরনের data রাখা উচিত এবং কোনটি রাখা উচিত নয়?**
+
+> রাখা যাবে: user_id, role, email, token type, expiry। রাখা উচিত নয়: password, credit card, sensitive personal info, large amount of data। কারণ JWT payload শুধু Base64 encoded — যেকোনো কেউ decode করে পড়তে পারে (শুধু signature verify করতে secret key লাগে, পড়তে না)।
+
+---
+
+**Q3: SQL Injection কী? FastAPI + SQLAlchemy তে কীভাবে prevent করবেন?**
+
+> SQL Injection = user input সরাসরি SQL query তে ব্যবহার করলে attacker SQL manipulate করতে পারে। SQLAlchemy ORM automatically parameterized queries use করে তাই injection prevent হয়। Raw SQL লিখলে অবশ্যই `text()` ও bind parameters ব্যবহার করুন: `db.execute(text("SELECT * FROM users WHERE id = :id"), {"id": user_id})`।
+
+---
+
+**Q4: CORS এর সাথে `allow_origins=["*"]` production এ কি নিরাপদ?**
+
+> `allow_origins=["*"]` মানে যেকোনো domain API call করতে পারবে। `allow_credentials=True` সাথে একসাথে ব্যবহার করা যায় না (browser block করে)। শুধু `["*"]` public API তে OK, কিন্তু authenticated endpoints এ specific origins দেওয়া উচিত। Production এ সবসময় specific domains — আপনার frontend URL।
+
+---
+
+**Q5: bcrypt এ salt কী? কেন দরকার?**
+
+> Salt হলো random data যা hash করার আগে password এর সাথে যোগ করা হয়। দরকার কারণ: ১. একই password দুই user এ ভিন্ন hash produce করে — attacker বুঝতে পারে না কারা same password ব্যবহার করছে। ২. Rainbow table attack (pre-computed hash lookup) prevent করে। bcrypt automatically unique salt generate করে এবং hash এর সাথে store করে — আলাদা save করতে হয় না।
+
+---
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|--------|-------|
+| JWT মানে কী? | JSON Web Token |
+| JWT এর তিনটি অংশ? | Header, Payload, Signature |
+| 401 vs 403? | 401 = Not authenticated, 403 = Not authorized |
+| bcrypt vs MD5? | bcrypt slow & salted (safe), MD5 fast (unsafe) |
+| CORS কী? | Cross-Origin Resource Sharing |
+| OAuth2PasswordRequestForm কী? | Login form এর username/password receive করার helper |
+| Refresh token কোথায় store করা ভালো? | HTTP-only cookie (XSS থেকে safe) |
+| Rate limiting কেন? | Brute force ও DDoS আটকাতে |
+| `.env` file কোথায় রাখবেন না? | Git repository তে |
+| `expire_on_commit=False` async session এ কেন? | Commit এর পরেও object attribute access করতে |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 5 — Async Programming *(Coming Soon)*
 >
-> PART 3 তে থাকবে: SQLAlchemy setup, PostgreSQL integration, ORM models, Alembic migrations, async database operations, CRUD with real DB।
+> PART 5 তে থাকবে: async/await বিস্তারিত, Event Loop, Async DB operations, concurrent HTTP requests, background processing।
 
 ---
 
