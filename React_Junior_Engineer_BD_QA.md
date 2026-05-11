@@ -13321,4 +13321,1665 @@ export default function RootLayout({ children }) {
 
 ---
 
-> **📌 পরবর্তী:** PART 13 — Testing & Best Practices *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 13 — Testing & Best Practices
+
+---
+
+<a id="part13"></a>
+## PART 13: Testing & Best Practices
+
+> Production-ready React code লেখার জন্য testing ও best practices জানা অপরিহার্য। এই PART-এ Jest, React Testing Library, accessibility testing, ESLint/Prettier, folder structure এবং Git workflow cover করা হয়েছে।
+
+| # | বিষয় |
+|---|-------|
+| 1 | Testing কেন দরকার — Testing Pyramid |
+| 2 | Jest Setup ও Basics |
+| 3 | React Testing Library (RTL) |
+| 4 | Component Testing Patterns |
+| 5 | Hook Testing (renderHook) |
+| 6 | API Mocking (MSW) |
+| 7 | Accessibility Testing |
+| 8 | ESLint ও Prettier Setup |
+| 9 | Folder Structure Best Practices |
+| 10 | Git Workflow ও Conventional Commits |
+
+---
+
+**Topic 1: Testing কেন দরকার — Testing Pyramid**
+
+Testing ছাড়া code refactor করা ভয়ের — কোথায় কী ভাঙবে জানা যায় না।
+
+**Testing Pyramid:**
+```
+         /\
+        /  \  E2E Tests (Playwright, Cypress)
+       /----\  — সবচেয়ে কম, সবচেয়ে ধীর, most realistic
+      /      \
+     /--------\  Integration Tests
+    /          \  — components + hooks + API একসাথে
+   /------------\
+  /              \  Unit Tests (সবচেয়ে বেশি)
+ /________________\  — pure functions, utils, hooks
+```
+
+| Type | Tool | Speed | Confidence |
+|------|------|-------|-----------|
+| Unit | Jest | ⚡⚡⚡ | কম |
+| Integration | RTL | ⚡⚡ | মাঝারি |
+| E2E | Playwright | ⚡ | সবচেয়ে বেশি |
+
+**React project-এ কী test করব:**
+```
+✅ Pure utility functions
+✅ Custom hooks
+✅ Component rendering (snapshot/behavior)
+✅ User interactions (click, type, submit)
+✅ Async operations (API calls)
+✅ Error states
+❌ Implementation details (state variable names)
+❌ Third-party library internals
+```
+
+---
+
+**Topic 2: Jest Setup ও Basics**
+
+Vite project-এ Jest setup:
+```bash
+npm install -D jest @types/jest jest-environment-jsdom
+npm install -D @testing-library/react @testing-library/jest-dom
+npm install -D @testing-library/user-event
+npm install -D babel-jest @babel/preset-env @babel/preset-react
+```
+
+**jest.config.js:**
+```js
+export default {
+  testEnvironment: 'jsdom',
+  setupFilesAfterFramework: ['<rootDir>/src/setupTests.js'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',       // path alias
+    '\\.(css|less|scss)$': 'identity-obj-proxy', // CSS modules mock
+    '\\.(jpg|png|svg)$': '<rootDir>/src/__mocks__/fileMock.js',
+  },
+  transform: {
+    '^.+\\.[jt]sx?$': 'babel-jest',
+  },
+  coverageThreshold: {
+    global: { branches: 70, functions: 70, lines: 70 },
+  },
+};
+```
+
+**src/setupTests.js:**
+```js
+import '@testing-library/jest-dom';
+// extends expect() with: toBeInTheDocument, toHaveClass, toHaveValue, etc.
+```
+
+**Jest basics — matchers:**
+```js
+// Equality
+expect(2 + 2).toBe(4);
+expect({ a: 1 }).toEqual({ a: 1 }); // deep equal
+
+// Truthiness
+expect(null).toBeNull();
+expect(undefined).toBeUndefined();
+expect(true).toBeTruthy();
+expect(0).toBeFalsy();
+
+// Numbers
+expect(5).toBeGreaterThan(3);
+expect(5).toBeLessThanOrEqual(5);
+
+// Strings
+expect('Hello World').toContain('World');
+expect('Hello').toMatch(/hell/i);
+
+// Arrays
+expect([1, 2, 3]).toContain(2);
+expect([1, 2, 3]).toHaveLength(3);
+
+// Async
+await expect(fetchUser(1)).resolves.toEqual({ id: 1, name: 'Alice' });
+await expect(fetchUser(-1)).rejects.toThrow('User not found');
+```
+
+**describe ও test structure:**
+```js
+describe('Calculator', () => {
+  describe('add()', () => {
+    test('দুটি positive number যোগ করে', () => {
+      expect(add(2, 3)).toBe(5);
+    });
+
+    test('negative number handle করে', () => {
+      expect(add(-1, 1)).toBe(0);
+    });
+  });
+
+  describe('divide()', () => {
+    test('zero দিয়ে ভাগ করলে error throw করে', () => {
+      expect(() => divide(5, 0)).toThrow('Cannot divide by zero');
+    });
+  });
+});
+```
+
+**Mocking:**
+```js
+// Function mock
+const mockFn = jest.fn();
+mockFn('hello');
+expect(mockFn).toHaveBeenCalledWith('hello');
+expect(mockFn).toHaveBeenCalledTimes(1);
+
+// Module mock
+jest.mock('./api/userService', () => ({
+  getUser: jest.fn().mockResolvedValue({ id: 1, name: 'Alice' }),
+  createUser: jest.fn().mockResolvedValue({ id: 2, name: 'Bob' }),
+}));
+
+// Implementation mock
+import { getUser } from './api/userService';
+getUser.mockResolvedValueOnce({ id: 1, name: 'Alice' }); // একবার
+getUser.mockRejectedValueOnce(new Error('Network error')); // error case
+```
+
+---
+
+**Topic 3: React Testing Library (RTL)**
+
+RTL-এর philosophy: **Test behavior, not implementation.** User কীভাবে interact করে সেটা test করুন।
+
+**Core queries — priority order:**
+```js
+// 1. getByRole — সবচেয়ে preferred (accessibility-friendly)
+screen.getByRole('button', { name: /submit/i })
+screen.getByRole('textbox', { name: /email/i })
+screen.getByRole('heading', { level: 1 })
+screen.getByRole('link', { name: /home/i })
+
+// 2. getByLabelText — form elements-এর জন্য
+screen.getByLabelText(/email address/i)
+
+// 3. getByPlaceholderText
+screen.getByPlaceholderText(/your name/i)
+
+// 4. getByText — visible text
+screen.getByText(/hello world/i)
+
+// 5. getByTestId — শেষ উপায়
+screen.getByTestId('submit-btn')
+```
+
+**get vs query vs find:**
+```js
+// getBy* — পাওয়া না গেলে error throw করে
+screen.getByText('Submit')
+
+// queryBy* — পাওয়া না গেলে null return করে (absence check)
+expect(screen.queryByText('Error')).not.toBeInTheDocument()
+
+// findBy* — async, returns Promise (appear করার জন্য অপেক্ষা করে)
+await screen.findByText('Loading complete')
+```
+
+**render ও cleanup:**
+```js
+import { render, screen } from '@testing-library/react';
+
+test('renders greeting', () => {
+  render(<Greeting name="Alice" />);
+  expect(screen.getByText('Hello, Alice!')).toBeInTheDocument();
+});
+// cleanup automatically happens after each test
+```
+
+**Wrapping with providers:**
+```js
+// Custom render function — project-এ একবার তৈরি করুন
+function renderWithProviders(ui, options = {}) {
+  const { initialState = {}, ...renderOptions } = options;
+  const store = setupStore(initialState);
+  
+  function Wrapper({ children }) {
+    return (
+      <Provider store={store}>
+        <BrowserRouter>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </BrowserRouter>
+      </Provider>
+    );
+  }
+  
+  return { store, ...render(ui, { wrapper: Wrapper, ...renderOptions }) };
+}
+
+// Usage:
+const { store } = renderWithProviders(<Dashboard />, {
+  initialState: { user: { name: 'Alice', role: 'admin' } }
+});
+```
+
+---
+
+**Topic 4: Component Testing Patterns**
+
+**Pattern 1: Simple render test**
+```js
+// components/Badge.test.jsx
+import { render, screen } from '@testing-library/react';
+import Badge from './Badge';
+
+describe('Badge component', () => {
+  test('text সঠিকভাবে render হয়', () => {
+    render(<Badge>New</Badge>);
+    expect(screen.getByText('New')).toBeInTheDocument();
+  });
+
+  test('variant class apply হয়', () => {
+    const { container } = render(<Badge variant="success">OK</Badge>);
+    expect(container.firstChild).toHaveClass('badge-success');
+  });
+
+  test('custom className accept করে', () => {
+    render(<Badge className="extra">Test</Badge>);
+    expect(screen.getByText('Test')).toHaveClass('extra');
+  });
+});
+```
+
+**Pattern 2: User interaction test**
+```js
+// components/Counter.test.jsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import Counter from './Counter';
+
+describe('Counter', () => {
+  test('initial count 0 দেখায়', () => {
+    render(<Counter />);
+    expect(screen.getByText('Count: 0')).toBeInTheDocument();
+  });
+
+  test('increment button click-এ count বাড়ে', async () => {
+    const user = userEvent.setup();
+    render(<Counter />);
+    
+    await user.click(screen.getByRole('button', { name: /increment/i }));
+    expect(screen.getByText('Count: 1')).toBeInTheDocument();
+    
+    await user.click(screen.getByRole('button', { name: /increment/i }));
+    expect(screen.getByText('Count: 2')).toBeInTheDocument();
+  });
+
+  test('reset button-এ 0-এ ফেরে', async () => {
+    const user = userEvent.setup();
+    render(<Counter initialCount={5} />);
+    
+    await user.click(screen.getByRole('button', { name: /reset/i }));
+    expect(screen.getByText('Count: 0')).toBeInTheDocument();
+  });
+});
+```
+
+**Pattern 3: Form test**
+```js
+// components/LoginForm.test.jsx
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import LoginForm from './LoginForm';
+
+describe('LoginForm', () => {
+  const mockOnSubmit = jest.fn();
+
+  beforeEach(() => {
+    mockOnSubmit.mockClear();
+  });
+
+  test('valid credentials দিয়ে submit করা যায়', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm onSubmit={mockOnSubmit} />);
+
+    await user.type(screen.getByLabelText(/email/i), 'alice@example.com');
+    await user.type(screen.getByLabelText(/password/i), 'password123');
+    await user.click(screen.getByRole('button', { name: /login/i }));
+
+    await waitFor(() => {
+      expect(mockOnSubmit).toHaveBeenCalledWith({
+        email: 'alice@example.com',
+        password: 'password123',
+      });
+    });
+  });
+
+  test('empty email-এ validation error দেখায়', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm onSubmit={mockOnSubmit} />);
+
+    await user.click(screen.getByRole('button', { name: /login/i }));
+
+    expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
+    expect(mockOnSubmit).not.toHaveBeenCalled();
+  });
+
+  test('invalid email format-এ error দেখায়', async () => {
+    const user = userEvent.setup();
+    render(<LoginForm onSubmit={mockOnSubmit} />);
+
+    await user.type(screen.getByLabelText(/email/i), 'not-an-email');
+    await user.tab(); // blur trigger
+
+    expect(await screen.findByText(/invalid email/i)).toBeInTheDocument();
+  });
+});
+```
+
+**Pattern 4: Async / Loading state test**
+```js
+// components/UserProfile.test.jsx
+import { render, screen } from '@testing-library/react';
+import { rest } from 'msw';
+import { server } from '../mocks/server';
+import UserProfile from './UserProfile';
+
+test('loading spinner দেখায়', () => {
+  render(<UserProfile userId="1" />);
+  expect(screen.getByRole('progressbar')).toBeInTheDocument();
+});
+
+test('user data load হওয়ার পরে দেখায়', async () => {
+  render(<UserProfile userId="1" />);
+  
+  expect(await screen.findByText('Alice Smith')).toBeInTheDocument();
+  expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+});
+
+test('error state সঠিকভাবে দেখায়', async () => {
+  // Override server response for this test
+  server.use(
+    rest.get('/api/users/1', (req, res, ctx) =>
+      res(ctx.status(500), ctx.json({ message: 'Server error' }))
+    )
+  );
+  
+  render(<UserProfile userId="1" />);
+  expect(await screen.findByText(/something went wrong/i)).toBeInTheDocument();
+});
+```
+
+---
+
+**Topic 5: Hook Testing (renderHook)**
+
+```js
+// hooks/useCounter.test.js
+import { renderHook, act } from '@testing-library/react';
+import useCounter from './useCounter';
+
+describe('useCounter', () => {
+  test('initial value দিয়ে শুরু হয়', () => {
+    const { result } = renderHook(() => useCounter(10));
+    expect(result.current.count).toBe(10);
+  });
+
+  test('increment কাজ করে', () => {
+    const { result } = renderHook(() => useCounter(0));
+    
+    act(() => {
+      result.current.increment();
+    });
+    
+    expect(result.current.count).toBe(1);
+  });
+
+  test('decrement minimum 0-এ আটকে', () => {
+    const { result } = renderHook(() => useCounter(0));
+    
+    act(() => {
+      result.current.decrement();
+    });
+    
+    expect(result.current.count).toBe(0); // 0-এর নিচে যায় না
+  });
+});
+```
+
+**Async hook test:**
+```js
+// hooks/useFetch.test.js
+import { renderHook, waitFor } from '@testing-library/react';
+import useFetch from './useFetch';
+
+test('data fetch করে এবং loading state পরিচালনা করে', async () => {
+  const { result } = renderHook(() => useFetch('/api/users'));
+
+  // Initially loading
+  expect(result.current.loading).toBe(true);
+  expect(result.current.data).toBeNull();
+
+  // Wait for data
+  await waitFor(() => {
+    expect(result.current.loading).toBe(false);
+  });
+
+  expect(result.current.data).toEqual([{ id: 1, name: 'Alice' }]);
+  expect(result.current.error).toBeNull();
+});
+```
+
+**Context-dependent hook:**
+```js
+// hooks/useAuth.test.js
+import { renderHook } from '@testing-library/react';
+import { AuthProvider } from '../context/AuthContext';
+import useAuth from './useAuth';
+
+const wrapper = ({ children }) => <AuthProvider>{children}</AuthProvider>;
+
+test('authenticated user-এর info return করে', () => {
+  const { result } = renderHook(() => useAuth(), { wrapper });
+  expect(result.current.isLoggedIn).toBe(false);
+  expect(result.current.user).toBeNull();
+});
+```
+
+---
+
+**Topic 6: API Mocking (MSW)**
+
+MSW (Mock Service Worker) — network level-এ intercept করে, implementation details থেকে independent:
+
+```bash
+npm install -D msw
+npx msw init public/ --save
+```
+
+**src/mocks/handlers.js:**
+```js
+import { http, HttpResponse } from 'msw';
+
+export const handlers = [
+  // GET users list
+  http.get('/api/users', () => {
+    return HttpResponse.json([
+      { id: 1, name: 'Alice', email: 'alice@example.com' },
+      { id: 2, name: 'Bob', email: 'bob@example.com' },
+    ]);
+  }),
+
+  // GET single user
+  http.get('/api/users/:id', ({ params }) => {
+    const users = { '1': { id: 1, name: 'Alice' }, '2': { id: 2, name: 'Bob' } };
+    const user = users[params.id];
+    if (!user) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json(user);
+  }),
+
+  // POST create user
+  http.post('/api/users', async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({ id: 3, ...body }, { status: 201 });
+  }),
+
+  // DELETE user
+  http.delete('/api/users/:id', () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+];
+```
+
+**src/mocks/server.js (Node/Jest-এর জন্য):**
+```js
+import { setupServer } from 'msw/node';
+import { handlers } from './handlers';
+
+export const server = setupServer(...handlers);
+```
+
+**src/setupTests.js-এ add করুন:**
+```js
+import '@testing-library/jest-dom';
+import { server } from './mocks/server';
+
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+afterEach(() => server.resetHandlers()); // test-specific overrides reset
+afterAll(() => server.close());
+```
+
+**Error scenario test:**
+```js
+import { http, HttpResponse } from 'msw';
+import { server } from '../mocks/server';
+
+test('network error gracefully handle করে', async () => {
+  server.use(
+    http.get('/api/users', () => {
+      return HttpResponse.error(); // network failure simulate
+    })
+  );
+  
+  render(<UserList />);
+  expect(await screen.findByText(/network error/i)).toBeInTheDocument();
+});
+```
+
+---
+
+**Topic 7: Accessibility Testing**
+
+```bash
+npm install -D jest-axe
+```
+
+```js
+// components/Modal.test.jsx
+import { render } from '@testing-library/react';
+import { axe, toHaveNoViolations } from 'jest-axe';
+import Modal from './Modal';
+
+expect.extend(toHaveNoViolations);
+
+test('Modal has no accessibility violations', async () => {
+  const { container } = render(
+    <Modal isOpen={true} onClose={() => {}} title="Test Modal">
+      <p>Modal content</p>
+    </Modal>
+  );
+  
+  const results = await axe(container);
+  expect(results).toHaveNoViolations();
+});
+```
+
+**ARIA attributes test:**
+```js
+test('button has accessible name', () => {
+  render(<IconButton icon="close" ariaLabel="Close dialog" />);
+  
+  const button = screen.getByRole('button', { name: /close dialog/i });
+  expect(button).toHaveAttribute('aria-label', 'Close dialog');
+});
+
+test('form field has associated label', () => {
+  render(<EmailInput />);
+  
+  // getByLabelText verifies label-input association
+  expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+});
+
+test('error message linked to input', async () => {
+  const user = userEvent.setup();
+  render(<LoginForm />);
+  
+  await user.click(screen.getByRole('button', { name: /submit/i }));
+  
+  const errorMsg = await screen.findByRole('alert');
+  expect(errorMsg).toBeInTheDocument();
+  // aria-describedby check
+  expect(screen.getByLabelText(/email/i)).toHaveAttribute('aria-invalid', 'true');
+});
+```
+
+---
+
+**Topic 8: ESLint ও Prettier Setup**
+
+**Installation:**
+```bash
+# ESLint
+npm install -D eslint @eslint/js eslint-plugin-react eslint-plugin-react-hooks
+npm install -D eslint-plugin-jsx-a11y eslint-plugin-import
+
+# Prettier
+npm install -D prettier eslint-config-prettier eslint-plugin-prettier
+```
+
+**eslint.config.js (Flat config — ESLint 9+):**
+```js
+import js from '@eslint/js';
+import reactPlugin from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import prettier from 'eslint-config-prettier';
+
+export default [
+  js.configs.recommended,
+  {
+    plugins: {
+      react: reactPlugin,
+      'react-hooks': reactHooks,
+      'jsx-a11y': jsxA11y,
+    },
+    rules: {
+      // React
+      'react/prop-types': 'off',        // TypeScript থাকলে off
+      'react/react-in-jsx-scope': 'off', // React 17+ import লাগে না
+      'react/jsx-no-target-blank': 'error', // Security: noopener noreferrer
+      
+      // Hooks
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      
+      // Accessibility
+      'jsx-a11y/alt-text': 'error',
+      'jsx-a11y/anchor-has-content': 'error',
+      'jsx-a11y/click-events-have-key-events': 'warn',
+      
+      // General
+      'no-console': 'warn',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'prefer-const': 'error',
+      'no-var': 'error',
+    },
+    settings: {
+      react: { version: 'detect' },
+    },
+  },
+  prettier, // prettier-এর conflicting rules off করে
+];
+```
+
+**.prettierrc:**
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "arrowParens": "avoid",
+  "endOfLine": "lf"
+}
+```
+
+**package.json scripts:**
+```json
+{
+  "scripts": {
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  }
+}
+```
+
+**VSCode settings (.vscode/settings.json):**
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
+}
+```
+
+**Husky + lint-staged (commit-এ auto lint):**
+```bash
+npm install -D husky lint-staged
+npx husky init
+```
+
+**.husky/pre-commit:**
+```bash
+npx lint-staged
+```
+
+**package.json:**
+```json
+{
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
+    "src/**/*.{css,json,md}": "prettier --write"
+  }
+}
+```
+
+---
+
+**Topic 9: Folder Structure Best Practices**
+
+**Feature-based structure (recommended for medium-large apps):**
+```
+src/
+├── app/                    # App-wide setup
+│   ├── store.js            # Redux store
+│   ├── routes.jsx          # Route definitions
+│   └── App.jsx
+├── features/               # Feature modules
+│   ├── auth/
+│   │   ├── components/     # Feature-specific components
+│   │   │   ├── LoginForm.jsx
+│   │   │   └── RegisterForm.jsx
+│   │   ├── hooks/          # Feature-specific hooks
+│   │   │   └── useAuth.js
+│   │   ├── api/            # API calls
+│   │   │   └── authApi.js
+│   │   ├── store/          # Redux slice
+│   │   │   └── authSlice.js
+│   │   └── index.js        # Public API (barrel export)
+│   ├── products/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── api/
+│   │   └── index.js
+│   └── cart/
+│       ├── components/
+│       ├── hooks/
+│       ├── store/
+│       └── index.js
+├── shared/                 # Cross-feature shared code
+│   ├── components/         # Reusable UI components
+│   │   ├── Button/
+│   │   │   ├── Button.jsx
+│   │   │   ├── Button.test.jsx
+│   │   │   └── index.js
+│   │   ├── Modal/
+│   │   └── Table/
+│   ├── hooks/              # Generic custom hooks
+│   │   ├── useDebounce.js
+│   │   ├── useLocalStorage.js
+│   │   └── useWindowSize.js
+│   ├── utils/              # Pure utility functions
+│   │   ├── formatDate.js
+│   │   ├── formatCurrency.js
+│   │   └── validators.js
+│   └── types/              # TypeScript types (shared)
+├── pages/                  # Route components (thin wrappers)
+│   ├── HomePage.jsx
+│   ├── ProductsPage.jsx
+│   └── CheckoutPage.jsx
+├── assets/                 # Static files
+│   ├── images/
+│   └── fonts/
+├── styles/                 # Global styles
+│   ├── globals.css
+│   └── variables.css
+├── mocks/                  # MSW handlers (testing)
+│   ├── handlers.js
+│   └── server.js
+└── config/                 # App configuration
+    ├── constants.js
+    └── env.js
+```
+
+**Component folder pattern:**
+```
+Button/
+├── Button.jsx          # Component
+├── Button.test.jsx     # Tests (co-located)
+├── Button.module.css   # Styles
+└── index.js            # Re-export: export { default } from './Button'
+```
+
+**Barrel exports (index.js):**
+```js
+// features/auth/index.js
+export { default as LoginForm } from './components/LoginForm';
+export { default as RegisterForm } from './components/RegisterForm';
+export { useAuth } from './hooks/useAuth';
+export { authApi } from './api/authApi';
+// authSlice internal only — not exported
+```
+
+**Import rules:**
+```js
+// ✅ features একে অপরের internals import করে না
+import { LoginForm } from '@/features/auth'; // barrel থেকে
+
+// ❌ cross-feature direct import
+import LoginForm from '@/features/auth/components/LoginForm'; // avoid
+
+// ✅ shared-এ যা কেউ ব্যবহার করতে পারে
+import { Button } from '@/shared/components/Button';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+```
+
+---
+
+**Topic 10: Git Workflow ও Conventional Commits**
+
+**Feature Branch Workflow:**
+```bash
+# 1. main থেকে feature branch তৈরি
+git checkout main && git pull origin main
+git checkout -b feature/user-authentication
+
+# 2. কাজ করুন, ছোট commits করুন
+git add src/features/auth/
+git commit -m "feat(auth): add login form with validation"
+
+# 3. Push করুন
+git push origin feature/user-authentication
+
+# 4. Pull Request তৈরি করুন GitHub-এ
+# 5. Code review → merge → branch delete
+```
+
+**Conventional Commits format:**
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+```
+feat:     নতুন feature
+fix:      bug fix
+docs:     documentation change
+style:    formatting (no logic change)
+refactor: code restructure (no feature/fix)
+test:     test add/fix
+chore:    build, dependency update
+perf:     performance improvement
+ci:       CI/CD config change
+```
+
+**Examples:**
+```bash
+git commit -m "feat(auth): add JWT refresh token rotation"
+git commit -m "fix(cart): prevent negative quantity on decrement"
+git commit -m "docs(readme): add setup instructions for Windows"
+git commit -m "refactor(products): extract product card to shared component"
+git commit -m "test(auth): add login form validation tests"
+git commit -m "chore: upgrade React to 18.3.1"
+git commit -m "perf(images): lazy load product images below fold"
+
+# Breaking change
+git commit -m "feat(api)!: rename userId to user_id in responses
+
+BREAKING CHANGE: API response shape changed.
+Old: { userId: 1 }
+New: { user_id: 1 }"
+```
+
+**Useful Git commands:**
+```bash
+# Interactive rebase — commits clean করুন
+git rebase -i HEAD~3
+
+# Stash — অসম্পূর্ণ কাজ সরিয়ে রাখুন
+git stash push -m "WIP: cart feature"
+git stash pop
+
+# Cherry-pick — specific commit নিন
+git cherry-pick abc1234
+
+# Bisect — কোন commit bug আনল খুঁজুন
+git bisect start
+git bisect bad HEAD
+git bisect good v1.0.0
+
+# Log — সুন্দর format
+git log --oneline --graph --decorate --all
+```
+
+**Branch naming convention:**
+```
+feature/user-authentication
+feature/product-search-filter
+fix/cart-quantity-bug
+fix/login-redirect-issue
+hotfix/security-xss-fix
+chore/upgrade-dependencies
+release/v2.1.0
+```
+
+**Pull Request best practices:**
+```
+✅ PR ছোট রাখুন (300 lines এর নিচে)
+✅ Screenshot/GIF add করুন (UI change হলে)
+✅ Description-এ "what" এবং "why" লিখুন
+✅ Reviewers assign করুন
+✅ Draft PR — কাজ চলার সময়
+✅ Squash merge — clean history রাখতে
+✅ Delete branch after merge
+```
+
+---
+
+**PART 13 Quick Revision Table**
+
+| বিষয় | মূল কথা |
+|------|---------|
+| Testing Pyramid | Unit (বেশি) → Integration → E2E (কম) |
+| RTL philosophy | Behavior test করুন, implementation না |
+| getBy vs queryBy vs findBy | error/null/Promise |
+| MSW কী? | Network level mock — realistic testing |
+| jest-axe কী? | Automated accessibility violation detect |
+| ESLint কী করে? | Code quality rules enforce করে |
+| Prettier কী করে? | Code formatting auto-fix করে |
+| Feature-based structure | Feature folder-এ related সব কিছু |
+| Barrel export কী? | index.js দিয়ে public API define করা |
+| Conventional Commits | `type(scope): description` format |
+| Husky কী? | Git hooks — commit-এ auto lint/test |
+| Feature branch workflow | main → branch → PR → review → merge |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part14"></a>
+## PART 14: Bangladeshi Interview Preparation
+
+> এই PART শুধুমাত্র বাংলাদেশি job market-এর জন্য। Company profiles, salary expectations, CV tips, behavioral questions — সব কিছু বাস্তব অভিজ্ঞতার ভিত্তিতে।
+
+| # | বিষয় |
+|---|-------|
+| 1 | BD Tech Job Market Overview |
+| 2 | Top IT Companies — Profiles ও Culture |
+| 3 | Salary Guide (2025) |
+| 4 | CV ও GitHub Portfolio Tips |
+| 5 | Interview Process — Step by Step |
+| 6 | Behavioral Questions in Bangla |
+| 7 | Technical Phone/Video Interview Tips |
+| 8 | Live Coding ও Whiteboard Tactics |
+| 9 | Remote ও Freelance Opportunities |
+| 10 | Career Growth Roadmap |
+
+---
+
+**Topic 1: BD Tech Job Market Overview**
+
+**Bangladesh-এর IT sector (2025 snapshot):**
+```
+Software export: $1.4 billion+ (rapidly growing)
+IT professionals: 700,000+
+Major hubs: Dhaka (Gulshan, Banani, Uttara), Chittagong, Sylhet
+Growth areas: Fintech, e-commerce, health tech, edtech
+Remote work: বাড়ছে (post-COVID permanent shift)
+```
+
+**Job types:**
+| Type | Company | Salary Range | Work Style |
+|------|---------|--------------|-----------|
+| Software Development | IT firms, product co. | 25k–120k BDT | Office/Hybrid |
+| Frontend Engineer | Startups, agencies | 30k–100k BDT | Often remote-friendly |
+| Full-stack | All types | 35k–130k BDT | Mixed |
+| Remote (foreign client) | Freelance/remote first | $1,000–5,000/month | Home |
+| Freelancing | Upwork, Fiverr | Variable | Home |
+
+**Job portals:**
+```
+🇧🇩 Local: bdjobs.com, prothomalo jobs, chakri.com
+🌐 International: LinkedIn, Indeed, RemoteOK, We Work Remotely
+💻 Tech-specific: GitHub Jobs, Stack Overflow Jobs
+📱 Network: LinkedIn, local Facebook groups (BD Developer Community)
+```
+
+---
+
+**Topic 2: Top IT Companies — Profiles ও Culture**
+
+**Brain Station 23**
+```
+Type: Service company (outsourcing + product)
+Size: 1,000+ employees
+Tech stack: Java, .NET, React, Angular, Python
+Location: Dhaka (Banani), remote options
+Interview: 3 rounds — HR, Technical, Final
+Culture: Professional, structured, good L&D
+Perks: Health insurance, training budget, annual increment
+Junior SWE: 30,000 – 45,000 BDT
+```
+
+**Therap (BD) Ltd.**
+```
+Type: US-based product company (healthcare)
+Size: 500+ (BD office)
+Tech stack: Java, React, PostgreSQL
+Location: Dhaka (Gulshan)
+Interview: Online test + 2 technical rounds
+Culture: Quality-focused, process-driven, stable
+Perks: Best salary in BD for junior, USA standard product
+Junior SWE: 40,000 – 60,000 BDT
+```
+
+**BJIT Group**
+```
+Type: Japanese outsourcing
+Size: 1,000+ employees
+Tech stack: Java, React, TypeScript, embedded
+Location: Dhaka (Gulshan)
+Interview: Written test + technical + HR
+Culture: Disciplined, Japanese work culture influence
+Perks: Japan training opportunity, stable employment
+Junior SWE: 35,000 – 55,000 BDT
+```
+
+**Enosis Solutions**
+```
+Type: US/UK outsourcing
+Size: 300+
+Tech stack: .NET, React, Vue, TypeScript
+Location: Dhaka (Uttara)
+Interview: Coding test + 2 technical rounds
+Culture: Collaborative, clean code focus, code review culture
+Perks: Good tech exposure, growth opportunities
+Junior SWE: 30,000 – 50,000 BDT
+```
+
+**Kaz Software**
+```
+Type: US outsourcing
+Size: 200+
+Tech stack: React, Node.js, .NET, Python
+Location: Dhaka (Dhanmondi)
+Interview: Phone screening + technical + HR
+Culture: Flexible, work-life balance good
+Junior SWE: 25,000 – 40,000 BDT
+```
+
+**Product Companies (BD-based):**
+
+| Company | Product | Tech | Junior Range |
+|---------|---------|------|-------------|
+| Chaldal | Grocery delivery | React, Django | 35k–55k |
+| Shajgoj | Beauty e-commerce | React, Laravel | 30k–50k |
+| 10 Minute School | EdTech | React, Node | 30k–50k |
+| ShopUp | B2B commerce | React, Go | 35k–60k |
+| bKash (FinTech) | Mobile banking | React, Java | 45k–70k |
+| Pathao | Ride/Delivery | React Native | 40k–65k |
+
+**Startups ও Agencies:**
+```
+Advantage: Fast learning, ownership, flexible
+Disadvantage: Unstable, salary inconsistent, less process
+Tip: Good for 1-2 years experience building, then move
+```
+
+---
+
+**Topic 3: Salary Guide (2025)**
+
+**Frontend/React Developer Salary (Dhaka, BDT/month):**
+
+| Level | Experience | Range | Notes |
+|-------|-----------|-------|-------|
+| Junior | 0–1 year | 20,000–40,000 | Fresh graduate |
+| Junior-Mid | 1–2 years | 35,000–60,000 | After 1st job |
+| Mid-level | 2–4 years | 55,000–100,000 | Strong portfolio |
+| Senior | 4–7 years | 90,000–160,000 | Lead/architect |
+| Principal/Lead | 7+ years | 150,000–250,000+ | Rare, negotiable |
+
+**Salary factors:**
+```
+✅ Company type: Product > Outsourcing > Agency
+✅ Tech stack: React+TypeScript > React alone
+✅ English skill: Fluent = +20-30% premium
+✅ Portfolio: Strong projects = skip 1 level
+✅ Referral: Network hire pays more
+✅ Negotiation: Always negotiate (80% room)
+```
+
+**Remote (foreign company) earnings:**
+```
+Entry remote: $500–1,200/month
+Mid remote: $1,500–3,000/month
+Senior remote: $3,000–7,000/month
+
+Companies hiring BD developers remotely:
+- Toptal (top 3%, but premium rates)
+- Arc.dev
+- X-Team
+- Remote-first startups (LinkedIn "remote" filter)
+- Upwork (freelance platform)
+```
+
+**Increment pattern:**
+```
+Year 1: 15–25% increment (if performing well)
+Year 2: 20–30% (or job change for 40-60% jump)
+Tip: Job change every 2-3 years = fastest salary growth
+```
+
+---
+
+**Topic 4: CV ও GitHub Portfolio Tips**
+
+**CV essentials (1 page, PDF format):**
+```
+✅ Header: নাম, email, phone, GitHub URL, LinkedIn URL, portfolio URL
+✅ Summary: 2-3 lines — কী করেন, কী জানেন, কী খুঁজছেন
+✅ Skills: React, JavaScript, TypeScript, Next.js, Redux, REST API, Git
+✅ Projects: 2-3 best project (GitHub link + live demo)
+✅ Experience: Role, company, duration, 2-3 bullet achievements
+✅ Education: University, degree, CGPA (3.0+ হলে দিন)
+✅ Certifications: Meta React, Udemy certificates (relevant হলে)
+```
+
+**CV mistakes এড়িয়ে চলুন:**
+```
+❌ "Responsible for..." → ✅ "Built...", "Reduced...", "Increased..."
+❌ Objective section (outdated)
+❌ References available upon request
+❌ Photo (বেশিরভাগ modern companies prefer না)
+❌ Buzzwords without evidence: "passionate", "team player"
+❌ Typos ও grammar errors
+❌ 2+ pages (junior-এর জন্য)
+```
+
+**GitHub Profile:**
+```
+✅ Profile README — নিজের intro, skills, stats
+✅ Pinned repositories — 6টি best project pin করুন
+✅ Green contribution graph — daily commit habit
+✅ Project README — screenshot, live demo link, tech stack, setup guide
+✅ Commit messages: conventional commits follow করুন
+✅ Issues + PRs — open source contribute করুন (যেকোনো ছোট repo)
+```
+
+**Profile README template:**
+```markdown
+# Hi, I'm [Name] 👋
+
+React/Frontend Developer from Bangladesh 🇧🇩
+
+**Currently:** Junior SWE @ [Company] | Open to remote opportunities
+
+**Tech Stack:**
+React · TypeScript · Next.js · Redux Toolkit · Tailwind CSS · Node.js
+
+**Projects:**
+- [E-Commerce App](link) — React, Redux, Stripe integration
+- [Kanban Board](link) — Drag & Drop, Zustand, TypeScript
+- [Blog Platform](link) — Next.js, MDX, SEO optimized
+
+📫 [your@email.com](mailto:your@email.com) | [LinkedIn](link)
+```
+
+**Portfolio website:**
+```
+✅ Domain: yourname.dev বা yourname.com (yearly ~$15)
+✅ Tech: Next.js + Vercel (free hosting, fast)
+✅ Content: Projects with screenshots + tech badges
+✅ About: Brief story + contact form
+✅ Blog: Technical articles (bonus — shows expertise)
+✅ Mobile responsive + fast loading
+```
+
+---
+
+**Topic 5: Interview Process — Step by Step**
+
+**Typical BD IT Company Process:**
+
+```
+1️⃣  CV Screening (HR)
+    └── ATS system → human review
+    └── LinkedIn/Referral → faster
+
+2️⃣  HR Phone Screening (15-30 min)
+    └── Background, salary expectation, availability
+    └── Basic English check
+
+3️⃣  Online Assessment / Home Assignment (1-3 days)
+    └── Coding test (HackerRank / custom)
+    └── Or: Small project assignment
+    
+4️⃣  Technical Interview Round 1 (1 hour)
+    └── JavaScript fundamentals
+    └── React concepts
+    └── Problem solving (1-2 problems)
+
+5️⃣  Technical Interview Round 2 / System Design (30-60 min)
+    └── Project walkthrough
+    └── Architecture discussion
+    └── Senior/Lead interviewer
+
+6️⃣  Final / Culture Fit (30 min)
+    └── Behavioral questions
+    └── Team intro
+    └── Q&A session
+
+7️⃣  Offer → Negotiation → Acceptance
+```
+
+**Product company process (Chaldal, Therap, etc.) — stricter:**
+```
+→ Online test (DSA + system thinking)
+→ Technical round 1: Live coding
+→ Technical round 2: System design + past projects
+→ Bar raiser / culture interview
+→ Offer
+```
+
+**Preparation timeline:**
+```
+2 weeks before: DSA basics (Arrays, String, HashMap, Sorting)
+1 week before: React deep dive, project walkthrough practice
+3 days before: Behavioral answers, company research
+1 day before: Light review, good sleep, outfit ready
+```
+
+---
+
+**Topic 6: Behavioral Questions in Bangla**
+
+Interview-এ Bangla বা English দুটোতেই answer দেওয়া যায়। **STAR format** follow করুন: **S**ituation → **T**ask → **A**ction → **R**esult।
+
+---
+
+**"নিজের সম্পর্কে বলুন" (Tell me about yourself):**
+```
+"আমার নাম [নাম]। আমি [বিশ্ববিদ্যালয়] থেকে CSE/SE graduation করেছি [সাল]-এ।
+গত [X মাস/বছর] ধরে React এবং JavaScript নিয়ে কাজ করছি।
+আমার সবচেয়ে notable project হলো [project name] — যেখানে আমি [feature/achievement]।
+এখন আমি এমন একটি position খুঁজছি যেখানে [growth/impact/technology]।"
+```
+
+**"আপনার সবচেয়ে বড় weakness কী?"**
+```
+"আমি মাঝে মাঝে perfectionism-এ পড়ে যাই — একটা feature ঠিকমতো না হওয়া পর্যন্ত
+submit করতে চাই না। তবে এখন আমি শিখেছি 'good enough to ship' mindset রাখতে।
+Time-box করি — এতটুকু সময় দেব, তারপর submit করব।"
+```
+
+**"Deadline miss হয়েছে কখনো? কী করেছিলেন?"**
+```
+"হ্যাঁ, একবার [project]-এ আমার estimate ভুল ছিল। API integration-এ expected-এর
+double সময় লেগেছে। আমি immediately team lead-কে জানিয়েছি, scope কমিয়ে MVP
+deliver করেছি, এবং পরে missing features আনা হয়েছে। শিখেছি: estimate-এ buffer রাখতে
+এবং আগে blocker জানাতে।"
+```
+
+**"Team conflict কীভাবে handle করেছেন?"**
+```
+"একবার code review-তে colleague আমার approach নিয়ে disagreement ছিল।
+আমি first সুনেছি তার point of view, তারপর আমার reasoning explain করেছি।
+শেষে আমরা একটি third approach-এ agree করেছি যেটা দুজনেরই better মনে হয়েছে।
+Technical disagreement-এ data আর evidence দিয়ে কথা বলি — personal করি না।"
+```
+
+**"কেন এই company-তে join করতে চান?"**
+```
+"[Company] এর product আমি actually use করি — [product name]। আমি দেখেছি
+[specific feature/problem] যেটা interesting। আপনাদের tech stack (React + TypeScript)
+আমি use করছি, এবং আমার [specific skill] এখানে contribute করতে পারব।
+এছাড়া আপনাদের engineering culture সম্পর্কে [source]-এ পড়েছি — learning culture
+আমার কাছে important।"
+```
+
+**"৫ বছর পরে নিজেকে কোথায় দেখছেন?"**
+```
+"৫ বছর পরে আমি একজন senior-level engineer হতে চাই যে technical decisions নিতে
+পারে এবং junior developers-দের mentor করতে পারে। আমি open source-এ contribute
+করতে এবং হয়তো একটি product build করতে চাই। Short-term goal হলো এখানে
+strong foundation গড়া এবং real-world large codebase-এর experience নেওয়া।"
+```
+
+**"Salary expectation কত?"**
+```
+Strategy: Research করুন → Range দিন → Anchor high
+
+"আমি research করে দেখেছি এই role-এর জন্য Dhaka-তে [range] typical।
+আমার skills ও experience বিবেচনায় আমি [X] থেকে [Y] expect করছি।
+তবে total package (benefits, growth, learning) এর উপরও নির্ভর করে।"
+```
+
+---
+
+**Topic 7: Technical Phone/Video Interview Tips**
+
+**আগে:**
+```
+✅ Company research: product, tech blog, recent news
+✅ নিজের project ২-৩টি ভালো করে practice করুন (30 sec pitch)
+✅ Quiet environment নিশ্চিত করুন
+✅ Camera, mic, internet test করুন
+✅ Code editor ready রাখুন (VS Code বা CodeSandbox)
+✅ Water glass রাখুন
+✅ Resume প্রিন্ট বা screen-এ খোলা রাখুন
+```
+
+**Interview-এ:**
+```
+✅ প্রশ্ন না বুঝলে clarify করুন — guess করবেন না
+✅ Think aloud করুন — "আমি ভাবছি X approach নেব কারণ..."
+✅ জানেন না → "এই specific syntax মনে নেই তবে এভাবে approach করব..."
+✅ Body language: সোজা বসুন, camera-তে তাকান (screen নয়)
+✅ Specific উদাহরণ দিন — abstract answer এড়িয়ে চলুন
+✅ প্রশ্ন করুন শেষে (genuine curiosity দেখান)
+```
+
+**শেষে জিজ্ঞেস করুন:**
+```
+"এই role-এ প্রথম ৩০ দিনে কী করা expect করা হয়?"
+"Team-এর biggest technical challenge এখন কী?"
+"Engineering culture সম্পর্কে বলবেন — code review কীভাবে হয়?"
+"এই position কি recently তৈরি হয়েছে নাকি কেউ leave করেছেন?"
+```
+
+---
+
+**Topic 8: Live Coding ও Whiteboard Tactics**
+
+**Live coding-এ common patterns:**
+
+**React component build:**
+```jsx
+// Interviewer: "একটি todo app বানান"
+// আপনি প্রথমে structure জিজ্ঞেস করুন:
+// - State কোথায় থাকবে?
+// - Persist করতে হবে?
+// - Delete/edit feature দরকার?
+
+function TodoApp() {
+  const [todos, setTodos] = useState([]);
+  const [input, setInput] = useState('');
+
+  const addTodo = () => {
+    if (!input.trim()) return;
+    setTodos(prev => [...prev, { id: Date.now(), text: input, done: false }]);
+    setInput('');
+  };
+
+  const toggleTodo = (id) => {
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  };
+
+  const deleteTodo = (id) => {
+    setTodos(prev => prev.filter(t => t.id !== id));
+  };
+
+  return (
+    <div>
+      <input value={input} onChange={e => setInput(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && addTodo()} />
+      <button onClick={addTodo}>Add</button>
+      <ul>
+        {todos.map(todo => (
+          <li key={todo.id} style={{ textDecoration: todo.done ? 'line-through' : 'none' }}>
+            <span onClick={() => toggleTodo(todo.id)}>{todo.text}</span>
+            <button onClick={() => deleteTodo(todo.id)}>×</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+**Algorithm question strategy:**
+```
+1. প্রশ্ন সম্পূর্ণ বুঝুন — edge cases জিজ্ঞেস করুন
+2. Example দিয়ে নিজে verify করুন
+3. Brute force approach প্রথমে বলুন
+4. Optimize করুন — "O(n²) থেকে O(n) করা যায় HashMap দিয়ে"
+5. Code লিখুন — clean, readable
+6. Test করুন — edge cases: empty, single element, duplicates
+```
+
+**Common patterns Bangladeshi interviews-এ:**
+```js
+// Two Sum (HashMap)
+function twoSum(nums, target) {
+  const map = new Map();
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (map.has(complement)) return [map.get(complement), i];
+    map.set(nums[i], i);
+  }
+  return [];
+}
+
+// Reverse String
+const reverseStr = str => str.split('').reverse().join('');
+
+// Palindrome Check
+const isPalindrome = str => {
+  const clean = str.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return clean === clean.split('').reverse().join('');
+};
+
+// FizzBuzz (এখনো জিজ্ঞেস হয়!)
+for (let i = 1; i <= 100; i++) {
+  if (i % 15 === 0) console.log('FizzBuzz');
+  else if (i % 3 === 0) console.log('Fizz');
+  else if (i % 5 === 0) console.log('Buzz');
+  else console.log(i);
+}
+
+// Array flatten
+const flatten = arr => arr.reduce((acc, val) =>
+  Array.isArray(val) ? acc.concat(flatten(val)) : acc.concat(val), []);
+
+// Debounce (বহুবার জিজ্ঞেস হয়)
+function debounce(fn, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+```
+
+---
+
+**Topic 9: Remote ও Freelance Opportunities**
+
+**Remote job পাওয়ার strategy:**
+
+**Step 1 — English communication strong করুন:**
+```
+✅ Daily English writing practice (dev.to, Medium-এ article)
+✅ GitHub commit messages ও PR descriptions English-এ
+✅ LinkedIn-এ English-এ post করুন
+✅ Mock interview English-এ practice করুন
+```
+
+**Step 2 — Platform-based approach:**
+```
+Upwork (সবচেয়ে accessible):
+- Profile 100% complete করুন
+- First 3 months: low-rate bids করুন reviews পেতে
+- Niche specialize করুন (React + TypeScript + Next.js)
+- Portfolio দিন, proposal personalize করুন
+
+Fiverr:
+- Gig: "I will build React web app with TypeScript"
+- Fast delivery option রাখুন (+fee)
+- Package tiers: Basic/Standard/Premium
+
+Toptal/Arc.dev (premium):
+- Screening process কঠিন কিন্তু rates high
+- 1-2 বছর experience পরে apply করুন
+```
+
+**Step 3 — LinkedIn remote job hunting:**
+```
+Profile: "Open to Work" → Remote positions
+Search: "React developer remote" → Filter: Remote
+Keywords: "Remote-first", "Fully remote", "Work from anywhere"
+Timezone overlap: EU startups often accept BD timezone
+```
+
+**Remote work setup:**
+```
+Hardware:
+- Laptop: 16GB RAM minimum (development heavy)
+- Backup internet (mobile hotspot)
+- Good headphones (noise-cancelling preferred)
+- Webcam (if built-in is bad)
+
+Software:
+- Slack/Teams: communication
+- Zoom/Google Meet: video calls
+- Notion/Linear: project management
+- GitHub/GitLab: code collaboration
+
+Productivity:
+- Fixed working hours রাখুন
+- Daily standup attend করুন
+- Proactive communication — no radio silence
+- Time zone: "I'm UTC+6" — calendar shared রাখুন
+```
+
+**Freelance rates (BD developer, 2025):**
+```
+Beginner (0-1yr): $5-15/hour
+Junior (1-2yr): $15-30/hour
+Mid (2-4yr): $30-60/hour
+Senior (4+yr): $60-120/hour
+
+Project-based:
+- Landing page: $200-500
+- React app (medium): $1,000-3,000
+- Full-stack app: $3,000-10,000+
+```
+
+---
+
+**Topic 10: Career Growth Roadmap**
+
+**Junior React Developer → Senior Engineer (5-year path):**
+
+```
+Year 0-1: Foundation
+├── Strong JS fundamentals (closures, async, prototypes)
+├── React basics + hooks mastery
+├── 2-3 personal projects on GitHub
+├── First job (any good company)
+└── Goal: Learn team workflow, code review culture
+
+Year 1-2: Mid-junior
+├── TypeScript add করুন
+├── State management (Redux Toolkit / Zustand)
+├── Testing (RTL + Jest)
+├── Next.js basics
+└── Goal: Own features end-to-end, first promotion
+
+Year 2-3: Mid-level
+├── System design basics
+├── Performance optimization expertise
+├── CI/CD, Docker basics
+├── Tech blog / open source contributions শুরু
+└── Goal: Lead small features, mentor juniors, job switch for 40%+ raise
+
+Year 3-4: Mid-Senior
+├── Full-stack capability (Node.js / backend basics)
+├── Architecture decisions contribute
+├── Team leadership experience
+├── Speaking at meetups / writing articles
+└── Goal: Senior title, significant salary jump
+
+Year 4-5: Senior
+├── System design complex apps
+├── Engineering roadmap decisions
+├── Cross-team collaboration
+├── Remote senior role (international market)
+└── Goal: $3,000+/month remote or 150k+ BDT local
+```
+
+**Skills priority order (2025 BD market):**
+```
+Tier 1 (Must have):
+  React, JavaScript ES6+, Git, REST API, responsive CSS
+
+Tier 2 (Strong advantage):
+  TypeScript, Next.js, Testing (RTL/Jest), Redux Toolkit
+
+Tier 3 (Senior level):
+  System Design, Docker/K8s basics, CI/CD, Performance
+
+Tier 4 (Specialist):
+  React Native, GraphQL, Web3, AI integration
+```
+
+**Learning resources (free/affordable):**
+```
+Documentation:
+  react.dev (official, best), nextjs.org/docs, javascript.info
+
+YouTube:
+  Traversy Media, Codevolution, Jack Herrington, Theo (t3)
+  বাংলা: Stack Learner, Learn with Sumit, Programming Hero
+
+Courses:
+  Epic React (Kent C. Dodds) — best React course
+  Total TypeScript (Matt Pocock)
+  Josh W Comeau CSS courses
+  Udemy (sale-এ $10-15)
+
+Practice:
+  LeetCode (Easy/Medium), Frontend Mentor (UI challenges)
+  GreatFrontEnd (frontend-specific)
+
+Community:
+  BD Developer Community (Facebook Group)
+  React Bangladesh (local meetup)
+  dev.to (English articles লিখুন)
+  Twitter/X: follow Kent C. Dodds, Dan Abramov, Theo
+```
+
+**Networking in BD:**
+```
+✅ LinkedIn active থাকুন — Bengali IT people connect করুন
+✅ Bangladesh Developer Conference attend করুন
+✅ Local React meetup যোগ দিন
+✅ Open source: বাংলাদেশি founders-দের project-এ PR দিন
+✅ Ex-colleagues network maintain করুন — referral সবচেয়ে effective
+✅ Alumni network use করুন — BUET/SUST/KUET groups
+```
+
+**Offer receive করলে:**
+```
+1. লিখিত offer চান — verbal accept করবেন না
+2. সব terms review করুন: salary, benefits, notice period, probation
+3. Counter offer দিন (10-15% more ask করুন)
+4. Current employer-এর counter offer — সতর্ক থাকুন
+5. Joining date negotiation — notice period clear করুন
+6. Background check / bond — read carefully
+```
+
+---
+
+**PART 14 Quick Revision Table**
+
+| বিষয় | মূল কথা |
+|------|---------|
+| Top paying company | Therap BD > BJIT > Brain Station 23 > Enosis |
+| Junior salary range | 20,000–45,000 BDT (Dhaka, 2025) |
+| Remote entry level | $500–1,200/month |
+| CV length | 1 page, PDF, no photo |
+| GitHub must-have | Profile README + 6 pinned repos + green graph |
+| Interview rounds | HR → Test → Tech 1 → Tech 2 → Offer |
+| STAR format | Situation → Task → Action → Result |
+| Salary negotiation | Always counter, anchor high, range দিন |
+| Top freelance platform | Upwork (most accessible for BD) |
+| Career switch | Job change every 2-3yr = fastest growth |
+| Must-learn skills | React + TypeScript + Next.js + Testing |
+| BD community | BD Developer Community Facebook Group |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **🎉 সম্পূর্ণ হয়েছে!** React Junior Engineer Handbook — সকল 14টি PART লেখা শেষ।
+>
+> **Handbook Summary:**
+> - PART 1–2: React Fundamentals + Hooks
+> - PART 3–4: Architecture + Routing
+> - PART 5–6: State Management + API Integration
+> - PART 7–8: Performance + Advanced React
+> - PART 9–10: Auth + Projects
+> - PART 11–12: Interview Q&A + Next.js
+> - PART 13–14: Testing + BD Career Guide
