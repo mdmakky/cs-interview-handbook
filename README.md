@@ -32,7 +32,7 @@
 | 01 | 🧩 **Object-Oriented Programming (OOP)** | [OOP Guide →](./OOP_Junior_Engineer_BD_QA.md) | ✅ **Available** | Encapsulation, Inheritance, Polymorphism, Design Patterns, SOLID, Mock Interview |
 | 02 | 🗄️ **Database & SQL** | [Database Guide →](./Database_Junior_Engineer_BD_QA.md) | ✅ **Available** | SQL Queries, Normalization, Indexing, Transactions, NoSQL |
 | 03 | ⚡ **JavaScript** | [JavaScript Guide →](./JavaScript_Junior_Engineer_BD_QA.md) | ✅ **Available** | Variables, DOM, Async/Await, ES6+, React, Node.js, Performance |
-| 04 | ⚛️ **React** | _Coming Soon_ | 🔜 **Coming Soon** | Hooks, State Management, Virtual DOM, Performance, Testing |
+| 04 | ⚛️ **React** | [React Guide →](./React_Junior_Engineer_BD_QA.md) | 🔄 **In Progress** (PART 1–2) | Hooks, State Management, Virtual DOM, Performance, Testing |
 | 05 | 📊 **Data Structures & Algorithms** | [DSA Guide →](./DSA_Junior_Engineer_BD_QA.md) | ✅ **Available** | Array, Linked List, Stack, Queue, Tree, Graph, Sorting, DP, Backtracking, Bit Manipulation |
 | 06 | 🏗️ **System Design** | [System Design Guide →](./SystemDesign_Junior_Engineer_BD_QA.md) | ✅ **Available** | Scalability, CAP Theorem, Load Balancing, CDN, REST, JWT, Caching, Microservices |
 | 07 | 🐍 **Python** | [Python Guide →](./Python_Junior_Engineer_BD_QA.md) | ✅ **Complete** (PART 1–12) | Fundamentals, Data Structures, OOP, Advanced Python, File Handling, Backend, Automation, DSA, Testing, Projects |
