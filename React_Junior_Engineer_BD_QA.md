@@ -11652,4 +11652,1673 @@ Redux Persist দিয়ে localStorage-এ cart serialize করে solve �
 
 ---
 
-> **📌 পরবর্তী:** PART 11 — Interview Questions Bank *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 11 — Interview Questions Bank
+
+---
+
+<a id="part11"></a>
+## PART 11: Interview Questions Bank
+
+> 150+ curated questions — Theoretical, Coding, Tricky, এবং Bangladeshi company patterns। Junior থেকে Mid-level সব level cover করা হয়েছে।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Fundamentals Q&A](#p11-fundamentals) |
+| 2 | [React Hooks Q&A](#p11-hooks) |
+| 3 | [State Management Q&A](#p11-state) |
+| 4 | [Performance Q&A](#p11-perf) |
+| 5 | [Advanced Topics Q&A](#p11-advanced) |
+| 6 | [Coding Challenges](#p11-coding) |
+| 7 | [Tricky Questions](#p11-tricky) |
+| 8 | [BD Company Interview Patterns](#p11-bd) |
+
+---
+
+<a id="p11-fundamentals"></a>
+**Section A: React Fundamentals — Theoretical Q&A**
+
+---
+
+**Q1: React কী এবং এটা কীভাবে কাজ করে?**
+
+React হলো Facebook-এর তৈরি একটি JavaScript UI library। এটি component-based architecture ব্যবহার করে — UI-কে ছোট ছোট reusable pieces-এ ভাগ করে। React একটি Virtual DOM maintain করে, state/props পরিবর্তন হলে নতুন Virtual DOM তৈরি করে পুরোনোটির সাথে diff করে (reconciliation), এবং শুধু changed parts-ই real DOM-এ update করে।
+
+**Q2: JSX কী? Browser কি JSX বোঝে?**
+
+JSX (JavaScript XML) হলো JavaScript-এর একটি syntax extension যা HTML-এর মতো দেখতে। Browser সরাসরি JSX বোঝে না — Babel এটিকে `React.createElement()` calls-এ transpile করে। যেমন:
+```jsx
+// JSX
+const el = <h1 className="title">Hello</h1>;
+
+// Transpiled
+const el = React.createElement("h1", { className: "title" }, "Hello");
+```
+
+**Q3: Virtual DOM কী এবং Real DOM থেকে কীভাবে আলাদা?**
+
+| বিষয় | Real DOM | Virtual DOM |
+|------|----------|-------------|
+| কোথায় থাকে | Browser memory | JS memory (object) |
+| Update speed | ধীর (reflow/repaint) | দ্রুত (in-memory diff) |
+| Direct manipulation | হ্যাঁ | না (React করে) |
+| Re-render | পুরো tree | শুধু changed nodes |
+
+Virtual DOM React-এর একটি in-memory JavaScript object representation। State change হলে React নতুন Virtual DOM তৈরি করে, আগেরটির সাথে compare (diffing) করে, এবং minimal changes-ই real DOM-এ apply করে।
+
+**Q4: Reconciliation কী?**
+
+Reconciliation হলো React-এর প্রক্রিয়া যেখানে সে নির্ধারণ করে কোন DOM changes দরকার। React দুটি Virtual DOM tree compare করে:
+- Same type element → props update করে
+- Different type element → পুরো subtree unmount+remount করে
+- Lists → `key` prop দিয়ে identify করে
+
+**Q5: Props vs State পার্থক্য কী?**
+
+| | Props | State |
+|--|-------|-------|
+| কে নিয়ন্ত্রণ করে | Parent component | Component নিজে |
+| Mutable? | না (read-only) | হ্যাঁ (setter দিয়ে) |
+| Re-render trigger | Parent re-render করলে | setState call-এ |
+| কোথায় defined | Parent-এ | Component-এ |
+
+**Q6: Component কত ধরনের?**
+
+**Functional Component:**
+```jsx
+function Greeting({ name }) {
+  return <h1>Hello, {name}</h1>;
+}
+```
+**Class Component (legacy):**
+```jsx
+class Greeting extends React.Component {
+  render() { return <h1>Hello, {this.props.name}</h1>; }
+}
+```
+আধুনিক React-এ সবসময় Functional Component ব্যবহার করুন।
+
+**Q7: key prop কেন দরকার?**
+
+React list render করার সময় প্রতিটি item-কে uniquely identify করতে `key` ব্যবহার করে। Key ছাড়া React ভুলভাবে elements reuse করতে পারে:
+```jsx
+// ✅ সঠিক — stable unique id
+items.map(item => <Item key={item.id} data={item} />)
+
+// ❌ ভুল — index as key (sort/delete-এ bug হয়)
+items.map((item, i) => <Item key={i} data={item} />)
+```
+
+**Q8: Controlled vs Uncontrolled Component কী?**
+
+**Controlled:** Form value React state-এ থাকে, React সব কিছু control করে।
+```jsx
+const [val, setVal] = useState('');
+<input value={val} onChange={e => setVal(e.target.value)} />
+```
+**Uncontrolled:** DOM নিজে value রাখে, React ref দিয়ে পড়ে।
+```jsx
+const ref = useRef();
+<input ref={ref} defaultValue="hello" />
+```
+Controlled preferred — validation, formatting সহজ।
+
+**Q9: React.Fragment কেন ব্যবহার করি?**
+
+JSX-এ একটি root element থাকতে হয়। Extra `<div>` avoid করতে Fragment ব্যবহার করি:
+```jsx
+// Extra div add করে
+return <div><h1>Title</h1><p>Body</p></div>;
+
+// Fragment — no extra DOM node
+return <><h1>Title</h1><p>Body</p></>;
+// বা: <React.Fragment key={id}>...</React.Fragment>
+```
+
+**Q10: Lifting State Up কী?**
+
+দুটি sibling component-এর মধ্যে shared state থাকলে সেই state-কে তাদের common parent-এ নিয়ে যাওয়াকে lifting state up বলে:
+```jsx
+// Parent holds shared state
+function Parent() {
+  const [count, setCount] = useState(0);
+  return (
+    <>
+      <Display count={count} />
+      <Counter onIncrement={() => setCount(c => c + 1)} />
+    </>
+  );
+}
+```
+
+**Q11: React-এ event handling কীভাবে কাজ করে?**
+
+React synthetic events ব্যবহার করে — cross-browser consistent। Event names camelCase:
+```jsx
+// HTML: onclick="handleClick()"
+// React: onClick={handleClick}
+function Button() {
+  const handleClick = (e) => {
+    e.preventDefault(); // default behavior বন্ধ
+    e.stopPropagation(); // bubbling বন্ধ
+    console.log('clicked');
+  };
+  return <button onClick={handleClick}>Click</button>;
+}
+```
+
+**Q12: Conditional Rendering কতভাবে করা যায়?**
+
+```jsx
+// 1. if-else
+if (isLoggedIn) return <Dashboard />;
+return <Login />;
+
+// 2. Ternary
+return isLoggedIn ? <Dashboard /> : <Login />;
+
+// 3. && (short-circuit) — false হলে কিছু render হয় না
+return isLoggedIn && <Dashboard />;
+
+// 4. Switch case (multiple conditions)
+switch(role) {
+  case 'admin': return <AdminPanel />;
+  case 'user': return <UserPanel />;
+  default: return <GuestPanel />;
+}
+```
+
+**Q13: React.StrictMode কী করে?**
+
+Development-এ double-invoke করে lifecycle methods এবং state initializers — side effects detect করতে। Production-এ কোনো effect নেই। `useEffect` দুইবার run হওয়া StrictMode-এর কারণ।
+
+**Q14: Component কখন re-render হয়?**
+
+1. `setState` বা `useState` setter call হলে
+2. Parent component re-render হলে
+3. `useContext` এর value পরিবর্তন হলে
+4. `forceUpdate()` call হলে (class component)
+
+**Q15: Pure Component কী?**
+
+Same props/state দিলে same output দেয় এবং side effects নেই। `React.memo` দিয়ে functional component-কে memoize করা যায়:
+```jsx
+const Pure = React.memo(({ value }) => <div>{value}</div>);
+```
+
+---
+
+<a id="p11-hooks"></a>
+**Section B: React Hooks Q&A**
+
+---
+
+**Q16: Hooks কী এবং কেন আনা হয়েছে?**
+
+Hooks হলো React 16.8-এ আসা functions যা functional component-এ state ও lifecycle features ব্যবহার করতে দেয়। Class component-এর `this` binding, HOC hell, এবং logic reuse সমস্যা সমাধানের জন্য।
+
+**Q17: useState-এর lazy initialization কী?**
+
+Initial state হিসেবে function দিলে শুধু প্রথম render-এ call হয়:
+```jsx
+// ❌ প্রতি render-এ expensiveCalc() call হয়
+const [state, setState] = useState(expensiveCalc());
+
+// ✅ শুধু প্রথম render-এ
+const [state, setState] = useState(() => expensiveCalc());
+```
+
+**Q18: useEffect-এর dependency array না দিলে কী হয়?**
+
+```jsx
+useEffect(() => { ... });          // প্রতি render-এ চলে
+useEffect(() => { ... }, []);      // শুধু mount-এ চলে
+useEffect(() => { ... }, [id]);    // id পরিবর্তনে চলে
+```
+Cleanup function return করলে unmount বা next run-এর আগে call হয়।
+
+**Q19: useRef vs useState পার্থক্য কী?**
+
+| | useRef | useState |
+|--|--------|----------|
+| Re-render trigger | না | হ্যাঁ |
+| Value persist | হ্যাঁ | হ্যাঁ |
+| Use case | DOM access, timer | UI state |
+
+```jsx
+const count = useRef(0); // render না করে count track
+count.current++;         // directly mutate
+```
+
+**Q20: Custom Hook কী? Rules কী?**
+
+Custom Hook হলো `use` দিয়ে শুরু হওয়া function যা অন্য hooks ব্যবহার করে। Rules:
+1. শুধু top level-এ call করুন (loop/condition-এ না)
+2. শুধু React function-এ call করুন
+3. নাম `use` দিয়ে শুরু করতে হবে
+
+```jsx
+function useWindowSize() {
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight });
+  useEffect(() => {
+    const handler = () => setSize({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return size;
+}
+```
+
+**Q21: useMemo vs useCallback পার্থক্য কী?**
+
+```jsx
+// useMemo — value memoize করে
+const sorted = useMemo(() => items.sort(), [items]);
+
+// useCallback — function memoize করে
+const handleClick = useCallback(() => doSomething(id), [id]);
+```
+`useCallback(fn, deps)` === `useMemo(() => fn, deps)`
+
+**Q22: useReducer কখন useState-এর চেয়ে ভালো?**
+
+- Complex state logic (multiple sub-values)
+- Next state depends on previous state
+- Testing সহজ — pure reducer function
+
+```jsx
+const initialState = { count: 0, error: null, loading: false };
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment': return { ...state, count: state.count + 1 };
+    case 'reset': return initialState;
+    default: return state;
+  }
+}
+const [state, dispatch] = useReducer(reducer, initialState);
+dispatch({ type: 'increment' });
+```
+
+**Q23: useContext কীভাবে কাজ করে? Performance issue কী?**
+
+Context value change হলে সব `useContext` consumer re-render হয়। Solution:
+```jsx
+// ✅ Context split করুন
+const ThemeContext = createContext(null);
+const UserContext = createContext(null);
+
+// Context-এ value memo করুন
+const value = useMemo(() => ({ theme, setTheme }), [theme]);
+<ThemeContext.Provider value={value}>
+```
+
+**Q24: useLayoutEffect vs useEffect পার্থক্য?**
+
+| | useEffect | useLayoutEffect |
+|--|-----------|-----------------|
+| কখন চলে | Paint-এর পরে (async) | Paint-এর আগে (sync) |
+| Use case | API calls, subscriptions | DOM measurement, tooltip position |
+| Performance | ভালো | Block করে (সতর্কে ব্যবহার) |
+
+**Q25: Hooks rules কেন enforce করতে হয়?**
+
+React hooks call order-এর উপর নির্ভর করে internal state track করে। Conditional বা loop-এ hook call করলে order change হয় এবং wrong state এর সাথে map হয়:
+```jsx
+// ❌ Bug — render-এ হয়তো skip হবে
+if (condition) {
+  const [val, setVal] = useState(0); // hooks rules violation
+}
+```
+
+---
+
+<a id="p11-state"></a>
+**Section C: State Management Q&A**
+
+---
+
+**Q26: Context API vs Redux কখন কোনটা ব্যবহার করব?**
+
+| | Context API | Redux Toolkit |
+|--|------------|---------------|
+| Complexity | Simple | Medium-High |
+| DevTools | না | হ্যাঁ (time-travel) |
+| Middleware | না | হ্যাঁ (thunk, saga) |
+| Performance | Context split করতে হয় | Selector-based |
+| Team size | Small | Large |
+
+Rule of thumb: Theme, Auth-এর মতো infrequently changing data → Context। Complex async, large app → Redux।
+
+**Q27: Redux-এর 3টি মূল নীতি কী?**
+
+1. **Single source of truth:** পুরো app state একটি store-এ
+2. **State is read-only:** শুধু action dispatch করে change করা যায়
+3. **Changes via pure reducers:** Reducer = `(state, action) => newState`
+
+**Q28: Redux Toolkit-এ createSlice কী করে?**
+
+`createSlice` একসাথে reducer, actions, এবং action creators তৈরি করে। Immer internally ব্যবহার করে তাই mutable syntax লেখা যায়:
+```jsx
+const counterSlice = createSlice({
+  name: 'counter',
+  initialState: { value: 0 },
+  reducers: {
+    increment: state => { state.value += 1; }, // Immer handle করে
+    addBy: (state, action) => { state.value += action.payload; }
+  }
+});
+export const { increment, addBy } = counterSlice.actions;
+```
+
+**Q29: Zustand vs Redux পার্থক্য কী?**
+
+Zustand অনেক হালকা এবং boilerplate-free:
+```jsx
+// Zustand — মাত্র কয়েক লাইন
+const useStore = create(set => ({
+  count: 0,
+  increment: () => set(state => ({ count: state.count + 1 }))
+}));
+```
+Small-medium app-এ Zustand, large enterprise-এ Redux Toolkit prefer করুন।
+
+**Q30: Prop Drilling কী এবং কীভাবে এড়াবেন?**
+
+Prop drilling হলো intermediate components-এর মধ্য দিয়ে props pass করা যারা সেই data actually ব্যবহার করে না। Solutions:
+1. Context API
+2. Redux / Zustand
+3. Component composition (children prop)
+4. Render props pattern
+
+---
+
+<a id="p11-perf"></a>
+**Section D: Performance Q&A**
+
+---
+
+**Q31: React.memo কীভাবে কাজ করে?**
+
+Parent re-render হলে child-ও re-render হয় — React.memo এটি prevent করে props same থাকলে। Shallow comparison করে by default:
+```jsx
+const Child = React.memo(({ name, onClick }) => {
+  return <button onClick={onClick}>{name}</button>;
+}, (prevProps, nextProps) => {
+  // true return করলে re-render হবে না
+  return prevProps.name === nextProps.name;
+});
+```
+
+**Q32: Code Splitting কীভাবে করবেন?**
+
+```jsx
+import { lazy, Suspense } from 'react';
+
+// Route-based splitting — most effective
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+
+function App() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+**Q33: List virtualization কী এবং কখন দরকার?**
+
+10,000+ items render করলে DOM-এ একসাথে সব থাকলে browser ধীর হয়। Virtualization শুধু visible items render করে:
+```jsx
+import { FixedSizeList } from 'react-window';
+
+<FixedSizeList height={600} itemCount={10000} itemSize={50} width="100%">
+  {({ index, style }) => <div style={style}>Item {index}</div>}
+</FixedSizeList>
+```
+
+**Q34: Web Vitals কী? React-এ কীভাবে improve করবেন?**
+
+| Metric | মানে | Target |
+|--------|------|--------|
+| LCP | Largest Contentful Paint | ≤ 2.5s |
+| CLS | Cumulative Layout Shift | ≤ 0.1 |
+| INP | Interaction to Next Paint | ≤ 200ms |
+
+React-এ: Code split করুন, Image optimize করুন (width/height দিন), `useTransition` দিয়ে non-urgent updates defer করুন।
+
+**Q35: Bundle size কমাবেন কীভাবে?**
+
+1. Tree shaking — named exports ব্যবহার করুন
+2. Dynamic import — `import()` 
+3. External CDN for large libs (moment → day.js)
+4. Compression (gzip/brotli) Nginx-এ
+5. `vite-bundle-visualizer` দিয়ে analyze করুন
+
+---
+
+<a id="p11-advanced"></a>
+**Section E: Advanced Topics Q&A**
+
+---
+
+**Q36: Error Boundary কী? Hooks-এ কেন করা যায় না?**
+
+Error Boundary হলো class component যা child-এর render error catch করে fallback দেখায়। `getDerivedStateFromError` এবং `componentDidCatch` lifecycle methods দরকার — এখনো functional equivalent নেই। `react-error-boundary` package সহজ API দেয়:
+```jsx
+import { ErrorBoundary } from 'react-error-boundary';
+<ErrorBoundary fallback={<div>Something went wrong</div>}>
+  <RiskyComponent />
+</ErrorBoundary>
+```
+
+**Q37: Portal কী এবং কোথায় ব্যবহার করবেন?**
+
+Portal দিয়ে child component-কে parent-এর বাইরে অন্য DOM node-এ render করা যায়:
+```jsx
+import { createPortal } from 'react-dom';
+
+function Modal({ children }) {
+  return createPortal(
+    <div className="modal">{children}</div>,
+    document.getElementById('modal-root')
+  );
+}
+```
+Use case: Modal, Tooltip, Dropdown (z-index/overflow issues এড়াতে)।
+
+**Q38: Higher-Order Component (HOC) কী?**
+
+HOC হলো function যা component নেয় এবং enhanced component return করে:
+```jsx
+function withAuth(Component) {
+  return function AuthenticatedComponent(props) {
+    const { isLoggedIn } = useAuth();
+    if (!isLoggedIn) return <Navigate to="/login" />;
+    return <Component {...props} />;
+  };
+}
+const ProtectedDashboard = withAuth(Dashboard);
+```
+
+**Q39: Render Props pattern কী?**
+
+Component-এর `render` prop হিসেবে function দিয়ে logic share করা:
+```jsx
+function MouseTracker({ render }) {
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  return (
+    <div onMouseMove={e => setPos({ x: e.clientX, y: e.clientY })}>
+      {render(pos)}
+    </div>
+  );
+}
+// Usage:
+<MouseTracker render={({ x, y }) => <p>Mouse at {x}, {y}</p>} />
+```
+Modern React-এ custom hooks এই pattern replace করেছে।
+
+**Q40: Compound Component pattern কী?**
+
+Related components একসাথে group করার pattern:
+```jsx
+// Select, Select.Option, Select.Group একসাথে কাজ করে
+<Select value={val} onChange={setVal}>
+  <Select.Option value="a">Option A</Select.Option>
+  <Select.Option value="b">Option B</Select.Option>
+</Select>
+```
+`Context` দিয়ে parent-child এর মধ্যে state share করা হয়।
+
+**Q41: React Fiber কী?**
+
+React 16-তে আসা নতুন reconciliation engine। Fiber-এর মূল বৈশিষ্ট্য:
+- **Incremental rendering:** কাজ ছোট units-এ ভাগ করে pause/resume করতে পারে
+- **Priority lanes:** High priority updates (user input) আগে process করে
+- **Concurrent Mode সম্ভব হয়:** `useTransition`, `useDeferredValue` কাজ করে
+
+**Q42: Strict Mode-এ useEffect দুইবার চলে কেন?**
+
+React 18-এ StrictMode development-এ component mount → unmount → remount করে। এটি intentional — side effects-এর cleanup সঠিক কিনা test করতে। Production-এ হয় না।
+
+---
+
+<a id="p11-coding"></a>
+**Section F: Coding Challenges**
+
+---
+
+**Challenge 1: Custom useLocalStorage Hook**
+```jsx
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  const setStoredValue = useCallback((val) => {
+    try {
+      const newValue = val instanceof Function ? val(value) : val;
+      setValue(newValue);
+      localStorage.setItem(key, JSON.stringify(newValue));
+    } catch (error) {
+      console.error(error);
+    }
+  }, [key, value]);
+
+  return [value, setStoredValue];
+}
+```
+
+**Challenge 2: Infinite Scroll with Intersection Observer**
+```jsx
+function useInfiniteScroll(callback) {
+  const observerRef = useRef(null);
+  const lastItemRef = useCallback(node => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) callback();
+    });
+    if (node) observerRef.current.observe(node);
+  }, [callback]);
+  return lastItemRef;
+}
+
+// Usage:
+function PostList() {
+  const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const loadMore = useCallback(() => setPage(p => p + 1), []);
+  const lastRef = useInfiniteScroll(loadMore);
+  
+  return posts.map((post, i) => (
+    <div key={post.id} ref={i === posts.length - 1 ? lastRef : null}>
+      {post.title}
+    </div>
+  ));
+}
+```
+
+**Challenge 3: Debounce Hook**
+```jsx
+function useDebounce(value, delay = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
+```
+
+**Challenge 4: Shopping Cart Reducer**
+```jsx
+function cartReducer(state, action) {
+  switch (action.type) {
+    case 'ADD': {
+      const existing = state.find(item => item.id === action.payload.id);
+      if (existing) {
+        return state.map(item =>
+          item.id === action.payload.id
+            ? { ...item, qty: item.qty + 1 }
+            : item
+        );
+      }
+      return [...state, { ...action.payload, qty: 1 }];
+    }
+    case 'REMOVE':
+      return state.filter(item => item.id !== action.payload);
+    case 'UPDATE_QTY':
+      return state.map(item =>
+        item.id === action.payload.id
+          ? { ...item, qty: action.payload.qty }
+          : item
+      );
+    case 'CLEAR':
+      return [];
+    default:
+      return state;
+  }
+}
+```
+
+**Challenge 5: Form Validation without Library**
+```jsx
+function useForm(initialValues, validate) {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setValues(prev => ({ ...prev, [name]: value }));
+    if (touched[name]) {
+      const err = validate({ ...values, [name]: value });
+      setErrors(err);
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    const err = validate(values);
+    setErrors(err);
+  };
+
+  const handleSubmit = (onSubmit) => (e) => {
+    e.preventDefault();
+    const err = validate(values);
+    setErrors(err);
+    setTouched(Object.keys(initialValues).reduce((acc, k) => ({ ...acc, [k]: true }), {}));
+    if (Object.keys(err).length === 0) onSubmit(values);
+  };
+
+  return { values, errors, touched, handleChange, handleBlur, handleSubmit };
+}
+```
+
+**Challenge 6: useAsync Hook**
+```jsx
+function useAsync(asyncFn, deps = []) {
+  const [state, setState] = useState({ data: null, loading: false, error: null });
+
+  useEffect(() => {
+    let cancelled = false;
+    setState({ data: null, loading: true, error: null });
+    asyncFn()
+      .then(data => { if (!cancelled) setState({ data, loading: false, error: null }); })
+      .catch(error => { if (!cancelled) setState({ data: null, loading: false, error }); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+
+  return state;
+}
+```
+
+**Challenge 7: Throttle Hook**
+```jsx
+function useThrottle(value, limit = 300) {
+  const [throttled, setThrottled] = useState(value);
+  const lastRan = useRef(Date.now());
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (Date.now() - lastRan.current >= limit) {
+        setThrottled(value);
+        lastRan.current = Date.now();
+      }
+    }, limit - (Date.now() - lastRan.current));
+    return () => clearTimeout(handler);
+  }, [value, limit]);
+
+  return throttled;
+}
+```
+
+---
+
+<a id="p11-tricky"></a>
+**Section G: Tricky / Gotcha Questions**
+
+---
+
+**Tricky Q1: এই code-এ কী সমস্যা?**
+```jsx
+function Counter() {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCount(count + 1); // ❌ stale closure!
+    }, 1000);
+    return () => clearInterval(id);
+  }, []); // count নেই dependency-তে
+}
+```
+**সমস্যা:** `count` stale — সবসময় 0 থাকবে।
+**Fix:** `setCount(c => c + 1)` (functional update) বা `count` dependency-তে add করুন।
+
+---
+
+**Tricky Q2: কতবার render হবে?**
+```jsx
+function App() {
+  const [a, setA] = useState(0);
+  const [b, setB] = useState(0);
+
+  const handleClick = () => {
+    setA(1);
+    setB(2);
+  };
+  // handleClick call-এ কতবার re-render?
+}
+```
+**উত্তর:** একবার। React 18-এ automatic batching — event handler-এর সব setState একসাথে process হয়।
+
+---
+
+**Tricky Q3: এই component কি re-render হবে?**
+```jsx
+const obj = { name: 'Alice' }; // component-এর বাইরে
+
+function App() {
+  const [count, setCount] = useState(0);
+  return <Child data={obj} />;
+}
+
+const Child = React.memo(({ data }) => {
+  console.log('Child rendered');
+  return <div>{data.name}</div>;
+});
+```
+**উত্তর:** না। `obj` component-এর বাইরে — reference same থাকে। React.memo shallow comparison-এ same reference পাবে।
+
+---
+
+**Tricky Q4: এই code কী print করবে?**
+```jsx
+function App() {
+  const [count, setCount] = useState(0);
+  
+  const handleClick = () => {
+    setCount(count + 1);
+    setCount(count + 1);
+    setCount(count + 1);
+    // count এখন কত হবে?
+  };
+}
+```
+**উত্তর:** 1, কারণ তিনটিই `count + 1` = `0 + 1`। Fix: `setCount(c => c + 1)` তিনবার → 3 হবে।
+
+---
+
+**Tricky Q5: useEffect infinite loop কেন হচ্ছে?**
+```jsx
+function App() {
+  const [data, setData] = useState([]);
+  
+  useEffect(() => {
+    fetchData().then(res => setData(res));
+  }, [data]); // ❌ data dependency
+}
+```
+**সমস্যা:** setData → data change → useEffect → setData... অনন্ত loop।
+**Fix:** `[]` dependency বা `data` remove করুন।
+
+---
+
+**Tricky Q6: key change করলে কী হয়?**
+```jsx
+<UserForm key={userId} userId={userId} />
+```
+`key` change হলে React পুরো component unmount করে নতুন instance mount করে — সব state reset হয়। এটি intentional reset করার কৌশল।
+
+---
+
+**Tricky Q7: Event handler-এ `this` কেন undefined হয় (class component)?**
+```jsx
+class Button extends React.Component {
+  handleClick() {
+    console.log(this); // undefined!
+  }
+  render() {
+    return <button onClick={this.handleClick}>Click</button>; // ❌
+  }
+}
+```
+**Fix:** Arrow function বা constructor-এ bind: `this.handleClick = this.handleClick.bind(this)` বা `handleClick = () => {...}`
+
+---
+
+**Tricky Q8: Suspense boundary-এর বাইরে lazy component throw করলে?**
+
+Error হবে। প্রতিটি lazy component-কে nearest Suspense boundary-র ভেতরে রাখতে হবে। Nested Suspense দিয়ে granular loading states তৈরি করা যায়।
+
+---
+
+**Tricky Q9: useState initial value callback কখন কাজে লাগে?**
+```jsx
+// ব্যবহার হবে না — প্রতি render-এ JSON.parse() call হয়
+const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+
+// ✅ শুধু প্রথম render-এ parse হয়
+const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')));
+```
+
+---
+
+**Tricky Q10: Props drilling vs Context — কোনটা better?**
+
+Context সবসময় better না। Context value change হলে সব consumers re-render হয়। Small component trees-এ prop drilling সহজ এবং explicit। Context ব্যবহার করুন যখন: deep nesting, cross-cutting concerns (theme, auth, i18n)।
+
+---
+
+<a id="p11-bd"></a>
+**Section H: Bangladeshi Company Interview Patterns**
+
+---
+
+**Brain Station 23 — Interview Style:**
+
+Focus areas: Problem solving, OOP concepts, React fundamentals, team collaboration।
+
+সাধারণ প্রশ্ন:
+- "React-এর কোনো project বানিয়েছেন? সেখানে কী কী challenge face করেছিলেন?"
+- "REST API কীভাবে consume করেন React-এ?"
+- "Git workflow কী follow করেন?"
+- "Agile/Scrum কী? Daily standup কী?"
+- Live coding: Simple counter, todo list, API fetch with loading state
+
+**Therap BD — Interview Style:**
+
+Focus: Core CS fundamentals, Java/React hybrid, problem solving capacity।
+
+সাধারণ প্রশ্ন:
+- "JavaScript closures explain করুন। React-এ কোথায় দেখেছেন?"
+- "Async/await vs Promise chain — কী পার্থক্য?"
+- "Component design — কীভাবে reusable component বানাবেন?"
+- "Database query optimization জানেন?"
+- Algorithm: Array manipulation, string processing
+
+**BJIT Group — Interview Style:**
+
+Focus: Technical depth, React + TypeScript, system thinking।
+
+সাধারণ প্রশ্ন:
+- "TypeScript কী? React-এ Props কীভাবে type করবেন?"
+- "State management কোনটা prefer করেন এবং কেন?"
+- "CORS কী? React-এ এই error কীভাবে handle করেন?"
+- "Testing জানেন? Jest/React Testing Library?"
+- Project walkthrough: নিজের project explain করতে হবে
+
+**Enosis Solutions — Interview Style:**
+
+Focus: Clean code, best practices, scalable architecture।
+
+সাধারণ প্রশ্ন:
+- "SOLID principles explain করুন। React-এ কোথায় apply করেন?"
+- "Code review করার সময় কী কী দেখেন?"
+- "Performance optimization কীভাবে করেছেন কোনো project-এ?"
+- "Micro-frontend কী শুনেছেন?"
+- Pair programming session হতে পারে
+
+**Kaz Software / Leads Tech / Sourcecod — Interview Style:**
+
+Focus: Product thinking, quick delivery, communication।
+
+সাধারণ প্রশ্ন:
+- "React Router-এ protected route কীভাবে implement করবেন?"
+- "JWT authentication flow explain করুন।"
+- "Responsive design কীভাবে করেন? Tailwind ব্যবহার করেছেন?"
+- "Deadline pressure-এ কীভাবে কাজ করেন?"
+- Portfolio project-এর live demo দেখাতে হতে পারে
+
+**Chaldal / Shajgoj / Pathao (Product Companies):**
+
+Focus: Impact, scalability, user experience।
+
+সাধারণ প্রশ্ন:
+- "আমাদের app-এর কোন feature improve করবেন? কীভাবে?"
+- "1 million user-এর জন্য React app scale করবেন কীভাবে?"
+- "A/B testing কী? Feature flag কীভাবে implement করবেন?"
+- "Web accessibility (a11y) জানেন?"
+- Data-driven decisions, metrics সম্পর্কে জিজ্ঞেস করতে পারে
+
+**Common BD Interview Tips:**
+
+```
+✅ বাংলায় explain করতে comfortable থাকুন
+✅ নিজের project-এর প্রতিটি line explain করতে পারুন
+✅ "আমি জানি না কিন্তু শিখতে পারব" — honest থাকুন
+✅ GitHub profile সুন্দর রাখুন (README, contributions)
+✅ LeetCode Easy/Medium করুন (Arrays, String, HashMap)
+✅ সময়মতো যান, professional থাকুন
+✅ Salary expectation জানুন (Junior: 25-45k BDT, market research করুন)
+```
+
+---
+
+**PART 11 Quick Revision Table**
+
+| প্রশ্ন | উত্তর (এক লাইনে) |
+|--------|-----------------|
+| Virtual DOM কী? | JS-এ DOM-এর memory representation |
+| Reconciliation কী? | Old/new Virtual DOM diff করে minimal update |
+| Props vs State | Props = parent থেকে, State = component-এর নিজের |
+| key prop কেন? | List-এ items uniquely identify করতে |
+| useState lazy init | `useState(() => fn())` — শুধু প্রথম render-এ |
+| stale closure fix | Functional update: `setState(prev => ...)` |
+| React.memo কী? | Props same থাকলে re-render prevent করে |
+| useMemo vs useCallback | value vs function memoize |
+| Error Boundary কী? | Render error catch করে fallback দেখায় |
+| Portal কী? | Parent-এর বাইরে DOM-এ render করা |
+| Batching কী? | Multiple setState একসাথে process করা |
+| Code splitting কীভাবে? | `lazy()` + `Suspense` + dynamic import |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part12"></a>
+## PART 12: Next.js Basics
+
+> React developer-দের জন্য Next.js শেখা আজ প্রায় mandatory। App Router, Server Components, SSR/SSG/ISR — সব কিছু এখানে covered।
+
+| # | বিষয় |
+|---|-------|
+| 1 | Next.js পরিচিতি ও কেন ব্যবহার করব |
+| 2 | Pages Router vs App Router |
+| 3 | File-based Routing (layouts, loading, error) |
+| 4 | Server Components vs Client Components |
+| 5 | Data Fetching (SSG, SSR, ISR) |
+| 6 | Route Handlers (API Routes) |
+| 7 | next/image — Image Optimization |
+| 8 | Metadata API ও SEO |
+| 9 | Middleware |
+| 10 | Deployment ও Vercel |
+
+---
+
+**Topic 1: Next.js পরিচিতি ও কেন ব্যবহার করব**
+
+Next.js হলো Vercel-এর তৈরি React-এর উপর built full-stack framework। Pure React-এ যা নেই:
+
+| Feature | Pure React | Next.js |
+|---------|-----------|---------|
+| Server-side rendering | ❌ | ✅ |
+| File-based routing | ❌ | ✅ |
+| API routes | ❌ | ✅ |
+| Image optimization | ❌ | ✅ |
+| SEO (SSR/SSG) | কঠিন | সহজ |
+| Code splitting | manual | automatic |
+
+**কখন Next.js ব্যবহার করবেন:**
+- SEO important (blog, e-commerce, landing page)
+- Initial load performance critical
+- Full-stack app (frontend + backend একসাথে)
+- Server-side data fetching দরকার
+
+```bash
+# নতুন project তৈরি
+npx create-next-app@latest my-app
+# TypeScript, Tailwind, App Router — সব yes দিন
+```
+
+---
+
+**Topic 2: Pages Router vs App Router**
+
+**Pages Router (Next.js 12 এবং আগে):**
+```
+pages/
+├── index.js          → /
+├── about.js          → /about
+├── blog/
+│   ├── index.js      → /blog
+│   └── [id].js       → /blog/123
+├── api/
+│   └── users.js      → /api/users
+└── _app.js           → root layout
+```
+
+**App Router (Next.js 13+ — recommended):**
+```
+app/
+├── page.js           → /
+├── layout.js         → root layout
+├── about/
+│   └── page.js       → /about
+├── blog/
+│   ├── page.js       → /blog
+│   └── [id]/
+│       └── page.js   → /blog/123
+└── api/
+    └── users/
+        └── route.js  → /api/users
+```
+
+App Router-এর সুবিধা:
+- Server Components by default
+- Nested layouts
+- Streaming (Suspense-based)
+- `loading.js`, `error.js` per-segment
+
+---
+
+**Topic 3: File-based Routing**
+
+**Special files:**
+```
+app/
+├── layout.js         → Shared UI (persists across navigation)
+├── page.js           → Route UI
+├── loading.js        → Suspense fallback
+├── error.js          → Error boundary
+├── not-found.js      → 404 page
+└── template.js       → Re-renders on every navigation
+```
+
+**Root Layout (required):**
+```jsx
+// app/layout.js
+export default function RootLayout({ children }) {
+  return (
+    <html lang="bn">
+      <body>
+        <Header />
+        <main>{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
+```
+
+**Dynamic Routes:**
+```
+app/blog/[slug]/page.js     → /blog/my-post
+app/shop/[...slug]/page.js  → /shop/a/b/c (catch-all)
+app/shop/[[...slug]]/page.js → /shop + /shop/a/b (optional)
+```
+
+```jsx
+// app/blog/[slug]/page.js
+export default function BlogPost({ params }) {
+  return <h1>Post: {params.slug}</h1>;
+}
+
+// Static params generate করা (SSG-এর জন্য)
+export async function generateStaticParams() {
+  const posts = await fetchAllPosts();
+  return posts.map(post => ({ slug: post.slug }));
+}
+```
+
+**Loading UI:**
+```jsx
+// app/blog/loading.js — automatically shown during page load
+export default function Loading() {
+  return <BlogSkeleton />;
+}
+```
+
+**Error Handling:**
+```jsx
+// app/blog/error.js
+'use client'; // Error components must be client components
+export default function Error({ error, reset }) {
+  return (
+    <div>
+      <h2>কিছু একটা ভুল হয়েছে!</h2>
+      <p>{error.message}</p>
+      <button onClick={() => reset()}>আবার চেষ্টা করুন</button>
+    </div>
+  );
+}
+```
+
+**Route Groups (URL affect করে না):**
+```
+app/
+├── (auth)/
+│   ├── login/page.js    → /login
+│   └── register/page.js → /register
+└── (dashboard)/
+    ├── layout.js        → dashboard-specific layout
+    └── home/page.js     → /home
+```
+
+---
+
+**Topic 4: Server Components vs Client Components**
+
+Next.js App Router-এ সব components default Server Component।
+
+| | Server Component | Client Component |
+|--|-----------------|-----------------|
+| Rendering | Server-এ | Browser-এ |
+| `useState`, `useEffect` | ❌ | ✅ |
+| Event handlers | ❌ | ✅ |
+| Browser APIs | ❌ | ✅ |
+| Direct DB access | ✅ | ❌ |
+| `async/await` | ✅ | ❌ (top level) |
+| Bundle size | 0 JS sent | JS bundle-এ যায় |
+
+**Client Component:**
+```jsx
+'use client'; // এই directive শুরুতে দিতে হবে
+
+import { useState } from 'react';
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
+}
+```
+
+**Server Component (async data fetch):**
+```jsx
+// app/posts/page.js — NO 'use client' needed
+async function getPosts() {
+  const res = await fetch('https://api.example.com/posts', {
+    next: { revalidate: 3600 } // ISR — 1 hour
+  });
+  return res.json();
+}
+
+export default async function PostsPage() {
+  const posts = await getPosts(); // সরাসরি await!
+  return (
+    <ul>
+      {posts.map(post => <li key={post.id}>{post.title}</li>)}
+    </ul>
+  );
+}
+```
+
+**Pattern: Server wraps Client**
+```jsx
+// ✅ Server Component-এ Client Component use করা যায়
+export default async function Page() {
+  const data = await fetchData(); // server-side
+  return (
+    <div>
+      <h1>Server rendered heading</h1>
+      <ClientInteractiveWidget data={data} /> {/* client component */}
+    </div>
+  );
+}
+```
+
+**`use server` directive:**
+```jsx
+// Server Actions — form submit বা button click-এ server function call
+async function createPost(formData) {
+  'use server';
+  const title = formData.get('title');
+  await db.post.create({ data: { title } });
+  revalidatePath('/posts');
+}
+
+export default function NewPostForm() {
+  return (
+    <form action={createPost}>
+      <input name="title" required />
+      <button type="submit">Post তৈরি করুন</button>
+    </form>
+  );
+}
+```
+
+---
+
+**Topic 5: Data Fetching Strategies**
+
+**1. SSG — Static Site Generation (Build time):**
+```jsx
+// app/blog/[slug]/page.js
+export default async function BlogPost({ params }) {
+  const post = await fetch(`/api/posts/${params.slug}`).then(r => r.json());
+  return <article>{post.content}</article>;
+}
+
+// Build time-এ কোন pages generate করব
+export async function generateStaticParams() {
+  const posts = await fetch('/api/posts').then(r => r.json());
+  return posts.map(p => ({ slug: p.slug }));
+}
+```
+**Best for:** Blog, docs, marketing pages (rarely changes)
+
+**2. SSR — Server-side Rendering (Request time):**
+```jsx
+// cache: 'no-store' → প্রতি request-এ fresh data
+async function getUser(id) {
+  const res = await fetch(`/api/users/${id}`, { cache: 'no-store' });
+  return res.json();
+}
+
+export default async function UserProfile({ params }) {
+  const user = await getUser(params.id);
+  return <div>Welcome, {user.name}</div>;
+}
+```
+**Best for:** User dashboard, personalized content, real-time data
+
+**3. ISR — Incremental Static Regeneration:**
+```jsx
+// revalidate: 60 → ৬০ সেকেন্ড পরে background-এ rebuild
+async function getProducts() {
+  const res = await fetch('/api/products', {
+    next: { revalidate: 60 }
+  });
+  return res.json();
+}
+```
+**Best for:** Product catalog, news, data that changes occasionally
+
+**4. On-demand Revalidation:**
+```jsx
+// app/api/revalidate/route.js
+import { revalidatePath, revalidateTag } from 'next/cache';
+
+export async function POST(req) {
+  const { path } = await req.json();
+  revalidatePath(path); // specific path clear
+  // অথবা: revalidateTag('products') — tagged cache clear
+  return Response.json({ revalidated: true });
+}
+```
+
+**fetch() cache options summary:**
+```jsx
+fetch(url)                          // default: force-cache (SSG)
+fetch(url, { cache: 'no-store' })   // SSR — no cache
+fetch(url, { next: { revalidate: 60 } }) // ISR
+fetch(url, { next: { tags: ['products'] } }) // tag-based revalidation
+```
+
+---
+
+**Topic 6: Route Handlers (API Routes)**
+
+App Router-এ `route.js` ফাইল API endpoint তৈরি করে:
+
+```jsx
+// app/api/posts/route.js
+import { NextResponse } from 'next/server';
+
+// GET /api/posts
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const page = searchParams.get('page') || '1';
+  
+  const posts = await db.post.findMany({
+    skip: (parseInt(page) - 1) * 10,
+    take: 10
+  });
+  
+  return NextResponse.json({ posts, page });
+}
+
+// POST /api/posts
+export async function POST(request) {
+  const body = await request.json();
+  const post = await db.post.create({ data: body });
+  return NextResponse.json(post, { status: 201 });
+}
+```
+
+**Dynamic Route Handler:**
+```jsx
+// app/api/posts/[id]/route.js
+export async function GET(request, { params }) {
+  const post = await db.post.findUnique({ where: { id: params.id } });
+  if (!post) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  return NextResponse.json(post);
+}
+
+export async function DELETE(request, { params }) {
+  await db.post.delete({ where: { id: params.id } });
+  return new Response(null, { status: 204 });
+}
+```
+
+**Authentication in Route Handler:**
+```jsx
+import { getServerSession } from 'next-auth';
+
+export async function GET(request) {
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  // authenticated request handle করুন
+}
+```
+
+---
+
+**Topic 7: next/image — Image Optimization**
+
+`next/image` automatically: resize, WebP conversion, lazy loading, CLS prevention করে।
+
+```jsx
+import Image from 'next/image';
+
+// Local image
+import avatar from '@/public/avatar.jpg';
+<Image src={avatar} alt="User avatar" />
+
+// Remote image — width/height required
+<Image
+  src="https://example.com/photo.jpg"
+  alt="Photo"
+  width={800}
+  height={600}
+  priority  // LCP image-এ দিন (above-the-fold)
+/>
+
+// Fill — parent container fill করে
+<div style={{ position: 'relative', height: '400px' }}>
+  <Image
+    src="/hero.jpg"
+    alt="Hero"
+    fill
+    style={{ objectFit: 'cover' }}
+  />
+</div>
+```
+
+**Remote images allow করতে (next.config.js):**
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.githubusercontent.com',
+      }
+    ],
+  },
+};
+export default nextConfig;
+```
+
+**Responsive images:**
+```jsx
+<Image
+  src="/banner.jpg"
+  alt="Banner"
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+  fill
+  style={{ objectFit: 'cover' }}
+/>
+```
+
+---
+
+**Topic 8: Metadata API ও SEO**
+
+**Static Metadata:**
+```jsx
+// app/about/page.js
+export const metadata = {
+  title: 'আমাদের সম্পর্কে | MyApp',
+  description: 'আমাদের team ও mission সম্পর্কে জানুন।',
+  openGraph: {
+    title: 'আমাদের সম্পর্কে',
+    description: 'আমাদের team ও mission সম্পর্কে জানুন।',
+    images: ['/og-about.jpg'],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'আমাদের সম্পর্কে',
+  },
+};
+```
+
+**Dynamic Metadata (data-based):**
+```jsx
+// app/blog/[slug]/page.js
+export async function generateMetadata({ params }) {
+  const post = await getPost(params.slug);
+  
+  return {
+    title: `${post.title} | Blog`,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      images: [post.coverImage],
+      publishedTime: post.publishedAt,
+      type: 'article',
+    },
+    alternates: {
+      canonical: `https://myapp.com/blog/${params.slug}`,
+    },
+  };
+}
+```
+
+**Metadata Template (root layout):**
+```jsx
+// app/layout.js
+export const metadata = {
+  title: {
+    default: 'MyApp',
+    template: '%s | MyApp', // child page title এখানে %s হবে
+  },
+  description: 'Best app ever',
+  metadataBase: new URL('https://myapp.com'), // absolute URLs-এর জন্য
+};
+```
+
+**robots.txt ও sitemap:**
+```jsx
+// app/robots.js
+export default function robots() {
+  return {
+    rules: { userAgent: '*', allow: '/' },
+    sitemap: 'https://myapp.com/sitemap.xml',
+  };
+}
+
+// app/sitemap.js
+export default async function sitemap() {
+  const posts = await getAllPosts();
+  return [
+    { url: 'https://myapp.com', lastModified: new Date() },
+    ...posts.map(post => ({
+      url: `https://myapp.com/blog/${post.slug}`,
+      lastModified: post.updatedAt,
+    })),
+  ];
+}
+```
+
+---
+
+**Topic 9: Middleware**
+
+Middleware request পৌঁছানোর আগে intercept করে — auth check, redirect, header modification।
+
+```jsx
+// middleware.js (root-এ, app/ বাইরে)
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+
+export async function middleware(request) {
+  const token = await getToken({ req: request });
+  const { pathname } = request.nextUrl;
+
+  // Auth check
+  const protectedPaths = ['/dashboard', '/profile', '/settings'];
+  const isProtected = protectedPaths.some(p => pathname.startsWith(p));
+
+  if (isProtected && !token) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Role-based check
+  if (pathname.startsWith('/admin') && token?.role !== 'admin') {
+    return NextResponse.redirect(new URL('/403', request.url));
+  }
+
+  // Custom header add
+  const response = NextResponse.next();
+  response.headers.set('x-pathname', pathname);
+  return response;
+}
+
+// কোন paths-এ middleware চলবে
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+  ],
+};
+```
+
+**Internationalization (i18n) redirect:**
+```jsx
+export function middleware(request) {
+  const { pathname } = request.nextUrl;
+  const locale = getLocale(request); // Accept-Language header পড়ুন
+  
+  if (!pathname.startsWith(`/${locale}`)) {
+    return NextResponse.redirect(new URL(`/${locale}${pathname}`, request.url));
+  }
+}
+```
+
+---
+
+**Topic 10: Deployment ও Vercel**
+
+**Vercel Deploy (সহজতম):**
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+
+# Production deploy
+vercel --prod
+```
+
+**Environment Variables:**
+```bash
+# .env.local (local development)
+DATABASE_URL="postgresql://..."
+NEXTAUTH_SECRET="your-secret"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Public variables (browser-এ accessible)
+NEXT_PUBLIC_API_URL="https://api.example.com"
+```
+
+**Vercel dashboard-এ:** Settings → Environment Variables-এ add করুন।
+
+**next.config.js — Common configurations:**
+```js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Standalone output (Docker deploy-এর জন্য)
+  output: 'standalone',
+  
+  // Redirect
+  async redirects() {
+    return [
+      { source: '/old-path', destination: '/new-path', permanent: true },
+    ];
+  },
+  
+  // Rewrite (proxy)
+  async rewrites() {
+    return [
+      { source: '/api/v1/:path*', destination: 'https://backend.example.com/:path*' },
+    ];
+  },
+  
+  // Turbopack (Next.js 15+ default)
+  experimental: {
+    turbo: {},
+  },
+};
+export default nextConfig;
+```
+
+**Docker deploy:**
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV production
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+**Performance checklist:**
+```
+✅ Image: next/image ব্যবহার করুন, priority LCP image-এ
+✅ Font: next/font দিয়ে Google Fonts load করুন (zero layout shift)
+✅ Bundle: dynamic imports দিয়ে code split করুন
+✅ Cache: fetch() revalidate সঠিকভাবে set করুন
+✅ Metadata: প্রতিটি page-এ title + description
+✅ CSP headers: next.config.js-এ security headers add করুন
+✅ Rate limiting: API routes-এ implement করুন
+```
+
+**next/font example:**
+```jsx
+// app/layout.js
+import { Inter, Hind_Siliguri } from 'next/font/google';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const hind = Hind_Siliguri({
+  subsets: ['bengali'],
+  weight: ['400', '500', '600'],
+  variable: '--font-hind'
+});
+
+export default function RootLayout({ children }) {
+  return (
+    <html className={`${inter.variable} ${hind.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+---
+
+**PART 12 Quick Revision Table**
+
+| বিষয় | মূল কথা |
+|------|---------|
+| Next.js কী? | React-এর উপর full-stack framework (SSR, routing, API) |
+| App Router কী? | Next.js 13+-এর নতুন routing system, `app/` directory |
+| Server Component | Server-এ render, no useState/useEffect, async/await সরাসরি |
+| `'use client'` | Browser APIs, state, event handlers দরকার হলে |
+| SSG | Build time-এ generate, `generateStaticParams` |
+| SSR | প্রতি request-এ `cache: 'no-store'` |
+| ISR | `next: { revalidate: N }` — background rebuild |
+| Route Handler | `route.js` ফাইল — API endpoint |
+| next/image | Auto optimize, lazy load, CLS prevent |
+| Metadata API | `export const metadata` বা `generateMetadata()` |
+| Middleware | `middleware.js` — auth check, redirect, headers |
+| Server Actions | `'use server'` — form/button থেকে server function call |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 13 — Testing & Best Practices *(Next request এ লিখব)*
