@@ -27,7 +27,7 @@
 | 📒 | [**PART 7** — Frontend Development](#part7) | SPA, Virtual DOM, React Basics, State Management | 🔜 |
 | 📃 | [**PART 8** — Node.js & Backend](#part8) | Express.js, REST API, JWT, Streams, Middleware | 🔜 |
 | 📑 | [**PART 9** — Coding Interview Q&A](#part9) | 150 Theoretical + 100 Coding + 30 Tricky Questions | ✅ |
-| 🗂️ | [**PART 10** — Mini Projects](#part10) | Todo App, Weather App, Calculator, Auth System, CRUD | 🔜 |
+| 🗂️ | [**PART 10** — Mini Projects](#part10) | Todo App, Weather App, Calculator, Auth System, CRUD | ✅ |
 | ⚡ | [**PART 11** — Performance & Optimization](#part11) | Lazy Loading, Memory Leaks, Code Splitting, Tree Shaking | 🔜 |
 | 🇧🇩 | [**PART 12** — BD Interview Prep](#part12) | Mock Interview, Company Patterns, Fresher Tips, Rapid-fire | 🔜 |
 
@@ -158,7 +158,13 @@
 <summary><strong>🗂️ PART 10 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-*(শীঘ্রই আসছে)*
+- [১০.১ Todo App](#১০১-todo-app)
+- [১০.২ Weather App](#১০২-weather-app)
+- [১০.৩ Calculator](#১০৩-calculator)
+- [১০.৪ Authentication System](#১০৪-authentication-system)
+- [১০.৫ CRUD App with Express](#১০৫-crud-app-with-express)
+- [১০.৬ Real-Time Chat (WebSocket)](#১০৬-real-time-chat-websocket)
+- [১০.৭ Interview Project Tips](#১০৭-interview-project-tips)
 
 </details>
 
@@ -10059,3 +10065,1111 @@ console.log(obj.greetArrow());
 > **🚀 PART 10 আসছে:** Problem Solving & Mini Projects — Todo App, Weather App, Calculator, Authentication System, Full CRUD App with Express।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 10 দাও" লিখুন।
+
+
+---
+
+<a id="part10"></a>
+
+# PART 10 — Problem Solving & Mini Projects
+
+> **📍 এই PART-এর Sections:** [১০.১ Todo App](#১০১-todo-app) · [১০.২ Weather App](#১০২-weather-app) · [১০.৩ Calculator](#১০৩-calculator) · [১০.৪ Authentication System](#১০৪-authentication-system) · [১০.৫ CRUD App with Express](#১০৫-crud-app-with-express) · [১০.৬ Real-Time Chat (WebSocket)](#১০৬-real-time-chat-websocket) · [১০.৭ Interview Project Tips](#১০৭-interview-project-tips)
+
+---
+
+## ১০.১ Todo App
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 Features
+- Add, complete, delete todos
+- Filter: All / Active / Completed
+- localStorage persistence
+- Item count
+
+### 💻 Vanilla JavaScript Todo App
+
+```javascript
+// todo.js — Complete implementation
+class TodoApp {
+  constructor() {
+    this.todos = JSON.parse(localStorage.getItem("todos")) || [];
+    this.filter = "all"; // all | active | completed
+    this.nextId = this.todos.length ? Math.max(...this.todos.map(t => t.id)) + 1 : 1;
+
+    this.form = document.getElementById("todo-form");
+    this.input = document.getElementById("todo-input");
+    this.list = document.getElementById("todo-list");
+    this.filterBtns = document.querySelectorAll(".filter-btn");
+    this.countEl = document.getElementById("count");
+    this.clearBtn = document.getElementById("clear-completed");
+
+    this.bindEvents();
+    this.render();
+  }
+
+  bindEvents() {
+    this.form.addEventListener("submit", e => {
+      e.preventDefault();
+      this.addTodo();
+    });
+
+    this.filterBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        this.filter = btn.dataset.filter;
+        this.filterBtns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        this.render();
+      });
+    });
+
+    this.clearBtn.addEventListener("click", () => {
+      this.todos = this.todos.filter(t => !t.completed);
+      this.save();
+      this.render();
+    });
+
+    // Event delegation for list items
+    this.list.addEventListener("click", e => {
+      const id = parseInt(e.target.closest("[data-id]")?.dataset.id);
+      if (!id) return;
+      if (e.target.classList.contains("toggle")) this.toggleTodo(id);
+      if (e.target.classList.contains("delete")) this.deleteTodo(id);
+    });
+  }
+
+  addTodo() {
+    const text = this.input.value.trim();
+    if (!text) return;
+
+    this.todos.push({
+      id: this.nextId++,
+      text,
+      completed: false,
+      createdAt: new Date().toISOString()
+    });
+    this.input.value = "";
+    this.save();
+    this.render();
+  }
+
+  toggleTodo(id) {
+    const todo = this.todos.find(t => t.id === id);
+    if (todo) todo.completed = !todo.completed;
+    this.save();
+    this.render();
+  }
+
+  deleteTodo(id) {
+    this.todos = this.todos.filter(t => t.id !== id);
+    this.save();
+    this.render();
+  }
+
+  save() {
+    localStorage.setItem("todos", JSON.stringify(this.todos));
+  }
+
+  getFiltered() {
+    return this.todos.filter(todo => {
+      if (this.filter === "active") return !todo.completed;
+      if (this.filter === "completed") return todo.completed;
+      return true;
+    });
+  }
+
+  render() {
+    const filtered = this.getFiltered();
+    const activeCount = this.todos.filter(t => !t.completed).length;
+
+    this.list.innerHTML = filtered.map(todo => `
+      <li class="todo-item ${todo.completed ? "completed" : ""}" data-id="${todo.id}">
+        <input class="toggle" type="checkbox" ${todo.completed ? "checked" : ""}>
+        <span class="text">${this.escapeHtml(todo.text)}</span>
+        <button class="delete" aria-label="Delete">✕</button>
+      </li>
+    `).join("");
+
+    this.countEl.textContent = `${activeCount} item${activeCount !== 1 ? "s" : ""} left`;
+  }
+
+  escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => new TodoApp());
+```
+
+### 💻 React Todo App (Hooks)
+
+```jsx
+// App.jsx
+import { useState, useEffect, useCallback } from "react";
+
+const FILTERS = { ALL: "all", ACTIVE: "active", COMPLETED: "completed" };
+
+function useTodos() {
+  const [todos, setTodos] = useState(() =>
+    JSON.parse(localStorage.getItem("todos") || "[]")
+  );
+
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
+
+  const add = useCallback((text) => {
+    if (!text.trim()) return;
+    setTodos(prev => [...prev, {
+      id: Date.now(),
+      text: text.trim(),
+      completed: false
+    }]);
+  }, []);
+
+  const toggle = useCallback((id) => {
+    setTodos(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  }, []);
+
+  const remove = useCallback((id) => {
+    setTodos(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  const clearCompleted = useCallback(() => {
+    setTodos(prev => prev.filter(t => !t.completed));
+  }, []);
+
+  return { todos, add, toggle, remove, clearCompleted };
+}
+
+export default function TodoApp() {
+  const [input, setInput] = useState("");
+  const [filter, setFilter] = useState(FILTERS.ALL);
+  const { todos, add, toggle, remove, clearCompleted } = useTodos();
+
+  const filtered = todos.filter(t => {
+    if (filter === FILTERS.ACTIVE) return !t.completed;
+    if (filter === FILTERS.COMPLETED) return t.completed;
+    return true;
+  });
+
+  const activeCount = todos.filter(t => !t.completed).length;
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    add(input);
+    setInput("");
+  }
+
+  return (
+    <div className="todo-app">
+      <h1>📝 Todo List</h1>
+
+      <form onSubmit={handleSubmit}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          placeholder="নতুন todo লিখুন..."
+        />
+        <button type="submit">Add</button>
+      </form>
+
+      <div className="filters">
+        {Object.values(FILTERS).map(f => (
+          <button
+            key={f}
+            className={filter === f ? "active" : ""}
+            onClick={() => setFilter(f)}
+          >
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      <ul>
+        {filtered.map(todo => (
+          <li key={todo.id} className={todo.completed ? "completed" : ""}>
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => toggle(todo.id)}
+            />
+            <span>{todo.text}</span>
+            <button onClick={() => remove(todo.id)}>✕</button>
+          </li>
+        ))}
+      </ul>
+
+      <footer>
+        <span>{activeCount} item{activeCount !== 1 ? "s" : ""} left</span>
+        {todos.some(t => t.completed) && (
+          <button onClick={clearCompleted}>Clear completed</button>
+        )}
+      </footer>
+    </div>
+  );
+}
+```
+
+---
+
+## ১০.২ Weather App
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 Features
+- শহরের নাম দিয়ে weather খোঁজা
+- OpenWeatherMap API integration
+- Temperature, humidity, wind, icon
+- Loading ও error state
+- Recent searches
+
+### 💻 React Weather App
+
+```jsx
+// WeatherApp.jsx
+import { useState, useCallback } from "react";
+
+const API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+const BASE_URL = "https://api.openweathermap.org/data/2.5";
+
+function useWeather() {
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchWeather = useCallback(async (city) => {
+    if (!city.trim()) return;
+    setLoading(true);
+    setError(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const res = await fetch(
+        `${BASE_URL}/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric&lang=en`,
+        { signal: controller.signal }
+      );
+
+      if (!res.ok) {
+        if (res.status === 404) throw new Error("শহর খুঁজে পাওয়া যায়নি");
+        throw new Error("Weather data আনতে সমস্যা হয়েছে");
+      }
+
+      const data = await res.json();
+      setWeather(data);
+    } catch (err) {
+      if (err.name === "AbortError") setError("Request timeout হয়েছে");
+      else setError(err.message);
+    } finally {
+      clearTimeout(timeoutId);
+      setLoading(false);
+    }
+  }, []);
+
+  return { weather, loading, error, fetchWeather };
+}
+
+export default function WeatherApp() {
+  const [city, setCity] = useState("");
+  const [recent, setRecent] = useState(
+    () => JSON.parse(localStorage.getItem("recent-cities") || "[]")
+  );
+  const { weather, loading, error, fetchWeather } = useWeather();
+
+  function handleSearch(e) {
+    e.preventDefault();
+    if (!city.trim()) return;
+
+    fetchWeather(city);
+    const updated = [city, ...recent.filter(c => c !== city)].slice(0, 5);
+    setRecent(updated);
+    localStorage.setItem("recent-cities", JSON.stringify(updated));
+  }
+
+  const getWeatherEmoji = (code) => {
+    if (code >= 200 && code < 300) return "⛈️";
+    if (code >= 300 && code < 400) return "🌧️";
+    if (code >= 500 && code < 600) return "🌦️";
+    if (code >= 600 && code < 700) return "❄️";
+    if (code >= 700 && code < 800) return "🌫️";
+    if (code === 800) return "☀️";
+    return "⛅";
+  };
+
+  return (
+    <div className="weather-app">
+      <h1>🌤️ Weather App</h1>
+
+      <form onSubmit={handleSearch}>
+        <input
+          value={city}
+          onChange={e => setCity(e.target.value)}
+          placeholder="শহরের নাম লিখুন... (e.g. Dhaka)"
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? "খুঁজছি..." : "Search"}
+        </button>
+      </form>
+
+      {recent.length > 0 && (
+        <div className="recent">
+          {recent.map(c => (
+            <button key={c} onClick={() => { setCity(c); fetchWeather(c); }}>
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {error && <div className="error">❌ {error}</div>}
+
+      {loading && <div className="loading">⏳ Weather data লোড হচ্ছে...</div>}
+
+      {weather && !loading && (
+        <div className="weather-card">
+          <div className="city-name">
+            📍 {weather.name}, {weather.sys.country}
+          </div>
+          <div className="temp-display">
+            <span className="emoji">{getWeatherEmoji(weather.weather[0].id)}</span>
+            <span className="temp">{Math.round(weather.main.temp)}°C</span>
+          </div>
+          <div className="description">
+            {weather.weather[0].description}
+          </div>
+          <div className="details">
+            <div>💧 Humidity: {weather.main.humidity}%</div>
+            <div>🌬️ Wind: {weather.wind.speed} m/s</div>
+            <div>🌡️ Feels like: {Math.round(weather.main.feels_like)}°C</div>
+            <div>👁️ Visibility: {(weather.visibility / 1000).toFixed(1)} km</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+---
+
+## ১০.৩ Calculator
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Vanilla JavaScript Calculator
+
+```javascript
+// calculator.js
+class Calculator {
+  constructor() {
+    this.displayEl = document.getElementById("display");
+    this.currentInput = "0";
+    this.previousInput = "";
+    this.operator = null;
+    this.shouldReset = false;
+
+    document.getElementById("calculator").addEventListener("click", e => {
+      if (!e.target.matches("button")) return;
+      this.handleInput(e.target.dataset.value, e.target.dataset.type);
+    });
+
+    // Keyboard support
+    document.addEventListener("keydown", e => {
+      if ("0123456789".includes(e.key)) this.handleInput(e.key, "number");
+      else if ("+-*/".includes(e.key)) this.handleInput(e.key, "operator");
+      else if (e.key === "Enter" || e.key === "=") this.handleInput("=", "equals");
+      else if (e.key === "Backspace") this.handleInput("backspace", "action");
+      else if (e.key === "Escape") this.handleInput("clear", "action");
+      else if (e.key === ".") this.handleInput(".", "decimal");
+    });
+  }
+
+  handleInput(value, type) {
+    switch (type) {
+      case "number":
+        this.inputNumber(value); break;
+      case "operator":
+        this.inputOperator(value); break;
+      case "equals":
+        this.calculate(); break;
+      case "decimal":
+        this.inputDecimal(); break;
+      case "action":
+        if (value === "clear") this.clear();
+        if (value === "backspace") this.backspace();
+        if (value === "toggle-sign") this.toggleSign();
+        if (value === "percent") this.percent();
+        break;
+    }
+    this.updateDisplay();
+  }
+
+  inputNumber(num) {
+    if (this.shouldReset) {
+      this.currentInput = num;
+      this.shouldReset = false;
+    } else {
+      this.currentInput = this.currentInput === "0" ? num
+        : (this.currentInput + num).slice(0, 15); // max 15 digits
+    }
+  }
+
+  inputOperator(op) {
+    if (this.previousInput && !this.shouldReset) this.calculate();
+    this.previousInput = this.currentInput;
+    this.operator = op;
+    this.shouldReset = true;
+  }
+
+  inputDecimal() {
+    if (this.shouldReset) { this.currentInput = "0"; this.shouldReset = false; }
+    if (!this.currentInput.includes(".")) this.currentInput += ".";
+  }
+
+  calculate() {
+    if (!this.previousInput || !this.operator) return;
+
+    const a = parseFloat(this.previousInput);
+    const b = parseFloat(this.currentInput);
+    let result;
+
+    switch (this.operator) {
+      case "+": result = a + b; break;
+      case "-": result = a - b; break;
+      case "*": result = a * b; break;
+      case "/":
+        if (b === 0) { this.currentInput = "Error"; this.operator = null; return; }
+        result = a / b; break;
+    }
+
+    // Floating point fix
+    this.currentInput = parseFloat(result.toPrecision(12)).toString();
+    this.previousInput = "";
+    this.operator = null;
+    this.shouldReset = true;
+  }
+
+  clear() {
+    this.currentInput = "0";
+    this.previousInput = "";
+    this.operator = null;
+    this.shouldReset = false;
+  }
+
+  backspace() {
+    if (this.shouldReset) return;
+    this.currentInput = this.currentInput.length > 1
+      ? this.currentInput.slice(0, -1) : "0";
+  }
+
+  toggleSign() {
+    this.currentInput = (parseFloat(this.currentInput) * -1).toString();
+  }
+
+  percent() {
+    this.currentInput = (parseFloat(this.currentInput) / 100).toString();
+  }
+
+  updateDisplay() {
+    const num = parseFloat(this.currentInput);
+    this.displayEl.textContent = isNaN(num) ? this.currentInput
+      : num.toLocaleString("en", { maximumFractionDigits: 10 });
+  }
+}
+
+new Calculator();
+```
+
+---
+
+## ১০.৪ Authentication System
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 Features
+- Register / Login / Logout
+- JWT (access + refresh token)
+- Protected routes
+- Axios interceptors (auto token refresh)
+
+### 💻 Frontend Auth System (React)
+
+```jsx
+// auth/authService.js
+import axios from "axios";
+
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL });
+
+// Request interceptor — token attach
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem("accessToken");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// Response interceptor — 401 on token expire → refresh
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(p => error ? p.reject(error) : p.resolve(token));
+  failedQueue = [];
+};
+
+api.interceptors.response.use(
+  response => response,
+  async error => {
+    const original = error.config;
+
+    if (error.response?.status === 401 && !original._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          original.headers.Authorization = `Bearer ${token}`;
+          return api(original);
+        });
+      }
+
+      original._retry = true;
+      isRefreshing = true;
+
+      try {
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_API_URL}/auth/refresh`,
+          {},
+          { withCredentials: true } // refresh token cookie-তে
+        );
+        localStorage.setItem("accessToken", data.accessToken);
+        processQueue(null, data.accessToken);
+        original.headers.Authorization = `Bearer ${data.accessToken}`;
+        return api(original);
+      } catch (err) {
+        processQueue(err, null);
+        localStorage.removeItem("accessToken");
+        window.location.href = "/login";
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export const authService = {
+  async register(data) {
+    const res = await api.post("/auth/register", data);
+    return res.data;
+  },
+  async login({ email, password }) {
+    const res = await api.post("/auth/login", { email, password });
+    localStorage.setItem("accessToken", res.data.accessToken);
+    return res.data;
+  },
+  async logout() {
+    await api.post("/auth/logout", {}, { withCredentials: true });
+    localStorage.removeItem("accessToken");
+  },
+  async getProfile() {
+    const res = await api.get("/auth/profile");
+    return res.data;
+  }
+};
+
+export default api;
+```
+
+```jsx
+// auth/AuthContext.jsx
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { authService } from "./authService";
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      authService.getProfile()
+        .then(setUser)
+        .catch(() => localStorage.removeItem("accessToken"))
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const login = useCallback(async (credentials) => {
+    const data = await authService.login(credentials);
+    setUser(data.user);
+    return data;
+  }, []);
+
+  const register = useCallback(async (data) => {
+    return authService.register(data);
+  }, []);
+
+  const logout = useCallback(async () => {
+    await authService.logout();
+    setUser(null);
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
+}
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
+};
+```
+
+```jsx
+// components/ProtectedRoute.jsx
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+
+export function ProtectedRoute({ children, roles }) {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (roles && !roles.includes(user.role)) return <Navigate to="/unauthorized" replace />;
+  return children;
+}
+```
+
+```jsx
+// pages/LoginPage.jsx
+import { useState } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
+
+export default function LoginPage() {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/dashboard";
+
+  const handleChange = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await login(form);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.error || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="auth-page">
+      <form onSubmit={handleSubmit}>
+        <h2>Login</h2>
+        {error && <div className="error">{error}</div>}
+        <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
+        <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
+        <button type="submit" disabled={loading}>{loading ? "Logging in..." : "Login"}</button>
+        <p>Don't have an account? <Link to="/register">Register</Link></p>
+      </form>
+    </div>
+  );
+}
+```
+
+---
+
+## ১০.৫ CRUD App with Express
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 Features: Product Management System
+
+### 💻 Backend — Express + MongoDB
+
+```javascript
+// models/Product.js
+const mongoose = require("mongoose");
+
+const productSchema = new mongoose.Schema({
+  name: { type: String, required: true, trim: true, maxlength: 100 },
+  description: { type: String, maxlength: 1000 },
+  price: { type: Number, required: true, min: 0 },
+  category: {
+    type: String,
+    required: true,
+    enum: ["electronics", "food", "clothing", "books", "other"]
+  },
+  stock: { type: Number, default: 0, min: 0 },
+  imageUrl: String,
+  isActive: { type: Boolean, default: true }
+}, { timestamps: true }); // createdAt, updatedAt auto
+
+productSchema.index({ name: "text", description: "text" }); // full-text search
+productSchema.index({ category: 1, price: 1 });
+
+module.exports = mongoose.model("Product", productSchema);
+```
+
+```javascript
+// routes/products.js
+const express = require("express");
+const router = express.Router();
+const Product = require("../models/Product");
+const { authenticate, authorize } = require("../middleware/auth");
+const asyncHandler = require("../middleware/asyncHandler");
+
+// GET /api/products — with search, filter, pagination, sort
+router.get("/", asyncHandler(async (req, res) => {
+  const {
+    q, category, minPrice, maxPrice,
+    page = 1, limit = 10, sort = "-createdAt"
+  } = req.query;
+
+  const filter = { isActive: true };
+  if (category) filter.category = category;
+  if (minPrice || maxPrice) {
+    filter.price = {};
+    if (minPrice) filter.price.$gte = parseFloat(minPrice);
+    if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+  }
+  if (q) filter.$text = { $search: q };
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const [products, total] = await Promise.all([
+    Product.find(filter).sort(sort).skip(skip).limit(parseInt(limit)),
+    Product.countDocuments(filter)
+  ]);
+
+  res.json({
+    data: products,
+    pagination: {
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+      limit: parseInt(limit)
+    }
+  });
+}));
+
+// GET /api/products/:id
+router.get("/:id", asyncHandler(async (req, res) => {
+  const product = await Product.findById(req.params.id);
+  if (!product) return res.status(404).json({ error: "Product not found" });
+  res.json(product);
+}));
+
+// POST /api/products — admin only
+router.post("/", authenticate, authorize("admin"), asyncHandler(async (req, res) => {
+  const product = await Product.create(req.body);
+  res.status(201).json(product);
+}));
+
+// PATCH /api/products/:id
+router.patch("/:id", authenticate, authorize("admin"), asyncHandler(async (req, res) => {
+  const product = await Product.findByIdAndUpdate(
+    req.params.id,
+    { $set: req.body },
+    { new: true, runValidators: true }
+  );
+  if (!product) return res.status(404).json({ error: "Product not found" });
+  res.json(product);
+}));
+
+// DELETE /api/products/:id — soft delete
+router.delete("/:id", authenticate, authorize("admin"), asyncHandler(async (req, res) => {
+  const product = await Product.findByIdAndUpdate(
+    req.params.id,
+    { isActive: false },
+    { new: true }
+  );
+  if (!product) return res.status(404).json({ error: "Product not found" });
+  res.json({ message: "Product deactivated" });
+}));
+
+module.exports = router;
+```
+
+### 💻 Frontend — React CRUD
+
+```jsx
+// hooks/useProducts.js
+import { useState, useEffect, useCallback } from "react";
+import api from "../auth/authService";
+import { toast } from "react-toastify";
+
+export function useProducts() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [pagination, setPagination] = useState({});
+  const [filters, setFilters] = useState({ q: "", category: "", page: 1 });
+
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams(
+        Object.entries(filters).filter(([, v]) => v)
+      );
+      const { data } = await api.get(`/products?${params}`);
+      setProducts(data.data);
+      setPagination(data.pagination);
+    } catch (err) {
+      toast.error("Products লোড হয়নি");
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+
+  const createProduct = async (formData) => {
+    const { data } = await api.post("/products", formData);
+    setProducts(prev => [data, ...prev]);
+    toast.success("Product তৈরি হয়েছে");
+    return data;
+  };
+
+  const updateProduct = async (id, formData) => {
+    const { data } = await api.patch(`/products/${id}`, formData);
+    setProducts(prev => prev.map(p => p._id === id ? data : p));
+    toast.success("Product আপডেট হয়েছে");
+    return data;
+  };
+
+  const deleteProduct = async (id) => {
+    await api.delete(`/products/${id}`);
+    setProducts(prev => prev.filter(p => p._id !== id));
+    toast.success("Product মুছে ফেলা হয়েছে");
+  };
+
+  return { products, loading, pagination, filters, setFilters,
+           createProduct, updateProduct, deleteProduct };
+}
+```
+
+---
+
+## ১০.৬ Real-Time Chat (WebSocket)
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Backend — Socket.io
+
+```javascript
+// server.js
+const express = require("express");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+const jwt = require("jsonwebtoken");
+
+const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: { origin: process.env.CLIENT_URL, credentials: true }
+});
+
+const rooms = new Map(); // roomId → Set of userIds
+const users = new Map(); // socketId → user info
+
+// Auth middleware for Socket.io
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) return next(new Error("Authentication error"));
+  try {
+    socket.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    next(new Error("Invalid token"));
+  }
+});
+
+io.on("connection", (socket) => {
+  users.set(socket.id, { ...socket.user, socketId: socket.id });
+  console.log(`User connected: ${socket.user.name}`);
+
+  // Join room
+  socket.on("join:room", (roomId) => {
+    socket.join(roomId);
+    if (!rooms.has(roomId)) rooms.set(roomId, new Set());
+    rooms.get(roomId).add(socket.user.userId);
+
+    // Notify others
+    socket.to(roomId).emit("user:joined", { user: socket.user.name, roomId });
+
+    // Send current members
+    const members = Array.from(rooms.get(roomId));
+    socket.emit("room:members", members);
+  });
+
+  // Send message
+  socket.on("message:send", ({ roomId, text, type = "text" }) => {
+    const message = {
+      id: `${Date.now()}-${socket.id}`,
+      text,
+      type,
+      sender: { id: socket.user.userId, name: socket.user.name },
+      timestamp: new Date().toISOString()
+    };
+
+    // Send to everyone in room (including sender)
+    io.to(roomId).emit("message:received", message);
+  });
+
+  // Typing indicator
+  socket.on("typing:start", (roomId) => {
+    socket.to(roomId).emit("typing:update", { user: socket.user.name, isTyping: true });
+  });
+  socket.on("typing:stop", (roomId) => {
+    socket.to(roomId).emit("typing:update", { user: socket.user.name, isTyping: false });
+  });
+
+  socket.on("disconnect", () => {
+    users.delete(socket.id);
+    rooms.forEach((members, roomId) => {
+      if (members.has(socket.user.userId)) {
+        members.delete(socket.user.userId);
+        io.to(roomId).emit("user:left", { user: socket.user.name });
+      }
+    });
+  });
+});
+
+httpServer.listen(3000);
+```
+
+```jsx
+// hooks/useChat.js — Frontend
+import { useEffect, useRef, useState, useCallback } from "react";
+import { io } from "socket.io-client";
+
+export function useChat(roomId) {
+  const [messages, setMessages] = useState([]);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [connected, setConnected] = useState(false);
+  const socketRef = useRef(null);
+  const typingTimerRef = useRef(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    socketRef.current = io(import.meta.env.VITE_WS_URL, {
+      auth: { token }
+    });
+
+    const socket = socketRef.current;
+
+    socket.on("connect", () => {
+      setConnected(true);
+      socket.emit("join:room", roomId);
+    });
+
+    socket.on("message:received", (msg) => {
+      setMessages(prev => [...prev, msg]);
+    });
+
+    socket.on("typing:update", ({ user, isTyping }) => {
+      setTypingUsers(prev =>
+        isTyping ? [...new Set([...prev, user])] : prev.filter(u => u !== user)
+      );
+    });
+
+    socket.on("disconnect", () => setConnected(false));
+
+    return () => { socket.disconnect(); };
+  }, [roomId]);
+
+  const sendMessage = useCallback((text) => {
+    socketRef.current?.emit("message:send", { roomId, text });
+  }, [roomId]);
+
+  const handleTyping = useCallback(() => {
+    socketRef.current?.emit("typing:start", roomId);
+    clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      socketRef.current?.emit("typing:stop", roomId);
+    }, 1500);
+  }, [roomId]);
+
+  return { messages, typingUsers, connected, sendMessage, handleTyping };
+}
+```
+
+---
+
+## ১০.৭ Interview Project Tips
+
+<div align="right"><a href="#part10">⬆ PART 10 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📋 Project-এ যা রাখবেন
+
+| বিষয় | করণীয় |
+|------|--------|
+| **README** | Project বর্ণনা, setup, features, screenshot |
+| **Error Handling** | Loading, error, empty state UI |
+| **Responsive** | Mobile-friendly CSS |
+| **Code Quality** | Meaningful names, no commented code |
+| **Git History** | Meaningful commit messages |
+| **Environment** | `.env.example` file |
+| **Security** | Input sanitize, no hardcoded keys |
+| **Performance** | Debounce, lazy loading, memo |
+
+### 💡 Interview-এ Project উপস্থাপন
+
+```markdown
+১. **Project intro** (৩০ seconds)
+   "এটি একটি [প্রজেক্টের নাম] — [main feature]।
+   Frontend: React, Backend: Node.js/Express, Database: MongoDB।"
+
+২. **Technical decisions**
+   "State management-এ Context API ব্যবহার করেছি কারণ...
+   JWT refresh token HttpOnly cookie-তে রেখেছি কারণ..."
+
+৩. **Challenges & Solutions**
+   "Search-এ API call throttle করা ছিল challenge —
+   debounce এবং AbortController দিয়ে solve করেছি।"
+
+৪. **কোড দেখাতে পারলে ভালো**
+   — Authentication flow
+   — একটি interesting algorithm
+   — Error handling pattern
+```
+
+### 🎯 Top 5 Project Ideas for BD Junior Jobs
+
+1. **📝 Expense Tracker** — React + Chart.js + localStorage
+2. **🛒 E-commerce Mini** — Product list, cart, checkout, order history
+3. **📰 News App** — Public News API + search + categories
+4. **📅 Task Manager** — Drag & drop, due dates, categories
+5. **💬 Chat App** — Socket.io, rooms, real-time
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 11 আসছে:** Performance & Optimization — Lazy Loading, Code Splitting, Memory Management, Browser Rendering Pipeline, Core Web Vitals, Bundle Optimization।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 11 দাও" লিখুন।
