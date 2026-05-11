@@ -2937,4 +2937,2299 @@ Component unmounts:
 
 ---
 
-> **📌 পরবর্তী:** PART 3 — React Component Architecture *(Next request এ লিখব)*
+<a id="part3"></a>
+
+## 📋 PART 3 সূচিপত্র — React Component Architecture
+
+| # | Topic | Key Concept |
+|---|---|---|
+| 1 | [Component Communication](#p3-communication) | Data flow patterns overview |
+| 2 | [Parent to Child](#p3-parent-child) | Props, one-way flow |
+| 3 | [Child to Parent](#p3-child-parent) | Callback functions |
+| 4 | [Lifting State Up](#p3-lifting-state) | Shared state in common ancestor |
+| 5 | [Controlled vs Uncontrolled](#p3-controlled) | Form input patterns |
+| 6 | [Reusable Components](#p3-reusable) | Design principles |
+| 7 | [Compound Components](#p3-compound) | Implicit state sharing pattern |
+| 8 | [Higher Order Components (HOC)](#p3-hoc) | Component wrapper pattern |
+| 9 | [Render Props](#p3-render-props) | Function as children |
+| 10 | [Composition vs Inheritance](#p3-composition) | React's preferred pattern |
+
+---
+
+<a id="p3-communication"></a>
+
+## 1. Component Communication — Overview
+
+**Definition:**
+React-এ components নিজেদের মধ্যে বিভিন্নভাবে communicate করে। Data flow unidirectional হওয়ায় নির্দিষ্ট patterns follow করতে হয়।
+
+**Communication Patterns:**
+
+```
+Direct Relationship:
+  Parent → Child         : Props দিয়ে
+  Child → Parent         : Callback function দিয়ে
+  Sibling ↔ Sibling      : Lifting state up
+
+Distant Relationship:
+  Any → Any (global)     : Context API / Redux / Zustand
+  Deep nested            : Context API (prop drilling avoid)
+```
+
+**Communication Pattern চার্ট:**
+
+| Relationship | Pattern | Tool |
+|---|---|---|
+| Parent → Child | Props | `<Child data={value} />` |
+| Child → Parent | Callback | `<Child onEvent={handler} />` |
+| Sibling → Sibling | Lifting State | Common parent-এ state রাখা |
+| Deeply Nested | Context | `useContext` / Redux |
+| Unrelated | Global State | Redux, Zustand, Context |
+
+**Interview-style Explanation:**
+> "React-এ data সবসময় top-down — parent থেকে child। কিন্তু child যদি parent-কে কিছু জানাতে চায়, parent একটি callback function prop হিসেবে দেয়, child সেই function call করে। দূরের component-এর মধ্যে communicate করতে Context বা Redux use করি।"
+
+---
+
+<a id="p3-parent-child"></a>
+
+## 2. Parent to Child Communication
+
+**Definition:**
+Parent component child-এ data পাঠায় **props** এর মাধ্যমে। এটি React-এর সবচেয়ে মৌলিক data flow — unidirectional, predictable।
+
+**Basic Pattern:**
+```jsx
+// Parent — data রাখে, child-এ পাঠায়
+function ParentComponent() {
+  const [products, setProducts] = useState([
+    { id: 1, name: 'Laptop', price: 75000, stock: 10 },
+    { id: 2, name: 'Phone', price: 25000, stock: 5 },
+    { id: 3, name: 'Tablet', price: 35000, stock: 0 },
+  ]);
+
+  return (
+    <div className="product-grid">
+      {products.map(product => (
+        <ProductCard
+          key={product.id}
+          name={product.name}
+          price={product.price}
+          inStock={product.stock > 0}
+          stockCount={product.stock}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Child — props receive করে display করে
+function ProductCard({ name, price, inStock, stockCount }) {
+  return (
+    <div className={`card ${inStock ? 'available' : 'out-of-stock'}`}>
+      <h3>{name}</h3>
+      <p>৳{price.toLocaleString('bn-BD')}</p>
+      {inStock
+        ? <span className="badge green">In Stock ({stockCount})</span>
+        : <span className="badge red">Out of Stock</span>
+      }
+    </div>
+  );
+}
+```
+
+**Complex Props — Objects, Arrays, Functions:**
+```jsx
+function DashboardPage() {
+  const user = { name: 'Rahim', role: 'admin', avatar: '/rahim.jpg' };
+  const permissions = ['read', 'write', 'delete'];
+  const stats = { orders: 142, revenue: 285000, users: 1204 };
+
+  const handleLogout = () => {
+    console.log('logout');
+  };
+
+  return (
+    <>
+      <Header
+        user={user}
+        permissions={permissions}
+        onLogout={handleLogout}
+      />
+      <StatsPanel stats={stats} />
+    </>
+  );
+}
+
+function Header({ user, permissions, onLogout }) {
+  const canDelete = permissions.includes('delete');
+
+  return (
+    <nav>
+      <img src={user.avatar} alt={user.name} />
+      <span>{user.name} ({user.role})</span>
+      {canDelete && <span className="admin-badge">Admin</span>}
+      <button onClick={onLogout}>Logout</button>
+    </nav>
+  );
+}
+```
+
+**Props Forwarding / Spreading:**
+```jsx
+// Button wrapper — সব HTML button props forward করে
+function Button({ children, variant = 'primary', loading, ...rest }) {
+  return (
+    <button
+      className={`btn btn-${variant} ${loading ? 'loading' : ''}`}
+      disabled={loading}
+      {...rest}   // onClick, type, aria-label, etc. automatically forward
+    >
+      {loading ? <Spinner /> : children}
+    </button>
+  );
+}
+
+// Usage — extra props automatically forwarded
+<Button
+  variant="danger"
+  loading={isSubmitting}
+  onClick={handleDelete}
+  type="button"
+  aria-label="Delete item"
+>
+  Delete
+</Button>
+```
+
+**Follow-up Interview Questions:**
+1. Props immutable কেন? React কি enforce করে?
+2. Component-এ অনেক props দিতে হলে কী করবেন?
+3. TypeScript-এ props কীভাবে type করবেন?
+
+---
+
+<a id="p3-child-parent"></a>
+
+## 3. Child to Parent Communication
+
+**Definition:**
+Child component সরাসরি parent-এর state change করতে পারে না। Parent একটি **callback function** prop হিসেবে দেয়, child সেটি call করে data উপরে পাঠায়।
+
+**Basic Callback Pattern:**
+```jsx
+// Parent — callback define করে, child-এ দেয়
+function ShoppingApp() {
+  const [cart, setCart] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // ✅ Callback — child এটি call করবে
+  const handleAddToCart = (product) => {
+    setCart(prev => [...prev, product]);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+  };
+
+  return (
+    <div>
+      <SearchBar onSearch={handleSearch} />
+      <ProductList
+        query={searchQuery}
+        onAddToCart={handleAddToCart}
+      />
+      <CartSummary itemCount={cart.length} />
+    </div>
+  );
+}
+
+// Child — callback prop call করে parent-কে notify করে
+function SearchBar({ onSearch }) {
+  const [value, setValue] = useState('');
+
+  const handleChange = (e) => {
+    setValue(e.target.value);
+    onSearch(e.target.value);  // Parent-কে জানায়
+  };
+
+  return (
+    <input
+      value={value}
+      onChange={handleChange}
+      placeholder="Search products..."
+    />
+  );
+}
+
+function ProductList({ query, onAddToCart }) {
+  const products = useProducts(query);  // custom hook
+
+  return (
+    <ul>
+      {products.map(product => (
+        <li key={product.id}>
+          {product.name}
+          <button onClick={() => onAddToCart(product)}>
+            Add to Cart
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+**Form Submit Pattern (Child → Parent):**
+```jsx
+// Reusable form component — submit করলে parent পায়
+function LoginForm({ onSubmit, onForgotPassword }) {
+  const [credentials, setCredentials] = useState({
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
+
+  const handleChange = (field) => (e) => {
+    setCredentials(prev => ({ ...prev, [field]: e.target.value }));
+    setError('');
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!credentials.email || !credentials.password) {
+      setError('All fields required');
+      return;
+    }
+    onSubmit(credentials);  // ✅ Parent-এ data পাঠানো
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        value={credentials.email}
+        onChange={handleChange('email')}
+        placeholder="Email"
+      />
+      <input
+        type="password"
+        value={credentials.password}
+        onChange={handleChange('password')}
+        placeholder="Password"
+      />
+      {error && <p className="error">{error}</p>}
+      <button type="submit">Login</button>
+      <button type="button" onClick={onForgotPassword}>
+        Forgot Password?
+      </button>
+    </form>
+  );
+}
+
+// Parent uses form
+function LoginPage() {
+  const navigate = useNavigate();
+
+  const handleLogin = async (credentials) => {
+    try {
+      await loginAPI(credentials);
+      navigate('/dashboard');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <div className="login-page">
+      <h1>Welcome Back</h1>
+      <LoginForm
+        onSubmit={handleLogin}
+        onForgotPassword={() => navigate('/forgot-password')}
+      />
+    </div>
+  );
+}
+```
+
+**Common Mistakes:**
+```jsx
+// ❌ Prop name inconsistency
+<Button onClick={handleClick} />  // HTML-like
+<Modal onClose={handleClose} />   // React-like
+
+// ✅ Convention: "on" prefix for event callbacks
+onSubmit, onClose, onDelete, onSelect, onChange, onSearch
+
+// ❌ Directly mutating parent state
+function Child({ items, setItems }) {
+  items.push(newItem);  // Direct mutation — BAD
+  setItems(items);      // Same reference, no re-render
+}
+
+// ✅ Use callback
+function Child({ onAddItem }) {
+  onAddItem(newItem);  // Parent handles immutable update
+}
+```
+
+---
+
+<a id="p3-lifting-state"></a>
+
+## 4. Lifting State Up
+
+**Definition:**
+দুটি sibling component-এ same data দরকার হলে সেই state তাদের **common ancestor** (parent)-এ রাখা হয়। Parent উভয়কে props দেয়। এটি "lifting state up" pattern।
+
+**Real-life Analogy:**
+দুটি সন্তান (sibling components) একই তথ্য শেয়ার করতে চায় — তারা parent-কে জানায়, parent উভয়কে update করে। Central source of truth।
+
+**Problem Without Lifting:**
+```jsx
+// ❌ Each has own state — out of sync
+function TemperatureConverter() {
+  return (
+    <>
+      <CelsiusInput />   {/* নিজের state */}
+      <FahrenheitInput /> {/* নিজের state — sync হয় না! */}
+    </>
+  );
+}
+```
+
+**Lifting State Up — Solution:**
+```jsx
+// ✅ State parent-এ — both in sync
+function TemperatureConverter() {
+  const [celsius, setCelsius] = useState('');
+
+  const fahrenheit = celsius !== '' ? (celsius * 9/5 + 32).toFixed(1) : '';
+
+  return (
+    <div>
+      <h2>Temperature Converter</h2>
+      <TemperatureInput
+        unit="Celsius"
+        value={celsius}
+        onChange={setCelsius}
+      />
+      <TemperatureInput
+        unit="Fahrenheit"
+        value={fahrenheit}
+        onChange={(f) => setCelsius(((f - 32) * 5/9).toFixed(1))}
+      />
+      {celsius && (
+        <p>
+          {celsius}°C = {fahrenheit}°F
+          {celsius >= 100 ? ' 🔥 Boiling!' : celsius <= 0 ? ' 🧊 Freezing!' : ''}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function TemperatureInput({ unit, value, onChange }) {
+  return (
+    <label>
+      {unit}:
+      <input
+        type="number"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={`Enter ${unit}`}
+      />
+    </label>
+  );
+}
+```
+
+**Real-world Example — Filter + List:**
+```jsx
+// State lifted to parent — Filter আর List synchronized
+function ProductPage() {
+  // Lifted state
+  const [category, setCategory] = useState('all');
+  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [sortBy, setSortBy] = useState('name');
+
+  return (
+    <div className="product-page">
+      <FilterPanel
+        category={category}
+        priceRange={priceRange}
+        sortBy={sortBy}
+        onCategoryChange={setCategory}
+        onPriceChange={setPriceRange}
+        onSortChange={setSortBy}
+      />
+      <ProductGrid
+        category={category}
+        priceRange={priceRange}
+        sortBy={sortBy}
+      />
+    </div>
+  );
+}
+
+function FilterPanel({ category, onCategoryChange, sortBy, onSortChange }) {
+  return (
+    <aside>
+      <select value={category} onChange={e => onCategoryChange(e.target.value)}>
+        <option value="all">All</option>
+        <option value="electronics">Electronics</option>
+        <option value="clothing">Clothing</option>
+      </select>
+      <select value={sortBy} onChange={e => onSortChange(e.target.value)}>
+        <option value="name">Name</option>
+        <option value="price">Price</option>
+      </select>
+    </aside>
+  );
+}
+
+function ProductGrid({ category, priceRange, sortBy }) {
+  const products = useFilteredProducts(category, priceRange, sortBy);
+  return (
+    <main>
+      {products.map(p => <ProductCard key={p.id} {...p} />)}
+    </main>
+  );
+}
+```
+
+**When to Lift State:**
+```
+✅ Lift state when:
+- Two siblings need same data
+- A component needs to control another
+- Data needs to be shared across subtree
+
+❌ Don't over-lift:
+- Every state to root — performance issue
+- State only one component needs — keep it local
+```
+
+**Follow-up Interview Questions:**
+1. State কতটা উপরে নেওয়া উচিত?
+2. Lifting state vs Context — কখন কোনটি?
+3. Performance-এ lifting state-এর impact কী?
+
+---
+
+<a id="p3-controlled"></a>
+
+## 5. Controlled vs Uncontrolled Components
+
+**Definition:**
+**Controlled component** এ form input-এর value React state দ্বারা নিয়ন্ত্রিত। **Uncontrolled component** এ DOM নিজেই value রাখে, `useRef` দিয়ে access করা হয়।
+
+**Controlled Component:**
+```jsx
+// ✅ Controlled — React state = single source of truth
+function RegistrationForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (field) => (e) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
+    // Validate on change
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validate = () => {
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Name required';
+    if (!formData.email.includes('@')) newErrors.email = 'Invalid email';
+    if (formData.phone.length < 11) newErrors.phone = 'Invalid phone';
+    if (formData.password.length < 6) newErrors.password = 'Min 6 characters';
+    return newErrors;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    console.log('Submitting:', formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <input
+          value={formData.name}
+          onChange={handleChange('name')}
+          placeholder="Full Name"
+        />
+        {errors.name && <span className="error">{errors.name}</span>}
+      </div>
+      <div>
+        <input
+          type="email"
+          value={formData.email}
+          onChange={handleChange('email')}
+          placeholder="Email"
+        />
+        {errors.email && <span className="error">{errors.email}</span>}
+      </div>
+      <button type="submit">Register</button>
+    </form>
+  );
+}
+```
+
+**Uncontrolled Component:**
+```jsx
+// Uncontrolled — DOM keeps value, ref দিয়ে access
+function FileUploadForm() {
+  const nameRef = useRef(null);
+  const fileRef = useRef(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const name = nameRef.current.value;
+    const file = fileRef.current.files[0];
+    console.log('Name:', name, 'File:', file?.name);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input ref={nameRef} defaultValue="Default Name" />
+      <input ref={fileRef} type="file" accept=".pdf,.doc" />
+      <button type="submit">Upload</button>
+    </form>
+  );
+}
+```
+
+**Controlled vs Uncontrolled Comparison:**
+
+| Feature | Controlled | Uncontrolled |
+|---|---|---|
+| Value stored in | React state | DOM |
+| Access via | `value` prop | `ref.current.value` |
+| Validation | Real-time, easy | On submit only |
+| Instant feedback | ✅ | ❌ |
+| Complex forms | ✅ | ❌ |
+| File input | ❌ (uncontrollable) | ✅ |
+| Performance | More re-renders | Fewer re-renders |
+| Code | More | Less |
+| Recommended | ✅ (most cases) | ⚠️ (file/legacy) |
+
+**When to Use Uncontrolled:**
+```
+- File input (<input type="file">) — always uncontrolled
+- Integrating with non-React library
+- Very simple form (just submit, no validation)
+- Performance critical large forms
+```
+
+**Interview-style Explanation:**
+> "Controlled component-এ input-এর value সবসময় React state থেকে আসে — `value={state}` আর `onChange` দিয়ে state update করি। এতে form-এর full control React-এর হাতে থাকে, validation সহজ। Uncontrolled-এ DOM value রাখে, ref দিয়ে পড়ি — simpler কিন্তু real-time validation কঠিন। File input সবসময় uncontrolled।"
+
+---
+
+<a id="p3-reusable"></a>
+
+## 6. Reusable Components
+
+**Definition:**
+Reusable component এমনভাবে design করা হয় যাতে different contexts-এ আলাদা আলাদা data দিয়ে use করা যায়। Good reusable component: **single responsibility**, **configurable via props**, এবং **independent**।
+
+**Principles:**
+```
+1. Single Responsibility — একটি component একটি কাজ
+2. Props-driven — behavior props দিয়ে configure
+3. No hardcoded data — data প্রপ থেকে
+4. Composable — ছোট components দিয়ে বড় বানানো
+5. Documented — PropTypes / TypeScript types
+```
+
+**Bad → Good Refactor:**
+```jsx
+// ❌ Not reusable — hardcoded, specific
+function SubmitOrderButton() {
+  return (
+    <button
+      style={{ background: 'blue', color: 'white', padding: '10px 20px' }}
+      onClick={() => submitOrder()}
+    >
+      Submit Order
+    </button>
+  );
+}
+
+// ✅ Reusable — configurable
+function Button({
+  children,
+  onClick,
+  variant = 'primary',       // primary | secondary | danger | ghost
+  size = 'medium',           // small | medium | large
+  loading = false,
+  disabled = false,
+  fullWidth = false,
+  leftIcon,
+  rightIcon,
+  type = 'button',
+}) {
+  const classes = [
+    'btn',
+    `btn-${variant}`,
+    `btn-${size}`,
+    fullWidth && 'btn-full',
+    loading && 'btn-loading',
+  ].filter(Boolean).join(' ');
+
+  return (
+    <button
+      type={type}
+      className={classes}
+      onClick={onClick}
+      disabled={disabled || loading}
+    >
+      {leftIcon && <span className="btn-icon-left">{leftIcon}</span>}
+      {loading ? <Spinner size="small" /> : children}
+      {rightIcon && <span className="btn-icon-right">{rightIcon}</span>}
+    </button>
+  );
+}
+
+// Use anywhere with different config
+<Button variant="primary" size="large" onClick={handleSubmit}>Submit Order</Button>
+<Button variant="danger" size="small" onClick={handleDelete}>Delete</Button>
+<Button variant="ghost" loading={isLoading}>Save Draft</Button>
+<Button variant="primary" fullWidth type="submit">Login</Button>
+```
+
+**Reusable Card Component:**
+```jsx
+function Card({
+  children,
+  title,
+  subtitle,
+  footer,
+  headerAction,
+  padding = 'normal',
+  shadow = true,
+  bordered = true,
+  className = '',
+}) {
+  return (
+    <div className={[
+      'card',
+      shadow && 'card-shadow',
+      bordered && 'card-bordered',
+      `card-padding-${padding}`,
+      className,
+    ].filter(Boolean).join(' ')}>
+      {(title || headerAction) && (
+        <div className="card-header">
+          <div>
+            {title && <h3 className="card-title">{title}</h3>}
+            {subtitle && <p className="card-subtitle">{subtitle}</p>}
+          </div>
+          {headerAction && <div className="card-action">{headerAction}</div>}
+        </div>
+      )}
+      <div className="card-body">{children}</div>
+      {footer && <div className="card-footer">{footer}</div>}
+    </div>
+  );
+}
+
+// Multiple uses
+<Card title="Monthly Revenue" subtitle="May 2026">
+  <RevenueChart />
+</Card>
+
+<Card
+  title="Recent Orders"
+  headerAction={<Button size="small">View All</Button>}
+  footer={<Pagination />}
+>
+  <OrderTable orders={orders} />
+</Card>
+```
+
+---
+
+<a id="p3-compound"></a>
+
+## 7. Compound Components
+
+**Definition:**
+Compound Components pattern হলো একটি group of components যারা একসাথে কাজ করে, implicit state share করে। HTML-এর `<select>` + `<option>` এর মতো — এরা together কাজ করে।
+
+**Real-life Analogy:**
+`<select>` আর `<option>` এর সম্পর্কের মতো — `<option>` alone কাজ করে না, `<select>` এর context দরকার।
+
+**Example — Tabs Component:**
+```jsx
+import { createContext, useContext, useState } from 'react';
+
+// ──── Context for implicit state sharing ────
+const TabsContext = createContext(null);
+
+// ──── Parent — state owns করে ────
+function Tabs({ children, defaultTab }) {
+  const [activeTab, setActiveTab] = useState(defaultTab);
+
+  return (
+    <TabsContext.Provider value={{ activeTab, setActiveTab }}>
+      <div className="tabs">{children}</div>
+    </TabsContext.Provider>
+  );
+}
+
+// ──── TabList — tab buttons container ────
+function TabList({ children }) {
+  return <div className="tab-list" role="tablist">{children}</div>;
+}
+
+// ──── Tab — individual tab button ────
+function Tab({ id, children }) {
+  const { activeTab, setActiveTab } = useContext(TabsContext);
+  const isActive = activeTab === id;
+
+  return (
+    <button
+      role="tab"
+      aria-selected={isActive}
+      className={`tab ${isActive ? 'tab-active' : ''}`}
+      onClick={() => setActiveTab(id)}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ──── TabPanels — panels container ────
+function TabPanels({ children }) {
+  return <div className="tab-panels">{children}</div>;
+}
+
+// ──── TabPanel — individual panel ────
+function TabPanel({ id, children }) {
+  const { activeTab } = useContext(TabsContext);
+  if (activeTab !== id) return null;
+
+  return (
+    <div role="tabpanel" className="tab-panel">
+      {children}
+    </div>
+  );
+}
+
+// ──── Attach sub-components ────
+Tabs.List = TabList;
+Tabs.Tab = Tab;
+Tabs.Panels = TabPanels;
+Tabs.Panel = TabPanel;
+
+// ──── Usage — clean, declarative ────
+function ProfilePage() {
+  return (
+    <Tabs defaultTab="overview">
+      <Tabs.List>
+        <Tabs.Tab id="overview">Overview</Tabs.Tab>
+        <Tabs.Tab id="orders">Orders</Tabs.Tab>
+        <Tabs.Tab id="settings">Settings</Tabs.Tab>
+      </Tabs.List>
+
+      <Tabs.Panels>
+        <Tabs.Panel id="overview">
+          <UserOverview />
+        </Tabs.Panel>
+        <Tabs.Panel id="orders">
+          <OrderHistory />
+        </Tabs.Panel>
+        <Tabs.Panel id="settings">
+          <AccountSettings />
+        </Tabs.Panel>
+      </Tabs.Panels>
+    </Tabs>
+  );
+}
+```
+
+**Compound Components — Accordion:**
+```jsx
+const AccordionContext = createContext(null);
+
+function Accordion({ children, allowMultiple = false }) {
+  const [openItems, setOpenItems] = useState(new Set());
+
+  const toggle = (id) => {
+    setOpenItems(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        if (!allowMultiple) next.clear();
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <AccordionContext.Provider value={{ openItems, toggle }}>
+      <div className="accordion">{children}</div>
+    </AccordionContext.Provider>
+  );
+}
+
+function AccordionItem({ id, title, children }) {
+  const { openItems, toggle } = useContext(AccordionContext);
+  const isOpen = openItems.has(id);
+
+  return (
+    <div className="accordion-item">
+      <button
+        className="accordion-header"
+        onClick={() => toggle(id)}
+        aria-expanded={isOpen}
+      >
+        {title}
+        <span>{isOpen ? '▲' : '▼'}</span>
+      </button>
+      {isOpen && (
+        <div className="accordion-body">{children}</div>
+      )}
+    </div>
+  );
+}
+
+Accordion.Item = AccordionItem;
+
+// Usage
+<Accordion allowMultiple>
+  <Accordion.Item id="faq1" title="React কী?">
+    React হলো Facebook-এর JavaScript UI library।
+  </Accordion.Item>
+  <Accordion.Item id="faq2" title="Hooks কী?">
+    Hooks হলো functional component-এ state ব্যবহারের mechanism।
+  </Accordion.Item>
+</Accordion>
+```
+
+**Follow-up Interview Questions:**
+1. Compound components-এর benefit কী regular props-এর চেয়ে?
+2. Context ছাড়া compound components বানানো যায়?
+3. `React.Children` API কী?
+
+---
+
+<a id="p3-hoc"></a>
+
+## 8. Higher Order Components (HOC)
+
+**Definition:**
+Higher Order Component (HOC) হলো একটি function যা একটি component নেয় এবং enhanced version return করে। এটি **cross-cutting concerns** (logging, auth check, loading, error handling) reuse করার pattern।
+
+**Structure:**
+```jsx
+function withEnhancement(WrappedComponent) {
+  function EnhancedComponent(props) {
+    // Extra logic
+    return <WrappedComponent {...props} />;
+  }
+  EnhancedComponent.displayName = `withEnhancement(${WrappedComponent.displayName || WrappedComponent.name})`;
+  return EnhancedComponent;
+}
+```
+
+**HOC Examples:**
+```jsx
+// ──── 1. withAuth — Protected component ────
+function withAuth(WrappedComponent) {
+  return function AuthenticatedComponent(props) {
+    const { isLoggedIn, user } = useAuth();
+
+    if (!isLoggedIn) {
+      return <Navigate to="/login" replace />;
+    }
+
+    return <WrappedComponent {...props} user={user} />;
+  };
+}
+
+// Usage
+const ProtectedDashboard = withAuth(Dashboard);
+const ProtectedProfile = withAuth(Profile);
+```
+
+```jsx
+// ──── 2. withLoading — Loading state ────
+function withLoading(WrappedComponent) {
+  return function LoadingComponent({ isLoading, loadingText = 'Loading...', ...props }) {
+    if (isLoading) {
+      return (
+        <div className="loading-container">
+          <Spinner />
+          <p>{loadingText}</p>
+        </div>
+      );
+    }
+    return <WrappedComponent {...props} />;
+  };
+}
+
+const ProductListWithLoading = withLoading(ProductList);
+
+// Usage
+<ProductListWithLoading
+  isLoading={loading}
+  loadingText="Fetching products..."
+  products={products}
+/>
+```
+
+```jsx
+// ──── 3. withErrorBoundary ────
+function withErrorBoundary(WrappedComponent, FallbackComponent) {
+  return class extends React.Component {
+    state = { hasError: false, error: null };
+
+    static getDerivedStateFromError(error) {
+      return { hasError: true, error };
+    }
+
+    componentDidCatch(error, info) {
+      console.error('Error caught by HOC:', error, info);
+    }
+
+    render() {
+      if (this.state.hasError) {
+        return FallbackComponent
+          ? <FallbackComponent error={this.state.error} />
+          : <div>Something went wrong!</div>;
+      }
+      return <WrappedComponent {...this.props} />;
+    }
+  };
+}
+
+const SafeChart = withErrorBoundary(Chart, ErrorFallback);
+```
+
+```jsx
+// ──── 4. withLogger ────
+function withLogger(WrappedComponent) {
+  return function LoggedComponent(props) {
+    useEffect(() => {
+      console.log(`[${WrappedComponent.name}] mounted`, props);
+      return () => {
+        console.log(`[${WrappedComponent.name}] unmounted`);
+      };
+    }, []);
+
+    return <WrappedComponent {...props} />;
+  };
+}
+```
+
+**HOC Compose করা:**
+```jsx
+// Multiple HOCs chain করা
+const EnhancedComponent = withLogger(withAuth(withLoading(Dashboard)));
+
+// বা compose utility দিয়ে (Redux-style)
+const compose = (...fns) => (x) => fns.reduceRight((acc, fn) => fn(acc), x);
+const EnhancedDashboard = compose(
+  withLogger,
+  withAuth,
+  withLoading
+)(Dashboard);
+```
+
+**HOC vs Custom Hooks:**
+
+| | HOC | Custom Hook |
+|---|---|---|
+| Returns | Component | Value/function |
+| Logic sharing | ✅ | ✅ |
+| Props interference | ⚠️ Possible | ❌ None |
+| JSX involvement | ✅ Can wrap JSX | ❌ Logic only |
+| Modern React | ⚠️ Less preferred | ✅ Preferred |
+| Debugging | Complex (wrapper hell) | Clear |
+
+**Interview-style Explanation:**
+> "HOC হলো component factory — একটি component নেয়, extra behavior যোগ করে, নতুন component return করে। `withAuth`, `withLoading`, `connect()` (Redux) — সব HOC। এখন Custom Hooks HOC-এর অনেক use case cover করে, তাই modern code-এ HOC কম দেখা যায়।"
+
+---
+
+<a id="p3-render-props"></a>
+
+## 9. Render Props
+
+**Definition:**
+Render Props হলো একটি pattern যেখানে component একটি **function prop** নেয় এবং সেই function-এ তার internal state/data pass করে call করে। এটি code sharing-এর আরেকটি pattern।
+
+**Basic Pattern:**
+```jsx
+// Component with render prop
+function MouseTracker({ render }) {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    setPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  return (
+    <div onMouseMove={handleMouseMove} style={{ height: '200px' }}>
+      {render(position)}   {/* internal state pass করে function call */}
+    </div>
+  );
+}
+
+// Usage — render prop-এ যা চাই তা render করি
+<MouseTracker
+  render={({ x, y }) => (
+    <p>Mouse at: ({x}, {y})</p>
+  )}
+/>
+
+<MouseTracker
+  render={({ x, y }) => (
+    <div
+      className="cursor-follower"
+      style={{ left: x, top: y }}
+    />
+  )}
+/>
+```
+
+**Children as Function (common variant):**
+```jsx
+// "children as a function" — render prop-এর elegant version
+function DataFetcher({ url, children }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch(url)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(e => { setError(e.message); setLoading(false); });
+  }, [url]);
+
+  return children({ data, loading, error });
+}
+
+// Usage — children হলো function
+<DataFetcher url="/api/products">
+  {({ data, loading, error }) => {
+    if (loading) return <Spinner />;
+    if (error) return <ErrorMessage message={error} />;
+    return <ProductList products={data} />;
+  }}
+</DataFetcher>
+
+<DataFetcher url="/api/users">
+  {({ data: users, loading }) =>
+    loading ? <Spinner /> : <UserTable users={users} />
+  }
+</DataFetcher>
+```
+
+**Render Props vs Custom Hooks:**
+```jsx
+// Same logic — Render Props version
+<Toggle>
+  {({ isOn, toggle }) => (
+    <button onClick={toggle}>{isOn ? 'ON' : 'OFF'}</button>
+  )}
+</Toggle>
+
+// Same logic — Custom Hook version (cleaner)
+function MyButton() {
+  const [isOn, toggle] = useToggle(false);
+  return <button onClick={toggle}>{isOn ? 'ON' : 'OFF'}</button>;
+}
+```
+
+> **Note:** Render Props এখন Custom Hooks দিয়ে replace করা হয় বেশিরভাগ ক্ষেত্রে। Legacy codebase-এ দেখা যায়, interview-এ জানা দরকার।
+
+---
+
+<a id="p3-composition"></a>
+
+## 10. Composition vs Inheritance
+
+**Definition:**
+React **composition over inheritance** recommend করে। Component-এ behavior add করার জন্য class inheritance-এর বদলে components compose করা হয়।
+
+**React-এ কেন Inheritance নয়:**
+```jsx
+// ❌ Inheritance — React-এ এভাবে করা হয় না
+class SpecialButton extends Button {
+  render() {
+    return super.render();  // Fragile, tightly coupled
+  }
+}
+
+// ✅ Composition — React way
+function SpecialButton({ children, ...props }) {
+  return (
+    <Button {...props} className="special">
+      <StarIcon />
+      {children}
+    </Button>
+  );
+}
+```
+
+**Composition Patterns:**
+```jsx
+// ──── 1. Containment — children prop ────
+function Modal({ title, children, footer, onClose }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{title}</h2>
+          <button onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">{children}</div>
+        {footer && <div className="modal-footer">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+
+// Modal reused with different content
+<Modal title="Delete Confirm" onClose={close} footer={<ConfirmButtons />}>
+  <p>Are you sure you want to delete this item?</p>
+</Modal>
+
+<Modal title="Add Product" onClose={close}>
+  <ProductForm onSubmit={handleAdd} />
+</Modal>
+```
+
+```jsx
+// ──── 2. Specialization — specific version of general ────
+function Dialog({ title, message, actions }) {
+  return (
+    <div className="dialog">
+      <h3>{title}</h3>
+      <p>{message}</p>
+      <div className="dialog-actions">{actions}</div>
+    </div>
+  );
+}
+
+// Specialized versions
+function ConfirmDialog({ onConfirm, onCancel, message }) {
+  return (
+    <Dialog
+      title="Confirm Action"
+      message={message}
+      actions={
+        <>
+          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+          <Button variant="danger" onClick={onConfirm}>Confirm</Button>
+        </>
+      }
+    />
+  );
+}
+
+function AlertDialog({ onOk, message, type = 'info' }) {
+  return (
+    <Dialog
+      title={type === 'error' ? '⛔ Error' : 'ℹ️ Info'}
+      message={message}
+      actions={<Button onClick={onOk}>OK</Button>}
+    />
+  );
+}
+```
+
+**Composition — Layout Pattern:**
+```jsx
+// Flexible layout composition
+function PageLayout({ sidebar, header, children, footer }) {
+  return (
+    <div className="page-layout">
+      {header && <header className="page-header">{header}</header>}
+      <div className="page-content">
+        {sidebar && <aside className="sidebar">{sidebar}</aside>}
+        <main className="main-content">{children}</main>
+      </div>
+      {footer && <footer className="page-footer">{footer}</footer>}
+    </div>
+  );
+}
+
+// Compose with different content
+<PageLayout
+  header={<DashboardHeader />}
+  sidebar={<NavigationMenu />}
+  footer={<AppFooter />}
+>
+  <Dashboard />
+</PageLayout>
+
+<PageLayout header={<MinimalHeader />}>
+  <LoginPage />
+</PageLayout>
+```
+
+**Follow-up Interview Questions:**
+1. React কেন inheritance recommend করে না?
+2. `children` prop আর `render` prop-এর পার্থক্য?
+3. HOC vs Render Props vs Custom Hooks — কোনটি prefer করবেন?
+
+---
+
+## PART 3 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Say |
+|---|---|---|
+| Communication | Parent→Child: props, Child→Parent: callback | Data unidirectional |
+| Parent→Child | Props, spread, children | Props immutable |
+| Child→Parent | Callback function props | `on` prefix convention |
+| Lifting State | Shared state in common ancestor | Single source of truth |
+| Controlled | React state = form value | `value` + `onChange` |
+| Uncontrolled | DOM holds value, ref reads | File input always uncontrolled |
+| Reusable | Single responsibility, configurable | Props-driven, no hardcode |
+| Compound | Context-based implicit sharing | `<Tabs.Tab>`, `<Select.Option>` |
+| HOC | Component → Enhanced Component | `withAuth`, `withLoading` |
+| Render Props | Function prop gets internal state | Children as function |
+| Composition | compose, not inherit | `children` prop, specialization |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part4"></a>
+
+## 📋 PART 4 সূচিপত্র — React Routing & Navigation
+
+| # | Topic | Key Concept |
+|---|---|---|
+| 1 | [React Router Overview](#p4-overview) | Client-side routing |
+| 2 | [BrowserRouter Setup](#p4-browserrouter) | Installation, basic setup |
+| 3 | [Routes & Route](#p4-routes) | Defining routes |
+| 4 | [Route Parameters](#p4-params) | Dynamic segments, useParams |
+| 5 | [Nested Routing](#p4-nested) | Layout routes, outlet |
+| 6 | [Navigation](#p4-navigation) | Link, NavLink, useNavigate |
+| 7 | [Protected Routes](#p4-protected) | Auth-based routing |
+| 8 | [Lazy Loading Routes](#p4-lazy) | Code splitting |
+| 9 | [Dynamic Routing](#p4-dynamic) | Data-driven routes |
+| 10 | [SPA Navigation Flow](#p4-flow) | Complete flow diagram |
+
+---
+
+<a id="p4-overview"></a>
+
+## 1. React Router Overview
+
+**Definition:**
+React Router হলো React-এর সবচেয়ে popular routing library। SPA-তে URL change করলে different components render করার mechanism। Browser-এর URL আর React component-এর মধ্যে mapping করে।
+
+**কেন React Router:**
+```
+Traditional website: URL change → Server নতুন HTML পাঠায়
+SPA with React Router: URL change → Client-side JS different component render করে
+                                   → Server-এ কোনো request যায় না!
+```
+
+**React Router v6 — Key Concepts:**
+
+| Concept | কী করে |
+|---|---|
+| `BrowserRouter` | HTML5 History API use করে routing |
+| `Routes` | Route definitions container |
+| `Route` | URL pattern → component mapping |
+| `Link` | SPA-friendly `<a>` tag |
+| `NavLink` | Active state সহ Link |
+| `Outlet` | Nested route render point |
+| `useNavigate` | Programmatic navigation |
+| `useParams` | URL parameters পড়া |
+| `useLocation` | Current URL info |
+| `useSearchParams` | Query string manage |
+
+**Installation:**
+```bash
+npm install react-router-dom
+```
+
+---
+
+<a id="p4-browserrouter"></a>
+
+## 2. BrowserRouter Setup
+
+**Basic Setup:**
+```jsx
+// main.jsx — root level-এ BrowserRouter
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </StrictMode>
+);
+```
+
+**Router Types:**
+
+| Router | Use Case | URL |
+|---|---|---|
+| `BrowserRouter` | Modern apps (recommended) | `/about`, `/users/1` |
+| `HashRouter` | Static hosting, no server config | `/#/about`, `/#/users/1` |
+| `MemoryRouter` | Testing, non-browser (React Native) | No URL change |
+| `createBrowserRouter` | New v6.4+ data API | Same as Browser |
+
+```jsx
+// Alternative — createBrowserRouter (v6.4+, recommended for new projects)
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <RootLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: 'about', element: <AboutPage /> },
+      {
+        path: 'products',
+        element: <ProductsPage />,
+        children: [
+          { path: ':id', element: <ProductDetail /> },
+        ],
+      },
+    ],
+  },
+]);
+
+// main.jsx
+<RouterProvider router={router} />
+```
+
+---
+
+<a id="p4-routes"></a>
+
+## 3. Routes & Route
+
+**Basic Route Setup:**
+```jsx
+// App.jsx
+import { Routes, Route } from 'react-router-dom';
+import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import ProductsPage from './pages/ProductsPage';
+import ProductDetail from './pages/ProductDetail';
+import NotFoundPage from './pages/NotFoundPage';
+import DashboardPage from './pages/DashboardPage';
+
+function App() {
+  return (
+    <div>
+      <Navbar />
+      <Routes>
+        {/* Exact match — "/" */}
+        <Route path="/" element={<HomePage />} />
+
+        {/* Static routes */}
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+
+        {/* Dynamic route */}
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:id" element={<ProductDetail />} />
+
+        {/* Index route */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardHome />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+
+        {/* 404 — catch all */}
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+      <Footer />
+    </div>
+  );
+}
+```
+
+**Route Matching Rules (v6):**
+```
+"/" → only exact "/"
+"/products" → exact "/products"
+"/products/:id" → "/products/123", "/products/abc"
+"/products/*" → "/products/any/path/here"
+"*" → matches everything (404 page)
+```
+
+---
+
+<a id="p4-params"></a>
+
+## 4. Route Parameters
+
+**URL Parameters — `useParams`:**
+```jsx
+// Route definition
+<Route path="/products/:productId" element={<ProductDetail />} />
+<Route path="/users/:userId/orders/:orderId" element={<OrderDetail />} />
+
+// ProductDetail component
+import { useParams } from 'react-router-dom';
+
+function ProductDetail() {
+  const { productId } = useParams();
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/products/${productId}`)
+      .then(r => r.json())
+      .then(data => {
+        setProduct(data);
+        setLoading(false);
+      });
+  }, [productId]);  // productId change হলে re-fetch
+
+  if (loading) return <ProductSkeleton />;
+  if (!product) return <NotFound />;
+
+  return (
+    <div className="product-detail">
+      <h1>{product.name}</h1>
+      <p>৳{product.price}</p>
+      <ProductImages images={product.images} />
+      <AddToCartButton productId={productId} />
+    </div>
+  );
+}
+```
+
+**Query String Parameters — `useSearchParams`:**
+```jsx
+import { useSearchParams } from 'react-router-dom';
+
+// URL: /products?category=electronics&sort=price&page=2
+
+function ProductsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const category = searchParams.get('category') || 'all';
+  const sort = searchParams.get('sort') || 'name';
+  const page = parseInt(searchParams.get('page') || '1');
+
+  const updateFilter = (key, value) => {
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      params.set(key, value);
+      params.set('page', '1');  // reset page on filter change
+      return params;
+    });
+  };
+
+  return (
+    <div>
+      <select
+        value={category}
+        onChange={e => updateFilter('category', e.target.value)}
+      >
+        <option value="all">All</option>
+        <option value="electronics">Electronics</option>
+        <option value="clothing">Clothing</option>
+      </select>
+
+      <select
+        value={sort}
+        onChange={e => updateFilter('sort', e.target.value)}
+      >
+        <option value="name">Name</option>
+        <option value="price">Price ↑</option>
+        <option value="-price">Price ↓</option>
+      </select>
+
+      <ProductGrid category={category} sort={sort} page={page} />
+      <Pagination
+        current={page}
+        onPageChange={p => updateFilter('page', p)}
+      />
+    </div>
+  );
+}
+```
+
+**`useLocation` — Current URL Info:**
+```jsx
+import { useLocation } from 'react-router-dom';
+
+function BreadCrumb() {
+  const location = useLocation();
+  // location.pathname = "/products/123"
+  // location.search = "?color=red"
+  // location.hash = "#reviews"
+  // location.state = { from: '/cart' }  (navigate-এ দেওয়া)
+
+  const paths = location.pathname.split('/').filter(Boolean);
+
+  return (
+    <nav aria-label="breadcrumb">
+      <Link to="/">Home</Link>
+      {paths.map((path, i) => (
+        <span key={i}>
+          {' / '}
+          <Link to={`/${paths.slice(0, i + 1).join('/')}`}>
+            {path}
+          </Link>
+        </span>
+      ))}
+    </nav>
+  );
+}
+```
+
+---
+
+<a id="p4-nested"></a>
+
+## 5. Nested Routing
+
+**Definition:**
+Nested routing মানে parent route-এর ভেতরে child routes। Parent layout (navbar, sidebar) same থাকে, শুধু content area change হয়। `<Outlet />` দিয়ে child route render হয়।
+
+**Layout with Nested Routes:**
+```jsx
+// App.jsx — route structure
+function App() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<PublicLayout />}>
+        <Route index element={<HomePage />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="products" element={<ProductsPage />} />
+        <Route path="products/:id" element={<ProductDetail />} />
+      </Route>
+
+      {/* Dashboard routes — different layout */}
+      <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route index element={<DashboardHome />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="products" element={<ManageProducts />} />
+        <Route path="products/new" element={<AddProduct />} />
+        <Route path="products/:id/edit" element={<EditProduct />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="settings" element={<SettingsLayout />}>
+          <Route index element={<GeneralSettings />} />
+          <Route path="profile" element={<ProfileSettings />} />
+          <Route path="security" element={<SecuritySettings />} />
+        </Route>
+      </Route>
+
+      {/* Auth routes */}
+      <Route path="/auth" element={<AuthLayout />}>
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
+        <Route path="forgot-password" element={<ForgotPassword />} />
+      </Route>
+
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
+  );
+}
+```
+
+```jsx
+// DashboardLayout.jsx — Outlet দিয়ে child render
+import { Outlet, NavLink } from 'react-router-dom';
+
+function DashboardLayout() {
+  return (
+    <div className="dashboard-layout">
+      <aside className="sidebar">
+        <NavLink to="/dashboard" end className={({ isActive }) =>
+          isActive ? 'nav-link active' : 'nav-link'
+        }>
+          🏠 Overview
+        </NavLink>
+        <NavLink to="/dashboard/analytics" className={({ isActive }) =>
+          isActive ? 'nav-link active' : 'nav-link'
+        }>
+          📊 Analytics
+        </NavLink>
+        <NavLink to="/dashboard/products">
+          🛍 Products
+        </NavLink>
+        <NavLink to="/dashboard/orders">
+          📦 Orders
+        </NavLink>
+        <NavLink to="/dashboard/settings">
+          ⚙️ Settings
+        </NavLink>
+      </aside>
+
+      <main className="dashboard-content">
+        <Outlet />   {/* Child route এখানে render হবে */}
+      </main>
+    </div>
+  );
+}
+```
+
+```jsx
+// Outlet with context (data pass করা)
+function DashboardLayout() {
+  const { user } = useAuth();
+
+  return (
+    <div>
+      <Sidebar />
+      <main>
+        <Outlet context={{ user, role: user.role }} />
+      </main>
+    </div>
+  );
+}
+
+// Child component-এ outlet context পড়া
+import { useOutletContext } from 'react-router-dom';
+
+function AnalyticsPage() {
+  const { user, role } = useOutletContext();
+  return <div>Analytics for {user.name} ({role})</div>;
+}
+```
+
+**Follow-up Interview Questions:**
+1. `<Outlet />` না থাকলে কী হবে?
+2. Nested route-এ URL কীভাবে build হয়?
+3. `index` route কী?
+
+---
+
+<a id="p4-navigation"></a>
+
+## 6. Navigation
+
+**Link vs NavLink vs useNavigate:**
+
+```jsx
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+
+// ──── Link — basic SPA navigation ────
+function Navbar() {
+  return (
+    <nav>
+      <Link to="/">Home</Link>
+      <Link to="/products">Products</Link>
+      <Link to="/about">About</Link>
+
+      {/* Dynamic link */}
+      <Link to={`/products/${product.id}`}>{product.name}</Link>
+
+      {/* With state */}
+      <Link to="/checkout" state={{ from: '/cart', items: cartItems }}>
+        Checkout
+      </Link>
+    </nav>
+  );
+}
+
+// ──── NavLink — active styling ────
+function Sidebar() {
+  return (
+    <nav>
+      {/* isActive prop দিয়ে styling */}
+      <NavLink
+        to="/dashboard"
+        end  // exact match (এটা না দিলে /dashboard/* সব active হবে)
+        className={({ isActive }) =>
+          `nav-item ${isActive ? 'nav-item-active' : ''}`
+        }
+        style={({ isActive }) => ({
+          color: isActive ? '#0066cc' : '#333',
+          fontWeight: isActive ? 'bold' : 'normal',
+        })}
+      >
+        Dashboard
+      </NavLink>
+
+      <NavLink to="/dashboard/analytics" className={({ isActive }) =>
+        isActive ? 'active' : ''
+      }>
+        Analytics
+      </NavLink>
+    </nav>
+  );
+}
+
+// ──── useNavigate — programmatic navigation ────
+function LoginForm() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogin = async (credentials) => {
+    await loginAPI(credentials);
+
+    // Navigate after action
+    const from = location.state?.from || '/dashboard';
+    navigate(from, { replace: true });  // replace: back button-এ login page আসবে না
+
+    // Other navigate examples:
+    // navigate('/dashboard');            // push
+    // navigate(-1);                      // go back
+    // navigate(1);                       // go forward
+    // navigate('/login', { replace: true });  // replace history
+    // navigate('/order/1', { state: { order } }); // with state
+  };
+
+  return <form onSubmit={handleLogin}>...</form>;
+}
+```
+
+**Link vs `<a>` tag:**
+
+| | `<a href>` | `<Link to>` |
+|---|---|---|
+| Page reload | ✅ Full reload | ❌ No reload |
+| SPA friendly | ❌ | ✅ |
+| History API | ❌ | ✅ |
+| State pass | ❌ | ✅ |
+| Active class | ❌ | ✅ (NavLink) |
+
+**Redirect:**
+```jsx
+import { Navigate } from 'react-router-dom';
+
+function OldPage() {
+  return <Navigate to="/new-page" replace />;
+}
+
+// Conditional redirect
+function Dashboard() {
+  const { isLoggedIn } = useAuth();
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: '/dashboard' }} replace />;
+  }
+  return <DashboardContent />;
+}
+```
+
+---
+
+<a id="p4-protected"></a>
+
+## 7. Protected Routes
+
+**Definition:**
+Protected (Private) Route হলো এমন route যেখানে শুধু authenticated user প্রবেশ করতে পারে। Unauthorized user-কে login page-এ redirect করা হয়।
+
+**Protected Route Component:**
+```jsx
+// components/ProtectedRoute.jsx
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+function ProtectedRoute({ children, requiredRole }) {
+  const { isLoggedIn, user } = useAuth();
+  const location = useLocation();
+
+  // না logged in → login page-এ পাঠাও, current location মনে রাখো
+  if (!isLoggedIn) {
+    return (
+      <Navigate
+        to="/auth/login"
+        state={{ from: location.pathname }}  // লগইনের পরে এখানে ফিরতে
+        replace
+      />
+    );
+  }
+
+  // Role check
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  return children;
+}
+```
+
+```jsx
+// App.jsx — protected routes use
+function App() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/auth/login" element={<LoginPage />} />
+      <Route path="/auth/register" element={<RegisterPage />} />
+      <Route path="/products" element={<ProductsPage />} />
+
+      {/* Protected — any authenticated user */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <DashboardLayout />
+        </ProtectedRoute>
+      }>
+        <Route index element={<DashboardHome />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="orders" element={<MyOrders />} />
+      </Route>
+
+      {/* Admin only */}
+      <Route path="/admin" element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminLayout />
+        </ProtectedRoute>
+      }>
+        <Route index element={<AdminDashboard />} />
+        <Route path="users" element={<UserManagement />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
+    </Routes>
+  );
+}
+```
+
+**Return to Original Page After Login:**
+```jsx
+// Login page — state থেকে "from" পড়ে
+function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
+
+  const from = location.state?.from || '/dashboard';
+
+  const handleSubmit = async (credentials) => {
+    await login(credentials);
+    navigate(from, { replace: true });
+    // User যেখান থেকে এসেছিল, সেখানে ফিরে যাবে
+  };
+
+  return <LoginForm onSubmit={handleSubmit} />;
+}
+```
+
+**Role-based Protected Route:**
+```jsx
+// Multiple role support
+function ProtectedRoute({ children, roles = [] }) {
+  const { user, isLoggedIn } = useAuth();
+  const location = useLocation();
+
+  if (!isLoggedIn) {
+    return <Navigate to="/auth/login" state={{ from: location.pathname }} replace />;
+  }
+
+  if (roles.length > 0 && !roles.includes(user.role)) {
+    return <Navigate to="/403" replace />;
+  }
+
+  return children;
+}
+
+// Usage
+<Route path="/reports" element={
+  <ProtectedRoute roles={['admin', 'manager']}>
+    <ReportsPage />
+  </ProtectedRoute>
+} />
+
+<Route path="/admin/users" element={
+  <ProtectedRoute roles={['admin']}>
+    <UserManagementPage />
+  </ProtectedRoute>
+} />
+```
+
+**Interview-style Explanation:**
+> "Protected route একটি wrapper component যা check করে user logged in কিনা। না থাকলে `<Navigate>` দিয়ে login page-এ redirect করি — `state={{ from: location.pathname }}` দিয়ে current URL মনে রাখি। Login সফল হলে user সেই original page-এ ফিরে যায়।"
+
+---
+
+<a id="p4-lazy"></a>
+
+## 8. Lazy Loading Routes
+
+**Definition:**
+Lazy loading মানে route-এর component initial bundle-এ না রেখে, যখন সেই route-এ যাওয়া হয় তখন load করা। `React.lazy()` আর `Suspense` ব্যবহার করা হয়। Initial bundle size কমে, app faster হয়।
+
+**কেন Lazy Load:**
+```
+Without lazy loading:
+App.js bundle = Home + Dashboard + Admin + Settings + Chart + ...
+= 2MB initial download 😱
+
+With lazy loading:
+Initial bundle = Home only = 200KB ✅
+Dashboard load করলে → Dashboard chunk download (300KB)
+Admin load করলে → Admin chunk download (400KB)
+```
+
+**Implementation:**
+```jsx
+import { Suspense, lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+// ✅ Lazy imports — function must return dynamic import
+const HomePage = lazy(() => import('./pages/HomePage'));
+const AboutPage = lazy(() => import('./pages/AboutPage'));
+const DashboardPage = lazy(() => import('./pages/Dashboard'));
+const ProductsPage = lazy(() => import('./pages/Products'));
+const AdminPage = lazy(() => import('./pages/Admin'));
+
+// Loading fallback component
+function PageLoader() {
+  return (
+    <div className="page-loader">
+      <div className="spinner-large" />
+      <p>Loading...</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    // Suspense — lazy component load হওয়া পর্যন্ত fallback দেখায়
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/dashboard/*" element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/products/*" element={<ProductsPage />} />
+        <Route path="/admin/*" element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminPage />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+**Multiple Suspense Boundaries:**
+```jsx
+// Per-section fallback — granular control
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={
+        <Suspense fallback={<HomePageSkeleton />}>
+          <HomePage />
+        </Suspense>
+      } />
+
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Suspense fallback={<DashboardSkeleton />}>
+            <Dashboard />
+          </Suspense>
+        </ProtectedRoute>
+      } />
+    </Routes>
+  );
+}
+```
+
+**Preloading (Performance optimization):**
+```jsx
+// Hover করলেই preload শুরু — navigation-এ faster
+const DashboardPage = lazy(() => import('./pages/Dashboard'));
+
+function Navbar() {
+  const handleMouseEnter = () => {
+    // Prefetch — hover করলেই background-এ load শুরু
+    import('./pages/Dashboard');
+  };
+
+  return (
+    <Link
+      to="/dashboard"
+      onMouseEnter={handleMouseEnter}
+    >
+      Dashboard
+    </Link>
+  );
+}
+```
+
+---
+
+<a id="p4-dynamic"></a>
+
+## 9. Dynamic Routing
+
+**Definition:**
+Dynamic routing মানে route structure runtime-এ data দিয়ে তৈরি হয়। Hardcoded routes-এর বদলে config বা API data থেকে routes generate করা।
+
+**Data-driven Routes:**
+```jsx
+// Config-based routing
+const routes = [
+  { path: '/', component: HomePage, exact: true },
+  { path: '/about', component: AboutPage },
+  { path: '/products', component: ProductsPage },
+  { path: '/products/:id', component: ProductDetail },
+  { path: '/dashboard', component: DashboardPage, protected: true },
+  { path: '/admin', component: AdminPage, protected: true, role: 'admin' },
+];
+
+function AppRouter() {
+  return (
+    <Routes>
+      {routes.map(({ path, component: Component, protected: isProtected, role }) => (
+        <Route
+          key={path}
+          path={path}
+          element={
+            isProtected
+              ? <ProtectedRoute requiredRole={role}><Component /></ProtectedRoute>
+              : <Component />
+          }
+        />
+      ))}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
+```
+
+**Role-based Dynamic Menu + Routes:**
+```jsx
+const menuConfig = {
+  admin: [
+    { label: 'Dashboard', path: '/admin/dashboard', icon: '🏠', component: AdminDashboard },
+    { label: 'Users', path: '/admin/users', icon: '👥', component: UserManagement },
+    { label: 'Products', path: '/admin/products', icon: '🛍', component: ProductManagement },
+    { label: 'Reports', path: '/admin/reports', icon: '📊', component: Reports },
+    { label: 'Settings', path: '/admin/settings', icon: '⚙️', component: Settings },
+  ],
+  manager: [
+    { label: 'Dashboard', path: '/dashboard', icon: '🏠', component: ManagerDashboard },
+    { label: 'Products', path: '/dashboard/products', icon: '🛍', component: ProductManagement },
+    { label: 'Reports', path: '/dashboard/reports', icon: '📊', component: Reports },
+  ],
+  user: [
+    { label: 'Home', path: '/home', icon: '🏠', component: UserHome },
+    { label: 'Orders', path: '/orders', icon: '📦', component: MyOrders },
+    { label: 'Profile', path: '/profile', icon: '👤', component: Profile },
+  ],
+};
+
+function DynamicSidebar() {
+  const { user } = useAuth();
+  const items = menuConfig[user.role] || menuConfig.user;
+
+  return (
+    <aside>
+      {items.map(item => (
+        <NavLink key={item.path} to={item.path} className={({ isActive }) =>
+          `menu-item ${isActive ? 'active' : ''}`
+        }>
+          {item.icon} {item.label}
+        </NavLink>
+      ))}
+    </aside>
+  );
+}
+
+function DynamicRoutes() {
+  const { user } = useAuth();
+  const items = menuConfig[user.role] || menuConfig.user;
+
+  return (
+    <Routes>
+      {items.map(({ path, component: Component }) => (
+        <Route key={path} path={path} element={<Component />} />
+      ))}
+    </Routes>
+  );
+}
+```
+
+---
+
+<a id="p4-flow"></a>
+
+## 10. SPA Navigation Flow — Complete Picture
+
+**Full Authentication Flow:**
+```
+User visits /dashboard (not logged in)
+    ↓
+ProtectedRoute checks: isLoggedIn = false
+    ↓
+<Navigate to="/auth/login" state={{ from: '/dashboard' }} />
+    ↓
+LoginPage renders — shows login form
+    ↓
+User submits credentials
+    ↓
+API call — success → token stored
+    ↓
+AuthContext: setUser(), setToken()
+    ↓
+navigate(from) → navigate('/dashboard')
+    ↓
+ProtectedRoute checks: isLoggedIn = true ✅
+    ↓
+DashboardLayout renders with <Outlet />
+    ↓
+DashboardHome renders inside Outlet
+```
+
+**Complete App Routing Example:**
+```jsx
+// Full production-like routing setup
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Suspense fallback={<FullPageLoader />}>
+          <Routes>
+            {/* Public layout */}
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/products" element={<ProductsPage />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
+              <Route path="/about" element={<AboutPage />} />
+            </Route>
+
+            {/* Auth pages — no layout */}
+            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/auth/register" element={<RegisterPage />} />
+            <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+
+            {/* Protected user dashboard */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <DashboardLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<DashboardHome />} />
+              <Route path="orders" element={<OrdersPage />} />
+              <Route path="orders/:id" element={<OrderDetail />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="settings" element={<SettingsPage />} />
+            </Route>
+
+            {/* Admin panel */}
+            <Route path="/admin" element={
+              <ProtectedRoute roles={['admin']}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<UsersManagement />} />
+              <Route path="users/:id" element={<UserDetail />} />
+              <Route path="products" element={<ProductsManagement />} />
+              <Route path="analytics" element={<Analytics />} />
+            </Route>
+
+            {/* Error pages */}
+            <Route path="/403" element={<UnauthorizedPage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+```
+
+**Routing Hooks Summary:**
+```jsx
+// useNavigate — programmatic navigation
+const navigate = useNavigate();
+navigate('/home');
+navigate(-1);
+navigate('/login', { replace: true, state: { from: '/dashboard' } });
+
+// useParams — URL params
+const { id, category } = useParams();
+
+// useLocation — current URL info
+const { pathname, search, hash, state } = useLocation();
+
+// useSearchParams — query string
+const [params, setParams] = useSearchParams();
+const page = params.get('page');
+
+// useOutletContext — data from parent Outlet
+const { user } = useOutletContext();
+```
+
+---
+
+## PART 4 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Say |
+|---|---|---|
+| React Router | Client-side routing, URL↔Component mapping | No server request on navigation |
+| BrowserRouter | HTML5 History API | Wrap app at root level |
+| Routes/Route | URL pattern matching | `path="*"` for 404 |
+| useParams | Dynamic URL segments | `const { id } = useParams()` |
+| useSearchParams | Query string management | `params.get('key')` |
+| Nested Routes | `<Outlet />` for child render | Layout + child pattern |
+| Link/NavLink | SPA link, no reload | NavLink has `isActive` |
+| useNavigate | Programmatic navigation | `navigate(-1)` for back |
+| Protected Route | Auth check wrapper | Redirect + `state={{ from }}` |
+| Lazy Loading | `React.lazy` + `Suspense` | Smaller initial bundle |
+| Dynamic Routing | Config/data-driven routes | Role-based menu |
+
+---
+
+## PART 3 & 4 Common Interview Questions
+
+**PART 3 — Architecture:**
+1. Component composition কী? উদাহরণ দিন।
+2. HOC কী? Custom Hooks-এর সাথে পার্থক্য?
+3. Controlled vs Uncontrolled component — কখন কোনটি?
+4. Lifting state up কেন দরকার?
+5. Compound components pattern কী?
+
+**PART 4 — Routing:**
+1. React Router-এ `BrowserRouter` কী করে?
+2. `<Link>` আর `<a>` পার্থক্য?
+3. Protected route কীভাবে implement করবেন?
+4. Nested routing-এ `<Outlet>` কী করে?
+5. Lazy loading routes কেন দরকার?
+6. `useNavigate` আর `<Navigate>` পার্থক্য?
+7. URL parameter আর query string পার্থক্য?
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 5 — State Management *(Next request এ লিখব)*
