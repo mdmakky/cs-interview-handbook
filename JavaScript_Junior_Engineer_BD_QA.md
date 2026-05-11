@@ -33,6 +33,7 @@
 
 <details>
 <summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [১.১ JavaScript কী?](#১১-javascript-কী)
 - [১.২ JavaScript-এর ইতিহাস](#১২-javascript-এর-ইতিহাস)
@@ -55,6 +56,7 @@
 
 <details>
 <summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [২.১ Execution Context](#২১-execution-context)
 - [২.২ Call Stack](#২২-call-stack)
@@ -81,6 +83,7 @@
 
 <details>
 <summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [৩.১ DOM কী?](#৩১-dom-কী)
 - [৩.২ DOM Manipulation](#৩২-dom-manipulation)
@@ -100,6 +103,7 @@
 
 <details>
 <summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [৪.১ Destructuring](#৪১-destructuring)
 - [৪.২ Spread Operator](#৪২-spread-operator)
@@ -119,6 +123,7 @@
 
 <details>
 <summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [৫.১ Synchronous vs Asynchronous](#৫১-synchronous-vs-asynchronous)
 - [৫.২ setTimeout ও setInterval](#৫২-settimeout-ও-setinterval)
@@ -136,6 +141,7 @@
 
 <details>
 <summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [৬.১ Objects](#৬১-objects)
 - [৬.২ Constructor Functions](#৬২-constructor-functions)
@@ -153,6 +159,7 @@
 
 <details>
 <summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [৭.১ SPA কী?](#৭১-spa-কী)
 - [৭.২ Virtual DOM](#৭২-virtual-dom)
@@ -170,6 +177,7 @@
 
 <details>
 <summary><strong>📃 PART 8 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [৮.১ Node.js কী?](#৮১-nodejs-কী)
 - [৮.২ Event-Driven Architecture](#৮২-event-driven-architecture)
@@ -187,6 +195,7 @@
 
 <details>
 <summary><strong>📑 PART 9 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [৯.১ JavaScript Theoretical Q&A](#৯১-javascript-theoretical-qa)
 - [৯.২ Common Coding Problems](#৯২-common-coding-problems)
@@ -199,6 +208,7 @@
 
 <details>
 <summary><strong>🗂️ PART 10 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [১০.১ Todo App](#১০১-todo-app)
 - [১০.২ Weather App](#১০২-weather-app)
@@ -212,6 +222,7 @@
 
 <details>
 <summary><strong>⚡ PART 11 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [১১.১ Browser Rendering Pipeline](#১১১-browser-rendering-pipeline)
 - [১১.২ Core Web Vitals](#১১২-core-web-vitals)
@@ -229,6 +240,7 @@
 
 <details>
 <summary><strong>🇧🇩 PART 12 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
 
 - [১২.১ BD Job Market Overview](#১২১-bd-job-market-overview)
 - [১২.২ Fresher Interview Pattern](#১২২-fresher-interview-pattern)
@@ -318,6 +330,7 @@ function validateEmail(email) {
 
 <details>
 <summary><strong>প্রশ্নগুলো দেখুন ও উত্তর মিলিয়ে নিন</strong></summary>
+<br>
 
 **Q: "JavaScript কি compiled নাকি interpreted language?"**
 > **A:** JavaScript মূলত **interpreted**, কিন্তু আধুনিক JS engines (V8) **JIT (Just-In-Time) Compilation** ব্যবহার করে performance বাড়ায়। তাই বলা যায় এটি **interpreted + JIT compiled**।
@@ -558,6 +571,7 @@ console.log(window.notGlobal); // undefined
 
 <details>
 <summary><strong>প্রশ্নগুলো দেখুন ও উত্তর মিলিয়ে নিন</strong></summary>
+<br>
 
 **Q: "const দিয়ে declare করা object-কে কি পুরোপুরি immutable করা যায়?"**
 > **A:** হ্যাঁ, `Object.freeze()` দিয়ে। `const` শুধু re-assignment রোধ করে, কিন্তু `Object.freeze(obj)` object-এর properties পরিবর্তনও রোধ করে।
@@ -678,6 +692,7 @@ console.log(Array.isArray([])); // true
 
 <details>
 <summary><strong>প্রশ্নগুলো দেখুন</strong></summary>
+<br>
 
 **Q: "NaN কী? এটা কোন type?"**
 > **A:** NaN = "Not a Number"। এটা ironically `Number` type! অসম্ভব mathematical operation করলে পাওয়া যায়: `"hello" * 2 = NaN`। Special property: `NaN === NaN` সবসময় `false`। Check করতে `Number.isNaN()` ব্যবহার করুন।
@@ -972,6 +987,7 @@ let username = getUserName() || "Guest"; // username না পেলে "Guest"
 
 <details>
 <summary><strong>প্রশ্নগুলো দেখুন</strong></summary>
+<br>
 
 **Q: "switch statement-এ break না দিলে কী হয়?"**
 > **A:** **Fall-through** হয় — match হওয়া case থেকে শুরু করে পরের সব cases execute হতে থাকে `break` বা function শেষ না হওয়া পর্যন্ত। কখনো কখনো intentionally ব্যবহার করা হয় (যেমন একাধিক case-এ একই code)।
@@ -1627,6 +1643,7 @@ line2` `` without `\n` |
 
 <details>
 <summary><strong>🔹 JavaScript Basics (Q1–Q10)</strong></summary>
+<br>
 
 **Q1: JavaScript কী এবং কেন এত popular?**
 > **A:** JavaScript একটি high-level, interpreted, dynamically-typed, multi-paradigm programming language। Popular কারণ: (১) Browser-এর একমাত্র native language, (২) Node.js দিয়ে backend-এও চলে, (৩) বিশাল ecosystem (npm), (৪) Versatile — web, mobile, desktop সব জায়গায়, (৫) Easy to learn।
@@ -1662,6 +1679,7 @@ line2` `` without `\n` |
 
 <details>
 <summary><strong>🔹 Functions & Scope (Q11–Q20)</strong></summary>
+<br>
 
 **Q11: Arrow function কী? Regular function থেকে কীভাবে আলাদা?**
 > **A:** Arrow function ES6-এর সংক্ষিপ্ত syntax। পার্থক্য: (১) `this` — arrow lexical this, regular function নিজের this, (২) `arguments` object — arrow-এ নেই, (৩) Constructor — arrow function constructor হিসেবে ব্যবহার করা যায় না, (৪) `prototype` — arrow-এ নেই।
@@ -1697,6 +1715,7 @@ line2` `` without `\n` |
 
 <details>
 <summary><strong>🔹 Data Types & Operators (Q21–Q30)</strong></summary>
+<br>
 
 **Q21: NaN কী? কীভাবে check করবেন?**
 > **A:** NaN = "Not a Number"। Type: `number`। উৎপত্তি: `"abc" * 2`, `0/0`। Special: `NaN === NaN` is `false`! Check: `Number.isNaN(value)` — global `isNaN()` এড়িয়ে চলুন (coercion করে)।
@@ -3140,6 +3159,7 @@ function expensiveCalculation(data) {
 
 <details>
 <summary><strong>🔹 Execution Context & Event Loop (Q1–Q10)</strong></summary>
+<br>
 
 **Q1: Execution Context কী? কত ধরনের?**
 > **A:** Execution Context হলো JS code execute হওয়ার পরিবেশ। তিন ধরন: Global EC (একটিমাত্র, program শুরুতে), Function EC (প্রতিটি function call-এ), Eval EC (এড়িয়ে চলুন)। প্রতিটিতে Variable Environment, Lexical Environment, ও this binding থাকে।
@@ -3181,6 +3201,7 @@ console.log("D");
 
 <details>
 <summary><strong>🔹 this, Prototype & Classes (Q11–Q20)</strong></summary>
+<br>
 
 **Q11: this keyword কীভাবে নির্ধারিত হয়?**
 > **A:** Call site দিয়ে: Regular function = window/undefined(strict)। Method call = object। Arrow function = enclosing lexical this। Constructor (new) = নতুন object। call/apply/bind = explicitly set।
@@ -3216,6 +3237,7 @@ console.log("D");
 
 <details>
 <summary><strong>🔹 Performance & Patterns (Q21–Q25)</strong></summary>
+<br>
 
 **Q21: Debounce এবং Throttle কী? কখন কোনটি ব্যবহার করবেন?**
 > **A:** Debounce: শেষ call-এর পর delay — search bar (user টাইপ থামলে API call)। Throttle: নির্দিষ্ট interval-এ একবার — scroll/resize handler। উভয়ই performance optimization।
@@ -4283,6 +4305,7 @@ input.setCustomValidity(""); // error clear
 
 <details>
 <summary><strong>🔹 DOM & Events (Q1–Q15)</strong></summary>
+<br>
 
 **Q1: DOM কী? JavaScript কীভাবে DOM ব্যবহার করে?**
 > **A:** DOM (Document Object Model) হলো HTML document-এর tree-shaped object representation যা browser তৈরি করে। JavaScript `document` object-এর মাধ্যমে DOM access করে — elements পড়তে, পরিবর্তন করতে, যোগ করতে ও মুছতে পারে। DOM manipulation-ই web interactivity-র মূল ভিত্তি।
@@ -4333,6 +4356,7 @@ input.setCustomValidity(""); // error clear
 
 <details>
 <summary><strong>🔹 Tricky & Practical Questions (Q16–Q20)</strong></summary>
+<br>
 
 **Q16: Event listener remove করতে না পারলে কী সমস্যা হয়?**
 > **A:** **Memory leak**। Element DOM থেকে remove হলেও listener active থাকলে সেই element ও তার closure garbage collected হয় না। `removeEventListener` দিয়ে remove করুন। অথবা `{ once: true }` option ব্যবহার করুন।
@@ -5256,6 +5280,7 @@ async function safeImport(path) {
 
 <details>
 <summary><strong>🔹 Destructuring, Spread, Rest (Q1–Q10)</strong></summary>
+<br>
 
 **Q1: Destructuring কী? Array ও Object destructuring-এর পার্থক্য?**
 > **A:** Destructuring হলো Array বা Object থেকে values extract করে variables-এ assign করার সংক্ষিপ্ত syntax। Array destructuring position-based `[a, b] = arr`। Object destructuring name-based `{ name, age } = obj`। Object-এ rename করা যায় `{ name: n }`, default value দেওয়া যায় `{ age = 18 }`।
@@ -5291,6 +5316,7 @@ async function safeImport(path) {
 
 <details>
 <summary><strong>🔹 Advanced ES6+ (Q11–Q20)</strong></summary>
+<br>
 
 **Q11: WeakMap এবং WeakSet কেন দরকার? কখন ব্যবহার করবেন?**
 > **A:** WeakMap/WeakSet-এর key/value object-গুলো Garbage Collection prevent করে না। Object reference চলে গেলে auto-cleanup হয় — memory leak এড়ানো যায়। Use case: private class data, DOM element-এর metadata সংরক্ষণ (element remove হলে auto-clean), circular structure handling।
@@ -6069,6 +6095,7 @@ async function fetchWithTimeout(url, timeout = 5000) {
 
 <details>
 <summary><strong>🔹 Core Async Concepts (Q1–Q12)</strong></summary>
+<br>
 
 **Q1: JavaScript কি সত্যিই single-threaded? তাহলে async কীভাবে কাজ করে?**
 > **A:** হ্যাঁ, JavaScript single-threaded — একসময়ে একটি কাজ। কিন্তু browser/Node.js-এর Web APIs (fetch, setTimeout, DOM events) আলাদা thread-এ কাজ করে। শেষ হলে callback queue-তে রাখে। Event Loop call stack খালি হলে সেই callback তুলে চালায়। তাই JS non-blocking async কাজ করতে পারে।
@@ -6110,6 +6137,7 @@ async function fetchWithTimeout(url, timeout = 5000) {
 
 <details>
 <summary><strong>🔹 Practical & Tricky (Q13–Q20)</strong></summary>
+<br>
 
 **Q13: নিচের code-এর output কী?**
 ```javascript
@@ -6993,6 +7021,7 @@ const service = new OrderService2(mockDb, mockEmail);
 
 <details>
 <summary><strong>🔹 OOP Core Concepts (Q1–Q12)</strong></summary>
+<br>
 
 **Q1: JavaScript কি সত্যিকারের OOP language?**
 > **A:** JavaScript prototype-based OOP language — class-based (Java, C++) নয়। ES6 Classes হলো prototype-এর syntactic sugar। তবে OOP-এর চারটি pillar (Encapsulation, Inheritance, Polymorphism, Abstraction) সবই JS-এ implement করা যায়।
@@ -7043,6 +7072,7 @@ class User extends Serializable(Validatable(Entity)) { }
 
 <details>
 <summary><strong>🔹 Advanced OOP (Q13–Q20)</strong></summary>
+<br>
 
 **Q13: Constructor function এবং Class-এর পার্থক্য?**
 > **A:** Class: strict mode enforced, hoisting নেই (TDZ), `new` বাধ্যতামূলক, cleaner syntax, private fields support। Constructor function: hoisted, `new` ছাড়া call করা যায় (কিন্তু bug), prototype manually setup করতে হয়। ভেতরে একই — prototype-based।
@@ -7985,6 +8015,7 @@ function Dashboard() {
 
 <details>
 <summary><strong>🔹 React & Frontend Core (Q1–Q12)</strong></summary>
+<br>
 
 **Q1: Virtual DOM কী? কেন সরাসরি real DOM update করা হয় না?**
 > **A:** Virtual DOM হলো real DOM-এর lightweight JS object copy। সরাসরি real DOM update expensive — reflow, repaint trigger করে। React state পরিবর্তনে নতুন Virtual DOM তৈরি করে, পুরনোর সাথে diff করে (Reconciliation), শুধু পরিবর্তিত অংশ real DOM-এ update করে (batched)।
@@ -8026,6 +8057,7 @@ function Dashboard() {
 
 <details>
 <summary><strong>🔹 Practical & Advanced (Q13–Q20)</strong></summary>
+<br>
 
 **Q13: Memory leak কীভাবে React-এ হয়? কীভাবে এড়াবেন?**
 > **A:** Component unmount-এর পরে state set করা — async fetch, setTimeout। Fix: cleanup function-এ cancelled flag, AbortController। Event listener `useEffect` cleanup-এ remove করা।
@@ -8882,6 +8914,7 @@ EMAIL_PASS=
 
 <details>
 <summary><strong>🔹 Node.js & Express Core (Q1–Q12)</strong></summary>
+<br>
 
 **Q1: Node.js কী? Browser JavaScript থেকে কীভাবে আলাদা?**
 > **A:** Node.js হলো V8 engine-এর উপর তৈরি server-side JS runtime। Browser-এ `window`, `document` আছে কিন্তু file system, network server নেই। Node-এ file system (`fs`), HTTP server, OS access আছে কিন্তু DOM নেই। উভয়েই non-blocking, event-driven।
@@ -8923,6 +8956,7 @@ EMAIL_PASS=
 
 <details>
 <summary><strong>🔹 Advanced & Security (Q13–Q20)</strong></summary>
+<br>
 
 **Q13: SQL Injection বা NoSQL Injection থেকে কীভাবে রক্ষা করবেন?**
 > **A:** Parameterized queries বা ORM ব্যবহার করুন। Raw query-তে user input সরাসরি দেবেন না। Mongoose-এ schema validation — invalid type reject হয়। Input sanitize করুন। `mongoose-sanitize` বা similar package।
@@ -8996,6 +9030,7 @@ app.get("/users", asyncHandler(async (req, res) => {
 
 <details>
 <summary><strong>🔹 JS Core — Variables, Types, Scope (Q1–Q15)</strong></summary>
+<br>
 
 **Q1: `var`, `let`, `const`-এর পার্থক্য কী?**
 > **A:**
@@ -9055,6 +9090,7 @@ app.get("/users", asyncHandler(async (req, res) => {
 
 <details>
 <summary><strong>🔹 Functions, OOP, Async (Q16–Q30)</strong></summary>
+<br>
 
 **Q16: Higher-Order Function কী?**
 > **A:** Function যে অন্য function argument হিসেবে নেয় বা return করে। `map`, `filter`, `reduce`, `forEach` — সবই HOF। Custom HOF: `const multiplier = (n) => (x) => x * n`।
@@ -9115,6 +9151,7 @@ app.get("/users", asyncHandler(async (req, res) => {
 
 <details>
 <summary><strong>🔹 Array Problems (P1–P10)</strong></summary>
+<br>
 
 **P1: Array-এর duplicate বের করো**
 ```javascript
@@ -9262,6 +9299,7 @@ console.log(mergeSorted([1, 3, 5], [2, 4, 6])); // [1,2,3,4,5,6]
 
 <details>
 <summary><strong>🔹 String Problems (P11–P18)</strong></summary>
+<br>
 
 **P11: String reverse করো**
 ```javascript
@@ -9363,6 +9401,7 @@ const countVowels = str =>
 
 <details>
 <summary><strong>🔹 Object & Function Problems (P19–P25)</strong></summary>
+<br>
 
 **P19: Object deep clone করো**
 ```javascript
@@ -9515,6 +9554,7 @@ class EventEmitter {
 
 <details>
 <summary><strong>🔹 Top 20 Tricky Questions</strong></summary>
+<br>
 
 **T1: `typeof null === "object"` কেন?**
 > **A:** JavaScript-এর historical bug (1995 থেকে)। Fix করলে পুরনো code break হবে — তাই রাখা হয়েছে। `null` check করতে: `value === null`।
@@ -9692,6 +9732,7 @@ console.log("D");
 
 <details>
 <summary><strong>🔹 40 Rapid-Fire Questions & One-Line Answers</strong></summary>
+<br>
 
 | # | প্রশ্ন | উত্তর |
 |---|--------|-------|
@@ -9746,6 +9787,7 @@ console.log("D");
 
 <details>
 <summary><strong>🔹 Real-World Scenarios (S1–S15)</strong></summary>
+<br>
 
 **S1: একটি search box-এ প্রতি keystroke-এ API call হচ্ছে — কীভাবে optimize করবেন?**
 > **A:** Debounce ব্যবহার করুন (300-500ms delay)। User টাইপ থামলে একবার API call। AbortController দিয়ে পুরনো request cancel করুন।
@@ -9845,6 +9887,7 @@ function useData(url) {
 
 <details>
 <summary><strong>🔹 25 Output Questions</strong></summary>
+<br>
 
 **O1:**
 ```javascript
@@ -12138,6 +12181,7 @@ function onRenderCallback(id, phase, actualDuration, baseDuration) {
 
 <details>
 <summary><strong>🔹 Performance Interview Q&A (Q1–Q20)</strong></summary>
+<br>
 
 **Q1: Browser rendering pipeline-এ Reflow এবং Repaint-এর পার্থক্য কী?**
 > **A:** Reflow — layout recalculate (size, position)। Repaint — pixel fill (color, background)। Reflow সবসময় Repaint trigger করে, কিন্তু Repaint সবসময় Reflow করে না। CSS `transform` ও `opacity` compositor thread-এ — দুটোর কোনোটিই trigger করে না।
@@ -12286,6 +12330,7 @@ Startups & Others:      Outsourcing:
 
 <details>
 <summary><strong>🔹 Tier 1 — প্রায় সব interview-এ আসে</strong></summary>
+<br>
 
 ```
 ✅ var/let/const পার্থক্য
@@ -12310,6 +12355,7 @@ Startups & Others:      Outsourcing:
 
 <details>
 <summary><strong>🔹 Tier 2 — Product company বা mid-level-এ আসে</strong></summary>
+<br>
 
 ```
 ✅ Prototype chain
@@ -12333,6 +12379,7 @@ Startups & Others:      Outsourcing:
 
 <details>
 <summary><strong>🔹 Tier 3 — Senior/Lead position বা top product company</strong></summary>
+<br>
 
 ```
 ✅ System design basics
@@ -12397,6 +12444,7 @@ function fibonacci(n, memo = {}) {
 
 <details>
 <summary><strong>🔹 Real Questions from BD Interviews (Community Reported)</strong></summary>
+<br>
 
 **Brain Station 23 / Kona:**
 - "React-এ component re-render কখন হয়? কীভাবে prevent করবেন?"
@@ -12431,6 +12479,7 @@ function fibonacci(n, memo = {}) {
 
 <details>
 <summary><strong>🔹 Technical MCQ — BD Online Tests-এ বেশি আসে</strong></summary>
+<br>
 
 ```javascript
 // Q: Output কী?
@@ -12488,6 +12537,7 @@ console.log("5" + 3);
 
 <details>
 <summary><strong>📋 Mock Interview (বাংলায় answer করার template)</strong></summary>
+<br>
 
 **Interviewer: "নিজের সম্পর্কে বলুন।"**
 > **Template Answer:**
