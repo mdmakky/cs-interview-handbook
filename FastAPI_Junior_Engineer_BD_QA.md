@@ -22,8 +22,8 @@
 | 📗 | [**PART 2** — Routing & API Development](#part2) | APIRouter, CRUD, HTTP Methods, File Upload, Dependency Injection, Middleware |
 | 📙 | [**PART 3** — Database Integration](#part3) | SQLAlchemy, PostgreSQL, ORM, Alembic, CRUD, Transactions |
 | 📕 | [**PART 4** — Authentication & Security](#part4) | JWT, OAuth2, Password Hashing, CORS, Rate Limiting |
-| 📓 | **PART 5** — Async Programming *(Coming Soon)* | async/await, Event Loop, Async DB, Concurrency |
-| 📔 | **PART 6** — Advanced FastAPI *(Coming Soon)* | WebSockets, Streaming, Custom Middleware, Caching |
+| 📓 | [**PART 5** — Async Programming](#part5) | async/await, Event Loop, Async DB, Concurrent Requests, Background Tasks |
+| 📔 | [**PART 6** — Advanced FastAPI](#part6) | WebSockets, Streaming, Custom Middleware, Exception Handling, Caching |
 | 📒 | **PART 7** — Testing & Debugging *(Coming Soon)* | Pytest, TestClient, Mocking, Logging |
 | 📃 | **PART 8** — Deployment & DevOps *(Coming Soon)* | Uvicorn, Docker, Nginx, CI/CD, VPS |
 | 🗂️ | **PART 9** — System Design *(Coming Soon)* | Microservices, Redis, Celery, API Gateway |
@@ -4148,9 +4148,514 @@ async def add_security_headers(request, call_next):
 
 ---
 
-> **📌 পরবর্তী:** PART 5 — Async Programming *(Coming Soon)*
+<a id="part5"></a>
+
+# PART 5: Async Programming
+
+> **📍 এই PART এর Sections:** [৫.१](#५१-asyncawait-পরিচয়) · [५.२](#५२-event-loop) · [५.३](#५३-asyncio-module) · [५.४](#०५४-fastapi-এ-async-endpoints) · [०५.५](#०५५-concurrent-http-requests) · [०५.६](#०५६-async-context-managers) · [००५.७](#०५७-asyncio-tasks-ও-task-management) · [००५.८](#००५८-background-tasks) · [००५.९](#००५९-part-5--interview-questions--answers)
+
+---
+
+## ५.१ Async/Await পরিচয়
+
+**Async** মানে \"asynchronous\" — একটি operation শেষ হওয়ার জন্য অপেক্ষা না করে অন্য কাজ করা।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+```
+রেস্টুরেন্টে ওয়েটার:
+  Sync (old way): গ্রাহক A কে খাবার serve করে, A খাওয়া শেষ না হওয়া পর্যন্ত অপেক্ষা করে।
+             অন্য গ্রাহকরা অপেক্ষা করে। খুবই inefficient।
+  
+  Async (new way): গ্রাহক A কে খাবার serve করে, সাথে সাথে B কে order নেয়,
+             C কে পানি দেয়, D র টেবিল clear করে। যখন A খাওয়া শেষ করে
+             তখন bill দেয়। সবাই একসাথে serve হয়।
+```
+
+### Sync vs Async Code
+
+```python
+# ─── SYNC (blocking) ───────────────────────────
+import requests
+import time
+
+start = time.time()
+response1 = requests.get(\"https://api.example.com/user/1\")  # 2 sec
+response2 = requests.get(\"https://api.example.com/user/2\")  # 2 sec
+response3 = requests.get(\"https://api.example.com/user/3\")  # 2 sec
+print(f\"Total: {time.time() - start:.1f} sec\")  # 6 sec ❌
+
+# ─── ASYNC (non-blocking) ─────────────────────────
+import aiohttp
+import asyncio
+import time
+
+async def fetch_users():
+    start = time.time()
+    async with aiohttp.ClientSession() as session:
+        # Concurrently করে fetch করুন
+        async with session.get(\"https://api.example.com/user/1\") as r1:
+            pass
+        async with session.get(\"https://api.example.com/user/2\") as r2:
+            pass
+        async with session.get(\"https://api.example.com/user/3\") as r3:
+            pass
+    print(f\"Total: {time.time() - start:.1f} sec\")  # 2 sec ✅
+
+asyncio.run(fetch_users())
+```
+
+### async/await Syntax
+
+```python
+# async function সংজ্ঞা
+async def greet(name: str) -> str:
+    # await — \"এখানে কিছু হতে দিন, এই সময়ে আমি অন্য কিছু করব না\"
+    result = await some_async_operation(name)
+    return result
+
+# ব্যবহার
+asyncio.run(greet(\"Rafi\"))  # Run করুন
+```
+
+### 🎤 Interview-style Explanation
+
+**প্রশ্ন:** \"Sync ও async এর পার্থক্য কী? কেন FastAPI async ব্যবহার করে?\"
+
+**আদর্শ উত্তর:**
+> \"Sync: একটি operation শেষ হওয়া পর্যন্ত পরবর্তী operation block থাকে। Async: একটি operation (যেমন DB query, HTTP request) কে ফিরিয়ে দিয়ে engine অন্য request serve করে। FastAPI ASGI framework, যা async support করে — একই thread এ হাজারো concurrent connections handle করতে পারে। High concurrency scenario এ sync থেকে 10-100x better performance পাওয়া যায়।\"
+
+---
+
+## ०५.२ Event Loop
+
+**Event Loop** হলো asyncio এর core — এটি async tasks manage করে।
+
+Event loop একটি thread এ হাজার হাজার concurrent request handle করতে পারে:
+
+```
+┌─────────────────────────────────────────┐
+│  Event Loop (Single Thread)             │
+├─────────────────────────────────────────┤
+│ Task 1 (DB query) → wait           │
+│ Task 2 (HTTP) → wait               │
+│ Task 3 (File read) → wait          │
+│                                     │
+│ Task 1 ready → resume              │
+│ Task 2 ready → resume              │
+│ Task 3 ready → resume              │
+└─────────────────────────────────────────┘
+```
+
+### Basic Example
+
+```python
+import asyncio
+
+async def task1():
+    print(\"Task 1 শুরু\")
+    await asyncio.sleep(2)
+    print(\"Task 1 শেষ\")
+
+async def task2():
+    print(\"Task 2 শুরু\")
+    await asyncio.sleep(1)
+    print(\"Task 2 শেষ\")
+
+async def main():
+    # একসাথে run করুন
+    await asyncio.gather(task1(), task2())  # Total 2 sec (not 3)
+
+asyncio.run(main())
+```
+
+---
+
+## ०५.३ asyncio Module
+
+```python
+import asyncio
+
+# gather — multiple coroutines একসাথে
+results = await asyncio.gather(async_func1(), async_func2())
+
+# create_task — background এ run করুন
+task = asyncio.create_task(async_func())
+await task
+
+# sleep — non-blocking wait
+await asyncio.sleep(2)
+
+# timeout
+try:
+    await asyncio.wait_for(operation(), timeout=5)
+except asyncio.TimeoutError:
+    print(\"Timeout\")
+```
+
+---
+
+## ०५.४ FastAPI এ Async Endpoints
+
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get(\"/async\")
+async def get_async_data():
+    await asyncio.sleep(1)  # non-blocking
+    return {\"data\": \"value\"}
+```
+
+---
+
+## ०५.५ Concurrent HTTP Requests
+
+```bash
+pip install httpx
+```
+
+```python
+import httpx
+import asyncio
+
+async def fetch_users(user_ids):
+    async with httpx.AsyncClient() as client:
+        tasks = [client.get(f\"https://api.example.com/users/{uid}\") for uid in user_ids]
+        responses = await asyncio.gather(*tasks)
+        return [r.json() for r in responses]
+```
+
+---
+
+## ०५.६ Async Context Managers
+
+```python
+async def async_operation():
+    async with aiohttp.ClientSession() as session:
+        async with session.get(\"https://api.example.com\") as response:
+            data = await response.json()
+            return data
+```
+
+---
+
+## ०५.७ asyncio Tasks ও Task Management
+
+```python
+async def main():
+    # Create task
+    task = asyncio.create_task(long_operation())
+    
+    # Cancel করুন
+    task.cancel()
+    
+    # Multiple tasks
+    tasks = [asyncio.create_task(op()) for _ in range(3)]
+    results = await asyncio.gather(*tasks)
+```
+
+---
+
+## ०५.८ Background Tasks
+
+```python
+from fastapi import BackgroundTasks
+
+@app.post(\"/register\")
+async def register(user_data: dict, background_tasks: BackgroundTasks):
+    user = save_user(user_data)
+    
+    # Background task add করুন
+    background_tasks.add_task(send_email, user[\"email\"])
+    
+    return {\"status\": \"success\"}
+```
+
+---
+
+## ००५.९ PART 5 — Interview Questions & Answers
+
+**Q: Sync এবং Async এ Thread ও Event Loop এর পার্থক্য?**
+
+> Sync: প্রতিটি request একটি thread এ চলে। Async: একটি thread (event loop) এ হাজার concurrent requests চলে। Async I/O-bound operations এ much better।
+
+---
+
+### Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|--------|----------|
+| `async def`? | Async function definition |
+| `await`? | Coroutine complete হওয়ার জন্য wait |
+| `asyncio.gather()`? | Multiple coroutines একসাথে run |
+| `create_task()`? | Background এ schedule করুন |
+| `asyncio.sleep()`? | Non-blocking sleep |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id=\"part6\"></a>
+
+# PART 6: Advanced FastAPI
+
+> **📍 এই PART এর Sections:** [६.१](#०६१-websockets) · [०६.२](#०६२-streaming-responses) · [०६.३](#००६३-custom-middleware) · [००६.४](#०००६४-exception-handling) · [०००६.५](#०००००६५-custom-validation) · [०००००६.६](#०००००००६६-lifespan-events) · [००००००६.७](#०००००००००६७-dependency-overrides) · [०००००००००००६.८](#०००००००००००००६८-pagination-filtering-searching) · [००००००००००००००६.९](#००००००००००००००००६९-caching-with-redis) · [०००००००००००००००००६.१०](#०००००००००००००००००००००६१०-part-6--interview-questions--answers)
+
+---
+
+## ०६.१ WebSockets
+
+**WebSocket** = Persistent bidirectional connection — real-time communication।
+
+### Basic WebSocket
+
+```python
+from fastapi import FastAPI, WebSocket
+
+@app.websocket(\"/ws\")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await websocket.send_text(f\"Echo: {data}\")
+    except Exception as e:
+        print(f\"Error: {e}\")
+    finally:
+        await websocket.close()
+```
+
+### Multi-client Broadcasting
+
+```python
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+@app.websocket(\"/ws/chat\")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await manager.broadcast(f\"Message: {data}\")
+    except Exception:
+        manager.active_connections.remove(websocket)
+```
+
+---
+
+## ०६.२ Streaming Responses
+
+```python
+from fastapi.responses import StreamingResponse
+
+@app.get(\"/download\")
+async def download_file():
+    def file_generator():
+        with open(\"file.zip\", \"rb\") as f:
+            while chunk := f.read(8192):
+                yield chunk
+
+    return StreamingResponse(file_generator())
+
+@app.get(\"/stream-events\")
+async def stream_events():
+    async def event_generator():
+        for i in range(5):
+            yield f\"data: Message {i}\\\\n\\\\n\"
+            await asyncio.sleep(1)
+
+    return StreamingResponse(event_generator(), media_type=\"text/event-stream\")
+```
+
+---
+
+## ००६.३ Custom Middleware
+
+```python
+from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+import time
+
+class LoggingMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start = time.time()
+        response = await call_next(request)
+        elapsed = time.time() - start
+        response.headers[\"X-Process-Time\"] = str(elapsed)
+        return response
+
+app.add_middleware(LoggingMiddleware)
+```
+
+---
+
+## ०००६.४ Exception Handling
+
+```python
+from fastapi import HTTPException
+
+@app.get(\"/users/{user_id}\")
+def get_user(user_id: int):
+    if user_id < 0:
+        raise HTTPException(status_code=400, detail=\"Invalid ID\")
+    return {\"user_id\": user_id}
+
+class CustomException(Exception):
+    pass
+
+@app.exception_handler(CustomException)
+async def custom_exception_handler(request, exc):
+    return JSONResponse(status_code=400, content={\"error\": str(exc)})
+```
+
+---
+
+## ०००००६.५ Custom Validation
+
+```python
+from pydantic import BaseModel, field_validator
+
+class User(BaseModel):
+    username: str
+    age: int
+
+    @field_validator(\"username\")
+    @classmethod
+    def username_valid(cls, v):
+        if len(v) < 3:
+            raise ValueError(\"Too short\")
+        return v.lower()
+```
+
+---
+
+## ०००००००६.६ Lifespan Events
+
+```python
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    print(\"Starting up...\")
+    yield
+    # Shutdown
+    print(\"Shutting down...\")
+
+app = FastAPI(lifespan=lifespan)
+```
+
+---
+
+## ०००००००००६.७ Dependency Overrides
+
+```python
+from fastapi.testclient import TestClient
+
+def get_current_user():
+    return {\"user_id\": 1}
+
+def override_get_current_user():
+    return {\"user_id\": 999}
+
+client = TestClient(app)
+app.dependency_overrides[get_current_user] = override_get_current_user
+
+response = client.get(\"/me\")
+```
+
+---
+
+## ०००००००००००००००००००००००००८ Pagination, Filtering, Searching
+
+```python
+from fastapi import Query
+
+@app.get(\"/items\")
+def list_items(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100)
+):
+    return items[skip:skip+limit]
+
+@app.get(\"/search\")
+def search(q: str = Query(..., min_length=1)):
+    results = db.query(Product).filter(Product.name.ilike(f\"%{q}%\")).all()
+    return {\"query\": q, \"results\": results}
+```
+
+---
+
+## ००००००००००००००००००००००००९ Caching with Redis
+
+```bash
+pip install redis
+```
+
+```python
+import redis
+import json
+
+redis_client = redis.Redis(host=\"localhost\", port=6379)
+
+@app.get(\"/data\")
+def get_data():
+    cached = redis_client.get(\"data_key\")
+    if cached:
+        return json.loads(cached)
+    
+    result = {\"data\": \"computed\"}
+    redis_client.setex(\"data_key\", 300, json.dumps(result))
+    return result
+```
+
+---
+
+## ०००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००००့ PART 6 — Interview Questions & Answers
+
+**Q: WebSocket এবং HTTP polling এর পার্থক্য?**
+
+> HTTP polling: বারবার request (inefficient)। WebSocket: persistent connection (real-time, efficient)।
+
+---
+
+### Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|--------|----------|
+| WebSocket URL? | ws:// বা wss:// |
+| Streaming Response? | Chunks এ পাঠানো |
+| Middleware order? | FIFO (প্রথম add, শেষে execute) |
+| HTTPException default status? | 400 |
+| Field validator? | Pydantic model এ |
+| Lifespan when? | Startup/shutdown |
+| Override dependency? | `app.dependency_overrides[func] = mock` |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 7 — Testing & Debugging *(Coming Soon)*
 >
-> PART 5 তে থাকবে: async/await বিস্তারিত, Event Loop, Async DB operations, concurrent HTTP requests, background processing।
+> PART 7 তে থাকবে: Pytest, TestClient, Fixtures, Mocking, Debugging।
 
 ---
 
