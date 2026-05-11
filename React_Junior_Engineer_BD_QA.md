@@ -5232,4 +5232,2243 @@ const { user } = useOutletContext();
 
 ---
 
-> **📌 পরবর্তী:** PART 5 — State Management *(Next request এ লিখব)*
+<a id="part5"></a>
+
+## 📋 PART 5 সূচিপত্র — State Management
+
+| # | Topic | Key Concept |
+|---|---|---|
+| 1 | [State Management Overview](#p5-overview) | কেন দরকার, options |
+| 2 | [Local vs Global State](#p5-local-global) | কোনটা কোথায় |
+| 3 | [Context API — Advanced](#p5-context-adv) | Multiple context, performance |
+| 4 | [Redux Toolkit — Basics](#p5-redux-basics) | Store, Slice, Dispatch |
+| 5 | [Redux Toolkit — Async (Thunk)](#p5-redux-thunk) | createAsyncThunk, loading states |
+| 6 | [Redux Toolkit — Full Example](#p5-redux-example) | E-commerce cart complete |
+| 7 | [Zustand](#p5-zustand) | Lightweight, simple |
+| 8 | [Redux vs Context vs Zustand](#p5-comparison) | Decision guide |
+| 9 | [Immer & Immutability](#p5-immer) | Why immutable, Immer under hood |
+| 10 | [State Management Patterns](#p5-patterns) | Normalized state, selectors |
+
+---
+
+<a id="p5-overview"></a>
+
+## 1. State Management Overview
+
+**Definition:**
+State management মানে application-এর data কোথায় রাখবো, কীভাবে update করবো, এবং কোন component access করতে পারবে — তা নির্ধারণ করা। Complex app-এ multiple components same data use করলে centralized state management দরকার।
+
+**কেন State Management Library দরকার:**
+```
+ছোট App:
+  useState + Context → যথেষ্ট
+
+Medium App:
+  Context বা Zustand → ভালো choice
+
+Large App (e-commerce, dashboard):
+  Redux Toolkit → predictable, scalable, DevTools
+```
+
+**State-এর ধরন:**
+
+| ধরন | উদাহরণ | কোথায় রাখবো |
+|---|---|---|
+| Local UI state | Modal open/close, form input | `useState` |
+| Shared UI state | Selected tab, active filter | Lifted state / Context |
+| Server/remote state | API data, products list | React Query / SWR |
+| Global app state | Auth user, cart, theme | Context / Redux / Zustand |
+| URL state | Filters, pagination, active tab | React Router / `useSearchParams` |
+
+**State Management Options:**
+
+| Library | Bundle size | Learning curve | Best for |
+|---|---|---|---|
+| useState + useReducer | 0 (built-in) | Easy | Component-level |
+| Context API | 0 (built-in) | Easy | Theme, Auth |
+| Zustand | ~1KB | Very easy | Small-medium apps |
+| Jotai | ~3KB | Easy | Atomic state |
+| Redux Toolkit | ~11KB | Medium | Large enterprise apps |
+| Recoil | ~21KB | Medium | Atomic, Facebook-style |
+
+**Interview-style Explanation:**
+> "State management-এর choice app-এর size আর complexity-র উপর নির্ভর করে। Simple app-এ `useState` আর Context যথেষ্ট। Large app-এ — অনেক async action, DevTools দরকার, team বড় — Redux Toolkit best। Performance-critical আর simple API চাই — Zustand। Server state separately React Query দিয়ে manage করি।"
+
+---
+
+<a id="p5-local-global"></a>
+
+## 2. Local vs Global State
+
+**Definition:**
+**Local state** শুধু একটি component-এর নিজের — অন্য কেউ দরকার নেই। **Global state** multiple unrelated components share করে।
+
+**কোনটি কোথায় রাখবো:**
+```jsx
+// ✅ LOCAL STATE — শুধু এই component-এর দরকার
+function SearchInput() {
+  const [query, setQuery] = useState('');  // Only this component needs it
+  return <input value={query} onChange={e => setQuery(e.target.value)} />;
+}
+
+// ✅ LOCAL STATE — form state, modal open/close
+function ProductCard({ product }) {
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+  // ...
+}
+
+// ✅ GLOBAL STATE — multiple far-apart components need it
+// Cart count: Navbar badge + Cart page + Checkout page
+// Auth user: Header + Profile + Protected Routes + API calls
+// Theme: Every component's styling
+```
+
+**Rule of Thumb:**
+```
+Ask: "কতজন component এই data দরকার?"
+
+  শুধু ১টি → useState (local)
+  Parent + Child → Lifted state (props)
+  ৩-৪টি nearby → Context
+  অনেকগুলো, app-wide → Redux / Zustand
+```
+
+**State Colocation Principle:**
+```jsx
+// ✅ GOOD — state যেখানে দরকার সেখানেই রাখো
+// Counter শুধু CounterWidget-এর দরকার → locally রাখো
+function CounterWidget() {
+  const [count, setCount] = useState(0);  // not global!
+  return (
+    <div>
+      <button onClick={() => setCount(c => c - 1)}>-</button>
+      <span>{count}</span>
+      <button onClick={() => setCount(c => c + 1)}>+</button>
+    </div>
+  );
+}
+
+// ❌ BAD — not everything should be global
+// Redux-এ modal open/close state রাখা over-engineering
+const modalSlice = createSlice({
+  name: 'modal',
+  initialState: { isProductDetailOpen: false },  // ❌ Unnecessary global
+  // ...
+});
+```
+
+---
+
+<a id="p5-context-adv"></a>
+
+## 3. Context API — Advanced
+
+**Multiple Contexts:**
+```jsx
+// ✅ Separate contexts for separate concerns
+// ThemeContext, AuthContext, CartContext — আলাদা করুন
+
+// context/CartContext.jsx
+import { createContext, useContext, useReducer, useMemo } from 'react';
+
+const CartContext = createContext(null);
+
+function cartReducer(state, action) {
+  switch (action.type) {
+    case 'ADD': {
+      const exists = state.items.find(i => i.id === action.payload.id);
+      if (exists) {
+        return {
+          ...state,
+          items: state.items.map(i =>
+            i.id === action.payload.id
+              ? { ...i, qty: i.qty + 1 }
+              : i
+          ),
+        };
+      }
+      return { ...state, items: [...state.items, { ...action.payload, qty: 1 }] };
+    }
+    case 'REMOVE':
+      return { ...state, items: state.items.filter(i => i.id !== action.payload) };
+    case 'UPDATE_QTY':
+      return {
+        ...state,
+        items: state.items.map(i =>
+          i.id === action.payload.id
+            ? { ...i, qty: Math.max(1, action.payload.qty) }
+            : i
+        ),
+      };
+    case 'CLEAR':
+      return { items: [] };
+    default:
+      return state;
+  }
+}
+
+export function CartProvider({ children }) {
+  const [cart, dispatch] = useReducer(cartReducer, { items: [] });
+
+  // ✅ Memoize derived values
+  const cartTotal = useMemo(
+    () => cart.items.reduce((sum, item) => sum + item.price * item.qty, 0),
+    [cart.items]
+  );
+  const cartCount = useMemo(
+    () => cart.items.reduce((sum, item) => sum + item.qty, 0),
+    [cart.items]
+  );
+
+  // ✅ Memoize actions — stable references
+  const actions = useMemo(() => ({
+    addToCart: (product) => dispatch({ type: 'ADD', payload: product }),
+    removeFromCart: (id) => dispatch({ type: 'REMOVE', payload: id }),
+    updateQty: (id, qty) => dispatch({ type: 'UPDATE_QTY', payload: { id, qty } }),
+    clearCart: () => dispatch({ type: 'CLEAR' }),
+  }), []);
+
+  // ✅ Split state + actions to avoid unnecessary re-renders
+  const value = useMemo(() => ({
+    items: cart.items,
+    total: cartTotal,
+    count: cartCount,
+    ...actions,
+  }), [cart.items, cartTotal, cartCount, actions]);
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+}
+
+export const useCart = () => {
+  const ctx = useContext(CartContext);
+  if (!ctx) throw new Error('useCart must be used within CartProvider');
+  return ctx;
+};
+```
+
+**Context Performance — Split Pattern:**
+```jsx
+// ❌ One big context — any state change re-renders ALL consumers
+const AppContext = createContext(null);
+
+function AppProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [theme, setTheme] = useState('light');
+  const [notifications, setNotifications] = useState([]);
+
+  // cart change হলে user, theme, notifications সব consumer re-render হবে!
+  return (
+    <AppContext.Provider value={{ user, cart, theme, notifications, ... }}>
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+// ✅ Split into separate contexts
+function AppProvider({ children }) {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <CartProvider>
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
+        </CartProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  );
+}
+
+// Avatar only uses AuthContext → cart change-এ re-render হবে না
+function Avatar() {
+  const { user } = useAuth();  // Only AuthContext consumer
+  return <img src={user.avatar} />;
+}
+
+// CartBadge only uses CartContext → auth change-এ re-render হবে না
+function CartBadge() {
+  const { count } = useCart();  // Only CartContext consumer
+  return <span className="badge">{count}</span>;
+}
+```
+
+**Follow-up Interview Questions:**
+1. Context re-render সমস্যা কীভাবে solve করবেন?
+2. `useMemo` context value-এ কেন দরকার?
+3. Context-এ selector pattern কীভাবে করবেন?
+
+---
+
+<a id="p5-redux-basics"></a>
+
+## 4. Redux Toolkit — Basics
+
+**Definition:**
+Redux Toolkit (RTK) হলো Redux-এর official, opinionated toolset যা boilerplate কমায়। `createSlice`, `configureStore`, `createAsyncThunk` দিয়ে Redux much simpler হয়।
+
+**Core Concepts:**
+
+| Concept | কী | Analogy |
+|---|---|---|
+| Store | Global state container | Central database |
+| Slice | একটি feature-এর state + reducers | Database table |
+| Action | State change request object | Database query |
+| Reducer | Action → new state (pure fn) | Query handler |
+| Dispatch | Action পাঠানোর mechanism | Query execute |
+| Selector | State থেকে data read করা | SELECT query |
+
+**Installation:**
+```bash
+npm install @reduxjs/toolkit react-redux
+```
+
+**Basic Setup:**
+```jsx
+// store/authSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState: {
+    user: null,
+    token: localStorage.getItem('token') || null,
+    isLoggedIn: !!localStorage.getItem('token'),
+  },
+  reducers: {
+    // RTK Immer দিয়ে direct mutation allow করে (internally immutable)
+    setUser: (state, action) => {
+      state.user = action.payload;
+      state.isLoggedIn = true;
+    },
+    setToken: (state, action) => {
+      state.token = action.payload;
+      localStorage.setItem('token', action.payload);
+    },
+    logout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.isLoggedIn = false;
+      localStorage.removeItem('token');
+    },
+  },
+});
+
+export const { setUser, setToken, logout } = authSlice.actions;
+
+// Selectors
+export const selectUser = (state) => state.auth.user;
+export const selectIsLoggedIn = (state) => state.auth.isLoggedIn;
+export const selectToken = (state) => state.auth.token;
+
+export default authSlice.reducer;
+```
+
+```jsx
+// store/index.js
+import { configureStore } from '@reduxjs/toolkit';
+import authReducer from './authSlice';
+import cartReducer from './cartSlice';
+import productsReducer from './productsSlice';
+
+export const store = configureStore({
+  reducer: {
+    auth: authReducer,
+    cart: cartReducer,
+    products: productsReducer,
+  },
+  // DevTools automatically enabled in development
+  // Middleware: thunk automatically added
+});
+
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+```
+
+```jsx
+// main.jsx — Provider wrap
+import { Provider } from 'react-redux';
+import { store } from './store';
+
+createRoot(document.getElementById('root')).render(
+  <Provider store={store}>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </Provider>
+);
+```
+
+**Using Redux in Components:**
+```jsx
+import { useSelector, useDispatch } from 'react-redux';
+import { logout, selectUser, selectIsLoggedIn } from '../store/authSlice';
+
+function Header() {
+  const user = useSelector(selectUser);          // state read
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const dispatch = useDispatch();                // action dispatch
+
+  const handleLogout = () => {
+    dispatch(logout());  // action dispatch করো
+  };
+
+  return (
+    <header>
+      {isLoggedIn ? (
+        <>
+          <span>Hello, {user.name}!</span>
+          <button onClick={handleLogout}>Logout</button>
+        </>
+      ) : (
+        <Link to="/login">Login</Link>
+      )}
+    </header>
+  );
+}
+```
+
+---
+
+<a id="p5-redux-thunk"></a>
+
+## 5. Redux Toolkit — Async (createAsyncThunk)
+
+**Definition:**
+`createAsyncThunk` দিয়ে async operations (API calls) Redux-এ handle করা হয়। Automatically `pending`, `fulfilled`, `rejected` states তৈরি করে।
+
+**createAsyncThunk — Pattern:**
+```jsx
+// store/productsSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+// Async thunk — API call
+export const fetchProducts = createAsyncThunk(
+  'products/fetchAll',         // action type prefix
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const query = new URLSearchParams(params).toString();
+      const res = await fetch(`/api/products?${query}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();                   // returned value → action.payload
+    } catch (err) {
+      return rejectWithValue(err.message);       // error → rejected payload
+    }
+  }
+);
+
+export const fetchProductById = createAsyncThunk(
+  'products/fetchById',
+  async (id, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`/api/products/${id}`);
+      if (!res.ok) throw new Error('Product not found');
+      return await res.json();
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+export const createProduct = createAsyncThunk(
+  'products/create',
+  async (productData, { rejectWithValue, getState }) => {
+    try {
+      const { auth } = getState();         // other slice state পড়া
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify(productData),
+      });
+      if (!res.ok) throw new Error('Failed to create');
+      return await res.json();
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+// Slice with extraReducers for async actions
+const productsSlice = createSlice({
+  name: 'products',
+  initialState: {
+    items: [],
+    selectedProduct: null,
+    loading: false,
+    error: null,
+    total: 0,
+    page: 1,
+  },
+  reducers: {
+    clearError: (state) => { state.error = null; },
+    setPage: (state, action) => { state.page = action.payload; },
+    clearSelected: (state) => { state.selectedProduct = null; },
+  },
+  extraReducers: (builder) => {
+    // fetchProducts
+    builder
+      .addCase(fetchProducts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload.data;
+        state.total = action.payload.total;
+      })
+      .addCase(fetchProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // fetchProductById
+    builder
+      .addCase(fetchProductById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchProductById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedProduct = action.payload;
+      })
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+
+    // createProduct
+    builder
+      .addCase(createProduct.fulfilled, (state, action) => {
+        state.items.unshift(action.payload);  // list-এর শুরুতে যোগ
+      });
+  },
+});
+
+export const { clearError, setPage, clearSelected } = productsSlice.actions;
+
+// Selectors
+export const selectProducts = (state) => state.products.items;
+export const selectProductsLoading = (state) => state.products.loading;
+export const selectProductsError = (state) => state.products.error;
+export const selectSelectedProduct = (state) => state.products.selectedProduct;
+
+export default productsSlice.reducer;
+```
+
+**Using Async Thunk in Component:**
+```jsx
+import { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  fetchProducts,
+  selectProducts,
+  selectProductsLoading,
+  selectProductsError,
+} from '../store/productsSlice';
+
+function ProductsPage() {
+  const dispatch = useDispatch();
+  const products = useSelector(selectProducts);
+  const loading = useSelector(selectProductsLoading);
+  const error = useSelector(selectProductsError);
+
+  useEffect(() => {
+    dispatch(fetchProducts({ category: 'electronics', page: 1 }));
+  }, [dispatch]);
+
+  if (loading) return <ProductGridSkeleton />;
+  if (error) return <ErrorBanner message={error} />;
+
+  return (
+    <div className="product-grid">
+      {products.map(p => <ProductCard key={p.id} product={p} />)}
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p5-redux-example"></a>
+
+## 6. Redux Toolkit — Full Cart Example
+
+**Complete Cart Slice:**
+```jsx
+// store/cartSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const cartSlice = createSlice({
+  name: 'cart',
+  initialState: {
+    items: [],
+    isOpen: false,
+    couponCode: null,
+    discount: 0,
+  },
+  reducers: {
+    addItem: (state, action) => {
+      const existing = state.items.find(i => i.id === action.payload.id);
+      if (existing) {
+        existing.qty += 1;  // Immer: direct mutation OK inside RTK
+      } else {
+        state.items.push({ ...action.payload, qty: 1 });
+      }
+    },
+    removeItem: (state, action) => {
+      state.items = state.items.filter(i => i.id !== action.payload);
+    },
+    updateQty: (state, action) => {
+      const item = state.items.find(i => i.id === action.payload.id);
+      if (item) {
+        item.qty = Math.max(1, action.payload.qty);
+      }
+    },
+    clearCart: (state) => {
+      state.items = [];
+      state.couponCode = null;
+      state.discount = 0;
+    },
+    toggleCart: (state) => {
+      state.isOpen = !state.isOpen;
+    },
+    applyCoupon: (state, action) => {
+      state.couponCode = action.payload.code;
+      state.discount = action.payload.discount;
+    },
+  },
+});
+
+export const {
+  addItem, removeItem, updateQty,
+  clearCart, toggleCart, applyCoupon,
+} = cartSlice.actions;
+
+// Memoized selectors (reselect-style)
+export const selectCartItems = (state) => state.cart.items;
+export const selectCartIsOpen = (state) => state.cart.isOpen;
+export const selectCartCount = (state) =>
+  state.cart.items.reduce((sum, i) => sum + i.qty, 0);
+export const selectCartSubtotal = (state) =>
+  state.cart.items.reduce((sum, i) => sum + i.price * i.qty, 0);
+export const selectCartTotal = (state) => {
+  const subtotal = selectCartSubtotal(state);
+  return subtotal - (subtotal * state.cart.discount / 100);
+};
+
+export default cartSlice.reducer;
+```
+
+**Cart Components:**
+```jsx
+// CartIcon — Navbar-এ
+function CartIcon() {
+  const dispatch = useDispatch();
+  const count = useSelector(selectCartCount);
+
+  return (
+    <button onClick={() => dispatch(toggleCart())} className="cart-icon">
+      🛒
+      {count > 0 && <span className="badge">{count}</span>}
+    </button>
+  );
+}
+
+// Add to Cart button
+function AddToCartButton({ product }) {
+  const dispatch = useDispatch();
+  const items = useSelector(selectCartItems);
+  const isInCart = items.some(i => i.id === product.id);
+
+  return (
+    <button
+      onClick={() => dispatch(addItem(product))}
+      className={`btn ${isInCart ? 'btn-secondary' : 'btn-primary'}`}
+    >
+      {isInCart ? '✓ Added' : 'Add to Cart'}
+    </button>
+  );
+}
+
+// Cart Drawer
+function CartDrawer() {
+  const dispatch = useDispatch();
+  const isOpen = useSelector(selectCartIsOpen);
+  const items = useSelector(selectCartItems);
+  const subtotal = useSelector(selectCartSubtotal);
+  const total = useSelector(selectCartTotal);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="cart-overlay" onClick={() => dispatch(toggleCart())}>
+      <div className="cart-drawer" onClick={e => e.stopPropagation()}>
+        <div className="cart-header">
+          <h2>Shopping Cart ({items.length})</h2>
+          <button onClick={() => dispatch(toggleCart())}>×</button>
+        </div>
+
+        <div className="cart-items">
+          {items.length === 0
+            ? <p className="empty-cart">Your cart is empty</p>
+            : items.map(item => (
+              <CartItem key={item.id} item={item} />
+            ))
+          }
+        </div>
+
+        {items.length > 0 && (
+          <div className="cart-footer">
+            <div className="subtotal">
+              <span>Subtotal:</span>
+              <span>৳{subtotal.toLocaleString()}</span>
+            </div>
+            <div className="total">
+              <strong>Total: ৳{total.toLocaleString()}</strong>
+            </div>
+            <button
+              onClick={() => dispatch(clearCart())}
+              className="btn btn-ghost btn-sm"
+            >
+              Clear Cart
+            </button>
+            <Link to="/checkout" className="btn btn-primary btn-full">
+              Checkout
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CartItem({ item }) {
+  const dispatch = useDispatch();
+
+  return (
+    <div className="cart-item">
+      <img src={item.image} alt={item.name} />
+      <div className="item-info">
+        <p>{item.name}</p>
+        <p>৳{item.price.toLocaleString()}</p>
+      </div>
+      <div className="item-controls">
+        <button onClick={() => dispatch(updateQty({ id: item.id, qty: item.qty - 1 }))}>-</button>
+        <span>{item.qty}</span>
+        <button onClick={() => dispatch(updateQty({ id: item.id, qty: item.qty + 1 }))}>+</button>
+        <button onClick={() => dispatch(removeItem(item.id))}>🗑</button>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p5-zustand"></a>
+
+## 7. Zustand
+
+**Definition:**
+Zustand হলো lightweight (~1KB) state management library যা React-এর বাইরেও কাজ করে। Minimal boilerplate, no Provider wrap দরকার (optional), simple API।
+
+**Installation:**
+```bash
+npm install zustand
+```
+
+**Basic Store:**
+```jsx
+// store/useCartStore.js
+import { create } from 'zustand';
+import { persist, devtools } from 'zustand/middleware';
+
+const useCartStore = create(
+  devtools(  // Redux DevTools support
+    persist(  // localStorage persist
+      (set, get) => ({
+        // State
+        items: [],
+        isOpen: false,
+
+        // Actions (no slice, no dispatch — direct!)
+        addItem: (product) => set((state) => {
+          const existing = state.items.find(i => i.id === product.id);
+          if (existing) {
+            return {
+              items: state.items.map(i =>
+                i.id === product.id ? { ...i, qty: i.qty + 1 } : i
+              ),
+            };
+          }
+          return { items: [...state.items, { ...product, qty: 1 }] };
+        }),
+
+        removeItem: (id) => set((state) => ({
+          items: state.items.filter(i => i.id !== id),
+        })),
+
+        updateQty: (id, qty) => set((state) => ({
+          items: state.items.map(i =>
+            i.id === id ? { ...i, qty: Math.max(1, qty) } : i
+          ),
+        })),
+
+        clearCart: () => set({ items: [] }),
+        toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
+
+        // Derived (computed via get())
+        getTotal: () => get().items.reduce((sum, i) => sum + i.price * i.qty, 0),
+        getCount: () => get().items.reduce((sum, i) => sum + i.qty, 0),
+      }),
+      { name: 'cart-storage' }  // localStorage key
+    )
+  )
+);
+
+export default useCartStore;
+```
+
+**Using Zustand Store:**
+```jsx
+// Selector দিয়ে — শুধু প্রয়োজনীয় part subscribe করো
+function CartIcon() {
+  // Only re-renders when count changes
+  const count = useCartStore(state => state.getCount());
+  const toggleCart = useCartStore(state => state.toggleCart);
+
+  return (
+    <button onClick={toggleCart}>
+      🛒 {count > 0 && <span>{count}</span>}
+    </button>
+  );
+}
+
+function AddToCartButton({ product }) {
+  const addItem = useCartStore(state => state.addItem);
+  const items = useCartStore(state => state.items);
+  const isInCart = items.some(i => i.id === product.id);
+
+  return (
+    <button onClick={() => addItem(product)}>
+      {isInCart ? '✓ Added' : 'Add to Cart'}
+    </button>
+  );
+}
+
+// Outside React component (no hooks needed!)
+const { addItem, getTotal } = useCartStore.getState();
+```
+
+**Zustand with Immer (for complex nested updates):**
+```jsx
+import { create } from 'zustand';
+import { immer } from 'zustand/middleware/immer';
+
+const useStore = create(
+  immer((set) => ({
+    user: { profile: { name: '', address: { city: '' } } },
+
+    updateCity: (city) => set((state) => {
+      // Direct mutation thanks to immer!
+      state.user.profile.address.city = city;
+    }),
+  }))
+);
+```
+
+---
+
+<a id="p5-comparison"></a>
+
+## 8. Redux vs Context vs Zustand
+
+**Detailed Comparison:**
+
+| Feature | Context API | Zustand | Redux Toolkit |
+|---|---|---|---|
+| Setup | Built-in, no install | `npm install zustand` | `npm install @reduxjs/toolkit react-redux` |
+| Boilerplate | Low | Very Low | Medium |
+| Bundle size | 0 | ~1KB | ~11KB |
+| DevTools | Limited | ✅ (plugin) | ✅ Excellent |
+| Time-travel debug | ❌ | ❌ | ✅ |
+| Async handling | Manual | Manual | `createAsyncThunk` |
+| Performance | Re-renders all consumers | Selective subscription | Selective (`useSelector`) |
+| Learning curve | Easy | Very Easy | Medium |
+| Outside React | ❌ | ✅ | ✅ |
+| Best for | Theme, Auth, small global state | Small-medium apps | Large, complex apps |
+
+**Decision Guide:**
+```
+Is it just Theme/Auth/Language?
+  → Context API ✅
+
+Small-medium app, want simplicity?
+  → Zustand ✅
+
+Large team, complex async, need DevTools & time-travel?
+  → Redux Toolkit ✅
+
+Server state (API data)?
+  → React Query / SWR (separate tool)
+```
+
+**Interview-style Explanation:**
+> "Context API simple কিন্তু performance issue আছে — সব consumer re-render হয়। Redux Toolkit powerful কিন্তু boilerplate আছে। Zustand middle ground — Redux-এর power, Context-এর simplicity। আমি project size দেখে choose করি। Production large app-এ RTK prefer করি কারণ DevTools আর team collaboration."
+
+---
+
+<a id="p5-immer"></a>
+
+## 9. Immer & Immutability
+
+**Definition:**
+Immer হলো library যা direct mutation-এর মতো code লিখতে দেয় কিন্তু internally immutable update করে। Redux Toolkit Immer built-in use করে।
+
+**কেন Immutability দরকার:**
+```jsx
+// ❌ Mutable update — React detect করে না!
+const state = { user: { name: 'Rahim', score: 10 } };
+state.user.score = 20;           // same reference!
+setState(state);                  // React: "nothing changed"
+
+// ✅ Immutable update — new reference
+setState({
+  ...state,
+  user: { ...state.user, score: 20 }
+});
+// React: "new object! re-render!"
+```
+
+**Immer under Redux Toolkit:**
+```jsx
+// RTK-এ Immer built-in — আপনি mutate করুন, Immer new object বানাবে
+const slice = createSlice({
+  name: 'example',
+  initialState: { items: [], user: { name: '', preferences: {} } },
+  reducers: {
+    // ✅ RTK/Immer — মনে হচ্ছে mutate কিন্তু internally new state
+    addItem: (state, action) => {
+      state.items.push(action.payload);           // OK in RTK!
+    },
+    updatePreference: (state, action) => {
+      state.user.preferences[action.payload.key] = action.payload.value;
+    },
+
+    // ✅ Return new state explicitly (also valid)
+    clearItems: (state) => {
+      return { ...state, items: [] };
+    },
+
+    // ❌ CANNOT both mutate and return
+    // bad: (state) => {
+    //   state.items = [];     // mutate
+    //   return state;         // return — will throw!
+    // }
+  },
+});
+```
+
+**Immutability without Immer:**
+```jsx
+// Nested object update — manual spread
+const updateNestedState = (state, userId, newCity) => ({
+  ...state,
+  users: {
+    ...state.users,
+    [userId]: {
+      ...state.users[userId],
+      address: {
+        ...state.users[userId].address,
+        city: newCity,
+      },
+    },
+  },
+});
+// 😫 Very verbose! Immer এটা simple করে
+```
+
+---
+
+<a id="p5-patterns"></a>
+
+## 10. State Management Patterns
+
+**Normalized State:**
+```jsx
+// ❌ Nested/Denormalized — update কঠিন
+const state = {
+  posts: [
+    {
+      id: 1,
+      title: 'React Tips',
+      author: { id: 10, name: 'Rahim', avatar: '...' },
+      comments: [
+        { id: 101, text: 'Great!', author: { id: 20, name: 'Karim' } },
+      ],
+    },
+  ],
+};
+
+// ✅ Normalized — flat, update সহজ
+const normalizedState = {
+  posts: {
+    byId: {
+      1: { id: 1, title: 'React Tips', authorId: 10, commentIds: [101] },
+    },
+    allIds: [1],
+  },
+  users: {
+    byId: {
+      10: { id: 10, name: 'Rahim', avatar: '...' },
+      20: { id: 20, name: 'Karim' },
+    },
+  },
+  comments: {
+    byId: {
+      101: { id: 101, text: 'Great!', authorId: 20 },
+    },
+  },
+};
+
+// Update author name — একটি জায়গায়, সব reference update
+normalizedState.users.byId[10].name = 'Rahim Ahmed';
+```
+
+**RTK `createEntityAdapter` (Auto-normalizer):**
+```jsx
+import { createEntityAdapter, createSlice } from '@reduxjs/toolkit';
+
+const productsAdapter = createEntityAdapter({
+  selectId: (product) => product.id,
+  sortComparer: (a, b) => a.name.localeCompare(b.name),
+});
+
+const productsSlice = createSlice({
+  name: 'products',
+  initialState: productsAdapter.getInitialState({ loading: false }),
+  reducers: {
+    addProduct: productsAdapter.addOne,
+    addProducts: productsAdapter.addMany,
+    updateProduct: productsAdapter.updateOne,
+    removeProduct: productsAdapter.removeOne,
+    upsertProducts: productsAdapter.upsertMany,
+  },
+});
+
+// Auto-generated selectors
+export const {
+  selectAll: selectAllProducts,
+  selectById: selectProductById,
+  selectIds: selectProductIds,
+} = productsAdapter.getSelectors(state => state.products);
+```
+
+---
+
+## PART 5 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Say |
+|---|---|---|
+| State types | Local/Global/Server/URL | Colocate state near usage |
+| Context Advanced | Split contexts, memoize value | One big context = all re-render |
+| Redux Toolkit | Store → Slice → Action → Dispatch | Immer built-in |
+| createAsyncThunk | pending/fulfilled/rejected | `rejectWithValue` for errors |
+| Cart Slice | `addOne`, RTK mutation pattern | `extraReducers` for async |
+| Zustand | No Provider, selector subscribe | ~1KB, outside React too |
+| Comparison | Context:simple, RTK:large, Zustand:medium | Server state → React Query |
+| Immer | Apparent mutation → actual immutability | RTK uses it built-in |
+| Normalization | Flat state, IDs as keys | `createEntityAdapter` |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part6"></a>
+
+## 📋 PART 6 সূচিপত্র — API Integration & Async React
+
+| # | Topic | Key Concept |
+|---|---|---|
+| 1 | [Fetch API Basics](#p6-fetch) | fetch, async/await, error handling |
+| 2 | [Axios](#p6-axios) | Interceptors, instance, defaults |
+| 3 | [API Service Layer](#p6-service) | Separation of concerns |
+| 4 | [Loading & Error States](#p6-states) | UI feedback patterns |
+| 5 | [React Query (TanStack Query)](#p6-react-query) | Server state management |
+| 6 | [Debouncing API Calls](#p6-debounce) | Search optimization |
+| 7 | [Infinite Scroll / Pagination](#p6-pagination) | Large data sets |
+| 8 | [Optimistic UI Updates](#p6-optimistic) | Instant feedback |
+| 9 | [File Upload](#p6-file-upload) | FormData, progress |
+| 10 | [Race Conditions & Cleanup](#p6-race) | Stale request handling |
+
+---
+
+<a id="p6-fetch"></a>
+
+## 1. Fetch API Basics
+
+**Definition:**
+`fetch` হলো browser-এর built-in HTTP client। React-এ `useEffect`-এর ভেতরে async data fetching করা হয়।
+
+**Fetch Patterns:**
+```jsx
+// Basic fetch with error handling
+async function fetchData(url) {
+  const res = await fetch(url);
+
+  // ⚠️ fetch শুধু network error-এ reject করে
+  // 404, 500 — reject করে না! manually check করতে হবে
+  if (!res.ok) {
+    throw new Error(`HTTP error! Status: ${res.status}`);
+  }
+
+  return res.json();
+}
+```
+
+```jsx
+// Fetch with full options
+async function apiRequest(url, options = {}) {
+  const token = localStorage.getItem('token');
+
+  const defaultOptions = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    },
+  };
+
+  const config = {
+    ...defaultOptions,
+    ...options,
+    headers: {
+      ...defaultOptions.headers,
+      ...options.headers,
+    },
+  };
+
+  const res = await fetch(url, config);
+
+  if (res.status === 401) {
+    // Token expired
+    localStorage.removeItem('token');
+    window.location.href = '/auth/login';
+    throw new Error('Unauthorized');
+  }
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: 'Unknown error' }));
+    throw new Error(error.message || `HTTP ${res.status}`);
+  }
+
+  // 204 No Content
+  if (res.status === 204) return null;
+
+  return res.json();
+}
+
+// Usage
+const products = await apiRequest('/api/products');
+const created = await apiRequest('/api/products', {
+  method: 'POST',
+  body: JSON.stringify(newProduct),
+});
+```
+
+**All HTTP Methods:**
+```jsx
+// GET
+const getProducts = () => apiRequest('/api/products');
+
+// POST
+const createProduct = (data) => apiRequest('/api/products', {
+  method: 'POST',
+  body: JSON.stringify(data),
+});
+
+// PUT — full update
+const updateProduct = (id, data) => apiRequest(`/api/products/${id}`, {
+  method: 'PUT',
+  body: JSON.stringify(data),
+});
+
+// PATCH — partial update
+const patchProduct = (id, changes) => apiRequest(`/api/products/${id}`, {
+  method: 'PATCH',
+  body: JSON.stringify(changes),
+});
+
+// DELETE
+const deleteProduct = (id) => apiRequest(`/api/products/${id}`, {
+  method: 'DELETE',
+});
+```
+
+---
+
+<a id="p6-axios"></a>
+
+## 2. Axios
+
+**Definition:**
+Axios হলো popular HTTP client library। Automatic JSON parsing, request/response interceptors, timeout support, আর better error handling দেয়।
+
+**Installation:**
+```bash
+npm install axios
+```
+
+**Axios vs Fetch:**
+
+| Feature | Fetch | Axios |
+|---|---|---|
+| Auto JSON parse | ❌ Manual | ✅ |
+| Error on 4xx/5xx | ❌ | ✅ |
+| Request cancel | AbortController | CancelToken / AbortController |
+| Interceptors | ❌ | ✅ |
+| Progress | Limited | ✅ |
+| Node.js | ❌ Native | ✅ |
+| Bundle size | 0 (built-in) | ~14KB |
+| Timeout | Manual | Built-in |
+
+**Axios Instance Setup:**
+```jsx
+// services/api.js
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+});
+
+// ──── Request Interceptor ────
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Request logging (dev)
+    if (import.meta.env.DEV) {
+      console.log(`→ ${config.method?.toUpperCase()} ${config.url}`);
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ──── Response Interceptor ────
+api.interceptors.response.use(
+  (response) => {
+    // Success — data unwrap
+    return response.data;
+  },
+  async (error) => {
+    const original = error.config;
+
+    // 401 — Token refresh attempt
+    if (error.response?.status === 401 && !original._retry) {
+      original._retry = true;
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+        localStorage.setItem('token', data.token);
+        original.headers.Authorization = `Bearer ${data.token}`;
+        return api(original);  // Retry original request
+      } catch {
+        localStorage.clear();
+        window.location.href = '/auth/login';
+      }
+    }
+
+    // Error format normalize
+    const message = error.response?.data?.message
+      || error.message
+      || 'Something went wrong';
+
+    return Promise.reject(new Error(message));
+  }
+);
+
+export default api;
+```
+
+**Using Axios Instance:**
+```jsx
+// services/productService.js
+import api from './api';
+
+export const productService = {
+  getAll: (params) => api.get('/products', { params }),
+  getById: (id) => api.get(`/products/${id}`),
+  create: (data) => api.post('/products', data),
+  update: (id, data) => api.put(`/products/${id}`, data),
+  patch: (id, data) => api.patch(`/products/${id}`, data),
+  delete: (id) => api.delete(`/products/${id}`),
+  uploadImage: (id, file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/products/${id}/image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+};
+```
+
+---
+
+<a id="p6-service"></a>
+
+## 3. API Service Layer
+
+**Definition:**
+Service layer হলো API call গুলো একটি আলাদা module-এ রাখার pattern। Component-এ সরাসরি fetch না করে service function call করা হয়।
+
+**Folder Structure:**
+```
+src/
+  services/
+    api.js              ← axios instance
+    authService.js      ← auth API calls
+    productService.js   ← product API calls
+    orderService.js     ← order API calls
+    userService.js      ← user API calls
+  hooks/
+    useProducts.js      ← data fetching hook
+    useAuth.js
+  store/
+    productsSlice.js
+```
+
+**Service Implementation:**
+```jsx
+// services/authService.js
+import api from './api';
+
+export const authService = {
+  login: (credentials) =>
+    api.post('/auth/login', credentials),
+
+  register: (userData) =>
+    api.post('/auth/register', userData),
+
+  logout: () =>
+    api.post('/auth/logout'),
+
+  getProfile: () =>
+    api.get('/auth/me'),
+
+  updateProfile: (data) =>
+    api.patch('/auth/me', data),
+
+  changePassword: (data) =>
+    api.patch('/auth/me/password', data),
+
+  forgotPassword: (email) =>
+    api.post('/auth/forgot-password', { email }),
+
+  resetPassword: (token, password) =>
+    api.post('/auth/reset-password', { token, password }),
+};
+```
+
+```jsx
+// hooks/useProducts.js — service + state combined
+import { useState, useEffect, useCallback } from 'react';
+import { productService } from '../services/productService';
+
+export function useProducts(initialParams = {}) {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [params, setParams] = useState(initialParams);
+
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await productService.getAll(params);
+      setProducts(data.items || data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [params]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  return {
+    products,
+    loading,
+    error,
+    refetch: fetchProducts,
+    updateParams: setParams,
+  };
+}
+
+// Usage in component
+function ProductsPage() {
+  const { products, loading, error, updateParams } = useProducts({ page: 1 });
+  // ...
+}
+```
+
+---
+
+<a id="p6-states"></a>
+
+## 4. Loading & Error States
+
+**Definition:**
+API call-এর সময় user-কে proper feedback দেওয়া — loading indicator, error message, empty state, skeleton loading।
+
+**Loading State Patterns:**
+```jsx
+// ──── Pattern 1: Simple boolean ────
+function SimpleList() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    productService.getAll()
+      .then(setData)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="spinner-container"><Spinner /></div>;
+  if (error) return <ErrorMessage message={error} onRetry={() => window.location.reload()} />;
+  if (data.length === 0) return <EmptyState message="No products found" />;
+  return <ProductGrid products={data} />;
+}
+```
+
+```jsx
+// ──── Pattern 2: Status enum (better) ────
+const STATUS = { IDLE: 'idle', LOADING: 'loading', SUCCESS: 'success', ERROR: 'error' };
+
+function ProductPage({ productId }) {
+  const [status, setStatus] = useState(STATUS.IDLE);
+  const [product, setProduct] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setStatus(STATUS.LOADING);
+    productService.getById(productId)
+      .then(data => {
+        setProduct(data);
+        setStatus(STATUS.SUCCESS);
+      })
+      .catch(err => {
+        setError(err.message);
+        setStatus(STATUS.ERROR);
+      });
+  }, [productId]);
+
+  const renders = {
+    [STATUS.IDLE]: null,
+    [STATUS.LOADING]: <ProductDetailSkeleton />,
+    [STATUS.ERROR]: <ErrorBanner message={error} />,
+    [STATUS.SUCCESS]: <ProductDetail product={product} />,
+  };
+
+  return renders[status];
+}
+```
+
+**Skeleton Loading:**
+```jsx
+// Better UX than spinner — shape ধরে রাখে
+function ProductCardSkeleton() {
+  return (
+    <div className="product-card skeleton">
+      <div className="skeleton-image" />
+      <div className="skeleton-text skeleton-title" />
+      <div className="skeleton-text skeleton-price" />
+      <div className="skeleton-button" />
+    </div>
+  );
+}
+
+function ProductGridSkeleton({ count = 6 }) {
+  return (
+    <div className="product-grid">
+      {Array.from({ length: count }, (_, i) => (
+        <ProductCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+// CSS
+// .skeleton { animation: shimmer 1.5s infinite; }
+// @keyframes shimmer { 0% { opacity: 0.6 } 50% { opacity: 1 } 100% { opacity: 0.6 } }
+```
+
+**Global Error Boundary + Toast:**
+```jsx
+function useToast() {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = useCallback((message, type = 'info', duration = 3000) => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, duration);
+  }, []);
+
+  return {
+    toasts,
+    success: (msg) => addToast(msg, 'success'),
+    error: (msg) => addToast(msg, 'error'),
+    info: (msg) => addToast(msg, 'info'),
+    warning: (msg) => addToast(msg, 'warning'),
+  };
+}
+```
+
+---
+
+<a id="p6-react-query"></a>
+
+## 5. React Query (TanStack Query)
+
+**Definition:**
+React Query হলো server state management library। Caching, background refetching, pagination, mutations — সব automatic। API data-র জন্য Redux-এর বিকল্প।
+
+**Installation:**
+```bash
+npm install @tanstack/react-query
+```
+
+**Setup:**
+```jsx
+// main.jsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,    // 5 min — data fresh থাকে
+      gcTime: 10 * 60 * 1000,      // 10 min — cache থাকে
+      retry: 2,                     // fail হলে 2 বার retry
+      refetchOnWindowFocus: true,   // tab focus-এ refetch
+    },
+  },
+});
+
+createRoot(document.getElementById('root')).render(
+  <QueryClientProvider client={queryClient}>
+    <App />
+    <ReactQueryDevtools initialIsOpen={false} />
+  </QueryClientProvider>
+);
+```
+
+**useQuery — Data Fetching:**
+```jsx
+import { useQuery } from '@tanstack/react-query';
+import { productService } from '../services/productService';
+
+function ProductsPage() {
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,   // background refetch indicator
+  } = useQuery({
+    queryKey: ['products'],              // cache key
+    queryFn: () => productService.getAll(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isLoading) return <ProductGridSkeleton />;
+  if (isError) return <ErrorMessage message={error.message} onRetry={refetch} />;
+
+  return (
+    <div>
+      {isFetching && <div className="refetch-indicator">Updating...</div>}
+      <ProductGrid products={data.items} />
+    </div>
+  );
+}
+```
+
+**useQuery with Params:**
+```jsx
+function ProductDetail({ productId }) {
+  const { data: product, isLoading } = useQuery({
+    queryKey: ['products', productId],       // productId-dependent key
+    queryFn: () => productService.getById(productId),
+    enabled: !!productId,                    // productId থাকলেই fetch করো
+  });
+
+  if (isLoading) return <Skeleton />;
+  return <ProductView product={product} />;
+}
+```
+
+**useMutation — Create/Update/Delete:**
+```jsx
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+function AddProductForm() {
+  const queryClient = useQueryClient();
+
+  const { mutate: createProduct, isPending } = useMutation({
+    mutationFn: (data) => productService.create(data),
+    onSuccess: (newProduct) => {
+      // Cache invalidate — products list refetch হবে
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      // অথবা optimistic update
+      queryClient.setQueryData(['products'], (old) => ({
+        ...old,
+        items: [newProduct, ...(old?.items || [])],
+      }));
+      toast.success('Product created!');
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const handleSubmit = (formData) => {
+    createProduct(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* form fields */}
+      <button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Product'}
+      </button>
+    </form>
+  );
+}
+```
+
+**React Query vs Redux:**
+
+| | React Query | Redux Toolkit |
+|---|---|---|
+| Purpose | Server state | Client state + server |
+| Caching | ✅ Auto | ❌ Manual |
+| Background refetch | ✅ | ❌ |
+| Loading/error states | ✅ Auto | Manual |
+| Devtools | ✅ | ✅ |
+| When to use | API data | App state, cart, auth |
+
+---
+
+<a id="p6-debounce"></a>
+
+## 6. Debouncing API Calls
+
+**Definition:**
+Debouncing মানে user typing শেষ হওয়ার নির্দিষ্ট সময় পরে API call করা — প্রতিটি keystroke-এ নয়। Network request কমায়।
+
+**Without Debounce — Problem:**
+```
+User types: "R" "e" "a" "c" "t"
+API calls:   5টি request! অপচয়
+```
+
+**With Debounce — Solution:**
+```
+User types: "R" "e" "a" "c" "t" (থামে ৩০০ms)
+API calls:   শুধু ১টি request: "React"
+```
+
+**useDebounce Hook:**
+```jsx
+function useDebounce(value, delay = 300) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+```
+
+**Search Component — Complete:**
+```jsx
+function ProductSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const debouncedQuery = useDebounce(query, 400);
+
+  useEffect(() => {
+    if (!debouncedQuery.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    setLoading(true);
+
+    productService.getAll({ search: debouncedQuery, signal: controller.signal })
+      .then(data => {
+        setResults(data.items);
+        setLoading(false);
+      })
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          setLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [debouncedQuery]);
+
+  return (
+    <div className="search-container">
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search products..."
+        className="search-input"
+      />
+      {loading && <SearchSpinner />}
+
+      {results.length > 0 && (
+        <ul className="search-results">
+          {results.map(product => (
+            <li key={product.id}>
+              <Link to={`/products/${product.id}`}>
+                <img src={product.thumbnail} alt={product.name} />
+                <div>
+                  <p>{product.name}</p>
+                  <p>৳{product.price.toLocaleString()}</p>
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {!loading && query && results.length === 0 && (
+        <p className="no-results">"{query}" — কোনো পণ্য পাওয়া যায়নি</p>
+      )}
+    </div>
+  );
+}
+```
+
+**Throttle vs Debounce:**
+
+| | Debounce | Throttle |
+|---|---|---|
+| কখন call | Activity শেষে (idle after X ms) | প্রতি X ms-এ once |
+| Use case | Search input, form validation | Scroll handler, resize, button |
+| Example | Wait 300ms after last keystroke | Max once per 200ms on scroll |
+
+---
+
+<a id="p6-pagination"></a>
+
+## 7. Infinite Scroll / Pagination
+
+**Traditional Pagination:**
+```jsx
+function PaginatedProducts() {
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const { data, isLoading } = useQuery({
+    queryKey: ['products', page],
+    queryFn: () => productService.getAll({ page, limit: 12 }),
+    onSuccess: (data) => setTotalPages(data.totalPages),
+    keepPreviousData: true,    // previous page data দেখা থাকে next fetch-এ
+  });
+
+  return (
+    <div>
+      <ProductGrid products={data?.items || []} loading={isLoading} />
+      <Pagination
+        current={page}
+        total={totalPages}
+        onChange={setPage}
+      />
+    </div>
+  );
+}
+
+function Pagination({ current, total, onChange }) {
+  return (
+    <div className="pagination">
+      <button
+        onClick={() => onChange(current - 1)}
+        disabled={current === 1}
+      >
+        ← Prev
+      </button>
+
+      {Array.from({ length: Math.min(total, 7) }, (_, i) => {
+        const pageNum = i + 1;
+        return (
+          <button
+            key={pageNum}
+            onClick={() => onChange(pageNum)}
+            className={current === pageNum ? 'active' : ''}
+          >
+            {pageNum}
+          </button>
+        );
+      })}
+
+      <button
+        onClick={() => onChange(current + 1)}
+        disabled={current === total}
+      >
+        Next →
+      </button>
+    </div>
+  );
+}
+```
+
+**Infinite Scroll:**
+```jsx
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { useEffect, useRef, useCallback } from 'react';
+
+function InfiniteProductList() {
+  const loadMoreRef = useRef(null);
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ['products', 'infinite'],
+    queryFn: ({ pageParam = 1 }) =>
+      productService.getAll({ page: pageParam, limit: 12 }),
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.hasMore ? allPages.length + 1 : undefined;
+    },
+  });
+
+  // Intersection Observer — "load more" element দৃষ্টিতে এলে next page
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const allProducts = data?.pages.flatMap(page => page.items) || [];
+
+  if (isLoading) return <ProductGridSkeleton />;
+
+  return (
+    <div>
+      <div className="product-grid">
+        {allProducts.map(product => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+
+      {/* Sentinel element — scroll করে এখানে এলে next page load হয় */}
+      <div ref={loadMoreRef} className="load-more-sentinel">
+        {isFetchingNextPage && <Spinner />}
+        {!hasNextPage && allProducts.length > 0 && (
+          <p className="end-of-list">সব পণ্য দেখা হয়েছে</p>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p6-optimistic"></a>
+
+## 8. Optimistic UI Updates
+
+**Definition:**
+Optimistic UI মানে API response-এর আগেই UI update করা — ধরে নেওয়া যে success হবে। Request fail হলে rollback। Instant, responsive feel।
+
+**Real-life Analogy:**
+WhatsApp message send করলে immediately tick দেখায় — server confirm হওয়ার আগেই। Fail হলে error দেখায়। এটা optimistic UI।
+
+**Optimistic Like Button:**
+```jsx
+function LikeButton({ postId, initialLikes, initialLiked }) {
+  const [liked, setLiked] = useState(initialLiked);
+  const [likes, setLikes] = useState(initialLikes);
+  const [error, setError] = useState(null);
+
+  const handleLike = async () => {
+    // ✅ Optimistic update — সাথে সাথে UI change
+    const wasLiked = liked;
+    const prevLikes = likes;
+
+    setLiked(!liked);
+    setLikes(prev => liked ? prev - 1 : prev + 1);
+    setError(null);
+
+    try {
+      await postService.toggleLike(postId);
+    } catch (err) {
+      // ❌ Rollback on failure
+      setLiked(wasLiked);
+      setLikes(prevLikes);
+      setError('Failed to update. Try again.');
+    }
+  };
+
+  return (
+    <div>
+      <button
+        onClick={handleLike}
+        className={`like-btn ${liked ? 'liked' : ''}`}
+      >
+        {liked ? '❤️' : '🤍'} {likes}
+      </button>
+      {error && <span className="error-tooltip">{error}</span>}
+    </div>
+  );
+}
+```
+
+**Optimistic with React Query:**
+```jsx
+function TodoList() {
+  const queryClient = useQueryClient();
+
+  const { mutate: toggleTodo } = useMutation({
+    mutationFn: ({ id, done }) => todoService.update(id, { done }),
+
+    // Optimistic update
+    onMutate: async ({ id, done }) => {
+      // Pending queries cancel করো
+      await queryClient.cancelQueries({ queryKey: ['todos'] });
+
+      // Current state snapshot
+      const previousTodos = queryClient.getQueryData(['todos']);
+
+      // Optimistically update
+      queryClient.setQueryData(['todos'], (old) =>
+        old.map(todo => todo.id === id ? { ...todo, done } : todo)
+      );
+
+      // Context return করো rollback-এর জন্য
+      return { previousTodos };
+    },
+
+    onError: (err, variables, context) => {
+      // Rollback
+      queryClient.setQueryData(['todos'], context.previousTodos);
+      toast.error('Update failed');
+    },
+
+    onSettled: () => {
+      // Server-এর fresh data দিয়ে sync করো
+      queryClient.invalidateQueries({ queryKey: ['todos'] });
+    },
+  });
+
+  const todos = useQuery({ queryKey: ['todos'], queryFn: todoService.getAll });
+
+  return (
+    <ul>
+      {todos.data?.map(todo => (
+        <li key={todo.id}>
+          <input
+            type="checkbox"
+            checked={todo.done}
+            onChange={() => toggleTodo({ id: todo.id, done: !todo.done })}
+          />
+          <span className={todo.done ? 'done' : ''}>{todo.text}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+<a id="p6-file-upload"></a>
+
+## 9. File Upload
+
+**Definition:**
+File upload React-এ `FormData` + `uncontrolled input` (file input সবসময় uncontrolled) দিয়ে করা হয়। Progress tracking-এ `axios` onUploadProgress use করা হয়।
+
+**File Upload Component:**
+```jsx
+import { useState, useRef } from 'react';
+import api from '../services/api';
+
+function FileUpload({ onSuccess }) {
+  const fileRef = useRef(null);
+  const [preview, setPreview] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Only JPG, PNG, WebP allowed');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {  // 5MB
+      setError('File must be under 5MB');
+      return;
+    }
+
+    setError(null);
+    // Preview
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpload = async () => {
+    const file = fileRef.current?.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('folder', 'products');
+
+    setUploading(true);
+    setProgress(0);
+
+    try {
+      const data = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const pct = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setProgress(pct);
+        },
+      });
+      onSuccess(data.url);
+      setPreview(null);
+      setProgress(0);
+      if (fileRef.current) fileRef.current.value = '';
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="file-upload">
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        disabled={uploading}
+      />
+
+      {preview && (
+        <div className="preview">
+          <img src={preview} alt="Preview" />
+        </div>
+      )}
+
+      {uploading && (
+        <div className="progress-bar">
+          <div
+            className="progress-fill"
+            style={{ width: `${progress}%` }}
+          />
+          <span>{progress}%</span>
+        </div>
+      )}
+
+      {error && <p className="error">{error}</p>}
+
+      <button
+        onClick={handleUpload}
+        disabled={!preview || uploading}
+        className="btn btn-primary"
+      >
+        {uploading ? `Uploading ${progress}%...` : 'Upload Image'}
+      </button>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p6-race"></a>
+
+## 10. Race Conditions & Cleanup
+
+**Definition:**
+Race condition হলো একাধিক async request-এর response যখন ভুল order-এ আসে। Fast typing-এ প্রতিটি keystroke request করলে — পুরানো request-এর response নতুন response-এর পরে আসতে পারে।
+
+**Race Condition Problem:**
+```
+User types: "R" → Request 1: GET /search?q=R
+User types: "Re" → Request 2: GET /search?q=Re
+User types: "Rea" → Request 3: GET /search?q=Rea
+
+Response order (network varies):
+  Request 3 arrives: results = ["React", "Reason"]  ← correct
+  Request 1 arrives: results = ["Rahim", "Rice"]    ← WRONG! old results shown!
+```
+
+**Fix 1: AbortController (Recommended):**
+```jsx
+function SearchResults({ query }) {
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    if (!query) {
+      setResults([]);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    fetch(`/api/search?q=${query}`, { signal: controller.signal })
+      .then(r => r.json())
+      .then(setResults)
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error(err);
+        }
+        // AbortError ignore — expected
+      });
+
+    // Cleanup: query change হলে previous request cancel
+    return () => controller.abort();
+  }, [query]);  // query change → cleanup previous → new request
+
+  return <ResultsList results={results} />;
+}
+```
+
+**Fix 2: Ignore Stale Results:**
+```jsx
+function SearchWithIgnore({ query }) {
+  const [results, setResults] = useState([]);
+
+  useEffect(() => {
+    let isCurrentRequest = true;  // flag
+
+    fetch(`/api/search?q=${query}`)
+      .then(r => r.json())
+      .then(data => {
+        if (isCurrentRequest) {     // still the latest request?
+          setResults(data);
+        }
+        // else: ignore — outdated response
+      });
+
+    return () => {
+      isCurrentRequest = false;    // mark as stale
+    };
+  }, [query]);
+
+  return <ResultsList results={results} />;
+}
+```
+
+**Fix 3: React Query (Handles automatically):**
+```jsx
+// React Query automatically handles race conditions!
+function SearchResults({ query }) {
+  const { data } = useQuery({
+    queryKey: ['search', query],
+    queryFn: () => searchService.search(query),
+    enabled: !!query,
+    // React Query automatically cancels in-flight queries
+    // when the key changes
+  });
+
+  return <ResultsList results={data || []} />;
+}
+```
+
+---
+
+## PART 6 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Say |
+|---|---|---|
+| Fetch | `res.ok` check করতে হয় | Network error ≠ HTTP error |
+| Axios | Auto JSON, interceptors | Instance create করো |
+| Service Layer | Component থেকে API logic আলাদা | Separation of concerns |
+| Loading States | Status enum বা boolean | Skeleton > Spinner |
+| React Query | Server state management | `queryKey`, `staleTime` |
+| Debounce | API call delay | `setTimeout` + cleanup |
+| Pagination | `keepPreviousData`, page state | URL-এ page রাখো |
+| Infinite Scroll | `IntersectionObserver` | `useInfiniteQuery` |
+| Optimistic UI | Immediate update, rollback on error | Snapshot → update → rollback |
+| File Upload | `FormData`, `uncontrolled` | Progress with `onUploadProgress` |
+| Race Condition | `AbortController` cleanup | useEffect return abort |
+
+---
+
+## PART 5 & 6 Common Interview Questions
+
+**PART 5 — State Management:**
+1. Context API-তে re-render সমস্যা কীভাবে solve করবেন?
+2. Redux-এ `createAsyncThunk`-এর তিনটি state কী কী?
+3. Zustand আর Redux Toolkit-এর পার্থক্য?
+4. RTK-এ কেন directly state mutate করা যায়?
+5. Normalized state কী? কেন দরকার?
+6. Redux Toolkit-এ `createEntityAdapter` কী করে?
+
+**PART 6 — API Integration:**
+1. Fetch আর Axios-এর পার্থক্য কী?
+2. Axios interceptor কোন কাজে লাগে?
+3. Debounce আর Throttle পার্থক্য?
+4. Race condition কীভাবে fix করবেন?
+5. Optimistic UI update কী? Rollback কীভাবে করবেন?
+6. Infinite scroll কীভাবে implement করবেন?
+7. React Query আর Redux-এর পার্থক্য কী?
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 7 — Performance Optimization *(Next request এ লিখব)*
