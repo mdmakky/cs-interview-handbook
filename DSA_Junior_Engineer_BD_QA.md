@@ -38,19 +38,19 @@
 <summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#১১-data-structure-কী">১.১ Data Structure কী?</a>
-- <a href="#১২-algorithm-কী">১.২ Algorithm কী?</a>
-- <a href="#১৩-dsa-কেন-গুরুত্বপূর্ণ">১.৩ DSA কেন গুরুত্বপূর্ণ?</a>
-- <a href="#১৪-time-complexity">১.৪ Time Complexity</a>
-- <a href="#১৫-space-complexity">১.৫ Space Complexity</a>
-- <a href="#১৬-big-o-notation">১.৬ Big O Notation</a>
-- <a href="#১৭-big-omega-ও-big-theta">১.৭ Big Omega ও Big Theta</a>
-- <a href="#১৮-best-average-worst-case">১.৮ Best, Average, Worst Case</a>
-- <a href="#১৯-recursion">১.৯ Recursion</a>
-- <a href="#১১০-iteration">১.১০ Iteration</a>
-- <a href="#১১১-memory-concepts">১.১১ Memory Concepts</a>
-- <a href="#১১২-stack-vs-heap-memory">১.১২ Stack vs Heap Memory</a>
-- <a href="#১১৩-part-1--interview-qa">১.১৩ PART 1 — Interview Q&A</a>
+- [১.১ Data Structure কী?](#১১-data-structure-কী)
+- [১.২ Algorithm কী?](#১২-algorithm-কী)
+- [১.৩ DSA কেন গুরুত্বপূর্ণ?](#১৩-dsa-কেন-গুরুত্বপূর্ণ)
+- [১.৪ Time Complexity](#১৪-time-complexity)
+- [১.৫ Space Complexity](#১৫-space-complexity)
+- [১.৬ Big O Notation](#১৬-big-o-notation)
+- [১.৭ Big Omega ও Big Theta](#১৭-big-omega-ও-big-theta)
+- [১.৮ Best, Average, Worst Case](#১৮-best-average-worst-case)
+- [১.৯ Recursion](#১৯-recursion)
+- [১.১০ Iteration](#১১০-iteration)
+- [১.১১ Memory Concepts](#১১১-memory-concepts)
+- [১.১২ Stack vs Heap Memory](#১১২-stack-vs-heap-memory)
+- [১.১৩ PART 1 — Interview Q&A](#১১৩-part-1--interview-qa)
 
 </details>
 
@@ -58,16 +58,16 @@
 <summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#২১-array-basics">২.১ Array Basics</a>
-- <a href="#২২-static-vs-dynamic-array">২.২ Static vs Dynamic Array</a>
-- <a href="#২৩-string-operations">২.৩ String Operations</a>
-- <a href="#২৪-prefix-sum">২.৪ Prefix Sum</a>
-- <a href="#২৫-sliding-window">২.৫ Sliding Window</a>
-- <a href="#২৬-two-pointer">২.৬ Two Pointer</a>
-- <a href="#২৭-kadanes-algorithm">২.৭ Kadane's Algorithm</a>
-- <a href="#২৮-binary-search">২.৮ Binary Search</a>
-- <a href="#২৯-matrix-operations">২.৯ Matrix Operations</a>
-- <a href="#২১০-part-2--interview-qa">২.১০ PART 2 — Interview Q&A</a>
+- [২.১ Array Basics](#২১-array-basics)
+- [২.২ Static vs Dynamic Array](#২২-static-vs-dynamic-array)
+- [২.৩ String Operations](#২৩-string-operations)
+- [২.৪ Prefix Sum](#২৪-prefix-sum)
+- [২.৫ Sliding Window](#২৫-sliding-window)
+- [২.৬ Two Pointer](#২৬-two-pointer)
+- [২.৭ Kadane's Algorithm](#২৭-kadanes-algorithm)
+- [২.৮ Binary Search](#২৮-binary-search)
+- [২.৯ Matrix Operations](#২৯-matrix-operations)
+- [২.১০ PART 2 — Interview Q&A](#২১০-part-2--interview-qa)
 
 </details>
 
@@ -75,16 +75,16 @@
 <summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৫১-tree-কী">৫.১ Tree কী?</a>
-- <a href="#৫২-binary-tree">৫.২ Binary Tree</a>
-- <a href="#৫৩-binary-search-tree-bst">৫.৩ Binary Search Tree (BST)</a>
-- <a href="#৫৪-tree-traversal">৫.৪ Tree Traversal</a>
-- <a href="#৫৫-bfs--level-order-traversal">৫.৫ BFS — Level-Order Traversal</a>
-- <a href="#৫৬-height-depth-ও-diameter">৫.৬ Height, Depth ও Diameter</a>
-- <a href="#৫৭-balanced-tree-ও-avl">৫.৭ Balanced Tree ও AVL</a>
-- <a href="#৫৮-segment-tree">৫.৮ Segment Tree</a>
-- <a href="#৫৯-trie">৫.৯ Trie</a>
-- <a href="#৫১০-part-5--interview-qa">৫.১০ PART 5 — Interview Q&A</a>
+- [৫.১ Tree কী?](#৫১-tree-কী)
+- [৫.২ Binary Tree](#৫২-binary-tree)
+- [৫.৩ Binary Search Tree (BST)](#৫৩-binary-search-tree-bst)
+- [৫.৪ Tree Traversal](#৫৪-tree-traversal)
+- [৫.৫ BFS — Level-Order Traversal](#৫৫-bfs--level-order-traversal)
+- [৫.৬ Height, Depth ও Diameter](#৫৬-height-depth-ও-diameter)
+- [৫.৭ Balanced Tree ও AVL](#৫৭-balanced-tree-ও-avl)
+- [৫.৮ Segment Tree](#৫৮-segment-tree)
+- [৫.৯ Trie](#৫৯-trie)
+- [৫.১০ PART 5 — Interview Q&A](#৫১০-part-5--interview-qa)
 
 </details>
 
@@ -92,16 +92,16 @@
 <summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৬১-graph-কী">৬.১ Graph কী?</a>
-- <a href="#৬২-graph-representation">৬.২ Graph Representation</a>
-- <a href="#৬৩-bfs">৬.৩ BFS</a>
-- <a href="#৬৪-dfs">৬.৪ DFS</a>
-- <a href="#৬৫-cycle-detection">৬.৫ Cycle Detection</a>
-- <a href="#৬৬-topological-sort">৬.৬ Topological Sort</a>
-- <a href="#৬৭-shortest-path--dijkstra">৬.৭ Shortest Path — Dijkstra</a>
-- <a href="#৬৮-bellman-ford-ও-floyd-warshall">৬.৮ Bellman-Ford ও Floyd-Warshall</a>
-- <a href="#৬৯-union-find-disjoint-set">৬.৯ Union-Find (Disjoint Set)</a>
-- <a href="#৬১০-part-6--interview-qa">৬.১০ PART 6 — Interview Q&A</a>
+- [৬.১ Graph কী?](#৬১-graph-কী)
+- [৬.২ Graph Representation](#৬২-graph-representation)
+- [৬.৩ BFS](#৬৩-bfs)
+- [৬.৪ DFS](#৬৪-dfs)
+- [৬.৫ Cycle Detection](#৬৫-cycle-detection)
+- [৬.৬ Topological Sort](#৬৬-topological-sort)
+- [৬.৭ Shortest Path — Dijkstra](#৬৭-shortest-path--dijkstra)
+- [৬.৮ Bellman-Ford ও Floyd-Warshall](#৬৮-bellman-ford-ও-floyd-warshall)
+- [৬.৯ Union-Find (Disjoint Set)](#৬৯-union-find-disjoint-set)
+- [৬.১০ PART 6 — Interview Q&A](#৬১০-part-6--interview-qa)
 
 </details>
 
@@ -111,16 +111,16 @@
 <summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৭১-sorting-overview">৭.১ Sorting Overview</a>
-- <a href="#৭২-bubble-sort">৭.২ Bubble Sort</a>
-- <a href="#৭৩-selection-sort">৭.৩ Selection Sort</a>
-- <a href="#৭৪-insertion-sort">৭.৪ Insertion Sort</a>
-- <a href="#৭৫-merge-sort">৭.৫ Merge Sort</a>
-- <a href="#৭৬-quick-sort">৭.৬ Quick Sort</a>
-- <a href="#৭৭-heap-sort">৭.৭ Heap Sort</a>
-- <a href="#৭৮-counting-sort-ও-radix-sort">৭.৮ Counting Sort ও Radix Sort</a>
-- <a href="#৭৯-binary-search-variants">৭.৯ Binary Search Variants</a>
-- <a href="#৭১০-part-7--interview-qa">৭.১০ PART 7 — Interview Q&A</a>
+- [৭.১ Sorting Overview](#৭১-sorting-overview)
+- [৭.২ Bubble Sort](#৭২-bubble-sort)
+- [৭.৩ Selection Sort](#৭৩-selection-sort)
+- [৭.৪ Insertion Sort](#৭৪-insertion-sort)
+- [৭.৫ Merge Sort](#৭৫-merge-sort)
+- [৭.৬ Quick Sort](#৭৬-quick-sort)
+- [৭.৭ Heap Sort](#৭৭-heap-sort)
+- [৭.৮ Counting Sort ও Radix Sort](#৭৮-counting-sort-ও-radix-sort)
+- [৭.৯ Binary Search Variants](#৭৯-binary-search-variants)
+- [৭.১০ PART 7 — Interview Q&A](#৭১০-part-7--interview-qa)
 
 </details>
 
@@ -128,16 +128,16 @@
 <summary><strong>📃 PART 8 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৮১-dynamic-programming-কী">৮.১ Dynamic Programming কী?</a>
-- <a href="#৮২-memoization-top-down">৮.২ Memoization (Top-Down)</a>
-- <a href="#৮৩-tabulation-bottom-up">৮.৩ Tabulation (Bottom-Up)</a>
-- <a href="#৮৪-fibonacci-ও-classic-dp">৮.৪ Fibonacci ও Classic DP</a>
-- <a href="#৮৫-longest-common-subsequence-lcs">৮.৫ Longest Common Subsequence (LCS)</a>
-- <a href="#৮৬-longest-increasing-subsequence-lis">৮.৬ Longest Increasing Subsequence (LIS)</a>
-- <a href="#৮৭-01-knapsack">৮.৭ 0/1 Knapsack</a>
-- <a href="#৮৮-coin-change">৮.৮ Coin Change</a>
-- <a href="#৮৯-greedy-algorithm">৮.৯ Greedy Algorithm</a>
-- <a href="#৮১০-part-8--interview-qa">৮.১০ PART 8 — Interview Q&A</a>
+- [৮.১ Dynamic Programming কী?](#৮১-dynamic-programming-কী)
+- [৮.২ Memoization (Top-Down)](#৮২-memoization-top-down)
+- [৮.৩ Tabulation (Bottom-Up)](#৮৩-tabulation-bottom-up)
+- [৮.৪ Fibonacci ও Classic DP](#৮৪-fibonacci-ও-classic-dp)
+- [৮.৫ Longest Common Subsequence (LCS)](#৮৫-longest-common-subsequence-lcs)
+- [৮.৬ Longest Increasing Subsequence (LIS)](#৮৬-longest-increasing-subsequence-lis)
+- [৮.৭ 0/1 Knapsack](#৮৭-01-knapsack)
+- [৮.৮ Coin Change](#৮৮-coin-change)
+- [৮.৯ Greedy Algorithm](#৮৯-greedy-algorithm)
+- [৮.১০ PART 8 — Interview Q&A](#৮১০-part-8--interview-qa)
 
 </details>
 
@@ -147,15 +147,15 @@
 <summary><strong>📄 PART 9 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৯১-hash-map-ও-hash-table">৯.১ Hash Map ও Hash Table</a>
-- <a href="#৯২-hash-map-patterns">৯.২ Hash Map Patterns</a>
-- <a href="#৯৩-bit-manipulation">৯.৩ Bit Manipulation</a>
-- <a href="#৯৪-bit-manipulation-problems">৯.৪ Bit Manipulation Problems</a>
-- <a href="#৯৫-backtracking">৯.৫ Backtracking</a>
-- <a href="#৯৬-divide--conquer">৯.৬ Divide & Conquer</a>
-- <a href="#৯৭-string-algorithms--kmp">৯.৭ String Algorithms — KMP</a>
-- <a href="#৯৮-rolling-hash-ও-rabin-karp">৯.৮ Rolling Hash ও Rabin-Karp</a>
-- <a href="#৯৯-part-9--interview-qa">৯.৯ PART 9 — Interview Q&A</a>
+- [৯.১ Hash Map ও Hash Table](#৯১-hash-map-ও-hash-table)
+- [৯.২ Hash Map Patterns](#৯২-hash-map-patterns)
+- [৯.৩ Bit Manipulation](#৯৩-bit-manipulation)
+- [৯.৪ Bit Manipulation Problems](#৯৪-bit-manipulation-problems)
+- [৯.৫ Backtracking](#৯৫-backtracking)
+- [৯.৬ Divide & Conquer](#৯৬-divide--conquer)
+- [৯.৭ String Algorithms — KMP](#৯৭-string-algorithms--kmp)
+- [৯.৮ Rolling Hash ও Rabin-Karp](#৯৮-rolling-hash-ও-rabin-karp)
+- [৯.৯ PART 9 — Interview Q&A](#৯৯-part-9--interview-qa)
 
 </details>
 
@@ -163,12 +163,12 @@
 <summary><strong>🗒️ PART 10 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#১০১-array--string-top-qa">১০.১ Array & String Top Q&A</a>
-- <a href="#১০২-linked-list-top-qa">১০.২ Linked List Top Q&A</a>
-- <a href="#১০৩-stack--queue-top-qa">১০.৩ Stack & Queue Top Q&A</a>
-- <a href="#১০৪-tree--graph-top-qa">১০.৪ Tree & Graph Top Q&A</a>
-- <a href="#১০৫-sorting--dp-top-qa">১০.৫ Sorting & DP Top Q&A</a>
-- <a href="#১০৬-complexity-cheat-sheet">১০.৬ Complexity Cheat Sheet</a>
+- [১০.১ Array & String Top Q&A](#১০১-array--string-top-qa)
+- [১০.২ Linked List Top Q&A](#১০২-linked-list-top-qa)
+- [১০.৩ Stack & Queue Top Q&A](#১০৩-stack--queue-top-qa)
+- [১০.৪ Tree & Graph Top Q&A](#১০৪-tree--graph-top-qa)
+- [১০.৫ Sorting & DP Top Q&A](#১০৫-sorting--dp-top-qa)
+- [১০.৬ Complexity Cheat Sheet](#১০৬-complexity-cheat-sheet)
 
 </details>
 
@@ -176,12 +176,12 @@
 <summary><strong>🗓️ PART 11 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#১১১-umpire-method">১১.১ UMPIRE Method</a>
-- <a href="#১১২-14-core-problem-patterns">১১.২ 14 Core Problem Patterns</a>
-- <a href="#১১৩-pattern-recognition-guide">১১.৩ Pattern Recognition Guide</a>
-- <a href="#১১৪-interview-dos--donts">১১.৪ Interview Do's & Don'ts</a>
-- <a href="#১১৫-time-management">১১.৫ Time Management</a>
-- <a href="#১১৬-mock-interview-checklist">১১.৬ Mock Interview Checklist</a>
+- [১১.১ UMPIRE Method](#১১১-umpire-method)
+- [১১.২ 14 Core Problem Patterns](#১১২-14-core-problem-patterns)
+- [১১.৩ Pattern Recognition Guide](#১১৩-pattern-recognition-guide)
+- [১১.৪ Interview Do's & Don'ts](#১১৪-interview-dos--donts)
+- [১১.৫ Time Management](#১১৫-time-management)
+- [১১.৬ Mock Interview Checklist](#১১৬-mock-interview-checklist)
 
 </details>
 
@@ -189,12 +189,12 @@
 <summary><strong>🗃️ PART 12 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#১২১-বাংলাদেশের-top-tech-companies">১২.১ বাংলাদেশের Top Tech Companies</a>
-- <a href="#১২২-company-wise-interview-pattern">১২.২ Company-wise Interview Pattern</a>
-- <a href="#১২৩-hr-interview-qa-বাংলায়">১২.৩ HR Interview Q&A (বাংলায়)</a>
-- <a href="#১২৪-salary-negotiation">১২.৪ Salary Negotiation</a>
-- <a href="#১২৫-90-day-study-plan">১২.৫ 90-Day Study Plan</a>
-- <a href="#১২৬-final-tips--resources">১২.৬ Final Tips & Resources</a>
+- [১২.১ বাংলাদেশের Top Tech Companies](#১২১-বাংলাদেশের-top-tech-companies)
+- [১২.২ Company-wise Interview Pattern](#১২২-company-wise-interview-pattern)
+- [১২.৩ HR Interview Q&A (বাংলায়)](#১২৩-hr-interview-qa-বাংলায়)
+- [১২.৪ Salary Negotiation](#১২৪-salary-negotiation)
+- [১২.৫ 90-Day Study Plan](#১২৫-90-day-study-plan)
+- [১২.৬ Final Tips & Resources](#১২৬-final-tips--resources)
 
 </details>
 
@@ -2167,15 +2167,15 @@ Hard:
 <summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৩১-linked-list-কী">৩.১ Linked List কী?</a>
-- <a href="#৩২-singly-linked-list">৩.২ Singly Linked List</a>
-- <a href="#৩৩-doubly-linked-list">৩.৩ Doubly Linked List</a>
-- <a href="#৩৪-circular-linked-list">৩.৪ Circular Linked List</a>
-- <a href="#৩৫-insert-ও-delete-operations">৩.৫ Insert ও Delete Operations</a>
-- <a href="#৩৬-reverse-linked-list">৩.৬ Reverse Linked List</a>
-- <a href="#৩৭-cycle-detection--floyds-algorithm">৩.৭ Cycle Detection — Floyd's Algorithm</a>
-- <a href="#৩৮-merge-linked-lists">৩.৮ Merge Linked Lists</a>
-- <a href="#৩৯-part-3--interview-qa">৩.৯ PART 3 — Interview Q&A</a>
+- [৩.১ Linked List কী?](#৩১-linked-list-কী)
+- [৩.২ Singly Linked List](#৩২-singly-linked-list)
+- [৩.৩ Doubly Linked List](#৩৩-doubly-linked-list)
+- [৩.৪ Circular Linked List](#৩৪-circular-linked-list)
+- [৩.৫ Insert ও Delete Operations](#৩৫-insert-ও-delete-operations)
+- [৩.৬ Reverse Linked List](#৩৬-reverse-linked-list)
+- [৩.৭ Cycle Detection — Floyd's Algorithm](#৩৭-cycle-detection--floyds-algorithm)
+- [৩.৮ Merge Linked Lists](#৩৮-merge-linked-lists)
+- [৩.৯ PART 3 — Interview Q&A](#৩৯-part-3--interview-qa)
 
 </details>
 
@@ -2183,15 +2183,15 @@ Hard:
 <summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৪১-stack">৪.১ Stack</a>
-- <a href="#৪২-queue">৪.২ Queue</a>
-- <a href="#৪৩-circular-queue">৪.৩ Circular Queue</a>
-- <a href="#৪৪-deque-double-ended-queue">৪.৪ Deque (Double-Ended Queue)</a>
-- <a href="#৪৫-priority-queue-ও-heap">৪.৫ Priority Queue ও Heap</a>
-- <a href="#৪৬-monotonic-stack">৪.৬ Monotonic Stack</a>
-- <a href="#৪৭-expression-evaluation">৪.৭ Expression Evaluation</a>
-- <a href="#৪৮-infix-to-postfix">৪.৮ Infix to Postfix</a>
-- <a href="#৪৯-part-4--interview-qa">৪.৯ PART 4 — Interview Q&A</a>
+- [৪.১ Stack](#৪১-stack)
+- [৪.২ Queue](#৪২-queue)
+- [৪.৩ Circular Queue](#৪৩-circular-queue)
+- [৪.৪ Deque (Double-Ended Queue)](#৪৪-deque-double-ended-queue)
+- [৪.৫ Priority Queue ও Heap](#৪৫-priority-queue-ও-heap)
+- [৪.৬ Monotonic Stack](#৪৬-monotonic-stack)
+- [৪.৭ Expression Evaluation](#৪৭-expression-evaluation)
+- [৪.৮ Infix to Postfix](#৪৮-infix-to-postfix)
+- [৪.৯ PART 4 — Interview Q&A](#৪৯-part-4--interview-qa)
 
 </details>
 

@@ -28,16 +28,16 @@
 <summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#১১-object-oriented-programming-oop-কী">১.১ OOP কী?</a>
-- <a href="#১২-class-এবং-object">১.২ Class এবং Object</a>
-- <a href="#১৩-constructor-এবং-destructor">১.৩ Constructor ও Destructor</a>
-- <a href="#১৪-access-modifiers-অ্যাক্সেস-মডিফায়ার">১.৪ Access Modifiers</a>
-- <a href="#১৫-encapsulation-এনক্যাপসুলেশন">১.৫ Encapsulation</a>
-- <a href="#১৬-abstraction-অ্যাবস্ট্রাকশন">১.৬ Abstraction</a>
-- <a href="#১৭-inheritance-ইনহেরিটেন্স">১.৭ Inheritance</a>
-- <a href="#১৮-polymorphism-পলিমরফিজম">১.৮ Polymorphism</a>
-- <a href="#১৯-method-overloading-vs-method-overriding">১.৯ Overloading vs Overriding</a>
-- <a href="#১১০-part-1--interview-questions--answers">১.১০ Interview Q&A</a>
+- [১.১ OOP কী?](#১১-object-oriented-programming-oop-কী)
+- [১.২ Class এবং Object](#১২-class-এবং-object)
+- [১.৩ Constructor ও Destructor](#১৩-constructor-এবং-destructor)
+- [১.৪ Access Modifiers](#১৪-access-modifiers-অ্যাক্সেস-মডিফায়ার)
+- [১.৫ Encapsulation](#১৫-encapsulation-এনক্যাপসুলেশন)
+- [১.৬ Abstraction](#১৬-abstraction-অ্যাবস্ট্রাকশন)
+- [১.৭ Inheritance](#১৭-inheritance-ইনহেরিটেন্স)
+- [১.৮ Polymorphism](#১৮-polymorphism-পলিমরফিজম)
+- [১.৯ Overloading vs Overriding](#১৯-method-overloading-vs-method-overriding)
+- [১.১০ Interview Q&A](#১১০-part-1--interview-questions--answers)
 
 </details>
 
@@ -45,16 +45,16 @@
 <summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#২১-static-binding-vs-dynamic-binding">২.১ Static vs Dynamic Binding</a>
-- <a href="#২২-interface-ইন্টারফেস">২.২ Interface</a>
-- <a href="#২৩-abstract-class-vs-interface">২.৩ Abstract Class vs Interface</a>
-- <a href="#২৪-virtual-function-এবং-pure-virtual-function">২.৪ Virtual Function ও Pure Virtual Function</a>
-- <a href="#২৫-copy-constructor-এবং-deep-vs-shallow-copy">২.৫ Copy Constructor ও Deep/Shallow Copy</a>
-- <a href="#২৬-diamond-problem-ডায়মন্ড-সমস্যা">২.৬ Diamond Problem</a>
-- <a href="#২৭-solid-principles">২.৭ SOLID Principles</a>
-- <a href="#২৮-dependency-injection-di">২.৮ Dependency Injection</a>
-- <a href="#২৯-coupling-এবং-cohesion">২.৯ Coupling ও Cohesion</a>
-- <a href="#২১০-part-2--interview-questions--answers">২.১০ Interview Q&A</a>
+- [২.১ Static vs Dynamic Binding](#২১-static-binding-vs-dynamic-binding)
+- [২.২ Interface](#২২-interface-ইন্টারফেস)
+- [২.৩ Abstract Class vs Interface](#২৩-abstract-class-vs-interface)
+- [২.৪ Virtual Function ও Pure Virtual Function](#২৪-virtual-function-এবং-pure-virtual-function)
+- [২.৫ Copy Constructor ও Deep/Shallow Copy](#২৫-copy-constructor-এবং-deep-vs-shallow-copy)
+- [২.৬ Diamond Problem](#২৬-diamond-problem-ডায়মন্ড-সমস্যা)
+- [২.৭ SOLID Principles](#২৭-solid-principles)
+- [২.৮ Dependency Injection](#২৮-dependency-injection-di)
+- [২.৯ Coupling ও Cohesion](#২৯-coupling-এবং-cohesion)
+- [২.১০ Interview Q&A](#২১০-part-2--interview-questions--answers)
 
 </details>
 
@@ -62,9 +62,9 @@
 <summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৩১-theoretical-interview-questions-৫০টি-বিস্তারিত-প্রশ্নোত্তর">৩.১ ৫০টি Theoretical Q&A</a>
-- <a href="#৩২-common-interview-mistakes-এবং-কীভাবে-এড়াবেন">৩.২ Common Interview Mistakes</a>
-- <a href="#৩৩-follow-up-question-patterns-common-sequences">৩.৩ Follow-up Question Patterns</a>
+- [৩.১ ৫০টি Theoretical Q&A](#৩১-theoretical-interview-questions-৫০টি-বিস্তারিত-প্রশ্নোত্তর)
+- [৩.২ Common Interview Mistakes](#৩২-common-interview-mistakes-এবং-কীভাবে-এড়াবেন)
+- [৩.৩ Follow-up Question Patterns](#৩৩-follow-up-question-patterns-common-sequences)
 
 </details>
 
@@ -72,11 +72,11 @@
 <summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৪১-student-management-system">৪.১ Student Management System</a>
-- <a href="#৪২-bank-management-system">৪.২ Bank Management System</a>
-- <a href="#৪৩-employee-management-system">৪.৩ Employee Management System</a>
-- <a href="#৪৪-library-management-system">৪.৪ Library Management System</a>
-- <a href="#৪৫-coding-problem--interview-কৌশল-সব-system-এর-জন্য">৪.৫ Coding Interview কৌশল</a>
+- [৪.১ Student Management System](#৪১-student-management-system)
+- [৪.২ Bank Management System](#৪২-bank-management-system)
+- [৪.৩ Employee Management System](#৪৩-employee-management-system)
+- [৪.৪ Library Management System](#৪৪-library-management-system)
+- [৪.৫ Coding Interview কৌশল](#৪৫-coding-problem--interview-কৌশল-সব-system-এর-জন্য)
 
 </details>
 
@@ -84,12 +84,12 @@
 <summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৫১-java-oop--বিস্তারিত">৫.১ Java OOP</a>
-- <a href="#৫২-c-oop--java-এর-সাথে-তুলনা">৫.২ C++ OOP</a>
-- <a href="#৫৩-python-oop--বৈশিষ্ট্য-ও-interview-traps">৫.৩ Python OOP</a>
-- <a href="#৫৪-c-oop--java-এর-সাথে-তুলনা">৫.৪ C# OOP</a>
-- <a href="#৫৫-language-তুলনা--quick-reference-table">৫.৫ Language তুলনা Table</a>
-- <a href="#৫৬-bangladeshi-interview-তে-language-specific-প্রশ্ন">৫.৬ BD Interview Language Questions</a>
+- [৫.১ Java OOP](#৫১-java-oop--বিস্তারিত)
+- [৫.২ C++ OOP](#৫২-c-oop--java-এর-সাথে-তুলনা)
+- [৫.৩ Python OOP](#৫৩-python-oop--বৈশিষ্ট্য-ও-interview-traps)
+- [৫.৪ C# OOP](#৫৪-c-oop--java-এর-সাথে-তুলনা)
+- [৫.৫ Language তুলনা Table](#৫৫-language-তুলনা--quick-reference-table)
+- [৫.৬ BD Interview Language Questions](#৫৬-bangladeshi-interview-তে-language-specific-প্রশ্ন)
 
 </details>
 
@@ -97,13 +97,13 @@
 <summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৬১-memory-management--stack-vs-heap">৬.১ Memory Management — Stack vs Heap</a>
-- <a href="#৬২-garbage-collection--java">৬.২ Garbage Collection</a>
-- <a href="#৬৩-design-patterns--gang-of-four-gof">৬.৩ Design Patterns (GoF)</a>
-- <a href="#৬৪-mvc-architecture--oop-দিয়ে">৬.৪ MVC Architecture</a>
-- <a href="#৬৫-object-cloning--shallow-vs-deep-copy-revisited">৬.৫ Object Cloning</a>
-- <a href="#৬৬-exception-handling-ও-oop">৬.৬ Exception Handling ও OOP</a>
-- <a href="#৬৭-advanced-oop-interview-questions">৬.৭ Advanced Interview Questions</a>
+- [৬.১ Memory Management — Stack vs Heap](#৬১-memory-management--stack-vs-heap)
+- [৬.২ Garbage Collection](#৬২-garbage-collection--java)
+- [৬.৩ Design Patterns (GoF)](#৬৩-design-patterns--gang-of-four-gof)
+- [৬.৪ MVC Architecture](#৬৪-mvc-architecture--oop-দিয়ে)
+- [৬.৫ Object Cloning](#৬৫-object-cloning--shallow-vs-deep-copy-revisited)
+- [৬.৬ Exception Handling ও OOP](#৬৬-exception-handling-ও-oop)
+- [৬.৭ Advanced Interview Questions](#৬৭-advanced-oop-interview-questions)
 
 </details>
 
@@ -111,15 +111,15 @@
 <summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- <a href="#৭১-bangladeshi-tech-company--interview-structure">৭.১ BD Company Interview Structure</a>
-- <a href="#৭২-fresher-viba--সবচেয়ে-বেশি-জিজ্ঞেস-করা-প্রশ্ন-ও-আদর্শ-উত্তর">৭.২ Fresher Viva — Common Q&A</a>
-- <a href="#৭৩-project-explanation--oop-দিয়ে-কীভাবে-বলবেন">৭.৩ Project Explanation Strategy</a>
-- <a href="#৭৪-complete-mock-interview--পূর্ণ-কথোপকথন">৭.৪ Complete Mock Interview</a>
-- <a href="#৭৫-সাধারণ-interview-ভুল--এড়িয়ে-চলুন">৭.৫ Interview ভুল এড়ানো</a>
-- <a href="#৭৬-30-মিনিটের-interview-preparation-checklist">৭.৬ 30-মিনিটের Checklist</a>
-- <a href="#৭৭-oop-concept--এক-লাইনের-স্মরণীয়-সংজ্ঞা">৭.৭ এক লাইনের সংজ্ঞা</a>
-- <a href="#৭৮-final-rapid-fire--৫০টি-quick-qa">৭.৮ Rapid-Fire (৫০টি Q&A)</a>
-- <a href="#৭৯-হ্যান্ডবুক-ব্যবহার-গাইড--revision-plan">৭.৯ Revision Plan</a>
+- [৭.১ BD Company Interview Structure](#৭১-bangladeshi-tech-company--interview-structure)
+- [৭.২ Fresher Viva — Common Q&A](#৭২-fresher-viba--সবচেয়ে-বেশি-জিজ্ঞেস-করা-প্রশ্ন-ও-আদর্শ-উত্তর)
+- [৭.৩ Project Explanation Strategy](#৭৩-project-explanation--oop-দিয়ে-কীভাবে-বলবেন)
+- [৭.৪ Complete Mock Interview](#৭৪-complete-mock-interview--পূর্ণ-কথোপকথন)
+- [৭.৫ Interview ভুল এড়ানো](#৭৫-সাধারণ-interview-ভুল--এড়িয়ে-চলুন)
+- [৭.৬ 30-মিনিটের Checklist](#৭৬-30-মিনিটের-interview-preparation-checklist)
+- [৭.৭ এক লাইনের সংজ্ঞা](#৭৭-oop-concept--এক-লাইনের-স্মরণীয়-সংজ্ঞা)
+- [৭.৮ Rapid-Fire (৫০টি Q&A)](#৭৮-final-rapid-fire--৫০টি-quick-qa)
+- [৭.৯ Revision Plan](#৭৯-হ্যান্ডবুক-ব্যবহার-গাইড--revision-plan)
 
 </details>
 
