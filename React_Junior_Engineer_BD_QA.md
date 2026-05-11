@@ -7471,4 +7471,1954 @@ function SearchResults({ query }) {
 
 ---
 
-> **📌 পরবর্তী:** PART 7 — Performance Optimization *(Next request এ লিখব)*
+<a id="part7"></a>
+
+## 📋 PART 7 সূচিপত্র — Performance Optimization
+
+| # | Topic | Key Concept |
+|---|---|---|
+| 1 | [Rendering & Reconciliation](#p7-rendering) | Virtual DOM, diffing |
+| 2 | [React.memo](#p7-memo) | Unnecessary re-render prevent |
+| 3 | [useMemo](#p7-usememo) | Expensive calculation cache |
+| 4 | [useCallback](#p7-usecallback) | Stable function reference |
+| 5 | [Code Splitting](#p7-codesplit) | lazy + Suspense |
+| 6 | [List Virtualization](#p7-virtual) | react-window, large lists |
+| 7 | [Bundle Optimization](#p7-bundle) | Tree shaking, analysis |
+| 8 | [Image & Asset Optimization](#p7-images) | Lazy loading, WebP |
+| 9 | [Web Vitals](#p7-vitals) | LCP, CLS, INP |
+| 10 | [React DevTools Profiler](#p7-profiler) | Finding bottlenecks |
+
+---
+
+<a id="p7-rendering"></a>
+
+## 1. Rendering & Reconciliation
+
+**Definition:**
+React render মানে component function call করে JSX থেকে Virtual DOM তৈরি করা। Reconciliation মানে previous Virtual DOM-এর সাথে তুলনা করে শুধু changed parts real DOM-এ update করা।
+
+**Render Triggers:**
+```
+Component re-render হয় যখন:
+  1. State change (useState, useReducer)
+  2. Props change (parent re-render → child re-render by default)
+  3. Context value change (useContext)
+  4. forceUpdate (class components)
+```
+
+**React Render Pipeline:**
+```
+State/Props Change
+       ↓
+  Component fn() called → New Virtual DOM (JSX)
+       ↓
+  Diffing: Old Virtual DOM vs New Virtual DOM
+       ↓
+  Commit: Only changed nodes → Real DOM update
+       ↓
+  Browser Paint
+```
+
+**Re-render Cascade Problem:**
+```jsx
+// ❌ Every parent re-render triggers ALL children
+function ParentComponent() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>
+      <ExpensiveChild />          {/* Re-renders on every count change! */}
+      <AnotherChild />            {/* Re-renders on every count change! */}
+      <DeepNestedTree />          {/* Entire tree re-renders! */}
+    </div>
+  );
+}
+```
+
+**Key Insight:**
+> "React-এ render হওয়া মানেই DOM update না। Virtual DOM diffing cheap। কিন্তু expensive calculation বা large component tree-তে unnecessary renders performance hit করে।"
+
+**Re-render vs Remount:**
+
+| | Re-render | Remount |
+|---|---|---|
+| কী হয় | fn() আবার call | unmount → mount |
+| State | Preserved | Reset |
+| Triggered by | State/Props change | `key` prop change, conditional |
+| Speed | Fast | Slow |
+
+---
+
+<a id="p7-memo"></a>
+
+## 2. React.memo
+
+**Definition:**
+`React.memo` একটি HOC যা props না বদলালে component re-render skip করে। Parent re-render হলেও memoized child শুধু props same থাকলে re-render করে না।
+
+**Basic Usage:**
+```jsx
+// ✅ React.memo — props same → no re-render
+const ProductCard = React.memo(function ProductCard({ product, onAddToCart }) {
+  console.log('ProductCard rendered:', product.id);
+  return (
+    <div className="card">
+      <img src={product.image} alt={product.name} />
+      <h3>{product.name}</h3>
+      <p>৳{product.price.toLocaleString()}</p>
+      <button onClick={() => onAddToCart(product)}>Add to Cart</button>
+    </div>
+  );
+});
+
+// Without memo: 100 products × every parent update = 100 re-renders
+// With memo: only changed product cards re-render
+function ProductGrid({ products }) {
+  const [sortBy, setSortBy] = useState('name');
+  const { addToCart } = useCart();
+
+  // ⚠️ Problem: new function reference on every render
+  // React.memo sees new onAddToCart → re-renders all cards anyway!
+  const handleAdd = (product) => addToCart(product);  // ❌
+
+  // ✅ Fix: useCallback for stable reference
+  const handleAdd = useCallback((product) => addToCart(product), [addToCart]);
+
+  return (
+    <div>
+      <SortBar sortBy={sortBy} onChange={setSortBy} />
+      <div className="grid">
+        {products.map(p => (
+          <ProductCard key={p.id} product={p} onAddToCart={handleAdd} />
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+**Custom Comparison:**
+```jsx
+// React.memo default: shallow comparison (Object.is)
+// Custom comparator for complex props
+const UserRow = React.memo(
+  function UserRow({ user, onEdit }) {
+    return (
+      <tr>
+        <td>{user.name}</td>
+        <td>{user.email}</td>
+        <td><button onClick={() => onEdit(user.id)}>Edit</button></td>
+      </tr>
+    );
+  },
+  // Custom: only re-render if these fields change
+  (prevProps, nextProps) => {
+    return (
+      prevProps.user.id === nextProps.user.id &&
+      prevProps.user.name === nextProps.user.name &&
+      prevProps.user.email === nextProps.user.email &&
+      prevProps.onEdit === nextProps.onEdit
+    );
+  }
+);
+```
+
+**When to use React.memo:**
+```
+✅ Use React.memo when:
+  - Component renders often with same props
+  - Component is expensive to render (heavy DOM, complex logic)
+  - Pure presentational component in large list
+
+❌ Skip React.memo when:
+  - Component always receives new props anyway
+  - Component is cheap/simple
+  - Props comparison itself is expensive (deep objects)
+```
+
+---
+
+<a id="p7-usememo"></a>
+
+## 3. useMemo
+
+**Definition:**
+`useMemo` expensive computation-এর result cache করে। Dependencies না বদলালে cached value return করে — function re-run হয় না।
+
+**Syntax:**
+```jsx
+const cachedValue = useMemo(() => expensiveCalculation(a, b), [a, b]);
+```
+
+**Real Examples:**
+```jsx
+function ProductAnalytics({ products, filters }) {
+  // ❌ Every render-এ recalculate — 10,000 products × every keystroke!
+  const stats = calculateComplexStats(products, filters);
+
+  // ✅ Only recalculate when products or filters change
+  const stats = useMemo(() => calculateComplexStats(products, filters), [products, filters]);
+
+  // ✅ Expensive sorting
+  const sortedProducts = useMemo(() =>
+    [...products].sort((a, b) => b.rating - a.rating),
+    [products]
+  );
+
+  // ✅ Derived data — filtered + grouped
+  const grouped = useMemo(() => {
+    const filtered = products.filter(p =>
+      filters.categories.length === 0 ||
+      filters.categories.includes(p.categoryId)
+    );
+    return filtered.reduce((acc, product) => {
+      const cat = product.categoryName;
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(product);
+      return acc;
+    }, {});
+  }, [products, filters.categories]);
+
+  return <AnalyticsDashboard stats={stats} grouped={grouped} />;
+}
+```
+
+**Referential Equality — Object/Array:**
+```jsx
+function UserList({ userId }) {
+  // ❌ New array every render → child re-renders even if data same
+  const options = { userId, role: 'admin' };  // new object ref every time!
+
+  // ✅ Stable reference — only changes when userId changes
+  const options = useMemo(() => ({ userId, role: 'admin' }), [userId]);
+
+  return <UserTable options={options} />;
+}
+```
+
+**useMemo vs useCallback:**
+
+| | `useMemo` | `useCallback` |
+|---|---|---|
+| Returns | Computed **value** | **Function** |
+| Use for | Expensive calculations, stable objects | Stable function references |
+| Equivalent | `useMemo(() => fn, deps)` | `useMemo(() => () => {}, deps)` |
+
+---
+
+<a id="p7-usecallback"></a>
+
+## 4. useCallback
+
+**Definition:**
+`useCallback` function-এর stable reference cache করে। Dependencies না বদলালে same function reference return করে — React.memo children unnecessary re-render হয় না।
+
+**Problem without useCallback:**
+```jsx
+function Parent() {
+  const [count, setCount] = useState(0);
+
+  // ❌ New function reference every render
+  const handleDelete = (id) => {
+    setItems(prev => prev.filter(i => i.id !== id));
+  };
+
+  // React.memo on Child is useless — new handleDelete = new prop = re-render!
+  return <MemoizedChild onDelete={handleDelete} />;
+}
+```
+
+**Fix with useCallback:**
+```jsx
+function Parent() {
+  const [count, setCount] = useState(0);
+  const [items, setItems] = useState([]);
+
+  // ✅ Stable reference — only changes when setItems changes (never)
+  const handleDelete = useCallback((id) => {
+    setItems(prev => prev.filter(i => i.id !== id));
+  }, []);  // empty deps → setItems from useState is stable
+
+  // ✅ With dependency
+  const handleSearch = useCallback((query) => {
+    fetchResults(query, filters);   // filters in deps
+  }, [filters]);
+
+  return <MemoizedChild onDelete={handleDelete} />;
+}
+```
+
+**useCallback + useEffect:**
+```jsx
+function DataFetcher({ userId }) {
+  const [data, setData] = useState(null);
+
+  // ✅ Stable fetch function — can be in useEffect deps safely
+  const fetchUser = useCallback(async () => {
+    const user = await userService.getById(userId);
+    setData(user);
+  }, [userId]);  // only re-create when userId changes
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);  // safe to include fetchUser in deps
+
+  // ✅ Expose refetch
+  return <UserProfile data={data} onRefresh={fetchUser} />;
+}
+```
+
+**Over-optimization Warning:**
+```jsx
+// ❌ useCallback on every function — unnecessary overhead
+function SimpleComponent() {
+  // This component doesn't pass functions to memoized children
+  // useCallback here is pointless overhead
+  const handleClick = useCallback(() => {
+    console.log('clicked');
+  }, []);
+
+  return <button onClick={handleClick}>Click</button>;
+}
+
+// ✅ useCallback শুধু যেখানে দরকার
+// Rule: React.memo child-এ prop হিসেবে pass করলে
+//       useEffect deps-এ থাকলে
+//       অন্যত্র usually not needed
+```
+
+---
+
+<a id="p7-codesplit"></a>
+
+## 5. Code Splitting
+
+**Definition:**
+Code splitting মানে app-এর JavaScript bundle কে ছোট ছোট chunk-এ ভাগ করা — প্রয়োজনে lazy load করা। Initial load time কমে।
+
+**Without Code Splitting:**
+```
+User loads "/" (Home page)
+Browser downloads: home.js + products.js + admin.js + dashboard.js + ...
+= 2MB download, even though user only needs Home!
+```
+
+**With Code Splitting:**
+```
+User loads "/"
+Browser downloads: home.js (~200KB) — fast!
+
+User navigates to /products
+Browser downloads: products.js (~400KB) — on demand
+```
+
+**React.lazy + Suspense:**
+```jsx
+import { lazy, Suspense } from 'react';
+
+// ✅ Lazy imports — each route is a separate chunk
+const Home = lazy(() => import('./pages/Home'));
+const Products = lazy(() => import('./pages/Products'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+
+// Loading fallback component
+function PageLoader() {
+  return (
+    <div className="page-loader">
+      <div className="spinner" />
+      <p>Loading...</p>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Navbar />
+      {/* Suspense: lazy component load হওয়ার আগ পর্যন্ত fallback দেখায় */}
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/admin/*" element={
+            <ProtectedRoute role="admin">
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </Suspense>
+      <Footer />
+    </BrowserRouter>
+  );
+}
+```
+
+**Component-level Code Splitting:**
+```jsx
+// Heavy component (chart library, map, editor) — conditionally load
+const RichTextEditor = lazy(() => import('./components/RichTextEditor'));
+const SalesChart = lazy(() => import('./components/SalesChart'));
+
+function ProductForm({ mode }) {
+  return (
+    <form>
+      <input name="name" />
+      {/* Editor শুধু edit mode-এ দরকার */}
+      {mode === 'edit' && (
+        <Suspense fallback={<div>Loading editor...</div>}>
+          <RichTextEditor />
+        </Suspense>
+      )}
+    </form>
+  );
+}
+```
+
+**Named Exports with lazy:**
+```jsx
+// ⚠️ React.lazy শুধু default export support করে
+// Named export হলে wrapper লাগবে
+
+// components/Charts/index.js
+export { BarChart, LineChart, PieChart };
+
+// Wrapper approach
+const BarChart = lazy(() =>
+  import('./components/Charts').then(module => ({ default: module.BarChart }))
+);
+```
+
+**Preloading Critical Routes:**
+```jsx
+// User "/products" link-এ hover করলেই preload শুরু
+const Products = lazy(() => import('./pages/Products'));
+
+function Navbar() {
+  // Hover করলে preload — click এর আগেই ready
+  const preloadProducts = () => import('./pages/Products');
+
+  return (
+    <nav>
+      <Link to="/products" onMouseEnter={preloadProducts}>
+        Products
+      </Link>
+    </nav>
+  );
+}
+```
+
+---
+
+<a id="p7-virtual"></a>
+
+## 6. List Virtualization
+
+**Definition:**
+Virtualization মানে large list-এ শুধু visible items-ই render করা — বাকিগুলো virtual। 10,000 items list থেকে শুধু screen-এ দেখা যাচ্ছে এমন ~20টি render হয়।
+
+**Problem with Large Lists:**
+```jsx
+// ❌ 10,000 product cards render — browser choke করবে!
+function AllProducts({ products }) {
+  return (
+    <div>
+      {products.map(p => <ProductCard key={p.id} product={p} />)}
+      {/* 10,000 DOM nodes = slow scroll, high memory */}
+    </div>
+  );
+}
+```
+
+**Installation:**
+```bash
+npm install react-window
+# Or: npm install react-virtual (lighter alternative)
+```
+
+**react-window — Fixed Size List:**
+```jsx
+import { FixedSizeList } from 'react-window';
+
+const ITEM_HEIGHT = 80;  // প্রতিটি row-এর height
+
+function VirtualProductList({ products }) {
+  const Row = ({ index, style }) => (
+    // ⚠️ style prop MUST be applied — virtualization এটা দিয়ে position করে
+    <div style={style} className="product-row">
+      <img src={products[index].thumbnail} alt={products[index].name} />
+      <span>{products[index].name}</span>
+      <span>৳{products[index].price.toLocaleString()}</span>
+    </div>
+  );
+
+  return (
+    <FixedSizeList
+      height={600}              // visible container height
+      width="100%"
+      itemCount={products.length}
+      itemSize={ITEM_HEIGHT}    // each row height
+      overscanCount={5}         // extra rows above/below visible area
+    >
+      {Row}
+    </FixedSizeList>
+  );
+}
+```
+
+**react-window — Variable Size List:**
+```jsx
+import { VariableSizeList } from 'react-window';
+
+function VariableList({ items }) {
+  const getItemSize = (index) => {
+    // Different heights based on content
+    return items[index].hasDescription ? 120 : 60;
+  };
+
+  const Row = ({ index, style }) => (
+    <div style={style}>
+      <h4>{items[index].title}</h4>
+      {items[index].hasDescription && <p>{items[index].description}</p>}
+    </div>
+  );
+
+  return (
+    <VariableSizeList
+      height={500}
+      width="100%"
+      itemCount={items.length}
+      itemSize={getItemSize}
+    >
+      {Row}
+    </VariableSizeList>
+  );
+}
+```
+
+**Grid Virtualization:**
+```jsx
+import { FixedSizeGrid } from 'react-window';
+
+function VirtualProductGrid({ products, columnCount = 4 }) {
+  const rowCount = Math.ceil(products.length / columnCount);
+
+  const Cell = ({ columnIndex, rowIndex, style }) => {
+    const index = rowIndex * columnCount + columnIndex;
+    if (index >= products.length) return <div style={style} />;
+
+    return (
+      <div style={{ ...style, padding: '8px' }}>
+        <ProductCard product={products[index]} />
+      </div>
+    );
+  };
+
+  return (
+    <FixedSizeGrid
+      columnCount={columnCount}
+      columnWidth={280}
+      height={600}
+      rowCount={rowCount}
+      rowHeight={350}
+      width={1200}
+    >
+      {Cell}
+    </FixedSizeGrid>
+  );
+}
+```
+
+---
+
+<a id="p7-bundle"></a>
+
+## 7. Bundle Optimization
+
+**Definition:**
+Bundle optimization মানে final JavaScript bundle-এর size কমানো। Tree shaking, dynamic imports, আর unnecessary dependencies remove করা।
+
+**Bundle Analysis — Vite:**
+```bash
+npm install --save-dev rollup-plugin-visualizer
+
+# vite.config.js
+import { visualizer } from 'rollup-plugin-visualizer';
+
+export default {
+  plugins: [
+    react(),
+    visualizer({
+      open: true,           // build-এ auto browser open
+      filename: 'stats.html',
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  ],
+};
+
+npm run build
+# stats.html খুলবে — কোন library কতটুকু size নিচ্ছে দেখা যাবে
+```
+
+**Tree Shaking — Import Correctly:**
+```jsx
+// ❌ Entire lodash bundle import (~70KB gzipped)
+import _ from 'lodash';
+const result = _.sortBy(items, 'name');
+
+// ✅ Only the function needed (~1KB)
+import sortBy from 'lodash/sortBy';
+const result = sortBy(items, 'name');
+
+// ✅ Or use modern alternatives
+const result = [...items].sort((a, b) => a.name.localeCompare(b.name));
+```
+
+```jsx
+// ❌ Entire date-fns import
+import * as dateFns from 'date-fns';
+
+// ✅ Named imports — tree-shakeable
+import { format, parseISO, differenceInDays } from 'date-fns';
+```
+
+**Vite Build Config Optimization:**
+```jsx
+// vite.config.js
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting
+        manualChunks: {
+          // vendor chunk — rarely changes, long cache
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'redux-vendor': ['@reduxjs/toolkit', 'react-redux'],
+          'ui-vendor': ['framer-motion', '@headlessui/react'],
+          'chart-vendor': ['recharts'],
+        },
+      },
+    },
+    // Chunk size warning threshold
+    chunkSizeWarningLimit: 500,  // KB
+  },
+});
+```
+
+**Performance Budget:**
+```
+Target metrics (Bangladeshi 4G network):
+  Initial JS: < 200KB gzipped
+  Total bundle: < 1MB gzipped
+  First chunk: < 100KB
+  TTI (Time to Interactive): < 3s
+```
+
+---
+
+<a id="p7-images"></a>
+
+## 8. Image & Asset Optimization
+
+**Definition:**
+Images often app-এর largest assets। Lazy loading, correct format, responsive sizes দিয়ে load time উল্লেখযোগ্য কমানো যায়।
+
+**Native Lazy Loading:**
+```jsx
+// ✅ Browser built-in lazy loading
+function ProductCard({ product }) {
+  return (
+    <div className="card">
+      <img
+        src={product.image}
+        alt={product.name}
+        loading="lazy"          // viewport-এ আসার আগে load হবে না
+        decoding="async"        // non-blocking image decode
+        width={300}             // ✅ Set dimensions — CLS prevent
+        height={300}
+      />
+      <h3>{product.name}</h3>
+    </div>
+  );
+}
+```
+
+**Responsive Images:**
+```jsx
+function HeroBanner({ banner }) {
+  return (
+    <picture>
+      {/* WebP format — ~30% smaller than JPG */}
+      <source
+        srcSet={`${banner.url}?w=400&fmt=webp 400w,
+                 ${banner.url}?w=800&fmt=webp 800w,
+                 ${banner.url}?w=1200&fmt=webp 1200w`}
+        type="image/webp"
+        sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1200px"
+      />
+      {/* Fallback JPG */}
+      <img
+        src={`${banner.url}?w=800`}
+        alt={banner.alt}
+        loading="eager"         // hero image — eager load (above fold)
+        fetchpriority="high"    // LCP image — high priority
+        width={1200}
+        height={400}
+      />
+    </picture>
+  );
+}
+```
+
+**Intersection Observer — Custom Lazy Load:**
+```jsx
+function LazyImage({ src, alt, className }) {
+  const [loaded, setLoaded] = useState(false);
+  const [inView, setInView] = useState(false);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }   // 200px আগে থেকে load শুরু
+    );
+
+    if (imgRef.current) observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={imgRef} className={`img-wrapper ${loaded ? 'loaded' : 'loading'}`}>
+      {inView && (
+        <img
+          src={src}
+          alt={alt}
+          className={className}
+          onLoad={() => setLoaded(true)}
+        />
+      )}
+      {!loaded && <div className="img-placeholder shimmer" />}
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p7-vitals"></a>
+
+## 9. Web Vitals
+
+**Definition:**
+Web Vitals হলো Google-এর user experience metrics। Real-world performance measure করে। SEO ranking-এও impact করে।
+
+**Core Web Vitals:**
+
+| Metric | Full Name | কী মাপে | Good | Needs Improvement | Poor |
+|---|---|---|---|---|---|
+| LCP | Largest Contentful Paint | Loading — বড় content কতক্ষণে দেখা যায় | ≤2.5s | 2.5–4s | >4s |
+| INP | Interaction to Next Paint | Interactivity — click/tap response | ≤200ms | 200–500ms | >500ms |
+| CLS | Cumulative Layout Shift | Visual stability — layout shift | ≤0.1 | 0.1–0.25 | >0.25 |
+
+**Measuring Web Vitals:**
+```jsx
+// npm install web-vitals
+import { onCLS, onINP, onLCP, onFCP, onTTFB } from 'web-vitals';
+
+function reportToAnalytics({ name, value, rating }) {
+  console.log(`${name}: ${value} (${rating})`);
+  // Google Analytics, Datadog, etc.
+  gtag('event', name, { value: Math.round(value), metric_rating: rating });
+}
+
+onCLS(reportToAnalytics);
+onINP(reportToAnalytics);
+onLCP(reportToAnalytics);
+onFCP(reportToAnalytics);
+onTTFB(reportToAnalytics);
+```
+
+**Common CLS Causes & Fixes:**
+```jsx
+// ❌ Image without dimensions — layout shift!
+<img src={product.image} alt={product.name} />
+
+// ✅ Always set width/height or aspect-ratio
+<img src={product.image} alt={product.name} width={300} height={300} />
+
+// Or CSS aspect ratio
+// .product-image { aspect-ratio: 1/1; width: 100%; }
+
+// ❌ Dynamic content insertion above existing content
+// (ads, banners loading in) → reserve space
+// ✅ CSS min-height for dynamic areas
+// .ad-slot { min-height: 90px; }
+```
+
+**LCP Optimization:**
+```jsx
+// ✅ Preload LCP image
+// <link rel="preload" as="image" href="/hero-banner.webp">
+
+// ✅ fetchpriority on hero image
+<img src="/hero-banner.webp" fetchpriority="high" loading="eager" alt="..." />
+
+// ✅ Avoid lazy loading above-the-fold images
+// loading="lazy" শুধু below the fold images-এ
+```
+
+---
+
+<a id="p7-profiler"></a>
+
+## 10. React DevTools Profiler
+
+**Definition:**
+React DevTools Profiler দিয়ে কোন component কতবার, কতক্ষণ render হচ্ছে — তা visually দেখা যায়। Performance bottleneck identify করার tool।
+
+**Using Profiler Component:**
+```jsx
+import { Profiler } from 'react';
+
+function onRenderCallback(
+  id,           // component tree name
+  phase,        // "mount" or "update"
+  actualDuration,   // render time ms
+  baseDuration,     // without memoization (estimate)
+  startTime,
+  commitTime
+) {
+  if (actualDuration > 16) {  // 16ms = 60fps budget
+    console.warn(`Slow render: ${id} took ${actualDuration.toFixed(2)}ms`);
+  }
+}
+
+function App() {
+  return (
+    <Profiler id="ProductGrid" onRender={onRenderCallback}>
+      <ProductGrid />
+    </Profiler>
+  );
+}
+```
+
+**DevTools Workflow:**
+```
+1. Chrome/Firefox → React DevTools extension install
+2. DevTools → Profiler tab
+3. "Record" click → User action করো → "Stop"
+4. Flame graph দেখো:
+   - Wide bars = slow renders
+   - Grey = not rendered (memoized ✅)
+   - Yellow/Orange = re-rendered
+5. "Ranked" view → slowest components top-এ
+6. Click component → why rendered (props/state/context changed)
+```
+
+**Common Optimization Findings:**
+```
+Problem: Context value প্রতিটি render-এ নতুন object
+Fix: useMemo(() => value, [deps])
+
+Problem: Callback fn প্রতিটি render-এ নতুন reference
+Fix: useCallback(() => fn, [deps])
+
+Problem: Large list সব render
+Fix: react-window virtualization
+
+Problem: Expensive filter/sort প্রতিটি render
+Fix: useMemo
+
+Problem: Child re-renders যদিও props same
+Fix: React.memo
+```
+
+---
+
+## PART 7 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Say |
+|---|---|---|
+| Rendering | Virtual DOM diff → only changed DOM update | Render ≠ DOM update |
+| React.memo | Shallow props compare → skip re-render | Pair with useCallback |
+| useMemo | Cache computed value | Dependencies same → cached |
+| useCallback | Cache function reference | Needed for React.memo children |
+| Code Splitting | lazy + Suspense → route-based chunks | Initial bundle কমায় |
+| Virtualization | Only visible items render | react-window, 10k items |
+| Bundle | Tree shaking, named imports | Lodash/fp not full import |
+| Images | lazy loading, dimensions, WebP | CLS fix: always set dimensions |
+| Web Vitals | LCP, CLS, INP | LCP≤2.5s, CLS≤0.1, INP≤200ms |
+| Profiler | Flame graph, why-rendered | actualDuration > 16ms = problem |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part8"></a>
+
+## 📋 PART 8 সূচিপত্র — Advanced React
+
+| # | Topic | Key Concept |
+|---|---|---|
+| 1 | [Error Boundaries](#p8-error-boundary) | Crash isolation |
+| 2 | [Portals](#p8-portals) | Outside root DOM |
+| 3 | [Refs & forwardRef](#p8-refs) | DOM access, parent ref |
+| 4 | [useImperativeHandle](#p8-imperative) | Custom ref API |
+| 5 | [useTransition & startTransition](#p8-transition) | Non-urgent updates |
+| 6 | [useDeferredValue](#p8-deferred) | Input responsiveness |
+| 7 | [Suspense for Data](#p8-suspense) | Declarative loading |
+| 8 | [React Fiber Architecture](#p8-fiber) | How React works inside |
+| 9 | [Custom Hooks — Advanced](#p8-custom-hooks) | Reusable logic patterns |
+| 10 | [React 19 New Features](#p8-react19) | use(), Actions, Compiler |
+
+---
+
+<a id="p8-error-boundary"></a>
+
+## 1. Error Boundaries
+
+**Definition:**
+Error Boundary হলো class component যা child component tree-তে JavaScript error catch করে — পুরো app crash না করে fallback UI দেখায়। `componentDidCatch` + `getDerivedStateFromError` দিয়ে তৈরি।
+
+**Why Class Component:**
+> Hooks দিয়ে Error Boundary বানানো যায় না — `componentDidCatch` lifecycle-এর equivalent hook নেই (এখনো)।
+
+**Error Boundary Implementation:**
+```jsx
+import { Component } from 'react';
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+
+  // Error হলে state update করো (render phase)
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  // Error log করো (commit phase)
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    // Error reporting service
+    console.error('ErrorBoundary caught:', error, errorInfo);
+    // logErrorToService(error, errorInfo.componentStack);
+  }
+
+  handleReset = () => {
+    this.setState({ hasError: false, error: null, errorInfo: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      // Custom fallback
+      if (this.props.fallback) {
+        return this.props.fallback({
+          error: this.state.error,
+          reset: this.handleReset,
+        });
+      }
+
+      return (
+        <div className="error-boundary">
+          <h2>কিছু একটা ভুল হয়েছে</h2>
+          <p>{this.state.error?.message}</p>
+          <button onClick={this.handleReset}>আবার চেষ্টা করুন</button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+```
+
+**Usage — Granular Error Isolation:**
+```jsx
+function App() {
+  return (
+    <ErrorBoundary fallback={({ error, reset }) => (
+      <div className="app-error">
+        <h1>App crashed: {error.message}</h1>
+        <button onClick={reset}>Reload</button>
+      </div>
+    )}>
+      <Navbar />
+
+      {/* Independent sections — one crash doesn't kill others */}
+      <ErrorBoundary fallback={({ reset }) => (
+        <div className="section-error">
+          <p>Products section failed to load</p>
+          <button onClick={reset}>Retry</button>
+        </div>
+      )}>
+        <ProductSection />
+      </ErrorBoundary>
+
+      <ErrorBoundary fallback={() => <p>Recommendations unavailable</p>}>
+        <RecommendationEngine />   {/* 3rd party widget */}
+      </ErrorBoundary>
+    </ErrorBoundary>
+  );
+}
+```
+
+**react-error-boundary (library):**
+```jsx
+// npm install react-error-boundary
+import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary';
+
+function ProductPage() {
+  const { showBoundary } = useErrorBoundary();
+
+  const loadProducts = async () => {
+    try {
+      const data = await productService.getAll();
+      setProducts(data);
+    } catch (err) {
+      showBoundary(err);  // Trigger nearest ErrorBoundary
+    }
+  };
+
+  return (
+    <ErrorBoundary
+      FallbackComponent={({ error, resetErrorBoundary }) => (
+        <div>
+          <p>Error: {error.message}</p>
+          <button onClick={resetErrorBoundary}>Try again</button>
+        </div>
+      )}
+      onReset={() => {
+        // reset state when retry
+        setProducts([]);
+      }}
+    >
+      <ProductGrid />
+    </ErrorBoundary>
+  );
+}
+```
+
+---
+
+<a id="p8-portals"></a>
+
+## 2. Portals
+
+**Definition:**
+Portal দিয়ে component-কে DOM-এর অন্য জায়গায় render করা যায় — parent-এর বাইরে। Modal, tooltip, dropdown-এ z-index আর overflow: hidden সমস্যা solve করে।
+
+**Problem Portals Solve:**
+```html
+<!-- ❌ Without portal — Modal parent-এর overflow: hidden-এ আটকে যায় -->
+<div class="product-card" style="overflow: hidden">
+  <button>View Details</button>
+  <!-- Modal এখানে render হলে কেটে যাবে! -->
+  <div class="modal">...</div>
+</div>
+
+<!-- ✅ With portal — Modal সরাসরি body-তে render -->
+<div class="product-card" style="overflow: hidden">
+  <button>View Details</button>
+</div>
+<!-- Portal: body-তে render, z-index সমস্যা নেই -->
+<div id="modal-root">
+  <div class="modal">...</div>
+</div>
+```
+
+**Portal Implementation:**
+```jsx
+import { createPortal } from 'react-dom';
+import { useEffect, useRef } from 'react';
+
+function Modal({ isOpen, onClose, title, children }) {
+  const modalRoot = document.getElementById('modal-root');
+
+  // ESC key to close
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';  // Scroll lock
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  // Portal: React tree-তে ProductCard-এর child কিন্তু DOM-এ #modal-root-এ
+  return createPortal(
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modal-title"
+    >
+      <div
+        className="modal-content"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h2 id="modal-title">{title}</h2>
+          <button onClick={onClose} aria-label="Close">&times;</button>
+        </div>
+        <div className="modal-body">
+          {children}
+        </div>
+      </div>
+    </div>,
+    modalRoot
+  );
+}
+
+// index.html
+// <div id="root"></div>
+// <div id="modal-root"></div>  ← Portal target
+```
+
+**Tooltip with Portal:**
+```jsx
+function Tooltip({ text, children }) {
+  const [show, setShow] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const triggerRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    const rect = triggerRef.current.getBoundingClientRect();
+    setPosition({
+      top: rect.top - 40 + window.scrollY,
+      left: rect.left + rect.width / 2 + window.scrollX,
+    });
+    setShow(true);
+  };
+
+  return (
+    <>
+      <span
+        ref={triggerRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setShow(false)}
+      >
+        {children}
+      </span>
+
+      {show && createPortal(
+        <div
+          className="tooltip"
+          style={{ top: position.top, left: position.left }}
+        >
+          {text}
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+```
+
+---
+
+<a id="p8-refs"></a>
+
+## 3. Refs & forwardRef
+
+**Definition:**
+`useRef` দুটি কাজ করে: (1) DOM element-এ direct access, (2) render trigger না করে mutable value store। `forwardRef` parent component-কে child-এর DOM-এ access দেয়।
+
+**useRef — DOM Access:**
+```jsx
+function AutoFocusInput() {
+  const inputRef = useRef(null);
+
+  // Component mount হলে auto focus
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  const handleClear = () => {
+    if (inputRef.current) {
+      inputRef.current.value = '';
+      inputRef.current.focus();
+    }
+  };
+
+  return (
+    <div>
+      <input ref={inputRef} type="text" placeholder="Search..." />
+      <button onClick={handleClear}>Clear</button>
+    </div>
+  );
+}
+```
+
+**useRef — Mutable Value (no re-render):**
+```jsx
+function Timer() {
+  const [count, setCount] = useState(0);
+  const intervalRef = useRef(null);    // interval ID store — no re-render
+
+  const start = () => {
+    if (!intervalRef.current) {
+      intervalRef.current = setInterval(() => {
+        setCount(c => c + 1);
+      }, 1000);
+    }
+  };
+
+  const stop = () => {
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+  };
+
+  useEffect(() => {
+    return () => clearInterval(intervalRef.current);   // cleanup on unmount
+  }, []);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={start}>Start</button>
+      <button onClick={stop}>Stop</button>
+    </div>
+  );
+}
+```
+
+**forwardRef — Parent Access to Child DOM:**
+```jsx
+// Custom Input — parent wants to focus/blur it
+const CustomInput = forwardRef(function CustomInput(
+  { label, error, ...props },
+  ref       // forwarded ref from parent
+) {
+  return (
+    <div className="input-group">
+      <label>{label}</label>
+      <input ref={ref} {...props} className={error ? 'error' : ''} />
+      {error && <span className="error-msg">{error}</span>}
+    </div>
+  );
+});
+
+// Parent component
+function LoginForm() {
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!emailRef.current.value) {
+      emailRef.current.focus();     // Parent controls child input focus!
+      return;
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <CustomInput ref={emailRef} label="Email" type="email" />
+      <CustomInput ref={passwordRef} label="Password" type="password" />
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+---
+
+<a id="p8-imperative"></a>
+
+## 4. useImperativeHandle
+
+**Definition:**
+`useImperativeHandle` parent-কে child-এর custom methods expose করে — পুরো DOM না দিয়ে specific API। `forwardRef`-এর সাথে use করা হয়।
+
+```jsx
+// Custom Video Player — parent controls play/pause/seek
+const VideoPlayer = forwardRef(function VideoPlayer({ src, poster }, ref) {
+  const videoRef = useRef(null);
+
+  // Parent শুধু এই methods পাবে — পুরো <video> DOM না
+  useImperativeHandle(ref, () => ({
+    play: () => videoRef.current?.play(),
+    pause: () => videoRef.current?.pause(),
+    seek: (time) => { if (videoRef.current) videoRef.current.currentTime = time; },
+    getCurrentTime: () => videoRef.current?.currentTime ?? 0,
+    getDuration: () => videoRef.current?.duration ?? 0,
+    setVolume: (vol) => { if (videoRef.current) videoRef.current.volume = Math.max(0, Math.min(1, vol)); },
+  }), []);
+
+  return (
+    <video ref={videoRef} src={src} poster={poster} className="video-player" />
+  );
+});
+
+// Parent usage
+function CoursePage({ lesson }) {
+  const playerRef = useRef(null);
+
+  return (
+    <div>
+      <VideoPlayer ref={playerRef} src={lesson.videoUrl} poster={lesson.thumbnail} />
+
+      {/* Custom controls — parent calls child methods */}
+      <div className="custom-controls">
+        <button onClick={() => playerRef.current?.play()}>▶ Play</button>
+        <button onClick={() => playerRef.current?.pause()}>⏸ Pause</button>
+        <button onClick={() => playerRef.current?.seek(0)}>⏮ Restart</button>
+        <button onClick={() => playerRef.current?.seek(
+          (playerRef.current?.getCurrentTime() ?? 0) + 10
+        )}>+10s</button>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p8-transition"></a>
+
+## 5. useTransition & startTransition
+
+**Definition:**
+`useTransition` non-urgent state updates mark করে — urgent updates (typing, clicking) priority পায়। Heavy re-render-এ UI freeze হয় না।
+
+**Problem without Transition:**
+```jsx
+// ❌ Typing করলে search আর input — দুটোই block হয়
+function SearchPage() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState(allProducts);
+
+  const handleChange = (e) => {
+    setQuery(e.target.value);
+    // ⚠️ 10,000 items filter — UI freeze করে! input lag!
+    setResults(allProducts.filter(p =>
+      p.name.toLowerCase().includes(e.target.value.toLowerCase())
+    ));
+  };
+
+  return (
+    <>
+      <input value={query} onChange={handleChange} />
+      <ResultList results={results} />   {/* 10,000 items */}
+    </>
+  );
+}
+```
+
+**Fix with useTransition:**
+```jsx
+import { useState, useTransition } from 'react';
+
+function SearchPage() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState(allProducts);
+  const [isPending, startTransition] = useTransition();
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+
+    // Urgent: input update immediately
+    setQuery(value);
+
+    // Non-urgent: heavy filter can be deferred
+    startTransition(() => {
+      setResults(allProducts.filter(p =>
+        p.name.toLowerCase().includes(value.toLowerCase())
+      ));
+    });
+  };
+
+  return (
+    <>
+      <input value={query} onChange={handleChange} />
+      {/* isPending: show loading state while transitioning */}
+      {isPending
+        ? <div className="searching">Searching...</div>
+        : <ResultList results={results} />
+      }
+    </>
+  );
+}
+```
+
+**Tab Switching with Transition:**
+```jsx
+function TabPanel() {
+  const [activeTab, setActiveTab] = useState('feed');
+  const [isPending, startTransition] = useTransition();
+
+  const switchTab = (tab) => {
+    startTransition(() => {
+      setActiveTab(tab);   // Heavy tab content — non-urgent
+    });
+  };
+
+  return (
+    <div>
+      <div className="tabs">
+        {['feed', 'trending', 'following'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => switchTab(tab)}
+            className={`tab ${activeTab === tab ? 'active' : ''} ${isPending ? 'loading' : ''}`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+      <Suspense fallback={<TabSkeleton />}>
+        <TabContent tab={activeTab} />
+      </Suspense>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p8-deferred"></a>
+
+## 6. useDeferredValue
+
+**Definition:**
+`useDeferredValue` একটি value-এর "deferred copy" রাখে। Input responsive থাকে, heavy render defer হয়। `useTransition`-এর alternative — third-party component control না থাকলে।
+
+```jsx
+import { useState, useDeferredValue, memo } from 'react';
+
+// ✅ Heavy list — memoized
+const ProductResults = memo(function ProductResults({ query }) {
+  // Expensive filter
+  const filtered = allProducts.filter(p =>
+    p.name.toLowerCase().includes(query.toLowerCase())
+  );
+  return (
+    <ul>
+      {filtered.map(p => <ProductRow key={p.id} product={p} />)}
+    </ul>
+  );
+});
+
+function SearchInput() {
+  const [query, setQuery] = useState('');
+  // Deferred: React urgent update (input) আগে করে, list update defer করে
+  const deferredQuery = useDeferredValue(query);
+
+  // query !== deferredQuery → still processing
+  const isStale = query !== deferredQuery;
+
+  return (
+    <div>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search products..."
+      />
+      {/* Stale state visual hint */}
+      <div style={{ opacity: isStale ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+        <ProductResults query={deferredQuery} />
+      </div>
+    </div>
+  );
+}
+```
+
+**useTransition vs useDeferredValue:**
+
+| | `useTransition` | `useDeferredValue` |
+|---|---|---|
+| কী defer করে | setState call | Value |
+| কখন | নিজের state control আছে | Third-party/prop value |
+| isPending | ✅ | ❌ (stale comparison করতে হয়) |
+| Use case | Tab switch, search filter | List rendering, third-party |
+
+---
+
+<a id="p8-suspense"></a>
+
+## 7. Suspense for Data
+
+**Definition:**
+Suspense data fetching-এর সময় fallback দেখায় — `isLoading` manually manage না করে। React Query, Relay, বা React 19 `use()` hook-এর সাথে কাজ করে।
+
+**Suspense with React Query:**
+```jsx
+// QueryClient — suspense enable
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      suspense: true,   // Enable suspense mode
+    },
+  },
+});
+
+// Suspense-enabled query
+function ProductDetail({ id }) {
+  // No isLoading check needed — Suspense handles it
+  const { data: product } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => productService.getById(id),
+    suspense: true,
+  });
+
+  return (
+    <div>
+      <h1>{product.name}</h1>
+      <p>৳{product.price.toLocaleString()}</p>
+    </div>
+  );
+}
+
+// Parent — declarative loading
+function ProductPage({ id }) {
+  return (
+    <ErrorBoundary fallback={<ErrorMessage />}>
+      <Suspense fallback={<ProductDetailSkeleton />}>
+        <ProductDetail id={id} />      {/* No loading state inside */}
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+**Nested Suspense:**
+```jsx
+function Dashboard() {
+  return (
+    <div className="dashboard">
+      {/* Critical content loads first */}
+      <Suspense fallback={<HeaderSkeleton />}>
+        <DashboardHeader />
+      </Suspense>
+
+      <div className="dashboard-body">
+        {/* Independent sections — parallel loading */}
+        <Suspense fallback={<ChartSkeleton />}>
+          <SalesChart />
+        </Suspense>
+
+        <Suspense fallback={<TableSkeleton />}>
+          <RecentOrders />
+        </Suspense>
+
+        <Suspense fallback={<StatsSkeleton />}>
+          <TopProducts />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p8-fiber"></a>
+
+## 8. React Fiber Architecture
+
+**Definition:**
+React Fiber হলো React 16+ এর reconciliation engine। Work unit-কে ছোট chunks-এ ভাগ করে — pause, resume, prioritize করা যায়। Concurrent features এটার উপর ভিত্তি করে।
+
+**Before Fiber (React 15 Stack Reconciler):**
+```
+Problem: বড় component tree update একবারে করতে হতো
+         — 100ms লাগলে browser input block হতো (frame drop)
+
+Stack: synchronous, non-interruptible
+     → 60fps impossible for heavy updates
+```
+
+**Fiber — Incremental Rendering:**
+```
+Fiber: Virtual DOM-এর প্রতিটি component = একটি Fiber node (linked list)
+
+Work loop:
+  1. Render phase (interruptible):
+     - Component render করো, Virtual DOM তৈরি করো
+     - Higher priority work আসলে pause করো
+     - Browser idle time-এ resume করো
+
+  2. Commit phase (non-interruptible):
+     - Real DOM update করো
+     - Side effects চালাও
+```
+
+**Priority Levels (Lanes):**
+```
+SyncLane:         User input (click, type) — immediate
+InputContinuous:  Mouse move, scroll
+DefaultLane:      useEffect, data fetch
+TransitionLane:   startTransition — deferrable
+IdleLane:         Background work — lowest priority
+```
+
+**Practical Implications:**
+```jsx
+// Fiber enables:
+// 1. Concurrent rendering (useTransition, useDeferredValue)
+// 2. Suspense
+// 3. Error Boundaries (per-tree)
+// 4. Priority-based rendering
+
+// Example: two setState calls batch হয় (React 18+ automatic batching)
+function handleClick() {
+  setCount(c => c + 1);    // These are batched —
+  setTitle('Updated');      // ONE re-render, not two
+  setLoading(false);        // ← React 18: batched even in async!
+}
+
+// React 17: async function-এ batching ছিল না
+// React 18: automatic batching everywhere
+```
+
+---
+
+<a id="p8-custom-hooks"></a>
+
+## 9. Custom Hooks — Advanced Patterns
+
+**Definition:**
+Advanced custom hooks complex logic encapsulate করে। Multiple hooks combine করে reusable, testable patterns তৈরি করে।
+
+**useLocalStorage:**
+```jsx
+function useLocalStorage(key, initialValue) {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  const setValue = useCallback((value) => {
+    try {
+      const valueToStore = value instanceof Function
+        ? value(storedValue)
+        : value;
+      setStoredValue(valueToStore);
+      localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(error);
+    }
+  }, [key, storedValue]);
+
+  const removeValue = useCallback(() => {
+    localStorage.removeItem(key);
+    setStoredValue(initialValue);
+  }, [key, initialValue]);
+
+  return [storedValue, setValue, removeValue];
+}
+
+// Usage
+const [theme, setTheme] = useLocalStorage('theme', 'light');
+const [recentSearches, setRecentSearches] = useLocalStorage('searches', []);
+```
+
+**useAsync — Generic Async Handler:**
+```jsx
+function useAsync(asyncFn, immediate = true) {
+  const [status, setStatus] = useState('idle');
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+
+  const execute = useCallback(async (...args) => {
+    setStatus('loading');
+    setData(null);
+    setError(null);
+    try {
+      const result = await asyncFn(...args);
+      setData(result);
+      setStatus('success');
+      return result;
+    } catch (err) {
+      setError(err.message);
+      setStatus('error');
+      throw err;
+    }
+  }, [asyncFn]);
+
+  useEffect(() => {
+    if (immediate) execute();
+  }, [execute, immediate]);
+
+  return {
+    execute,
+    status,
+    data,
+    error,
+    isLoading: status === 'loading',
+    isSuccess: status === 'success',
+    isError: status === 'error',
+  };
+}
+
+// Usage
+function UserProfile({ userId }) {
+  const { data: user, isLoading, error, execute: refetch } = useAsync(
+    () => userService.getById(userId)
+  );
+
+  if (isLoading) return <Skeleton />;
+  if (error) return <ErrorState onRetry={refetch} />;
+  return <Profile user={user} />;
+}
+```
+
+**useEventListener:**
+```jsx
+function useEventListener(eventName, handler, element = window) {
+  const savedHandler = useRef(handler);
+
+  useEffect(() => {
+    savedHandler.current = handler;
+  }, [handler]);
+
+  useEffect(() => {
+    if (!element?.addEventListener) return;
+    const listener = (e) => savedHandler.current(e);
+    element.addEventListener(eventName, listener);
+    return () => element.removeEventListener(eventName, listener);
+  }, [eventName, element]);
+}
+
+// Usage
+function App() {
+  useEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') openSearch();
+  });
+}
+```
+
+**usePrevious:**
+```jsx
+function usePrevious(value) {
+  const ref = useRef(undefined);
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+  return ref.current;   // Returns value from previous render
+}
+
+// Usage
+function Counter() {
+  const [count, setCount] = useState(0);
+  const prevCount = usePrevious(count);
+
+  return (
+    <div>
+      <p>Now: {count} | Before: {prevCount ?? 'none'}</p>
+      <button onClick={() => setCount(c => c + 1)}>Increment</button>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p8-react19"></a>
+
+## 10. React 19 New Features
+
+**Definition:**
+React 19 (2024) major new features নিয়ে এসেছে: `use()` hook, Server Actions, React Compiler (auto-memoization), আর form Actions।
+
+**`use()` Hook:**
+```jsx
+import { use, Suspense } from 'react';
+
+// use() — Promise বা Context read করে
+// Suspense আর Error Boundary automatically handle করে
+
+// Create a promise (outside component)
+function fetchProductData(id) {
+  return fetch(`/api/products/${id}`).then(r => r.json());
+}
+
+function ProductDetail({ id }) {
+  // use() suspends component until promise resolves
+  const product = use(fetchProductData(id));    // No await, no useEffect!
+
+  return (
+    <div>
+      <h1>{product.name}</h1>
+      <p>৳{product.price.toLocaleString()}</p>
+    </div>
+  );
+}
+
+function ProductPage({ id }) {
+  const productPromise = fetchProductData(id);  // Start fetching early!
+
+  return (
+    <ErrorBoundary fallback={<ErrorUI />}>
+      <Suspense fallback={<ProductSkeleton />}>
+        <ProductDetail id={id} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+// use() with Context (conditionally!)
+// unlike useContext, use() can be called conditionally
+function ThemedButton({ variant, children }) {
+  if (variant === 'plain') {
+    return <button>{children}</button>;  // No theme needed
+  }
+  const theme = use(ThemeContext);       // ✅ Conditional context read
+  return <button style={{ background: theme.primary }}>{children}</button>;
+}
+```
+
+**Form Actions (React 19):**
+```jsx
+import { useActionState, useFormStatus } from 'react';
+
+// useActionState — form submission state
+function LoginForm() {
+  async function loginAction(prevState, formData) {
+    const email = formData.get('email');
+    const password = formData.get('password');
+
+    try {
+      const user = await authService.login({ email, password });
+      return { success: true, user };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  const [state, dispatch, isPending] = useActionState(loginAction, null);
+
+  return (
+    <form action={dispatch}>
+      {state?.error && <p className="error">{state.error}</p>}
+      {state?.success && <p className="success">Logged in!</p>}
+
+      <input name="email" type="email" required />
+      <input name="password" type="password" required />
+
+      <SubmitButton />
+    </form>
+  );
+}
+
+// useFormStatus — inside form component
+function SubmitButton() {
+  const { pending } = useFormStatus();    // parent form-এর status
+  return (
+    <button type="submit" disabled={pending}>
+      {pending ? 'Logging in...' : 'Login'}
+    </button>
+  );
+}
+```
+
+**React Compiler (React 19+):**
+```jsx
+// React Compiler — automatic memoization
+// useMemo, useCallback, React.memo manually লেখা লাগবে না
+// Compiler analyze করে automatically optimize করে
+
+// Before Compiler: manually optimize
+const ExpensiveList = React.memo(({ items, onDelete }) => {
+  const sorted = useMemo(() => [...items].sort(), [items]);
+  const handleDelete = useCallback((id) => onDelete(id), [onDelete]);
+  // ...
+});
+
+// After React Compiler: write natural code, compiler handles it
+function ExpensiveList({ items, onDelete }) {
+  const sorted = [...items].sort();       // Compiler auto-memoizes
+  const handleDelete = (id) => onDelete(id);  // Compiler makes stable ref
+  // ...
+}
+
+// Enable: babel plugin or next.js built-in
+// next.config.js: experimental: { reactCompiler: true }
+```
+
+**React 19 Summary:**
+
+| Feature | Description | Old way |
+|---|---|---|
+| `use()` hook | Promise/Context read anywhere | `useEffect` + `useState` |
+| `useActionState` | Form action state | Manual form state |
+| `useFormStatus` | Form pending in child | Prop drilling |
+| `useOptimistic` | Optimistic UI built-in | Manual rollback |
+| React Compiler | Auto memoization | Manual `useMemo`/`useCallback` |
+| Server Components | Zero JS on client | N/A (Next.js feature) |
+
+---
+
+## PART 8 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Say |
+|---|---|---|
+| Error Boundary | Class component, `componentDidCatch` | Hook দিয়ে হয় না |
+| Portals | `createPortal(children, domNode)` | Modal/tooltip overflow fix |
+| forwardRef | Parent → child DOM access | `React.forwardRef(fn)` |
+| useImperativeHandle | Custom ref API expose | forwardRef এর সাথে |
+| useTransition | Non-urgent setState | `isPending` loading state |
+| useDeferredValue | Deferred value copy | Stale opacity pattern |
+| Suspense data | Declarative loading | ErrorBoundary wrap করো |
+| Fiber | Incremental, prioritized rendering | Pause/resume/prioritize |
+| Custom Hooks | Logic encapsulation | `use` prefix, return values |
+| React 19 | `use()`, Actions, Compiler | Auto memoization |
+
+---
+
+## PART 7 & 8 Common Interview Questions
+
+**PART 7 — Performance:**
+1. `useMemo` আর `useCallback`-এর পার্থক্য কী?
+2. `React.memo` কখন কাজ করে না?
+3. Code splitting কীভাবে করবেন?
+4. List virtualization কেন দরকার?
+5. CLS কী? কীভাবে fix করবেন?
+6. `useCallback` ছাড়া `React.memo` কেন কাজ করে না?
+
+**PART 8 — Advanced:**
+1. Error Boundary class component কেন হতে হয়?
+2. Portal কোন সমস্যা solve করে?
+3. `forwardRef` vs `useImperativeHandle` পার্থক্য?
+4. `useTransition` vs `useDeferredValue` কখন কোনটা?
+5. React Fiber কী? কেন দরকার?
+6. React 19-এর `use()` hook কীভাবে কাজ করে?
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 9 — Backend Integration & Authentication *(Next request এ লিখব)*
