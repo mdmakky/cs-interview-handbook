@@ -3275,4 +3275,1368 @@ def func(): ...
 
 ---
 
-> **📌 পরবর্তী:** PART 5 — File Handling & Exception Handling *(Next request এ লিখব)*
+<a id="part5"></a>
+
+## 📋 PART 5 সূচিপত্র — File Handling & Exception Handling
+
+| # | Topic | What You Will Learn |
+|---|---|---|
+| 1 | [File Operations](#p5-file-ops) | open(), modes, pathlib |
+| 2 | [Read & Write Files](#p5-read-write) | text, binary, line-by-line |
+| 3 | [CSV Handling](#p5-csv) | csv module, DictReader, DictWriter |
+| 4 | [JSON Handling](#p5-json) | json module, loads/dumps, file I/O |
+| 5 | [Exception Handling](#p5-exceptions) | try/except/else/finally, hierarchy |
+| 6 | [Custom Exceptions](#p5-custom-exceptions) | Exception subclass, best practices |
+| 7 | [Logging](#p5-logging) | logging module, levels, handlers |
+| 8 | [Debugging](#p5-debugging) | pdb, print debug, VS Code tips |
+
+---
+
+<a id="p5-file-ops"></a>
+
+## 1. File Operations
+
+**Definition:**
+Python-এ `open()` function দিয়ে file open করা হয়। `with` statement ব্যবহার করলে file automatically close হয় — error হলেও।
+
+**File Open Modes:**
+
+| Mode | মানে |
+|---|---|
+| `'r'` | Read (default) |
+| `'w'` | Write — file না থাকলে তৈরি, থাকলে overwrite |
+| `'a'` | Append — শেষে যোগ করা |
+| `'x'` | Exclusive create — file থাকলে error |
+| `'b'` | Binary mode (combine: `'rb'`, `'wb'`) |
+| `'+'` | Read + Write (combine: `'r+'`, `'w+'`) |
+
+**Real-life Analogy:**
+File open করা কে **খাতা বের করা** হিসেবে ভাবুন। `'r'` = শুধু পড়া, `'w'` = নতুন পাতায় লেখা, `'a'` = পুরনো লেখার পর যোগ করা।
+
+**Practical Use Case:**
+- configuration file read করা
+- log file-এ write করা
+- report CSV/JSON export করা
+
+**Interview-style Explanation:**
+> "File handling-এ সবসময় `with` statement use করি — এটি context manager, নিশ্চিত করে file সঠিকভাবে close হবে। `pathlib.Path` modern Python-এ OS-independent path handling-এর জন্য preferred।"
+
+**Common Mistakes:**
+- `with` ছাড়া file open করলে close ভুলে যাওয়া
+- binary mode (`'rb'`) ছাড়া binary file read করা
+- relative path hardcode করা — `pathlib` use করা উচিত
+
+**Follow-up Interview Questions:**
+1. `with` statement ছাড়া file handle করলে কী সমস্যা?
+2. `pathlib` কেন `os.path`-এর চেয়ে better?
+3. `'w'` আর `'a'` mode পার্থক্য কী?
+
+**Code Example:**
+```python
+from pathlib import Path
+
+# pathlib — modern approach
+base = Path(__file__).parent
+data_file = base / "data" / "users.txt"
+
+# Directory তৈরি (exist করলে error নয়)
+data_file.parent.mkdir(parents=True, exist_ok=True)
+
+# Write
+with open(data_file, "w", encoding="utf-8") as f:
+    f.write("Rahim\nAmina\nKarim\n")
+
+# Check existence
+print(data_file.exists())
+print(data_file.stat().st_size)   # file size bytes
+
+# Append
+with open(data_file, "a", encoding="utf-8") as f:
+    f.write("Sohel\n")
+```
+
+---
+
+<a id="p5-read-write"></a>
+
+## 2. Read & Write Files
+
+**Definition:**
+File-এর content তিনভাবে read করা যায়: `read()` (সম্পূর্ণ), `readline()` (এক লাইন), `readlines()` (list of lines)। বড় file-এর জন্য iteration best।
+
+**Practical Use Case:**
+- log file parse করা
+- large dataset line-by-line process করা
+- binary image/audio read করা
+
+**Interview-style Explanation:**
+> "বড় file এর জন্য `read()` দিয়ে সব memory-তে load না করে `for line in file` loop দিয়ে lazy read করি। এটি generator-এর মতো কাজ করে — memory efficient।"
+
+**Common Mistakes:**
+- encoding না দেওয়া — Windows-এ `cp1252`, Linux-এ `utf-8` default, cross-platform issue
+- `readlines()` দিয়ে বড় file পড়া — সব memory-তে load হয়
+
+**Code Example:**
+```python
+# Write
+with open("sample.txt", "w", encoding="utf-8") as f:
+    lines = ["Brain Station 23\n", "BJIT Group\n", "Pathao\n", "bKash\n"]
+    f.writelines(lines)
+
+# Read all
+with open("sample.txt", "r", encoding="utf-8") as f:
+    content = f.read()
+    print(content)
+
+# Line by line (memory efficient)
+with open("sample.txt", "r", encoding="utf-8") as f:
+    for line in f:
+        print(line.strip())
+
+# Binary read
+with open("sample.txt", "rb") as f:
+    data = f.read()
+    print(data[:10])   # first 10 bytes
+```
+
+---
+
+<a id="p5-csv"></a>
+
+## 3. CSV Handling
+
+**Definition:**
+Python-এর `csv` module দিয়ে CSV (Comma Separated Values) file read ও write করা যায়। `DictReader`/`DictWriter` column name দিয়ে access করতে দেয়।
+
+**Real-life Analogy:**
+CSV কে **Excel spreadsheet** হিসেবে ভাবুন — rows ও columns, কিন্তু plain text format।
+
+**Practical Use Case:**
+- employee/student data import-export
+- bank transaction report
+- e-commerce order list
+
+**Interview-style Explanation:**
+> "Data processing project-এ CSV handle করতে `DictReader` use করি — column name দিয়ে access করা যায়, column order নিয়ে চিন্তা নেই। বড় file-এর জন্য `csv.reader` with iteration ভালো।"
+
+**Common Mistakes:**
+- encoding issue — UTF-8 BOM থাকলে `encoding='utf-8-sig'` দিতে হবে
+- `newline=''` না দেওয়া Windows-এ — extra blank line আসে
+
+**Follow-up Interview Questions:**
+1. `csv.reader` আর `DictReader` পার্থক্য কী?
+2. CSV-তে comma থাকলে কীভাবে handle করবেন?
+3. pandas CSV read করার চেয়ে `csv` module কখন better?
+
+**Code Example:**
+```python
+import csv
+
+# Write CSV
+employees = [
+    {"name": "Rahim", "dept": "Engineering", "salary": 80000},
+    {"name": "Amina", "dept": "Design", "salary": 75000},
+    {"name": "Karim", "dept": "QA", "salary": 70000},
+]
+
+with open("employees.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=["name", "dept", "salary"])
+    writer.writeheader()
+    writer.writerows(employees)
+
+# Read CSV with DictReader
+with open("employees.csv", "r", encoding="utf-8") as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        print(f"{row['name']} — {row['dept']} — BDT {row['salary']}")
+
+# Filter engineering team
+with open("employees.csv", "r", encoding="utf-8") as f:
+    eng_team = [r for r in csv.DictReader(f) if r["dept"] == "Engineering"]
+    print(eng_team)
+```
+
+---
+
+<a id="p5-json"></a>
+
+## 4. JSON Handling
+
+**Definition:**
+`json` module দিয়ে Python object থেকে JSON string এবং JSON string থেকে Python object convert করা যায়।
+
+**Key Functions:**
+
+| Function | কাজ |
+|---|---|
+| `json.dumps(obj)` | Python → JSON string |
+| `json.loads(string)` | JSON string → Python |
+| `json.dump(obj, f)` | Python → JSON file |
+| `json.load(f)` | JSON file → Python |
+
+**Real-life Analogy:**
+JSON কে **universal language** হিসেবে ভাবুন। Python, JavaScript, Java — সবাই বোঝে। API response সবসময় JSON।
+
+**Practical Use Case:**
+- REST API response parse করা
+- config file read/write করা
+- data সংরক্ষণ করা
+
+**Interview-style Explanation:**
+> "`json.dumps()` Python dict কে JSON string-এ convert করে। `indent` parameter দিলে pretty print হয়। `default` parameter দিয়ে non-serializable object handle করা যায় — যেমন `datetime`।"
+
+**Common Mistakes:**
+- `datetime` object directly JSON serialize করা — TypeError
+- `json.loads()` আর `json.load()` confuse করা — string vs file
+
+**Follow-up Interview Questions:**
+1. `json.dumps()` আর `json.dump()` পার্থক্য কী?
+2. Non-serializable object (datetime) কীভাবে handle করবেন?
+3. JSON-এ circular reference থাকলে কী হয়?
+
+**Code Example:**
+```python
+import json
+from datetime import datetime
+
+# Dict → JSON string
+user = {
+    "name": "Rahim",
+    "age": 25,
+    "skills": ["Python", "Django", "PostgreSQL"],
+    "active": True,
+}
+
+json_str = json.dumps(user, indent=2, ensure_ascii=False)
+print(json_str)
+
+# JSON string → Dict
+parsed = json.loads(json_str)
+print(parsed["skills"])
+
+# File I/O
+with open("user.json", "w", encoding="utf-8") as f:
+    json.dump(user, f, indent=2, ensure_ascii=False)
+
+with open("user.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+    print(data["name"])
+
+# Custom serializer for datetime
+def json_serializer(obj):
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    raise TypeError(f"Not serializable: {type(obj)}")
+
+event = {"title": "Interview", "date": datetime(2026, 5, 12)}
+print(json.dumps(event, default=json_serializer))
+```
+
+---
+
+<a id="p5-exceptions"></a>
+
+## 5. Exception Handling
+
+**Definition:**
+Exception handling হলো runtime error gracefully handle করার mechanism। `try`, `except`, `else`, `finally` block দিয়ে করা হয়।
+
+**Real-life Analogy:**
+Exception handling কে **সড়ক দুর্ঘটনার plan** হিসেবে ভাবুন। স্বাভাবিক পথে গেলে ঠিকঠাক পৌঁছাবেন (`else`), দুর্ঘটনা হলে ambulance ডাকবেন (`except`), যাই হোক insurance-এ কল করবেন (`finally`)।
+
+**Exception Hierarchy:**
+
+```text
+BaseException
+├── SystemExit
+├── KeyboardInterrupt
+└── Exception
+    ├── ValueError
+    ├── TypeError
+    ├── KeyError
+    ├── IndexError
+    ├── AttributeError
+    ├── FileNotFoundError
+    ├── ZeroDivisionError
+    ├── OverflowError
+    └── ...
+```
+
+**try/except/else/finally:**
+
+| Block | কখন চলে |
+|---|---|
+| `try` | সবসময় |
+| `except` | Exception হলে |
+| `else` | Exception না হলে |
+| `finally` | সবসময় — error হোক বা না হোক |
+
+**Practical Use Case:**
+- API call failure handle করা
+- file not found gracefully handle করা
+- user input validation
+
+**Interview-style Explanation:**
+> "`else` block তখন চলে যখন `try` block-এ কোনো exception হয় না — এটি অনেকে জানেন না। `finally` always চলে, এমনকি `return` statement থাকলেও — resource cleanup-এর জন্য perfect।"
+
+**Common Mistakes:**
+- bare `except:` use করা — সব exception ধরে ফেলে, debug কঠিন হয়
+- exception ignore করা (`except: pass`) — silent failure
+- too broad exception ধরা (`except Exception`) — specific type ধরুন
+
+**Follow-up Interview Questions:**
+1. `else` block কখন execute হয়?
+2. `finally` কি `return` statement-এর পরেও চলে?
+3. `raise` আর `raise e` পার্থক্য কী?
+
+**Code Example:**
+```python
+# Basic exception handling
+def divide(a, b):
+    try:
+        result = a / b
+    except ZeroDivisionError:
+        print("Error: Cannot divide by zero")
+        return None
+    except TypeError as e:
+        print(f"Type error: {e}")
+        return None
+    else:
+        print("Division successful")
+        return result
+    finally:
+        print("divide() called")   # always runs
+
+print(divide(10, 2))
+print(divide(10, 0))
+
+# Multiple exceptions
+def parse_config(filename):
+    try:
+        with open(filename, "r") as f:
+            import json
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"Config file not found: {filename}")
+    except json.JSONDecodeError as e:
+        print(f"Invalid JSON: {e}")
+    except PermissionError:
+        print("No permission to read file")
+    return {}
+
+# Re-raise
+def process(data):
+    try:
+        return int(data)
+    except ValueError:
+        print("Logging the error...")
+        raise   # re-raise same exception with traceback preserved
+```
+
+---
+
+<a id="p5-custom-exceptions"></a>
+
+## 6. Custom Exceptions
+
+**Definition:**
+Custom exception হলো `Exception` (বা subclass) থেকে inherit করা নিজস্ব exception class। Domain-specific error communicate করতে use করা হয়।
+
+**Real-life Analogy:**
+Custom exception কে **hospital-এর specific error code** হিসেবে ভাবুন। General "patient problem" না বলে "BloodPressureHighError" বলা — specific ও actionable।
+
+**Best Practices:**
+- `Error` suffix দেওয়া: `InsufficientFundsError`, `InvalidUserError`
+- error message এবং context data সহ রাখা
+- exception hierarchy বানানো বড় project-এর জন্য
+
+**Interview-style Explanation:**
+> "Custom exception তৈরি করলে code readable হয়, caller জানতে পারে exactly কী error হয়েছে এবং কীভাবে handle করবে। বড় project-এ base exception hierarchy রাখি — যেমন `AppError` → `ValidationError`, `DatabaseError`।"
+
+**Common Mistakes:**
+- `Exception` directly catch করা custom exception-এর জায়গায়
+- exception-এ enough context না দেওয়া
+
+**Follow-up Interview Questions:**
+1. Custom exception কেন বানাবেন?
+2. Exception hierarchy কীভাবে design করবেন?
+3. Exception-এ additional data কীভাবে পাঠাবেন?
+
+**Code Example:**
+```python
+# Domain-specific exception hierarchy
+class AppError(Exception):
+    """Base exception for this application"""
+    pass
+
+class ValidationError(AppError):
+    def __init__(self, field, message):
+        self.field = field
+        super().__init__(f"Validation failed on '{field}': {message}")
+
+class InsufficientFundsError(AppError):
+    def __init__(self, balance, amount):
+        self.balance = balance
+        self.amount = amount
+        super().__init__(
+            f"Insufficient funds: balance={balance}, requested={amount}"
+        )
+
+class UserNotFoundError(AppError):
+    def __init__(self, user_id):
+        self.user_id = user_id
+        super().__init__(f"User not found: id={user_id}")
+
+# Usage
+class BankAccount:
+    def __init__(self, owner, balance):
+        if balance < 0:
+            raise ValidationError("balance", "Must be non-negative")
+        self.owner = owner
+        self.balance = balance
+
+    def withdraw(self, amount):
+        if amount > self.balance:
+            raise InsufficientFundsError(self.balance, amount)
+        self.balance -= amount
+        return self.balance
+
+def process_transaction(account, amount):
+    try:
+        new_balance = account.withdraw(amount)
+        print(f"Withdrawn BDT {amount}. New balance: {new_balance}")
+    except InsufficientFundsError as e:
+        print(f"Transaction failed: {e}")
+        print(f"  Balance: {e.balance}, Requested: {e.amount}")
+    except ValidationError as e:
+        print(f"Validation: {e}")
+
+acc = BankAccount("Rahim", 5000)
+process_transaction(acc, 2000)
+process_transaction(acc, 10000)
+```
+
+---
+
+<a id="p5-logging"></a>
+
+## 7. Logging
+
+**Definition:**
+`logging` module দিয়ে application-এর runtime information record করা হয়। `print()` এর professional alternative।
+
+**Log Levels:**
+
+| Level | Value | কখন ব্যবহার |
+|---|---|---|
+| `DEBUG` | 10 | Detailed debug info |
+| `INFO` | 20 | Normal operation info |
+| `WARNING` | 30 | Something unexpected (default min level) |
+| `ERROR` | 40 | Error occurred, but app continues |
+| `CRITICAL` | 50 | Serious error, app may stop |
+
+**Real-life Analogy:**
+Logging কে **factory-র CCTV** হিসেবে ভাবুন। সব ঘটনা record হয়, পরে দরকারে দেখা যায়।
+
+**Practical Use Case:**
+- production server debugging
+- audit trail
+- error tracking
+
+**Interview-style Explanation:**
+> "`print()` production-এ use করি না। `logging` module দিয়ে level অনুযায়ী filter করা যায়, file-এ লেখা যায়, timestamp আসে। Production-এ `ERROR` level-এর উপর log রাখি, development-এ `DEBUG`।"
+
+**Common Mistakes:**
+- `print()` দিয়ে debug করা production code-এ
+- root logger configure না করে `logging.basicConfig()` call না করা
+- log file-এ sensitive information (password, token) লেখা
+
+**Follow-up Interview Questions:**
+1. `print()` আর `logging` পার্থক্য কী?
+2. Log level কীভাবে কাজ করে?
+3. Multiple module-এ logging কীভাবে করবেন?
+
+**Code Example:**
+```python
+import logging
+from pathlib import Path
+
+# Basic setup
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+# Named logger (best practice — module-specific)
+logger = logging.getLogger(__name__)
+
+logger.debug("Starting process")
+logger.info("User logged in: rahim@example.com")
+logger.warning("Disk usage above 80%")
+logger.error("Failed to connect to database")
+logger.critical("System out of memory")
+
+# File handler
+def setup_file_logger(name: str, log_file: str) -> logging.Logger:
+    file_logger = logging.getLogger(name)
+    file_logger.setLevel(logging.DEBUG)
+
+    fh = logging.FileHandler(log_file, encoding="utf-8")
+    fh.setLevel(logging.INFO)
+
+    formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(message)s"
+    )
+    fh.setFormatter(formatter)
+    file_logger.addHandler(fh)
+    return file_logger
+
+app_logger = setup_file_logger("app", "app.log")
+app_logger.info("Application started")
+app_logger.error("Something went wrong")
+
+# Exception logging
+def risky():
+    try:
+        1 / 0
+    except ZeroDivisionError:
+        logger.exception("Division error occurred")   # includes traceback
+
+risky()
+```
+
+---
+
+<a id="p5-debugging"></a>
+
+## 8. Debugging
+
+**Definition:**
+Debugging হলো code-এর bug খুঁজে বের করার process। Python-এ `pdb` (Python Debugger), `print()`, logging, এবং IDE debugger use করা হয়।
+
+**Real-life Analogy:**
+Debugging কে **গোয়েন্দার তদন্ত** হিসেবে ভাবুন। Clue সংগ্রহ করো, suspect narrow করো, সত্য বের করো।
+
+**Key pdb Commands:**
+
+| Command | কাজ |
+|---|---|
+| `n` | Next line |
+| `s` | Step into function |
+| `c` | Continue to next breakpoint |
+| `p var` | Print variable value |
+| `l` | List code around current line |
+| `q` | Quit debugger |
+| `b 25` | Set breakpoint at line 25 |
+| `h` | Help |
+
+**Practical Use Case:**
+- complex logic trace করা
+- unexpected value কোথায় থেকে আসছে বের করা
+- third-party code debug করা
+
+**Interview-style Explanation:**
+> "Production-এ `pdb` নয়, `logging` use করি। Development-এ VS Code debugger সবচেয়ে সুবিধাজনক। `breakpoint()` Python 3.7+ এ built-in — IDE-তে debugger attached থাকলে সেটাই use করে।"
+
+**Common Mistakes:**
+- `print()` debug statement production code-এ রেখে দেওয়া
+- `pdb.set_trace()` production-এ রেখে দেওয়া — app hang হয়ে যাবে
+- debugger use না শিখে শুধু print-এ depend করা
+
+**Follow-up Interview Questions:**
+1. `breakpoint()` কী Python 3.7+-এ?
+2. `pdb` কীভাবে use করবেন?
+3. Production debugging কীভাবে করবেন?
+
+**Code Example:**
+```python
+# Python 3.7+ built-in breakpoint()
+def calculate_discount(price, discount_pct):
+    if discount_pct < 0 or discount_pct > 100:
+        raise ValueError(f"Invalid discount: {discount_pct}")
+    discount = price * discount_pct / 100
+    # breakpoint()   # Uncomment to drop into debugger here
+    final = price - discount
+    return final
+
+# Manual pdb
+import pdb
+
+def buggy_function(items):
+    total = 0
+    for item in items:
+        # pdb.set_trace()   # Drop into debugger
+        total += item["price"] * item["qty"]
+    return total
+
+# Python's built-in assertion
+def process_payment(amount):
+    assert amount > 0, f"Amount must be positive, got {amount}"
+    print(f"Processing BDT {amount}")
+
+# Useful debug helper
+import traceback
+
+def safe_execute(func, *args):
+    try:
+        return func(*args)
+    except Exception as e:
+        traceback.print_exc()   # full traceback
+        return None
+```
+
+---
+
+## PART 5 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Know |
+|---|---|---|
+| File Operations | `with open()` — always | File modes: r, w, a, x, b |
+| Read/Write | Line iteration for large files | `encoding='utf-8'` always |
+| CSV | `DictReader`/`DictWriter` | `newline=''` on Windows |
+| JSON | `dumps`/`loads` (str), `dump`/`load` (file) | Custom serializer for datetime |
+| Exception Handling | `try/except/else/finally` | `else` = no exception, `finally` = always |
+| Custom Exceptions | Inherit `Exception`, add context | Hierarchy: `AppError` → specific |
+| Logging | `logging.getLogger(__name__)` | Levels: DEBUG→INFO→WARNING→ERROR→CRITICAL |
+| Debugging | `breakpoint()`, pdb, IDE | Never leave `pdb.set_trace()` in production |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part6"></a>
+
+## 📋 PART 6 সূচিপত্র — Database & Backend Python
+
+| # | Topic | What You Will Learn |
+|---|---|---|
+| 1 | [SQLite with sqlite3](#p6-sqlite) | Built-in DB, CRUD operations |
+| 2 | [PostgreSQL with psycopg2](#p6-postgres) | Real DB connection, parameterized queries |
+| 3 | [SQLAlchemy ORM](#p6-sqlalchemy) | ORM concept, models, session |
+| 4 | [CRUD Operations](#p6-crud) | Create, Read, Update, Delete patterns |
+| 5 | [REST API Concepts](#p6-rest) | HTTP methods, status codes, JSON API |
+| 6 | [FastAPI Overview](#p6-fastapi) | Async, Pydantic, routing (full handbook link) |
+| 7 | [Flask Overview](#p6-flask) | Minimal framework, routing, templates |
+| 8 | [Environment Variables](#p6-env) | `.env`, `python-dotenv`, secrets management |
+
+---
+
+<a id="p6-sqlite"></a>
+
+## 1. SQLite with sqlite3
+
+**Definition:**
+`sqlite3` Python-এর built-in module। কোনো server লাগে না — single file database। Development ও small project-এর জন্য ideal।
+
+**Real-life Analogy:**
+SQLite কে **portable notebook** হিসেবে ভাবুন। সাথে নিয়ে যাওয়া যায়, কোনো server লাগে না।
+
+**Practical Use Case:**
+- local app data store করা
+- testing এবং prototyping
+- mobile app embedded database
+- small tool এবং script
+
+**Interview-style Explanation:**
+> "SQLite production-এ high concurrency-তে ভালো না, কিন্তু development এবং testing-এ perfect। Parameterized query সবসময় use করি SQL injection prevent করতে।"
+
+**Common Mistakes:**
+- SQL string concatenation দিয়ে query বানানো — SQL injection vulnerability
+- `commit()` ভুলে যাওয়া — data save হবে না
+- connection close না করা
+
+**Follow-up Interview Questions:**
+1. Parameterized query কেন ব্যবহার করবেন?
+2. SQLite কখন use করবেন, কখন PostgreSQL?
+3. `with` statement দিয়ে SQLite transaction কীভাবে করবেন?
+
+**Code Example:**
+```python
+import sqlite3
+from contextlib import contextmanager
+
+DATABASE = "company.db"
+
+@contextmanager
+def get_db():
+    conn = sqlite3.connect(DATABASE)
+    conn.row_factory = sqlite3.Row   # dict-like access
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+# Create table
+def create_tables():
+    with get_db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS employees (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                department TEXT NOT NULL,
+                salary REAL NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+# Insert
+def add_employee(name: str, dept: str, salary: float):
+    with get_db() as conn:
+        cursor = conn.execute(
+            "INSERT INTO employees (name, department, salary) VALUES (?, ?, ?)",
+            (name, dept, salary)   # parameterized — SQL injection safe
+        )
+        return cursor.lastrowid
+
+# Read
+def get_employees(dept: str = None):
+    with get_db() as conn:
+        if dept:
+            rows = conn.execute(
+                "SELECT * FROM employees WHERE department = ?", (dept,)
+            ).fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM employees").fetchall()
+        return [dict(row) for row in rows]
+
+# Update
+def update_salary(emp_id: int, new_salary: float):
+    with get_db() as conn:
+        conn.execute(
+            "UPDATE employees SET salary = ? WHERE id = ?",
+            (new_salary, emp_id)
+        )
+
+# Delete
+def delete_employee(emp_id: int):
+    with get_db() as conn:
+        conn.execute("DELETE FROM employees WHERE id = ?", (emp_id,))
+
+# Demo
+create_tables()
+add_employee("Rahim", "Engineering", 80000)
+add_employee("Amina", "Design", 75000)
+add_employee("Karim", "Engineering", 70000)
+
+print(get_employees())
+print(get_employees("Engineering"))
+update_salary(1, 90000)
+```
+
+---
+
+<a id="p6-postgres"></a>
+
+## 2. PostgreSQL with psycopg2
+
+**Definition:**
+`psycopg2` সবচেয়ে popular PostgreSQL adapter for Python। Production-grade application-এ SQLite-এর পরিবর্তে PostgreSQL use করা হয়।
+
+**Real-life Analogy:**
+PostgreSQL হলো **professional office building** — security, concurrency, scalability সব আছে। SQLite হলো home office।
+
+**Practical Use Case:**
+- production web application database
+- concurrent user support
+- complex query ও transaction
+- bKash, Nagad, Pathao — সব production app-এ PostgreSQL বা MySQL
+
+**Interview-style Explanation:**
+> "psycopg2 দিয়ে PostgreSQL connect করি। Real project-এ connection pool (psycopg2.pool বা SQLAlchemy) use করি — প্রতি request-এ নতুন connection তৈরি expensive। Parameterized query SQL injection থেকে রক্ষা করে।"
+
+**Common Mistakes:**
+- credentials hardcode করা — environment variable use করুন
+- connection pool না করা — প্রতি request-এ new connection expensive
+- `%s` placeholder ব্যবহার (psycopg2 style) vs `?` (sqlite3 style) confuse করা
+
+**Follow-up Interview Questions:**
+1. Connection pooling কেন দরকার?
+2. psycopg2-এ `%s` কেন SQL injection safe?
+3. SQLite আর PostgreSQL কখন কোনটি choose করবেন?
+
+**Code Example:**
+```python
+import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from contextlib import contextmanager
+
+# Credentials from environment (never hardcode)
+DB_CONFIG = {
+    "host": os.environ.get("DB_HOST", "localhost"),
+    "port": int(os.environ.get("DB_PORT", 5432)),
+    "dbname": os.environ.get("DB_NAME", "myapp"),
+    "user": os.environ.get("DB_USER", "postgres"),
+    "password": os.environ.get("DB_PASSWORD", ""),
+}
+
+@contextmanager
+def get_connection():
+    conn = psycopg2.connect(**DB_CONFIG)
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+def get_all_users():
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("SELECT id, name, email FROM users ORDER BY id")
+            return cur.fetchall()
+
+def get_user_by_id(user_id: int):
+    with get_connection() as conn:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # %s — psycopg2 parameterized placeholder (SQL injection safe)
+            cur.execute(
+                "SELECT * FROM users WHERE id = %s", (user_id,)
+            )
+            return cur.fetchone()
+
+def create_user(name: str, email: str) -> int:
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO users (name, email) VALUES (%s, %s) RETURNING id",
+                (name, email)
+            )
+            return cur.fetchone()[0]
+```
+
+---
+
+<a id="p6-sqlalchemy"></a>
+
+## 3. SQLAlchemy ORM
+
+**Definition:**
+SQLAlchemy ORM (Object Relational Mapper) database table-কে Python class হিসেবে represent করে। Raw SQL না লিখে Python object দিয়ে DB operation করা যায়।
+
+**ORM Concept:**
+
+```text
+Python Class   ←→   Database Table
+Object         ←→   Row
+Attribute      ←→   Column
+```
+
+**Real-life Analogy:**
+ORM কে **translation service** হিসেবে ভাবুন। আপনি Bangla-তে কথা বলেন, translator SQL-এ convert করে database-কে বলে।
+
+**Practical Use Case:**
+- FastAPI + SQLAlchemy — standard production stack
+- database migration (with Alembic)
+- multiple DB backend support (SQLite dev, PostgreSQL prod)
+
+**Interview-style Explanation:**
+> "SQLAlchemy দুটো mode-এ কাজ করে: Core (SQL expression) এবং ORM (model class)। FastAPI-তে ORM use করি কারণ Pydantic model এর সাথে easily integrate হয়। Session দিয়ে transaction manage করি।"
+
+**Common Mistakes:**
+- N+1 query problem — lazy loading relationship-এ অনেক query হয়
+- session management ভুল করা — session close না করা
+- `Base.metadata.create_all()` production-এ use করা — Alembic migration use করুন
+
+**Follow-up Interview Questions:**
+1. ORM কী? Raw SQL-এর চেয়ে কোনটি ভালো?
+2. N+1 query problem কী?
+3. SQLAlchemy session কী করে?
+
+**Code Example:**
+```python
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from datetime import datetime
+
+# Setup
+DATABASE_URL = "sqlite:///./company.db"   # or postgresql://user:pass@host/db
+engine = create_engine(DATABASE_URL, echo=False)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# Model
+class Employee(Base):
+    __tablename__ = "employees"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    department = Column(String, nullable=False)
+    salary = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Employee {self.name} ({self.department})>"
+
+# Create tables
+Base.metadata.create_all(bind=engine)
+
+# Context manager for session
+from contextlib import contextmanager
+
+@contextmanager
+def get_session():
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+# CRUD operations
+def create_employee(name: str, dept: str, salary: float) -> Employee:
+    with get_session() as session:
+        emp = Employee(name=name, department=dept, salary=salary)
+        session.add(emp)
+        session.flush()   # get ID before commit
+        session.refresh(emp)
+        return emp
+
+def get_employees(dept: str = None):
+    with get_session() as session:
+        query = session.query(Employee)
+        if dept:
+            query = query.filter(Employee.department == dept)
+        return query.all()
+
+def update_salary(emp_id: int, new_salary: float):
+    with get_session() as session:
+        emp = session.query(Employee).filter(Employee.id == emp_id).first()
+        if emp:
+            emp.salary = new_salary
+
+# Demo
+create_employee("Rahim", "Engineering", 80000)
+create_employee("Amina", "Design", 75000)
+
+employees = get_employees()
+for emp in employees:
+    print(emp)
+```
+
+---
+
+<a id="p6-crud"></a>
+
+## 4. CRUD Operations
+
+**Definition:**
+CRUD = **Create**, **Read**, **Update**, **Delete** — database-এর ৪টি মৌলিক operation। প্রতিটি web application-এর core।
+
+**CRUD → HTTP Mapping:**
+
+| Operation | HTTP Method | SQL | URL Pattern |
+|---|---|---|---|
+| Create | POST | INSERT | `/users` |
+| Read (all) | GET | SELECT | `/users` |
+| Read (one) | GET | SELECT WHERE | `/users/{id}` |
+| Update | PUT/PATCH | UPDATE | `/users/{id}` |
+| Delete | DELETE | DELETE | `/users/{id}` |
+
+**Interview-style Explanation:**
+> "CRUD pattern সব backend application-এর foundation। REST API design-এ HTTP method এবং URL pattern CRUD-এর সাথে align করা standard practice।"
+
+**Code Example (FastAPI-style CRUD):**
+```python
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from typing import Optional, List
+
+app = FastAPI()
+
+# In-memory store (real app-এ DB use করবেন)
+users_db = {}
+next_id = 1
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+
+# Create
+@app.post("/users", response_model=UserResponse, status_code=201)
+def create_user(user: UserCreate):
+    global next_id
+    new_user = {"id": next_id, "name": user.name, "email": user.email}
+    users_db[next_id] = new_user
+    next_id += 1
+    return new_user
+
+# Read all
+@app.get("/users", response_model=List[UserResponse])
+def get_users():
+    return list(users_db.values())
+
+# Read one
+@app.get("/users/{user_id}", response_model=UserResponse)
+def get_user(user_id: int):
+    if user_id not in users_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    return users_db[user_id]
+
+# Update (PATCH — partial update)
+@app.patch("/users/{user_id}", response_model=UserResponse)
+def update_user(user_id: int, user: UserUpdate):
+    if user_id not in users_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    stored = users_db[user_id]
+    update_data = user.model_dump(exclude_unset=True)
+    stored.update(update_data)
+    return stored
+
+# Delete
+@app.delete("/users/{user_id}", status_code=204)
+def delete_user(user_id: int):
+    if user_id not in users_db:
+        raise HTTPException(status_code=404, detail="User not found")
+    del users_db[user_id]
+```
+
+---
+
+<a id="p6-rest"></a>
+
+## 5. REST API Concepts
+
+**Definition:**
+REST (Representational State Transfer) হলো web API design-এর architectural style। HTTP protocol-এর উপর resource-based communication।
+
+**REST Principles:**
+
+| Principle | মানে |
+|---|---|
+| Stateless | প্রতিটি request independent — server client state রাখে না |
+| Resource-based | URL = noun (resource), Method = verb |
+| Uniform Interface | Standard HTTP methods |
+| JSON/XML | Standard data format |
+
+**HTTP Methods:**
+
+| Method | কাজ | Idempotent? |
+|---|---|---|
+| GET | Data read | ✅ |
+| POST | Create | ❌ |
+| PUT | Full replace | ✅ |
+| PATCH | Partial update | ✅ |
+| DELETE | Delete | ✅ |
+
+**HTTP Status Codes:**
+
+| Code | মানে |
+|---|---|
+| 200 OK | Success |
+| 201 Created | Resource created |
+| 204 No Content | Success, no response body |
+| 400 Bad Request | Client-side error |
+| 401 Unauthorized | Authentication required |
+| 403 Forbidden | Permission denied |
+| 404 Not Found | Resource not found |
+| 422 Unprocessable | Validation error |
+| 500 Internal Error | Server-side error |
+
+**Interview-style Explanation:**
+> "REST API design-এ URL কে resource হিসেবে ভাবি — `/users` (collection), `/users/1` (specific user)। HTTP method দিয়ে action বোঝাই। Status code দিয়ে result communicate করি। Idempotent মানে same request বারবার same result দেয়।"
+
+**Common Mistakes:**
+- URL-এ verb ব্যবহার: `/getUsers` — ❌, `/users` GET — ✅
+- 200 সব response-এ return করা — proper status code দিন
+- `POST` এবং `PUT` পার্থক্য না বোঝা
+
+**Follow-up Interview Questions:**
+1. REST কী? RESTful API কীভাবে design করবেন?
+2. Idempotent মানে কী? কোন methods idempotent?
+3. 401 আর 403 পার্থক্য কী?
+
+---
+
+<a id="p6-fastapi"></a>
+
+## 6. FastAPI Overview
+
+**Definition:**
+FastAPI হলো modern, fast Python web framework। Async support, automatic OpenAPI docs, Pydantic validation — সব built-in।
+
+**Key Features:**
+
+| Feature | বিবরণ |
+|---|---|
+| Performance | Uvicorn ASGI — Node.js comparable |
+| Validation | Pydantic automatic request/response validation |
+| Docs | `/docs` (Swagger) এবং `/redoc` auto-generated |
+| Async | `async def` — high concurrency |
+| Type Hints | Python type hints থেকে API schema generate |
+
+**Real-life Analogy:**
+FastAPI কে **modern office building** হিসেবে ভাবুন — elevator, security, AC সব automatic। Flask হলো basic room — নিজে সব setup করতে হবে।
+
+**Interview-style Explanation:**
+> "FastAPI async-first, type hint-driven framework। Request আসলে Pydantic automatically validate করে — invalid data হলে 422 return করে। Background task, dependency injection, OAuth2 — সব built-in।"
+
+> 📚 **বিস্তারিত:** [FastAPI Complete Handbook →](./FastAPI_Junior_Engineer_BD_QA.md) — 12 PART সম্পূর্ণ গাইড
+
+**Quick Code Example:**
+```python
+from fastapi import FastAPI, Depends, HTTPException, status
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+
+app = FastAPI(title="Company API", version="1.0.0")
+
+class EmployeeCreate(BaseModel):
+    name: str
+    email: str
+    department: str
+    salary: float
+
+class EmployeeResponse(EmployeeCreate):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# Dependency injection
+def get_current_user(token: str = ""):
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token required"
+        )
+    return {"user_id": 1, "role": "admin"}
+
+@app.get("/")
+async def root():
+    return {"message": "Company API", "status": "healthy"}
+
+@app.post("/employees", response_model=EmployeeResponse, status_code=201)
+async def create_employee(
+    employee: EmployeeCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    # Save to DB...
+    return {**employee.model_dump(), "id": 1}
+
+@app.get("/employees/{emp_id}", response_model=EmployeeResponse)
+async def get_employee(emp_id: int):
+    # Fetch from DB...
+    if emp_id != 1:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return {"id": 1, "name": "Rahim", "email": "rahim@company.com",
+            "department": "Engineering", "salary": 80000}
+```
+
+---
+
+<a id="p6-flask"></a>
+
+## 7. Flask Overview
+
+**Definition:**
+Flask হলো lightweight, micro web framework। Core শুধু routing এবং request handling — বাকি সব extension দিয়ে add করতে হয়।
+
+**Flask vs FastAPI:**
+
+| | Flask | FastAPI |
+|---|---|---|
+| Type | Sync (default) | Async-first |
+| Validation | Manual / Flask-Marshmallow | Pydantic (built-in) |
+| Docs | Manual setup | Auto-generated |
+| Learning curve | Lower | Medium |
+| Performance | Good | Excellent |
+| Use case | Simple APIs, quick prototyping | Production APIs |
+
+**Interview-style Explanation:**
+> "Flask simple project এবং quick prototype-এর জন্য ভালো। FastAPI production-grade API-এর জন্য better — type safety, async, auto-docs। Bangladesh-এ অনেক legacy project Flask-এ আছে, তাই দুটোই জানা দরকার।"
+
+**Code Example:**
+```python
+from flask import Flask, request, jsonify, abort
+
+app = Flask(__name__)
+
+# In-memory store
+employees = {}
+next_id = 1
+
+@app.route("/")
+def index():
+    return jsonify({"message": "Flask API", "status": "running"})
+
+@app.route("/employees", methods=["GET"])
+def get_all():
+    return jsonify(list(employees.values()))
+
+@app.route("/employees/<int:emp_id>", methods=["GET"])
+def get_one(emp_id):
+    emp = employees.get(emp_id)
+    if not emp:
+        abort(404)
+    return jsonify(emp)
+
+@app.route("/employees", methods=["POST"])
+def create():
+    global next_id
+    data = request.get_json()
+    if not data or "name" not in data:
+        abort(400)
+    emp = {"id": next_id, **data}
+    employees[next_id] = emp
+    next_id += 1
+    return jsonify(emp), 201
+
+@app.route("/employees/<int:emp_id>", methods=["DELETE"])
+def delete(emp_id):
+    if emp_id not in employees:
+        abort(404)
+    del employees[emp_id]
+    return "", 204
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found"}), 404
+
+if __name__ == "__main__":
+    app.run(debug=True, port=8000)
+```
+
+---
+
+<a id="p6-env"></a>
+
+## 8. Environment Variables
+
+**Definition:**
+Environment variable হলো OS-level variable যেখানে sensitive configuration (API key, DB password, secret key) store করা হয়। Code-এ hardcode করা unsafe।
+
+**Real-life Analogy:**
+Environment variable কে **personal diary** এর মতো ভাবুন। Public বইয়ে (code) sensitive তথ্য লেখেন না — diary-তে লেখেন।
+
+**Practical Use Case:**
+- Database credentials
+- API keys (OpenAI, Stripe, bKash)
+- Secret keys
+- Feature flags
+
+**Interview-style Explanation:**
+> "Production-এ secrets কখনো code-এ hardcode করি না। `.env` file-এ রাখি, `.gitignore`-এ add করি। `python-dotenv` দিয়ে load করি। Environment-based config (dev/staging/prod) আলাদা রাখি।"
+
+**Common Mistakes:**
+- `.env` file git-এ commit করা — সবচেয়ে dangerous mistake
+- production-এ `DEBUG=True` রাখা
+- default insecure value রাখা
+
+**Follow-up Interview Questions:**
+1. `.env` file git-এ commit করা উচিত কি?
+2. `os.environ.get()` আর `os.environ[]` পার্থক্য?
+3. Different environment (dev/prod) config কীভাবে manage করবেন?
+
+**Code Example:**
+```python
+# .env file (কখনো git-এ push করবেন না)
+# DB_HOST=localhost
+# DB_PORT=5432
+# DB_NAME=myapp
+# DB_USER=postgres
+# DB_PASSWORD=secret123
+# SECRET_KEY=super-secret-key
+# DEBUG=False
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()   # .env file থেকে load করে
+
+# Access
+DB_HOST = os.environ.get("DB_HOST", "localhost")
+DB_PORT = int(os.environ.get("DB_PORT", 5432))
+SECRET_KEY = os.environ.get("SECRET_KEY")
+DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY environment variable not set!")
+
+# Config class pattern (best practice)
+class Settings:
+    DB_HOST: str = os.environ.get("DB_HOST", "localhost")
+    DB_PORT: int = int(os.environ.get("DB_PORT", 5432))
+    DB_NAME: str = os.environ.get("DB_NAME", "myapp")
+    DB_USER: str = os.environ.get("DB_USER", "postgres")
+    DB_PASSWORD: str = os.environ.get("DB_PASSWORD", "")
+    SECRET_KEY: str = os.environ.get("SECRET_KEY", "")
+    DEBUG: bool = os.environ.get("DEBUG", "False").lower() == "true"
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return (
+            f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
+
+settings = Settings()
+print(settings.DATABASE_URL)
+```
+
+---
+
+## PART 6 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Know |
+|---|---|---|
+| SQLite | Built-in, no server, dev/test | Parameterized query (`?`) |
+| PostgreSQL | Production DB, concurrent | psycopg2, connection pool |
+| SQLAlchemy | ORM — class → table mapping | Session management, N+1 problem |
+| CRUD | Create/Read/Update/Delete | CRUD → HTTP method mapping |
+| REST API | Stateless, resource-based | HTTP methods, status codes |
+| FastAPI | Async, Pydantic, auto-docs | `async def`, Depends() |
+| Flask | Micro, sync, minimal | `request`, `jsonify`, `abort()` |
+| Env Variables | Never hardcode secrets | `.env` + `.gitignore` |
+
+---
+
+## PART 6 Interview Must-Know Comparisons
+
+**SQLite vs PostgreSQL:**
+```text
+SQLite:      Single file, no server, development/testing/embedded
+PostgreSQL:  Server, concurrent, production, complex queries
+```
+
+**Flask vs FastAPI:**
+```text
+Flask:    Synchronous, simple, flexible, mature ecosystem
+FastAPI:  Async, type-safe, auto-docs, faster, modern
+```
+
+**ORM vs Raw SQL:**
+```text
+ORM:      Readable, type-safe, DB agnostic, slower complex queries
+Raw SQL:  Faster, full control, harder to maintain, DB-specific
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 7 — Python for Automation & Scripting *(Next request এ লিখব)*
