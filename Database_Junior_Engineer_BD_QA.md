@@ -41,7 +41,6 @@
 
 <details>
 <summary><strong>📄 PART 9 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [৯.১ বাংলাদেশের IT Job Market](#৯১-বাংলাদেশের-it-job-market)
 - [৯.২ Interview Process — BD Companies](#৯২-interview-process--bd-companies)
@@ -57,7 +56,6 @@
 
 <details>
 <summary><strong>📃 PART 8 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [৮.১ NoSQL কী?](#৮১-nosql-কী)
 - [৮.২ SQL vs NoSQL](#৮২-sql-vs-nosql)
@@ -73,7 +71,6 @@
 
 <details>
 <summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [৭.১ PHP ও MySQL](#৭১-php-ও-mysql)
 - [৭.২ Laravel Database (Eloquent & Query Builder)](#৭২-laravel-database-eloquent--query-builder)
@@ -88,7 +85,6 @@
 
 <details>
 <summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [৬.১ Database Fundamentals Q&A](#৬১-database-fundamentals-qa)
 - [৬.২ SQL Q&A](#৬২-sql-qa)
@@ -103,7 +99,6 @@
 
 <details>
 <summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [৫.১ ORM কী?](#৫১-orm-কী)
 - [৫.২ ORM vs Raw SQL](#৫২-orm-vs-raw-sql)
@@ -124,7 +119,6 @@
 
 <details>
 <summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [৪.১ Normalization কী?](#৪১-normalization-কী)
 - [৪.২ 1NF — First Normal Form](#৪২-1nf--first-normal-form)
@@ -145,7 +139,6 @@
 
 <details>
 <summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [৩.১ Indexing](#৩১-indexing)
 - [৩.২ Clustered vs Non-clustered Index](#৩২-clustered-vs-non-clustered-index)
@@ -169,7 +162,6 @@
 
 <details>
 <summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [২.১ SELECT](#২১-select)
 - [২.২ WHERE](#২২-where)
@@ -197,7 +189,6 @@
 
 <details>
 <summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
-<br>
 
 - [১.১ Database কী?](#১১-database-কী)
 - [১.২ DBMS vs RDBMS](#১২-dbms-vs-rdbms)

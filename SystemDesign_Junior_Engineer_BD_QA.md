@@ -36,7 +36,6 @@
 
 <details>
 <summary>📖 <strong>PART 1: System Design Fundamentals</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [1.1 System Design কী?](#11-system-design-কী-what-is-system-design)
 - [1.2 কেন গুরুত্বপূর্ণ?](#12-system-design-কেন-গুরুত্বপূর্ণ-why-system-design-is-important)
@@ -56,7 +55,6 @@
 
 <details>
 <summary>🌐 <strong>PART 2: Networking & Communication Basics</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [2.1 Client-Server Architecture](#21-client-server-architecture)
 - [2.2 HTTP vs HTTPS](#22-http-vs-https)
@@ -77,7 +75,6 @@
 
 <details>
 <summary>🗄️ <strong>PART 3: Database Design in System Design</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [3.1 SQL vs NoSQL](#31-sql-vs-nosql)
 - [3.2 Database Scaling](#32-database-scaling)
@@ -95,7 +92,6 @@
 
 <details>
 <summary>⚡ <strong>PART 4: Caching & Performance Optimization</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [4.1 Caching কী?](#41-caching-কী-what-is-caching)
 - [4.2 Redis](#42-redis)
@@ -113,7 +109,6 @@
 
 <details>
 <summary>📨 <strong>PART 5: Message Queues & Distributed Systems</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [5.1 Message Queue Basics](#51-message-queue-basics)
 - [5.2 Apache Kafka](#52-apache-kafka)
@@ -129,7 +124,6 @@
 
 <details>
 <summary>🏗️ <strong>PART 6: System Design Case Studies</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [6.1 URL Shortener](#61-url-shortener-bitly-tinyurl)
 - [6.2 Chat Application](#62-chat-application-whatsappmessenger)
@@ -145,7 +139,6 @@
 
 <details>
 <summary>🧩 <strong>PART 7: Low-Level Design (LLD)</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [7.1 SOLID Principles](#71-solid-principles)
 - [7.2 Design Patterns (Overview)](#72-design-patterns)
@@ -163,7 +156,6 @@
 
 <details>
 <summary>☁️ <strong>PART 8: Cloud & DevOps Basics</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [8.1 Cloud Computing Basics](#81-cloud-computing-basics)
 - [8.2 AWS Core Services](#82-aws-core-services)
@@ -178,7 +170,6 @@
 
 <details>
 <summary>❓ <strong>PART 9: System Design Interview Q&A Bank</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [9.1 Fundamentals Rapid Fire](#91-fundamentals-তাৎক্ষণিক-উত্তর-rapid-fire)
 - [9.2 Database Q&A](#92-database-তাৎক্ষণিক-উত্তর)
@@ -197,7 +188,6 @@
 
 <details>
 <summary>🇧🇩 <strong>PART 10: Bangladeshi Interview Preparation</strong> — কী কী শিখবো?</summary>
-<br>
 
 - [10.1 BD Job Market Overview](#101-bangladesh-tech-job-market-overview)
 - [10.2 BD Company Questions](#102-bd-company-common-questions)
