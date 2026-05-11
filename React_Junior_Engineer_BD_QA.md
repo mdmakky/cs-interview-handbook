@@ -9421,4 +9421,2235 @@ function ExpensiveList({ items, onDelete }) {
 
 ---
 
-> **📌 পরবর্তী:** PART 9 — Backend Integration & Authentication *(Next request এ লিখব)*
+<a id="part9"></a>
+
+## 📋 PART 9 সূচিপত্র — Backend Integration & Authentication
+
+| # | Topic | Key Concept |
+|---|---|---|
+| 1 | [JWT Authentication Flow](#p9-jwt) | Token lifecycle, storage |
+| 2 | [Login System Implementation](#p9-login) | Full auth flow in React |
+| 3 | [AuthContext — Global Auth State](#p9-authcontext) | Provider, hooks, persistence |
+| 4 | [Protected Routes](#p9-protected) | Role-based access control |
+| 5 | [Token Refresh Strategy](#p9-refresh) | Silent refresh, interceptor |
+| 6 | [RBAC — Role Based Access](#p9-rbac) | Permissions, guards |
+| 7 | [OAuth / Social Login](#p9-oauth) | Google, GitHub login flow |
+| 8 | [Form Validation](#p9-validation) | React Hook Form + Zod |
+| 9 | [Environment Variables & Config](#p9-env) | Vite env, API base URL |
+| 10 | [Security Best Practices](#p9-security) | XSS, CSRF, HTTPS |
+
+---
+
+<a id="p9-jwt"></a>
+
+## 1. JWT Authentication Flow
+
+**Definition:**
+JWT (JSON Web Token) হলো self-contained token যাতে user info encode থাকে। Server session রাখে না — token-ই proof of identity।
+
+**JWT Structure:**
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9   ← Header (base64)
+.eyJzdWIiOiIxMjM0IiwibmFtZSI6IlJhaGltIn0   ← Payload (base64)
+.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c   ← Signature (HMAC)
+
+Payload contains: userId, email, role, exp (expiry), iat (issued at)
+```
+
+**Complete Auth Flow:**
+```
+1. User: email + password → POST /api/auth/login
+2. Server: verify credentials → create JWT (accessToken) + refreshToken
+3. Server: response → { accessToken, refreshToken, user }
+4. Client: store tokens
+5. Client: every API request → Authorization: Bearer <accessToken>
+6. Server: verify token signature → allow/deny
+7. accessToken expire (15min) → use refreshToken → new accessToken
+8. refreshToken expire (7d) → logout
+```
+
+**Token Storage — Where to keep:**
+
+| Storage | XSS Risk | CSRF Risk | Notes |
+|---|---|---|---|
+| `localStorage` | ❌ HIGH | ✅ Safe | JS readable — XSS সহজ |
+| `sessionStorage` | ❌ HIGH | ✅ Safe | Tab বন্ধে clear |
+| `httpOnly Cookie` | ✅ Safe | ❌ CSRF risk | Best for refresh token |
+| Memory (useState) | ✅ Safe | ✅ Safe | Page refresh-এ হারায় |
+
+**Recommended Strategy:**
+```
+accessToken → Memory (React state) — short-lived (15min), XSS safe
+refreshToken → httpOnly Cookie — long-lived (7d), JS cannot read
+
+Why: accessToken memory-তে → page refresh-এ হারায়
+     → silent refresh endpoint hit করো → new accessToken পাও
+     → seamless UX
+```
+
+**JWT Decode (without verification):**
+```jsx
+function decodeJWT(token) {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpired(token) {
+  const decoded = decodeJWT(token);
+  if (!decoded?.exp) return true;
+  return Date.now() / 1000 > decoded.exp;
+}
+
+// Usage
+const payload = decodeJWT(token);
+// { sub: "123", name: "Rahim", role: "admin", exp: 1716000000 }
+```
+
+---
+
+<a id="p9-login"></a>
+
+## 2. Login System Implementation
+
+**Complete Login Flow:**
+```jsx
+// services/authService.js
+import api from './api';
+
+export const authService = {
+  login: async ({ email, password }) => {
+    const data = await api.post('/auth/login', { email, password });
+    // data: { accessToken, refreshToken (set in cookie by server), user }
+    return data;
+  },
+
+  register: async (userData) => {
+    return api.post('/auth/register', userData);
+  },
+
+  logout: async () => {
+    await api.post('/auth/logout');  // server-side cookie clear
+  },
+
+  refreshToken: async () => {
+    // httpOnly cookie automatic-এ পাঠায়
+    return api.post('/auth/refresh');
+  },
+
+  getProfile: async () => {
+    return api.get('/auth/me');
+  },
+};
+```
+
+```jsx
+// pages/Login.jsx
+import { useState } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+function LoginPage() {
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redirect to previous page after login
+  const from = location.state?.from?.pathname || '/dashboard';
+
+  const handleChange = (e) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    if (error) setError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Client-side validation
+    if (!form.email || !form.password) {
+      setError('সব field পূরণ করুন');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      await login(form.email, form.password);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(err.message || 'Login failed. Check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-header">
+          <img src="/logo.svg" alt="Logo" />
+          <h1>স্বাগতম</h1>
+          <p>আপনার account-এ login করুন</p>
+        </div>
+
+        {error && (
+          <div className="alert alert-error" role="alert">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="example@email.com"
+              autoComplete="email"
+              disabled={loading}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <div className="input-with-icon">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                disabled={loading}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                className="toggle-password"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '🙈' : '👁'}
+              </button>
+            </div>
+          </div>
+
+          <div className="form-options">
+            <label className="checkbox-label">
+              <input type="checkbox" name="rememberMe" /> Remember me
+            </label>
+            <Link to="/forgot-password">Password ভুলে গেছেন?</Link>
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary btn-full"
+            disabled={loading}
+          >
+            {loading ? (
+              <><span className="spinner-sm" /> Logging in...</>
+            ) : 'Login'}
+          </button>
+        </form>
+
+        <p className="auth-footer">
+          Account নেই? <Link to="/register">Register করুন</Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default LoginPage;
+```
+
+---
+
+<a id="p9-authcontext"></a>
+
+## 3. AuthContext — Global Auth State
+
+**Complete AuthContext:**
+```jsx
+// context/AuthContext.jsx
+import {
+  createContext, useContext, useState,
+  useEffect, useCallback, useMemo
+} from 'react';
+import { authService } from '../services/authService';
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);    // memory only (XSS safe)
+  const [loading, setLoading] = useState(true); // initial auth check
+
+  // App start-এ silent refresh — cookie থেকে নতুন accessToken
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const data = await authService.refreshToken();
+        setToken(data.accessToken);
+        setUser(data.user);
+      } catch {
+        // No valid session — user is logged out
+        setUser(null);
+        setToken(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    initAuth();
+  }, []);
+
+  const login = useCallback(async (email, password) => {
+    const data = await authService.login({ email, password });
+    setToken(data.accessToken);
+    setUser(data.user);
+    return data;
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // logout silently even if API fails
+    } finally {
+      setToken(null);
+      setUser(null);
+    }
+  }, []);
+
+  const updateUser = useCallback((updates) => {
+    setUser(prev => prev ? { ...prev, ...updates } : prev);
+  }, []);
+
+  // Expose token to api.js interceptor
+  useEffect(() => {
+    // Store token in a module-level variable for interceptor access
+    window.__authToken = token;
+  }, [token]);
+
+  const value = useMemo(() => ({
+    user,
+    token,
+    isLoggedIn: !!user,
+    isLoading: loading,
+    login,
+    logout,
+    updateUser,
+  }), [user, token, loading, login, logout, updateUser]);
+
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="spinner-lg" />
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
+};
+
+// Convenience hooks
+export const useUser = () => useAuth().user;
+export const useIsLoggedIn = () => useAuth().isLoggedIn;
+```
+
+**Axios Interceptor — Token from Context:**
+```jsx
+// services/api.js — use window.__authToken set by AuthContext
+api.interceptors.request.use((config) => {
+  const token = window.__authToken;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+```
+
+---
+
+<a id="p9-protected"></a>
+
+## 4. Protected Routes
+
+**Complete Protected Route System:**
+```jsx
+// components/ProtectedRoute.jsx
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+// Basic auth guard
+export function ProtectedRoute({ children }) {
+  const { isLoggedIn, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) return <PageLoader />;
+
+  if (!isLoggedIn) {
+    // Save attempted URL for post-login redirect
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children || <Outlet />;
+}
+
+// Role-based guard
+export function RoleGuard({ allowedRoles, children, fallback }) {
+  const { user, isLoggedIn, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) return <PageLoader />;
+
+  if (!isLoggedIn) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!allowedRoles.includes(user?.role)) {
+    return fallback || <Navigate to="/unauthorized" replace />;
+  }
+
+  return children || <Outlet />;
+}
+
+// Public-only route (login/register) — redirect if logged in
+export function PublicOnlyRoute({ children }) {
+  const { isLoggedIn, isLoading } = useAuth();
+
+  if (isLoading) return <PageLoader />;
+  if (isLoggedIn) return <Navigate to="/dashboard" replace />;
+
+  return children || <Outlet />;
+}
+```
+
+**App Routes Setup:**
+```jsx
+// App.jsx
+import { lazy, Suspense } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { ProtectedRoute, RoleGuard, PublicOnlyRoute } from './components/ProtectedRoute';
+
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'));
+const AdminUsers = lazy(() => import('./pages/admin/Users'));
+const Unauthorized = lazy(() => import('./pages/Unauthorized'));
+
+function App() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
+
+        {/* Public-only (redirect if logged in) */}
+        <Route element={<PublicOnlyRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+
+        {/* Protected — any logged-in user */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+
+        {/* Admin only */}
+        <Route element={<RoleGuard allowedRoles={['admin', 'super_admin']} />}>
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+---
+
+<a id="p9-refresh"></a>
+
+## 5. Token Refresh Strategy
+
+**Silent Refresh Pattern:**
+```jsx
+// Axios interceptor — automatic token refresh on 401
+let isRefreshing = false;
+let failedQueue = [];   // 401 হলে pending requests queue
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) reject(error);
+    else resolve(token);
+  });
+  failedQueue = [];
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const original = error.config;
+
+    if (error.response?.status !== 401 || original._retry) {
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      // Already refreshing — queue this request
+      return new Promise((resolve, reject) => {
+        failedQueue.push({ resolve, reject });
+      }).then(token => {
+        original.headers.Authorization = `Bearer ${token}`;
+        return api(original);
+      });
+    }
+
+    original._retry = true;
+    isRefreshing = true;
+
+    try {
+      const data = await authService.refreshToken();
+      const newToken = data.accessToken;
+
+      // Update global token
+      window.__authToken = newToken;
+
+      // Retry queued requests
+      processQueue(null, newToken);
+
+      original.headers.Authorization = `Bearer ${newToken}`;
+      return api(original);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      // Refresh failed — force logout
+      window.__authToken = null;
+      window.dispatchEvent(new Event('auth:logout'));
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  }
+);
+
+// Listen in AuthContext
+useEffect(() => {
+  const handleAuthLogout = () => logout();
+  window.addEventListener('auth:logout', handleAuthLogout);
+  return () => window.removeEventListener('auth:logout', handleAuthLogout);
+}, [logout]);
+```
+
+**Token Expiry Check — Proactive Refresh:**
+```jsx
+// Refresh before expiry (e.g., 1 min before)
+function useTokenRefresh(token) {
+  useEffect(() => {
+    if (!token) return;
+
+    const decoded = decodeJWT(token);
+    if (!decoded?.exp) return;
+
+    // Calculate time until 1 min before expiry
+    const expiresIn = decoded.exp * 1000 - Date.now() - 60000;
+
+    if (expiresIn <= 0) return;   // Already near expiry
+
+    const timer = setTimeout(async () => {
+      try {
+        const data = await authService.refreshToken();
+        setToken(data.accessToken);
+      } catch {
+        logout();
+      }
+    }, expiresIn);
+
+    return () => clearTimeout(timer);
+  }, [token]);
+}
+```
+
+---
+
+<a id="p9-rbac"></a>
+
+## 6. RBAC — Role Based Access Control
+
+**Definition:**
+RBAC মানে user-এর role অনুযায়ী কী দেখতে পাবে, কী করতে পারবে তা নির্ধারণ। Admin সব দেখে, editor content manage করে, user শুধু নিজেরটা দেখে।
+
+**Permission System:**
+```jsx
+// config/permissions.js
+export const ROLES = {
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin',
+  EDITOR: 'editor',
+  USER: 'user',
+};
+
+export const PERMISSIONS = {
+  // Products
+  'products:read': ['super_admin', 'admin', 'editor', 'user'],
+  'products:create': ['super_admin', 'admin', 'editor'],
+  'products:update': ['super_admin', 'admin', 'editor'],
+  'products:delete': ['super_admin', 'admin'],
+
+  // Users
+  'users:read': ['super_admin', 'admin'],
+  'users:create': ['super_admin', 'admin'],
+  'users:update': ['super_admin', 'admin'],
+  'users:delete': ['super_admin'],
+
+  // Orders
+  'orders:read_own': ['super_admin', 'admin', 'user'],
+  'orders:read_all': ['super_admin', 'admin'],
+  'orders:update_status': ['super_admin', 'admin'],
+
+  // Analytics
+  'analytics:view': ['super_admin', 'admin'],
+  'analytics:export': ['super_admin'],
+};
+
+export function hasPermission(userRole, permission) {
+  return PERMISSIONS[permission]?.includes(userRole) ?? false;
+}
+
+export function hasAnyPermission(userRole, permissions) {
+  return permissions.some(p => hasPermission(userRole, p));
+}
+```
+
+**usePermission Hook:**
+```jsx
+// hooks/usePermission.js
+import { useUser } from '../context/AuthContext';
+import { hasPermission, hasAnyPermission } from '../config/permissions';
+
+export function usePermission() {
+  const user = useUser();
+
+  return {
+    can: (permission) => hasPermission(user?.role, permission),
+    canAny: (permissions) => hasAnyPermission(user?.role, permissions),
+    role: user?.role,
+    isAdmin: ['admin', 'super_admin'].includes(user?.role),
+    isSuperAdmin: user?.role === 'super_admin',
+  };
+}
+```
+
+**Permission Guard Component:**
+```jsx
+// components/Can.jsx
+import { usePermission } from '../hooks/usePermission';
+
+export function Can({ permission, fallback = null, children }) {
+  const { can } = usePermission();
+  return can(permission) ? children : fallback;
+}
+
+export function CanAny({ permissions, fallback = null, children }) {
+  const { canAny } = usePermission();
+  return canAny(permissions) ? children : fallback;
+}
+
+// Usage in components
+function ProductActions({ product }) {
+  const { can } = usePermission();
+
+  return (
+    <div className="actions">
+      {/* Everyone sees view */}
+      <Link to={`/products/${product.id}`}>View</Link>
+
+      {/* Only editor+ can edit */}
+      <Can permission="products:update">
+        <Link to={`/products/${product.id}/edit`}>Edit</Link>
+      </Can>
+
+      {/* Only admin can delete */}
+      <Can
+        permission="products:delete"
+        fallback={<span className="tooltip" title="Admin only">Delete</span>}
+      >
+        <button onClick={() => handleDelete(product.id)}>Delete</button>
+      </Can>
+    </div>
+  );
+}
+
+// Navbar — conditional menu items
+function AdminNav() {
+  const { isAdmin } = usePermission();
+
+  return (
+    <nav>
+      <Link to="/dashboard">Dashboard</Link>
+      <Can permission="products:create">
+        <Link to="/products/new">Add Product</Link>
+      </Can>
+      <Can permission="users:read">
+        <Link to="/admin/users">Users</Link>
+      </Can>
+      <Can permission="analytics:view">
+        <Link to="/admin/analytics">Analytics</Link>
+      </Can>
+    </nav>
+  );
+}
+```
+
+---
+
+<a id="p9-oauth"></a>
+
+## 7. OAuth / Social Login
+
+**Definition:**
+OAuth 2.0 দিয়ে Google, Facebook, GitHub-এর account দিয়ে login করা যায়। Password manage করতে হয় না। Authorization Code Flow সবচেয়ে secure।
+
+**OAuth Flow:**
+```
+1. User: "Login with Google" click করে
+2. Frontend: Google OAuth URL-এ redirect করে
+   https://accounts.google.com/o/oauth2/auth?
+     client_id=YOUR_CLIENT_ID&
+     redirect_uri=https://yourapp.com/auth/callback&
+     response_type=code&
+     scope=email profile
+
+3. Google: User login করে → permission দেয়
+4. Google: redirect_uri-তে ?code=AUTH_CODE পাঠায়
+
+5. Frontend: code → backend-এ পাঠায়
+6. Backend: code দিয়ে Google-এর token endpoint hit করে
+7. Backend: Google থেকে user info পায়
+8. Backend: নিজের JWT তৈরি করে → frontend-কে দেয়
+9. Frontend: normal JWT auth flow
+```
+
+**Frontend — Google OAuth Button:**
+```jsx
+// Option 1: Redirect-based (simple, secure)
+function GoogleLoginButton() {
+  const handleGoogleLogin = () => {
+    const params = new URLSearchParams({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      redirect_uri: `${window.location.origin}/auth/callback/google`,
+      response_type: 'code',
+      scope: 'email profile',
+      access_type: 'offline',
+      prompt: 'select_account',
+    });
+
+    window.location.href = `https://accounts.google.com/o/oauth2/auth?${params}`;
+  };
+
+  return (
+    <button onClick={handleGoogleLogin} className="btn-social btn-google">
+      <GoogleIcon />
+      Google দিয়ে login করুন
+    </button>
+  );
+}
+```
+
+```jsx
+// Option 2: Google One Tap (npm install @react-oauth/google)
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { useAuth } from '../context/AuthContext';
+
+function App() {
+  return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>...</Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </GoogleOAuthProvider>
+  );
+}
+
+function SocialLoginButtons() {
+  const { login } = useAuth();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      // Send Google token to your backend
+      const data = await authService.googleLogin(credentialResponse.credential);
+      // data: { accessToken, user }
+      login(data);
+    } catch (err) {
+      toast.error('Google login failed');
+    }
+  };
+
+  return (
+    <div className="social-login">
+      <GoogleLogin
+        onSuccess={handleGoogleSuccess}
+        onError={() => toast.error('Google login failed')}
+        useOneTap
+      />
+    </div>
+  );
+}
+```
+
+**OAuth Callback Handler:**
+```jsx
+// pages/OAuthCallback.jsx
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+function OAuthCallback() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  useEffect(() => {
+    const code = searchParams.get('code');
+    const error = searchParams.get('error');
+
+    if (error) {
+      navigate('/login?error=oauth_denied');
+      return;
+    }
+
+    if (code) {
+      authService.exchangeCode(code)
+        .then(data => {
+          login(data);
+          navigate('/dashboard');
+        })
+        .catch(() => navigate('/login?error=oauth_failed'));
+    }
+  }, []);
+
+  return (
+    <div className="oauth-loading">
+      <Spinner />
+      <p>Logging you in...</p>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p9-validation"></a>
+
+## 8. Form Validation — React Hook Form + Zod
+
+**Definition:**
+React Hook Form (RHF) performance-optimized form library। Zod TypeScript-first schema validation। দুটো একসাথে powerful form + validation system তৈরি করে।
+
+**Installation:**
+```bash
+npm install react-hook-form zod @hookform/resolvers
+```
+
+**Registration Form — Full Example:**
+```jsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+// Zod schema — validation rules
+const registerSchema = z.object({
+  name: z
+    .string()
+    .min(3, 'নাম কমপক্ষে ৩ অক্ষরের হতে হবে')
+    .max(50, 'নাম ৫০ অক্ষরের বেশি হবে না'),
+
+  email: z
+    .string()
+    .email('সঠিক email address দিন'),
+
+  phone: z
+    .string()
+    .regex(/^01[3-9]\d{8}$/, 'সঠিক বাংলাদেশি মোবাইল নম্বর দিন')
+    .optional()
+    .or(z.literal('')),
+
+  password: z
+    .string()
+    .min(8, 'Password কমপক্ষে ৮ অক্ষরের হতে হবে')
+    .regex(/[A-Z]/, 'কমপক্ষে একটি uppercase letter লাগবে')
+    .regex(/[0-9]/, 'কমপক্ষে একটি number লাগবে'),
+
+  confirmPassword: z.string(),
+
+  agreeToTerms: z
+    .boolean()
+    .refine(val => val === true, 'Terms and conditions agree করতে হবে'),
+})
+.refine(
+  (data) => data.password === data.confirmPassword,
+  {
+    message: 'Password মিলছে না',
+    path: ['confirmPassword'],
+  }
+);
+
+function RegisterForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+    watch,
+    setError,
+    reset,
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    mode: 'onChange',    // validate on change
+    defaultValues: {
+      name: '', email: '', phone: '',
+      password: '', confirmPassword: '',
+      agreeToTerms: false,
+    },
+  });
+
+  const password = watch('password');
+
+  const onSubmit = async (data) => {
+    try {
+      await authService.register(data);
+      reset();
+      navigate('/login?registered=true');
+    } catch (err) {
+      // Server validation errors
+      if (err.field) {
+        setError(err.field, { message: err.message });
+      } else {
+        setError('root', { message: err.message });
+      }
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {errors.root && (
+        <div className="alert alert-error">{errors.root.message}</div>
+      )}
+
+      <div className="form-group">
+        <label htmlFor="name">পূর্ণ নাম *</label>
+        <input
+          id="name"
+          {...register('name')}
+          className={errors.name ? 'input-error' : ''}
+          placeholder="আপনার নাম লিখুন"
+        />
+        {errors.name && (
+          <span className="field-error">{errors.name.message}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="email">Email *</label>
+        <input
+          id="email"
+          type="email"
+          {...register('email')}
+          className={errors.email ? 'input-error' : ''}
+          placeholder="example@email.com"
+        />
+        {errors.email && (
+          <span className="field-error">{errors.email.message}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="password">Password *</label>
+        <input
+          id="password"
+          type="password"
+          {...register('password')}
+          className={errors.password ? 'input-error' : ''}
+        />
+        {errors.password && (
+          <span className="field-error">{errors.password.message}</span>
+        )}
+        {/* Password strength indicator */}
+        <PasswordStrength password={password} />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="confirmPassword">Password নিশ্চিত করুন *</label>
+        <input
+          id="confirmPassword"
+          type="password"
+          {...register('confirmPassword')}
+          className={errors.confirmPassword ? 'input-error' : ''}
+        />
+        {errors.confirmPassword && (
+          <span className="field-error">{errors.confirmPassword.message}</span>
+        )}
+      </div>
+
+      <div className="form-group">
+        <label className="checkbox-label">
+          <input type="checkbox" {...register('agreeToTerms')} />
+          <Link to="/terms">Terms & Conditions</Link> এ রাজি
+        </label>
+        {errors.agreeToTerms && (
+          <span className="field-error">{errors.agreeToTerms.message}</span>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        disabled={isSubmitting || !isValid}
+        className="btn btn-primary btn-full"
+      >
+        {isSubmitting ? 'Creating account...' : 'Register'}
+      </button>
+    </form>
+  );
+}
+```
+
+---
+
+<a id="p9-env"></a>
+
+## 9. Environment Variables & Config
+
+**Vite Environment Variables:**
+```bash
+# .env (committed — public defaults)
+VITE_APP_NAME=MyShop
+VITE_APP_VERSION=1.0.0
+
+# .env.development (local dev)
+VITE_API_BASE_URL=http://localhost:8000/api
+VITE_GOOGLE_CLIENT_ID=dev_client_id
+
+# .env.production (production build)
+VITE_API_BASE_URL=https://api.myshop.com/api
+VITE_GOOGLE_CLIENT_ID=prod_client_id
+
+# .env.local (never commit — secrets)
+VITE_STRIPE_PUBLIC_KEY=pk_test_...
+```
+
+```jsx
+// ⚠️ VITE_ prefix REQUIRED — otherwise not exposed to client
+// ⚠️ Never put SECRET keys here — client-side is public!
+
+// Usage in code
+const apiUrl = import.meta.env.VITE_API_BASE_URL;
+const appName = import.meta.env.VITE_APP_NAME;
+const isDev = import.meta.env.DEV;         // built-in
+const isProd = import.meta.env.PROD;       // built-in
+const mode = import.meta.env.MODE;         // 'development' | 'production'
+```
+
+**Config Object Pattern:**
+```jsx
+// config/app.js — centralized config
+const config = {
+  api: {
+    baseUrl: import.meta.env.VITE_API_BASE_URL,
+    timeout: 15000,
+    version: 'v1',
+  },
+  auth: {
+    googleClientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    tokenKey: 'access_token',
+  },
+  app: {
+    name: import.meta.env.VITE_APP_NAME || 'App',
+    version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+    isDev: import.meta.env.DEV,
+  },
+  features: {
+    googleLogin: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    analytics: import.meta.env.PROD,
+  },
+};
+
+export default config;
+```
+
+**.gitignore:**
+```
+# Always ignore these!
+.env.local
+.env.*.local
+.env.production   # Production secrets
+```
+
+---
+
+<a id="p9-security"></a>
+
+## 10. Security Best Practices
+
+**XSS (Cross-Site Scripting) Prevention:**
+```jsx
+// ❌ Dangerous — never do this
+function Comment({ comment }) {
+  return (
+    <div dangerouslySetInnerHTML={{ __html: comment.content }} />
+    // Attacker can inject: <script>steal(document.cookie)</script>
+  );
+}
+
+// ✅ React auto-escapes — use text content
+function Comment({ comment }) {
+  return <div>{comment.content}</div>;  // Safe — JSX escapes HTML
+}
+
+// ✅ If you MUST render HTML — sanitize first
+import DOMPurify from 'dompurify';
+
+function RichContent({ html }) {
+  const clean = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li'],
+    ALLOWED_ATTR: ['href', 'target'],
+  });
+  return <div dangerouslySetInnerHTML={{ __html: clean }} />;
+}
+```
+
+**CSRF Prevention:**
+```jsx
+// httpOnly cookie-তে token থাকলে CSRF risk আছে
+// Solution: CSRF token (double submit cookie pattern)
+
+api.interceptors.request.use((config) => {
+  // CSRF token header
+  const csrfToken = document.cookie
+    .split('; ')
+    .find(r => r.startsWith('csrf_token='))
+    ?.split('=')[1];
+
+  if (csrfToken) {
+    config.headers['X-CSRF-Token'] = csrfToken;
+  }
+  return config;
+});
+```
+
+**Input Sanitization:**
+```jsx
+// URL-এ user input — never trust!
+function SearchPage() {
+  const [searchParams] = useSearchParams();
+  const query = searchParams.get('q') || '';
+
+  // ✅ Use as text only — not in dangerouslySetInnerHTML
+  // ✅ Encode when sending to API
+  const encoded = encodeURIComponent(query);
+
+  // ❌ Never use in eval, Function(), or innerHTML
+}
+```
+
+**Security Checklist:**
+```
+✅ Tokens: accessToken in memory, refreshToken in httpOnly cookie
+✅ HTTPS: Always in production (API + frontend)
+✅ Input: Sanitize with DOMPurify before dangerouslySetInnerHTML
+✅ CSP: Content Security Policy header (server-side)
+✅ Dependencies: npm audit regularly, update packages
+✅ Env vars: Secrets never in VITE_ (client-side) variables
+✅ Error messages: Don't expose stack traces to client
+✅ Auth endpoints: Rate limiting (server-side)
+✅ Sensitive routes: Server-side permission check too (never trust client)
+✅ Logout: Clear tokens + invalidate server session
+```
+
+---
+
+## PART 9 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Say |
+|---|---|---|
+| JWT | Header.Payload.Signature | `exp` check করো |
+| Token storage | accessToken memory, refreshToken httpOnly | localStorage = XSS risk |
+| AuthContext | `isLoading` initial check | Silent refresh on mount |
+| Protected Route | `<Navigate state={{from}}` | Redirect back after login |
+| Token refresh | Queue pending requests | `isRefreshing` flag |
+| RBAC | Permission map, `Can` component | Server-side check too |
+| OAuth | Code → backend → JWT | Never exchange code client-side |
+| RHF + Zod | `zodResolver`, `setError` | `mode: 'onChange'` |
+| Env vars | `VITE_` prefix, never secrets | `.env.local` gitignore |
+| Security | XSS: DOMPurify, CSRF: X-CSRF-Token | Server validates too |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part10"></a>
+
+## 📋 PART 10 সূচিপত্র — React Projects
+
+| # | Project | Stack | Key Concepts |
+|---|---|---|---|
+| 1 | [E-Commerce App](#p10-ecommerce) | RTK, React Router, Axios | Cart, Auth, Orders |
+| 2 | [Task Management (Kanban)](#p10-kanban) | Context, DnD, localStorage | Drag & Drop, CRUD |
+| 3 | [Real-time Chat App](#p10-chat) | Socket.io, React Query | WebSocket, rooms |
+| 4 | [Blog Platform](#p10-blog) | RHF, Zod, Rich Editor | CMS, comments, tags |
+| 5 | [Dashboard & Analytics](#p10-dashboard) | Recharts, React Query | Charts, data viz |
+| 6 | [Job Portal](#p10-jobs) | Search, Filters, Pagination | Multi-filter, saved jobs |
+| 7 | [Multi-step Form Wizard](#p10-wizard) | RHF, Zod, Progress | Stepper, validation |
+
+---
+
+<a id="p10-ecommerce"></a>
+
+## 1. E-Commerce App — Full Stack
+
+**Project Structure:**
+```
+src/
+  components/
+    layout/     Navbar, Footer, Sidebar
+    ui/         Button, Input, Modal, Badge
+    product/    ProductCard, ProductGrid, ProductDetail
+    cart/       CartDrawer, CartItem, CartSummary
+    checkout/   CheckoutForm, OrderSummary, PaymentForm
+  pages/
+    Home, Products, ProductDetail, Cart,
+    Checkout, OrderSuccess, Orders, Profile
+    auth/       Login, Register, ForgotPassword
+    admin/      Dashboard, Products, Orders, Users
+  store/        authSlice, cartSlice, productsSlice
+  services/     api, authService, productService, orderService
+  hooks/        useProducts, useOrder, usePermission
+  context/      AuthContext, ThemeContext
+```
+
+**Core Features List:**
+```
+✅ Auth: Login, Register, JWT, Protected Routes, RBAC
+✅ Products: List, Filter, Search, Sort, Detail, Related
+✅ Cart: Add/Remove/Update, Persist (Redux Persist)
+✅ Checkout: Address, Payment (Stripe/SSLCommerz), Order
+✅ Orders: History, Detail, Track status
+✅ Admin: Product CRUD, Order management, User list
+✅ UI: Dark mode, Responsive, Skeleton loading, Toast
+```
+
+**Key Implementation — Product Filter System:**
+```jsx
+// hooks/useProductFilters.js
+function useProductFilters() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // URL-based filters — shareable, bookmarkable
+  const filters = {
+    search: searchParams.get('q') || '',
+    category: searchParams.get('category') || '',
+    minPrice: Number(searchParams.get('minPrice')) || 0,
+    maxPrice: Number(searchParams.get('maxPrice')) || Infinity,
+    rating: Number(searchParams.get('rating')) || 0,
+    inStock: searchParams.get('inStock') === 'true',
+    sortBy: searchParams.get('sort') || 'newest',
+    page: Number(searchParams.get('page')) || 1,
+  };
+
+  const updateFilter = useCallback((key, value) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value === '' || value === null || value === undefined) {
+        next.delete(key);
+      } else {
+        next.set(key, String(value));
+      }
+      next.set('page', '1');  // Reset pagination on filter change
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const clearFilters = useCallback(() => {
+    setSearchParams({});
+  }, [setSearchParams]);
+
+  return { filters, updateFilter, clearFilters };
+}
+```
+
+```jsx
+// components/product/FilterSidebar.jsx
+function FilterSidebar({ categories }) {
+  const { filters, updateFilter, clearFilters } = useProductFilters();
+  const hasActiveFilters = filters.category || filters.minPrice || filters.rating;
+
+  return (
+    <aside className="filter-sidebar">
+      <div className="filter-header">
+        <h3>ফিল্টার</h3>
+        {hasActiveFilters && (
+          <button onClick={clearFilters} className="btn-ghost btn-sm">
+            সব মুছুন
+          </button>
+        )}
+      </div>
+
+      {/* Category */}
+      <div className="filter-group">
+        <h4>ক্যাটাগরি</h4>
+        {categories.map(cat => (
+          <label key={cat.id} className="filter-option">
+            <input
+              type="radio"
+              name="category"
+              value={cat.slug}
+              checked={filters.category === cat.slug}
+              onChange={e => updateFilter('category', e.target.value)}
+            />
+            {cat.name} ({cat.count})
+          </label>
+        ))}
+      </div>
+
+      {/* Price Range */}
+      <div className="filter-group">
+        <h4>মূল্য পরিসর</h4>
+        <div className="price-inputs">
+          <input
+            type="number"
+            placeholder="Min ৳"
+            value={filters.minPrice || ''}
+            onChange={e => updateFilter('minPrice', e.target.value)}
+          />
+          <span>–</span>
+          <input
+            type="number"
+            placeholder="Max ৳"
+            value={filters.maxPrice === Infinity ? '' : filters.maxPrice}
+            onChange={e => updateFilter('maxPrice', e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Rating */}
+      <div className="filter-group">
+        <h4>রেটিং</h4>
+        {[4, 3, 2, 1].map(star => (
+          <label key={star} className="filter-option">
+            <input
+              type="radio"
+              name="rating"
+              value={star}
+              checked={filters.rating === star}
+              onChange={() => updateFilter('rating', star)}
+            />
+            {'★'.repeat(star)} ও তার বেশি
+          </label>
+        ))}
+      </div>
+
+      {/* In Stock */}
+      <div className="filter-group">
+        <label className="filter-option">
+          <input
+            type="checkbox"
+            checked={filters.inStock}
+            onChange={e => updateFilter('inStock', e.target.checked)}
+          />
+          Stock-এ আছে শুধু
+        </label>
+      </div>
+    </aside>
+  );
+}
+```
+
+**Checkout Flow:**
+```jsx
+// pages/Checkout.jsx
+function CheckoutPage() {
+  const [step, setStep] = useState(1);  // 1:Address, 2:Payment, 3:Review
+  const [address, setAddress] = useState(null);
+  const cartItems = useSelector(selectCartItems);
+  const total = useSelector(selectCartTotal);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { mutate: placeOrder, isPending } = useMutation({
+    mutationFn: (orderData) => orderService.create(orderData),
+    onSuccess: (order) => {
+      dispatch(clearCart());
+      navigate(`/order-success/${order.id}`);
+    },
+  });
+
+  const handlePlaceOrder = (paymentData) => {
+    placeOrder({
+      items: cartItems.map(({ id, qty, price }) => ({ productId: id, qty, price })),
+      address,
+      payment: paymentData,
+      total,
+    });
+  };
+
+  if (cartItems.length === 0) {
+    return <Navigate to="/cart" replace />;
+  }
+
+  return (
+    <div className="checkout-page">
+      <CheckoutStepper current={step} steps={['ঠিকানা', 'পেমেন্ট', 'নিশ্চিত করুন']} />
+
+      <div className="checkout-layout">
+        <div className="checkout-main">
+          {step === 1 && (
+            <AddressForm
+              onNext={(addr) => { setAddress(addr); setStep(2); }}
+            />
+          )}
+          {step === 2 && (
+            <PaymentForm
+              onBack={() => setStep(1)}
+              onNext={(payment) => { setStep(3); }}
+            />
+          )}
+          {step === 3 && (
+            <OrderReview
+              address={address}
+              onBack={() => setStep(2)}
+              onConfirm={handlePlaceOrder}
+              isLoading={isPending}
+            />
+          )}
+        </div>
+
+        <OrderSummary items={cartItems} total={total} />
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p10-kanban"></a>
+
+## 2. Task Management — Kanban Board
+
+**Core Features:**
+```
+✅ Columns: Todo, In Progress, Review, Done
+✅ Cards: Title, Description, Priority, Assignee, Due date
+✅ Drag & Drop: Card reorder, column transfer
+✅ CRUD: Add/Edit/Delete cards and columns
+✅ Persist: localStorage
+✅ Filter: By assignee, priority, due date
+```
+
+**Kanban State:**
+```jsx
+// useKanbanStore.js (Zustand)
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { nanoid } from 'nanoid';
+
+const useKanbanStore = create(
+  persist(
+    (set, get) => ({
+      columns: {
+        'todo': { id: 'todo', title: '📋 Todo', taskIds: [] },
+        'in-progress': { id: 'in-progress', title: '🔄 In Progress', taskIds: [] },
+        'review': { id: 'review', title: '👀 Review', taskIds: [] },
+        'done': { id: 'done', title: '✅ Done', taskIds: [] },
+      },
+      columnOrder: ['todo', 'in-progress', 'review', 'done'],
+      tasks: {},
+
+      addTask: (columnId, taskData) => set((state) => {
+        const id = nanoid();
+        return {
+          tasks: {
+            ...state.tasks,
+            [id]: {
+              id, ...taskData,
+              priority: taskData.priority || 'medium',
+              createdAt: new Date().toISOString(),
+            },
+          },
+          columns: {
+            ...state.columns,
+            [columnId]: {
+              ...state.columns[columnId],
+              taskIds: [...state.columns[columnId].taskIds, id],
+            },
+          },
+        };
+      }),
+
+      moveTask: (taskId, fromColumn, toColumn, toIndex) => set((state) => {
+        const from = state.columns[fromColumn];
+        const to = state.columns[toColumn];
+
+        const fromIds = from.taskIds.filter(id => id !== taskId);
+        const toIds = [...to.taskIds];
+        toIds.splice(toIndex, 0, taskId);
+
+        return {
+          columns: {
+            ...state.columns,
+            [fromColumn]: { ...from, taskIds: fromIds },
+            [toColumn]: { ...to, taskIds: toIds },
+          },
+        };
+      }),
+
+      deleteTask: (taskId, columnId) => set((state) => {
+        const { [taskId]: removed, ...remainingTasks } = state.tasks;
+        return {
+          tasks: remainingTasks,
+          columns: {
+            ...state.columns,
+            [columnId]: {
+              ...state.columns[columnId],
+              taskIds: state.columns[columnId].taskIds.filter(id => id !== taskId),
+            },
+          },
+        };
+      }),
+    }),
+    { name: 'kanban-board' }
+  )
+);
+```
+
+**Drag & Drop (react-beautiful-dnd / @dnd-kit):**
+```jsx
+// npm install @dnd-kit/core @dnd-kit/sortable
+import {
+  DndContext, DragOverlay,
+  PointerSensor, useSensor, useSensors,
+  closestCorners,
+} from '@dnd-kit/core';
+
+function KanbanBoard() {
+  const { columns, columnOrder, tasks, moveTask } = useKanbanStore();
+  const [activeTask, setActiveTask] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },  // 5px drag to start
+    })
+  );
+
+  const handleDragStart = ({ active }) => {
+    setActiveTask(tasks[active.id]);
+  };
+
+  const handleDragEnd = ({ active, over }) => {
+    setActiveTask(null);
+    if (!over) return;
+
+    const taskId = active.id;
+    const targetColumnId = over.id;
+
+    // Find source column
+    const sourceColumnId = columnOrder.find(colId =>
+      columns[colId].taskIds.includes(taskId)
+    );
+
+    if (sourceColumnId && targetColumnId !== sourceColumnId) {
+      const toIndex = columns[targetColumnId].taskIds.length;
+      moveTask(taskId, sourceColumnId, targetColumnId, toIndex);
+    }
+  };
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="kanban-board">
+        {columnOrder.map(colId => (
+          <KanbanColumn
+            key={colId}
+            column={columns[colId]}
+            tasks={columns[colId].taskIds.map(id => tasks[id]).filter(Boolean)}
+          />
+        ))}
+      </div>
+
+      {/* Drag preview */}
+      <DragOverlay>
+        {activeTask && <TaskCard task={activeTask} isDragging />}
+      </DragOverlay>
+    </DndContext>
+  );
+}
+```
+
+---
+
+<a id="p10-chat"></a>
+
+## 3. Real-time Chat App
+
+**Core Features:**
+```
+✅ Rooms: Public channels, Private DMs
+✅ Real-time: Socket.io messages
+✅ History: React Query for past messages
+✅ Typing indicators
+✅ Online presence
+✅ Message reactions, read receipts
+```
+
+**Socket.io Integration:**
+```jsx
+// hooks/useSocket.js
+import { useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
+import { useAuth } from '../context/AuthContext';
+
+let socket = null;
+
+export function useSocket() {
+  const { token } = useAuth();
+
+  useEffect(() => {
+    if (!token) return;
+
+    socket = io(import.meta.env.VITE_WS_URL, {
+      auth: { token },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5,
+    });
+
+    socket.on('connect', () => console.log('Socket connected'));
+    socket.on('connect_error', (err) => console.error('Socket error:', err.message));
+
+    return () => {
+      socket?.disconnect();
+      socket = null;
+    };
+  }, [token]);
+
+  return socket;
+}
+```
+
+```jsx
+// pages/ChatRoom.jsx
+function ChatRoom({ roomId }) {
+  const socket = useSocket();
+  const { user } = useAuth();
+  const [messages, setMessages] = useState([]);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const bottomRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
+  // Load history with React Query
+  const { data: history } = useQuery({
+    queryKey: ['messages', roomId],
+    queryFn: () => chatService.getMessages(roomId, { limit: 50 }),
+  });
+
+  useEffect(() => {
+    if (history) setMessages(history.messages);
+  }, [history]);
+
+  // Socket listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit('room:join', roomId);
+
+    socket.on('message:new', (msg) => {
+      setMessages(prev => [...prev, msg]);
+    });
+
+    socket.on('typing:start', ({ userId, name }) => {
+      if (userId !== user.id) {
+        setTypingUsers(prev => [...new Set([...prev, name])]);
+      }
+    });
+
+    socket.on('typing:stop', ({ userId, name }) => {
+      setTypingUsers(prev => prev.filter(n => n !== name));
+    });
+
+    return () => {
+      socket.emit('room:leave', roomId);
+      socket.off('message:new');
+      socket.off('typing:start');
+      socket.off('typing:stop');
+    };
+  }, [socket, roomId, user.id]);
+
+  // Auto scroll
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleTyping = () => {
+    socket?.emit('typing:start', { roomId });
+    clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      socket?.emit('typing:stop', { roomId });
+    }, 1500);
+  };
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !socket) return;
+
+    socket.emit('message:send', {
+      roomId,
+      content: newMessage.trim(),
+    });
+
+    setNewMessage('');
+    socket.emit('typing:stop', { roomId });
+  };
+
+  return (
+    <div className="chat-room">
+      <div className="messages-container">
+        {messages.map(msg => (
+          <MessageBubble
+            key={msg.id}
+            message={msg}
+            isOwn={msg.senderId === user.id}
+          />
+        ))}
+        {typingUsers.length > 0 && (
+          <div className="typing-indicator">
+            {typingUsers.join(', ')} typing...
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      <form onSubmit={sendMessage} className="message-input-bar">
+        <input
+          value={newMessage}
+          onChange={e => { setNewMessage(e.target.value); handleTyping(); }}
+          placeholder="Message লিখুন..."
+          autoComplete="off"
+        />
+        <button type="submit" disabled={!newMessage.trim()}>Send ➤</button>
+      </form>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p10-dashboard"></a>
+
+## 4. Dashboard & Analytics
+
+**Core Features:**
+```
+✅ KPI Cards: Revenue, Orders, Users, Conversion
+✅ Charts: Line (sales trend), Bar (category), Pie (traffic)
+✅ Date range picker: Last 7d, 30d, 90d, Custom
+✅ Data table: Sortable, filterable, exportable
+✅ Real-time: WebSocket or polling
+```
+
+**Dashboard Layout:**
+```jsx
+// npm install recharts
+import {
+  LineChart, Line, BarChart, Bar,
+  PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer,
+} from 'recharts';
+
+function SalesTrendChart({ data }) {
+  return (
+    <div className="chart-card">
+      <h3>Sales Trend</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" tickFormatter={d => format(new Date(d), 'MMM d')} />
+          <YAxis tickFormatter={v => `৳${(v/1000).toFixed(0)}k`} />
+          <Tooltip formatter={(v) => [`৳${v.toLocaleString()}`, 'Revenue']} />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="revenue"
+            stroke="#6366f1"
+            strokeWidth={2}
+            dot={false}
+            name="Revenue"
+          />
+          <Line
+            type="monotone"
+            dataKey="orders"
+            stroke="#22c55e"
+            strokeWidth={2}
+            dot={false}
+            name="Orders"
+            yAxisId="right"
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function KPICard({ title, value, change, icon, color }) {
+  const isPositive = change >= 0;
+  return (
+    <div className={`kpi-card kpi-${color}`}>
+      <div className="kpi-icon">{icon}</div>
+      <div className="kpi-content">
+        <p className="kpi-title">{title}</p>
+        <p className="kpi-value">{value}</p>
+        <p className={`kpi-change ${isPositive ? 'positive' : 'negative'}`}>
+          {isPositive ? '↑' : '↓'} {Math.abs(change)}% vs last period
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function AdminDashboard() {
+  const [dateRange, setDateRange] = useState('30d');
+
+  const { data: stats } = useQuery({
+    queryKey: ['dashboard', dateRange],
+    queryFn: () => analyticsService.getStats(dateRange),
+    refetchInterval: 60000,   // Auto-refresh every minute
+  });
+
+  return (
+    <div className="dashboard">
+      <DashboardHeader dateRange={dateRange} onRangeChange={setDateRange} />
+
+      <div className="kpi-grid">
+        <KPICard title="মোট আয়" value={`৳${stats?.revenue?.toLocaleString()}`} change={stats?.revenueChange} icon="💰" color="purple" />
+        <KPICard title="Orders" value={stats?.orders} change={stats?.ordersChange} icon="📦" color="blue" />
+        <KPICard title="নতুন Users" value={stats?.newUsers} change={stats?.usersChange} icon="👥" color="green" />
+        <KPICard title="Conversion" value={`${stats?.conversion}%`} change={stats?.conversionChange} icon="📈" color="orange" />
+      </div>
+
+      <div className="charts-grid">
+        <SalesTrendChart data={stats?.trend || []} />
+        <CategoryPieChart data={stats?.categories || []} />
+      </div>
+
+      <RecentOrdersTable />
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p10-jobs"></a>
+
+## 5. Job Portal
+
+**Core Features:**
+```
+✅ Job listings: Filter by type, location, salary, tech stack
+✅ Job detail: Description, requirements, company info
+✅ Apply: Resume upload, cover letter
+✅ Saved jobs: Bookmark, track applications
+✅ Company profiles
+✅ Search: Full-text, debounced
+```
+
+**Job Search with Multi-Filter:**
+```jsx
+function JobListingPage() {
+  const { filters, updateFilter, clearFilters } = useJobFilters();
+  const debouncedSearch = useDebounce(filters.search, 400);
+
+  const { data, isLoading, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    queryKey: ['jobs', { ...filters, search: debouncedSearch }],
+    queryFn: ({ pageParam = 1 }) =>
+      jobService.getAll({ ...filters, search: debouncedSearch, page: pageParam }),
+    getNextPageParam: (last) => last.hasMore ? last.nextPage : undefined,
+  });
+
+  const jobs = data?.pages.flatMap(p => p.jobs) || [];
+
+  return (
+    <div className="job-portal">
+      {/* Search bar */}
+      <div className="search-hero">
+        <input
+          value={filters.search}
+          onChange={e => updateFilter('search', e.target.value)}
+          placeholder="Job title, skill, company..."
+          className="search-input-lg"
+        />
+        <input
+          value={filters.location}
+          onChange={e => updateFilter('location', e.target.value)}
+          placeholder="Location (Dhaka, Remote...)"
+        />
+      </div>
+
+      <div className="job-layout">
+        {/* Filters */}
+        <aside className="job-filters">
+          <MultiSelect
+            label="Job Type"
+            options={['Full-time', 'Part-time', 'Remote', 'Contract', 'Internship']}
+            selected={filters.types}
+            onChange={v => updateFilter('types', v)}
+          />
+          <MultiSelect
+            label="Tech Stack"
+            options={['React', 'Node.js', 'Python', 'Laravel', 'Django', 'Vue']}
+            selected={filters.skills}
+            onChange={v => updateFilter('skills', v)}
+          />
+          <RangeSlider
+            label="Salary (৳/month)"
+            min={0} max={200000}
+            value={[filters.minSalary, filters.maxSalary]}
+            onChange={([min, max]) => {
+              updateFilter('minSalary', min);
+              updateFilter('maxSalary', max);
+            }}
+          />
+        </aside>
+
+        {/* Job list */}
+        <main className="job-list">
+          {isLoading
+            ? Array.from({ length: 5 }, (_, i) => <JobCardSkeleton key={i} />)
+            : jobs.map(job => <JobCard key={job.id} job={job} />)
+          }
+          {hasNextPage && (
+            <button onClick={() => fetchNextPage()} className="load-more">
+              আরও দেখুন
+            </button>
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+<a id="p10-blog"></a>
+
+## 6. Blog Platform
+
+**Core Features:**
+```
+✅ Posts: List, Detail, Categories, Tags
+✅ Editor: Rich text (Tiptap/Quill)
+✅ Comments: Nested, pagination
+✅ Author: Profile, post history
+✅ SEO: Meta tags, OG tags
+✅ Auth: Login to comment/write
+```
+
+**Blog Post Detail:**
+```jsx
+function BlogPostPage() {
+  const { slug } = useParams();
+
+  const { data: post } = useQuery({
+    queryKey: ['post', slug],
+    queryFn: () => blogService.getBySlug(slug),
+  });
+
+  const { data: comments } = useQuery({
+    queryKey: ['comments', post?.id],
+    queryFn: () => blogService.getComments(post.id),
+    enabled: !!post?.id,
+  });
+
+  // SEO meta tags
+  useEffect(() => {
+    if (post) {
+      document.title = `${post.title} | MyBlog`;
+      document.querySelector('meta[name="description"]')
+        ?.setAttribute('content', post.excerpt);
+    }
+  }, [post]);
+
+  if (!post) return <PostSkeleton />;
+
+  return (
+    <article className="blog-post">
+      <header className="post-header">
+        <div className="post-meta">
+          <CategoryBadge category={post.category} />
+          <time>{format(new Date(post.publishedAt), 'MMMM d, yyyy')}</time>
+          <span>{post.readTime} min read</span>
+        </div>
+        <h1>{post.title}</h1>
+        <p className="post-excerpt">{post.excerpt}</p>
+        <AuthorCard author={post.author} />
+        <img src={post.coverImage} alt={post.title} className="post-cover" />
+      </header>
+
+      <div
+        className="post-content prose"
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
+      />
+
+      <footer className="post-footer">
+        <TagList tags={post.tags} />
+        <SocialShare post={post} />
+      </footer>
+
+      <CommentSection postId={post.id} comments={comments} />
+      <RelatedPosts currentPost={post} />
+    </article>
+  );
+}
+```
+
+---
+
+<a id="p10-wizard"></a>
+
+## 7. Multi-step Form Wizard
+
+**Core Features:**
+```
+✅ Steps: Progress bar, step validation before next
+✅ Navigation: Back/Next, direct step click
+✅ Persist: Step data survives component unmount
+✅ Review: Final confirmation step
+✅ Submit: With loading, success, error states
+```
+
+**Form Wizard Implementation:**
+```jsx
+// Multi-step — each step has its own Zod schema
+const step1Schema = z.object({
+  firstName: z.string().min(2, 'নাম কমপক্ষে ২ অক্ষর'),
+  lastName: z.string().min(2),
+  email: z.string().email('সঠিক email দিন'),
+  phone: z.string().regex(/^01[3-9]\d{8}$/, 'সঠিক মোবাইল নম্বর'),
+});
+
+const step2Schema = z.object({
+  division: z.string().min(1, 'বিভাগ নির্বাচন করুন'),
+  district: z.string().min(1, 'জেলা নির্বাচন করুন'),
+  address: z.string().min(10, 'সম্পূর্ণ ঠিকানা লিখুন'),
+  postalCode: z.string().regex(/^\d{4}$/, '৪ সংখ্যার postal code'),
+});
+
+const step3Schema = z.object({
+  occupation: z.string().min(1),
+  experience: z.string().min(1),
+  skills: z.array(z.string()).min(1, 'কমপক্ষে একটি skill'),
+  bio: z.string().max(500),
+});
+
+const schemas = [null, step1Schema, step2Schema, step3Schema];
+
+function useFormWizard(totalSteps) {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({});
+  const [completedSteps, setCompletedSteps] = useState(new Set());
+
+  const goNext = (stepData) => {
+    setFormData(prev => ({ ...prev, ...stepData }));
+    setCompletedSteps(prev => new Set([...prev, currentStep]));
+    if (currentStep < totalSteps) setCurrentStep(s => s + 1);
+  };
+
+  const goBack = () => {
+    if (currentStep > 1) setCurrentStep(s => s - 1);
+  };
+
+  const goToStep = (step) => {
+    if (completedSteps.has(step - 1) || step <= currentStep) {
+      setCurrentStep(step);
+    }
+  };
+
+  return {
+    currentStep, formData, completedSteps,
+    goNext, goBack, goToStep,
+    isFirstStep: currentStep === 1,
+    isLastStep: currentStep === totalSteps,
+  };
+}
+
+function MultiStepForm() {
+  const wizard = useFormWizard(4);  // 4 steps including review
+  const { mutate: submitForm, isPending } = useMutation({
+    mutationFn: (data) => userService.createProfile(data),
+    onSuccess: () => navigate('/dashboard?welcome=true'),
+  });
+
+  const STEPS = [
+    { label: 'ব্যক্তিগত তথ্য', icon: '👤' },
+    { label: 'ঠিকানা', icon: '📍' },
+    { label: 'পেশাদার তথ্য', icon: '💼' },
+    { label: 'নিশ্চিত করুন', icon: '✅' },
+  ];
+
+  return (
+    <div className="wizard-container">
+      {/* Progress stepper */}
+      <div className="stepper">
+        {STEPS.map((step, i) => {
+          const stepNum = i + 1;
+          const isDone = wizard.completedSteps.has(stepNum);
+          const isCurrent = wizard.currentStep === stepNum;
+
+          return (
+            <button
+              key={stepNum}
+              onClick={() => wizard.goToStep(stepNum)}
+              className={`step ${isDone ? 'done' : ''} ${isCurrent ? 'current' : ''}`}
+              disabled={!isDone && stepNum > wizard.currentStep}
+            >
+              <span className="step-icon">{isDone ? '✓' : step.icon}</span>
+              <span className="step-label">{step.label}</span>
+              {stepNum < STEPS.length && <div className="step-connector" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Step content */}
+      <div className="step-content">
+        {wizard.currentStep === 1 && (
+          <PersonalInfoStep
+            defaultValues={wizard.formData}
+            onNext={wizard.goNext}
+          />
+        )}
+        {wizard.currentStep === 2 && (
+          <AddressStep
+            defaultValues={wizard.formData}
+            onNext={wizard.goNext}
+            onBack={wizard.goBack}
+          />
+        )}
+        {wizard.currentStep === 3 && (
+          <ProfessionalStep
+            defaultValues={wizard.formData}
+            onNext={wizard.goNext}
+            onBack={wizard.goBack}
+          />
+        )}
+        {wizard.currentStep === 4 && (
+          <ReviewStep
+            data={wizard.formData}
+            onBack={wizard.goBack}
+            onSubmit={() => submitForm(wizard.formData)}
+            isLoading={isPending}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+---
+
+## PART 10 Quick Revision Table
+
+| Project | Key Tech | Must-Mention Feature |
+|---|---|---|
+| E-Commerce | RTK, Axios, React Router | URL-based filters, Checkout flow |
+| Kanban | Zustand, @dnd-kit, localStorage | Drag-drop between columns |
+| Chat | Socket.io, React Query | Typing indicator, room join/leave |
+| Dashboard | Recharts, React Query | Auto-refresh, KPI cards |
+| Job Portal | Infinite scroll, Multi-filter | URL-synced filters, debounce |
+| Blog | DOMPurify, SEO meta | Sanitize HTML, nested comments |
+| Form Wizard | RHF + Zod per-step, useReducer | Persist data between steps |
+
+---
+
+## Projects Common Interview Points
+
+**1. Interview-এ Project জিজ্ঞেস করলে যা বলবেন:**
+```
+Project: E-Commerce App
+
+"এটা একটা full-featured e-commerce app যেখানে আমি:
+- Redux Toolkit দিয়ে cart + auth state manage করেছি
+- Axios instance + interceptor দিয়ে API layer তৈরি করেছি
+- JWT + httpOnly cookie দিয়ে secure auth implement করেছি
+- React.memo + useCallback দিয়ে product grid optimize করেছি
+- URL-based filter system বানিয়েছি যাতে filter share করা যায়
+- Code splitting দিয়ে initial bundle 60% কমিয়েছি"
+```
+
+**2. Technical Challenge জিজ্ঞেস করলে:**
+```
+"Cart state persist করতে গিয়ে challenge হয়েছিল —
+Page refresh-এ cart হারিয়ে যাচ্ছিল।
+Redux Persist দিয়ে localStorage-এ cart serialize করে solve করেছি।
+আবার sensitive auth data persist করিনি — শুধু cart।"
+```
+
+**3. কোনটা কেন chose করলেন:**
+```
+"Zustand না নিয়ে Redux Toolkit নিলাম কারণ:
+- Team project — DevTools + time-travel debugging দরকার
+- Complex async (API) operations আছে — createAsyncThunk helpful
+- Large codebase — predictable patterns important"
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 11 — Interview Questions Bank *(Next request এ লিখব)*
