@@ -35,8 +35,8 @@
 | 04 | ⚛️ **React** | _Coming Soon_ | 🔜 **Coming Soon** | Hooks, State Management, Virtual DOM, Performance, Testing |
 | 05 | 📊 **Data Structures & Algorithms** | [DSA Guide →](./DSA_Junior_Engineer_BD_QA.md) | ✅ **Available** | Array, Linked List, Stack, Queue, Tree, Graph, Sorting, DP, Backtracking, Bit Manipulation |
 | 06 | 🏗️ **System Design** | [System Design Guide →](./SystemDesign_Junior_Engineer_BD_QA.md) | ✅ **Available** | Scalability, CAP Theorem, Load Balancing, CDN, REST, JWT, Caching, Microservices |
-| 07 | 💻 **Operating System** | _Coming Soon_ | 🔜 **Coming Soon** | Process, Thread, Deadlock, Memory Management, Scheduling |
-| 08 | 🌐 **Computer Networks** | _Coming Soon_ | 🔜 **Coming Soon** | TCP/IP, HTTP/HTTPS, DNS, REST API, WebSocket |
+| 07 | � **Python** | _Coming Soon_ | 🔜 **Coming Soon** | Basics, OOP, Decorators, Generators, Comprehensions, Standard Library |
+| 08 | ⚡ **FastAPI** | _Coming Soon_ | 🔜 **Coming Soon** | Routing, Pydantic, Dependency Injection, Auth, Async, CRUD, Deployment |
 | 09 | 🔀 **Git & Version Control** | _Coming Soon_ | 🔜 **Coming Soon** | Branch Strategy, Merge vs Rebase, CI/CD, GitHub Flow |
 
 ---
@@ -54,8 +54,8 @@ Junior SWE Interview এর জন্য নিচের ক্রমে পড�
 │  1️⃣  │ OOP — সবার আগে OOP মজবুত করুন (সব interview এ আসে)     │
 │  2️⃣  │ DSA — Coding Round এর মূল ভিত্তি (12 PARTS সম্পন্ন ✅)   │
 │  3️⃣  │ Database & SQL — প্রায় সব company তে SQL test হয়          │
-│  4️⃣  │ Operating System — Viva Round এ common প্রশ্ন             │
-│  5️⃣  │ Computer Networks — API, HTTP, REST সংক্রান্ত প্রশ্ন     │
+│  4️⃣  │ Python — Backend scripting ও automation এর ভিত্তি         │
+│  5️⃣  │ FastAPI — Modern Python API development                    │
 │  6️⃣  │ JavaScript / React — Web-focused role এর জন্য            │
 │  7️⃣  │ System Design — Mid-Senior level এ জিজ্ঞেস করা হয়        │
 │  8️⃣  │ Git — Practical round এ কাজে আসে                         │
