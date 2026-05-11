@@ -8022,3 +8022,907 @@ Feature-based structure বড় project-এ ভালো: `features/auth/`, `f
 > **🚀 PART 8 আসছে:** Node.js & Backend JavaScript — What is Node.js, Event-driven architecture, npm/package.json, Express.js, REST API, Middleware, JWT Authentication, File System, Streams, Environment Variables।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 8 দাও" লিখুন।
+
+
+---
+
+<a id="part8"></a>
+
+# PART 8 — Node.js & Backend JavaScript
+
+> **📍 এই PART-এর Sections:** [৮.১ Node.js কী?](#৮১-nodejs-কী) · [৮.২ Event-Driven Architecture](#৮২-event-driven-architecture) · [৮.৩ npm ও package.json](#৮৩-npm-ও-packagejson) · [৮.৪ Express.js](#৮৪-expressjs) · [৮.৫ REST API](#৮৫-rest-api) · [৮.৬ Middleware](#৮৬-middleware) · [৮.৭ Authentication ও JWT](#৮৭-authentication-ও-jwt) · [৮.৮ File System](#৮৮-file-system) · [৮.৯ Streams](#৮৯-streams) · [৮.১০ Environment Variables](#৮১০-environment-variables) · [৮.১১ Interview Q&A](#৮১১-part-8--interview-questions--answers)
+
+---
+
+## ৮.১ Node.js কী?
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Node.js** হলো Chrome-এর V8 JavaScript engine-এর উপর তৈরি **server-side JavaScript runtime**। Browser-এর বাইরে — server, CLI, file system-এ JavaScript চালানো যায়।
+
+### 🏠 বাস্তব জীবনের উদাহরণ
+
+> Browser হলো একটি রেস্তোরাঁর টেবিলে বসা গ্রাহক, Node.js হলো রান্নাঘর (kitchen/server)। একই ভাষা (JS) দিয়ে দুই জায়গাতেই কাজ।
+
+### 📊 Node.js vs Browser JavaScript
+
+| | Browser JS | Node.js |
+|--|-----------|---------|
+| **Environment** | Browser | Server/Terminal |
+| **Window/Document** | ✅ | ❌ |
+| **File System** | ❌ | ✅ (fs module) |
+| **HTTP Server** | ❌ | ✅ |
+| **npm packages** | বেশিরভাগ ✅ | ✅ |
+| **Modules** | ESM (import) | CommonJS (require) + ESM |
+| **Global** | `window` | `global` / `globalThis` |
+| **Use case** | UI, DOM | API, server, CLI, tools |
+
+### 💻 Node.js Basic
+
+```javascript
+// hello.js
+console.log("Hello from Node.js!");
+console.log(process.version);   // Node version
+console.log(process.platform);  // "linux", "darwin", "win32"
+console.log(process.cwd());     // current working directory
+console.log(__filename);        // এই file-এর path
+console.log(__dirname);         // এই file-এর directory
+
+// Process args
+// node script.js arg1 arg2
+console.log(process.argv);      // ["node", "script.js", "arg1", "arg2"]
+const args = process.argv.slice(2); // ["arg1", "arg2"]
+
+// Exit
+process.exit(0);  // 0 = success, 1 = error
+```
+
+---
+
+## ৮.২ Event-Driven Architecture
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+Node.js **single-threaded, event-driven, non-blocking I/O** architecture ব্যবহার করে। File read, network call-এ block না করে event loop চলতে থাকে — callback দিয়ে complete হলে জানায়।
+
+### 💻 EventEmitter
+
+```javascript
+const EventEmitter = require("events");
+
+class OrderSystem extends EventEmitter {
+  placeOrder(order) {
+    console.log(`Order received: ${order.item}`);
+    this.emit("order:placed", order);
+
+    // Simulate async processing
+    setTimeout(() => {
+      this.emit("order:ready", order);
+    }, 2000);
+  }
+}
+
+const system = new OrderSystem();
+
+// Listen to events
+system.on("order:placed", (order) => {
+  console.log(`Processing order for ${order.customer}...`);
+  sendConfirmationEmail(order.email);
+});
+
+system.on("order:ready", (order) => {
+  console.log(`Order ready! Notify ${order.customer}`);
+  sendPushNotification(order.customerId);
+});
+
+// once — একবার শুনবে
+system.once("order:placed", (order) => {
+  console.log("First order of the day!");
+});
+
+system.placeOrder({ item: "Burger", customer: "Rahim", email: "rahim@bd.com" });
+system.placeOrder({ item: "Pizza", customer: "Karim", email: "karim@bd.com" });
+```
+
+### 💻 Node.js Event Loop
+
+```
+Node.js Event Loop Phases:
+
+① timers        — setTimeout, setInterval callbacks
+② pending I/O   — I/O callbacks (network, file)
+③ idle, prepare — internal use
+④ poll          — I/O events wait করা
+⑤ check         — setImmediate() callbacks
+⑥ close events  — socket.destroy() etc.
+
+Microtasks (highest priority, between each phase):
+  - process.nextTick()
+  - Promise callbacks (.then)
+
+Priority: nextTick > Promise > setImmediate > setTimeout(0)
+```
+
+```javascript
+setImmediate(() => console.log("setImmediate"));
+setTimeout(() => console.log("setTimeout 0"), 0);
+Promise.resolve().then(() => console.log("Promise"));
+process.nextTick(() => console.log("nextTick"));
+console.log("sync");
+
+// Output: sync → nextTick → Promise → setTimeout 0 → setImmediate
+```
+
+---
+
+## ৮.৩ npm ও package.json
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 package.json বিস্তারিত
+
+```json
+{
+  "name": "my-api",
+  "version": "1.0.0",
+  "description": "REST API for BD app",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest",
+    "build": "tsc",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3",
+    "mongoose": "^7.5.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "jest": "^29.0.0",
+    "eslint": "^8.50.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+```
+
+### 💻 npm Commands
+
+```bash
+# Project setup
+npm init -y               # package.json তৈরি (default values)
+npm install               # সব dependencies install
+
+# Package install
+npm install express       # production dependency
+npm install -D nodemon    # dev dependency only
+npm install -g typescript # global install
+
+# Package remove
+npm uninstall lodash
+
+# Scripts
+npm start                 # "start" script চালানো
+npm run dev               # "dev" script চালানো
+npm test                  # "test" script
+
+# Version info
+npm list                  # installed packages
+npm outdated              # update আছে কোনটিতে
+npm update                # update করা
+
+# Lock file
+npm ci                    # package-lock.json থেকে exact install (CI/CD-এ)
+```
+
+### 💻 Modules (CommonJS vs ESM)
+
+```javascript
+// CommonJS (Node.js default)
+const express = require("express");
+const { readFile } = require("fs");
+module.exports = { myFunction };
+module.exports.helper = helperFn;
+
+// ESM (package.json-এ "type": "module" বা .mjs)
+import express from "express";
+import { readFile } from "fs/promises";
+export { myFunction };
+export default myClass;
+
+// __dirname equivalent in ESM
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+```
+
+---
+
+## ৮.৪ Express.js
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Express.js** হলো Node.js-এর সবচেয়ে popular minimal web framework। HTTP server, routing, middleware সহজে তৈরি করা যায়।
+
+### 💻 Express — Complete Setup
+
+```javascript
+const express = require("express");
+const cors = require("cors");
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// ─── Middleware ──────────────────────────────────────────────
+app.use(express.json());                    // JSON body parse
+app.use(express.urlencoded({ extended: true })); // form data parse
+app.use(cors({ origin: "http://localhost:5173" })); // CORS
+
+// ─── Routes ─────────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.json({ message: "API is running", version: "1.0.0" });
+});
+
+// Route params
+app.get("/users/:id", (req, res) => {
+  const { id } = req.params;
+  res.json({ userId: id });
+});
+
+// Query strings: /search?q=rahim&limit=10
+app.get("/search", (req, res) => {
+  const { q, limit = 10, page = 1 } = req.query;
+  res.json({ query: q, limit: parseInt(limit), page: parseInt(page) });
+});
+
+// Request body
+app.post("/users", (req, res) => {
+  const { name, email, password } = req.body;
+  // validation, DB save...
+  res.status(201).json({ message: "User created", user: { name, email } });
+});
+
+// Router — separate file-এ organize
+const userRouter = require("./routes/users");
+const productRouter = require("./routes/products");
+app.use("/api/users", userRouter);
+app.use("/api/products", productRouter);
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
+
+// Error handler (4 params — express চেনে)
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(err.status || 500).json({
+    error: err.message || "Internal Server Error"
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+```
+
+---
+
+## ৮.৫ REST API
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 REST Conventions
+
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | `/users` | সব users | 200 |
+| GET | `/users/:id` | নির্দিষ্ট user | 200, 404 |
+| POST | `/users` | নতুন user তৈরি | 201 |
+| PUT | `/users/:id` | সম্পূর্ণ update | 200 |
+| PATCH | `/users/:id` | আংশিক update | 200 |
+| DELETE | `/users/:id` | delete | 200/204, 404 |
+
+### 💻 Complete REST API — User Resource
+
+```javascript
+// routes/users.js
+const express = require("express");
+const router = express.Router();
+
+// In-memory store (real app-এ DB)
+let users = [
+  { id: 1, name: "Rahim", email: "rahim@bd.com", role: "user" },
+  { id: 2, name: "Karim", email: "karim@bd.com", role: "admin" }
+];
+let nextId = 3;
+
+// GET /api/users — সব users (pagination, filtering)
+router.get("/", (req, res) => {
+  const { role, page = 1, limit = 10 } = req.query;
+  let result = users;
+
+  if (role) result = result.filter(u => u.role === role);
+
+  const start = (page - 1) * limit;
+  const paginated = result.slice(start, start + parseInt(limit));
+
+  res.json({
+    data: paginated,
+    total: result.length,
+    page: parseInt(page),
+    pages: Math.ceil(result.length / limit)
+  });
+});
+
+// GET /api/users/:id
+router.get("/:id", (req, res) => {
+  const user = users.find(u => u.id === parseInt(req.params.id));
+  if (!user) return res.status(404).json({ error: "User not found" });
+  res.json(user);
+});
+
+// POST /api/users
+router.post("/", (req, res) => {
+  const { name, email, role = "user" } = req.body;
+
+  if (!name || !email) {
+    return res.status(400).json({ error: "name ও email দরকার" });
+  }
+
+  if (users.find(u => u.email === email)) {
+    return res.status(409).json({ error: "Email already exists" });
+  }
+
+  const newUser = { id: nextId++, name, email, role };
+  users.push(newUser);
+  res.status(201).json(newUser);
+});
+
+// PATCH /api/users/:id
+router.patch("/:id", (req, res) => {
+  const idx = users.findIndex(u => u.id === parseInt(req.params.id));
+  if (idx === -1) return res.status(404).json({ error: "User not found" });
+
+  users[idx] = { ...users[idx], ...req.body, id: users[idx].id }; // id immutable
+  res.json(users[idx]);
+});
+
+// DELETE /api/users/:id
+router.delete("/:id", (req, res) => {
+  const idx = users.findIndex(u => u.id === parseInt(req.params.id));
+  if (idx === -1) return res.status(404).json({ error: "User not found" });
+
+  users.splice(idx, 1);
+  res.status(204).send();
+});
+
+module.exports = router;
+```
+
+---
+
+## ৮.৬ Middleware
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Middleware** — request আসলে → response যাওয়ার আগে মাঝে যে functions চলে। Request modify, validate, log, authenticate করে। `next()` দিয়ে পরের middleware-এ pass করে।
+
+```
+Request → [Logger] → [Auth] → [Validate] → Route Handler → Response
+              ↓           ↓           ↓
+           next()      next()      next()
+```
+
+### 💻 Custom Middleware
+
+```javascript
+// ১. Logger middleware
+const logger = (req, res, next) => {
+  const start = Date.now();
+  console.log(`${req.method} ${req.path}`);
+
+  // Response-এর পরে log
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    console.log(`${req.method} ${req.path} ${res.statusCode} — ${duration}ms`);
+  });
+
+  next(); // পরের middleware-এ যাও
+};
+
+// ২. Auth middleware
+const authenticate = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1]; // "Bearer <token>"
+
+  if (!token) {
+    return res.status(401).json({ error: "Token required" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // request-এ user attach
+    next();
+  } catch (err) {
+    res.status(401).json({ error: "Invalid token" });
+  }
+};
+
+// ৩. Role-based authorization
+const authorize = (...roles) => (req, res, next) => {
+  if (!roles.includes(req.user?.role)) {
+    return res.status(403).json({ error: "Permission denied" });
+  }
+  next();
+};
+
+// ৪. Validation middleware
+const validateUser = (req, res, next) => {
+  const { name, email } = req.body;
+  const errors = [];
+
+  if (!name?.trim()) errors.push("নাম দরকার");
+  if (!email?.includes("@")) errors.push("সঠিক ইমেইল দরকার");
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+  next();
+};
+
+// ৫. Rate limiting (simple)
+const rateLimit = (maxRequests, windowMs) => {
+  const requests = new Map();
+
+  return (req, res, next) => {
+    const ip = req.ip;
+    const now = Date.now();
+    const windowStart = now - windowMs;
+
+    const reqs = (requests.get(ip) || []).filter(t => t > windowStart);
+
+    if (reqs.length >= maxRequests) {
+      return res.status(429).json({ error: "Too many requests" });
+    }
+
+    reqs.push(now);
+    requests.set(ip, reqs);
+    next();
+  };
+};
+
+// Application
+app.use(logger);
+app.use("/api", rateLimit(100, 60 * 1000)); // 100 req/min
+
+app.post("/api/users", validateUser, createUser);
+app.get("/api/admin", authenticate, authorize("admin"), adminPanel);
+app.delete("/api/users/:id", authenticate, authorize("admin", "moderator"), deleteUser);
+```
+
+---
+
+## ৮.৭ Authentication ও JWT
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 JWT কী?
+
+**JWT (JSON Web Token)** — stateless authentication-এর জন্য। তিনটি অংশ: **Header.Payload.Signature**
+
+```
+eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInJvbGUiOiJ1c2VyIn0.SIGNATURE
+|______ Header ______|.|_________ Payload __________________|.|_Sig___|
+```
+
+### 💻 Complete Auth System
+
+```javascript
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES = "7d";
+const REFRESH_EXPIRES = "30d";
+
+// ─── Register ───────────────────────────────────────────────
+app.post("/api/auth/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: "সব field দরকার" });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: "Password কমপক্ষে ৮ অক্ষর" });
+    }
+
+    // Existing check
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(409).json({ error: "Email already registered" });
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 12); // cost factor 12
+
+    // Save user
+    const user = await User.create({ name, email, password: hashedPassword });
+
+    // Generate tokens
+    const accessToken = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES }
+    );
+
+    res.status(201).json({
+      message: "নিবন্ধন সফল",
+      user: { id: user._id, name, email },
+      accessToken
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ─── Login ──────────────────────────────────────────────────
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) return res.status(401).json({ error: "Invalid credentials" });
+
+    const accessToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES }
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.REFRESH_SECRET,
+      { expiresIn: REFRESH_EXPIRES }
+    );
+
+    // Refresh token HttpOnly cookie-তে (XSS safe)
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+    });
+
+    res.json({
+      accessToken,
+      user: { id: user._id, name: user.name, email, role: user.role }
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ─── Protected route ────────────────────────────────────────
+app.get("/api/profile", authenticate, (req, res) => {
+  res.json({ user: req.user }); // authenticate middleware-এ attach করা
+});
+
+// ─── Logout ─────────────────────────────────────────────────
+app.post("/api/auth/logout", (req, res) => {
+  res.clearCookie("refreshToken");
+  res.json({ message: "Logged out" });
+});
+```
+
+---
+
+## ৮.৮ File System
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 fs/promises — Modern File Operations
+
+```javascript
+const fs = require("fs/promises");
+const path = require("path");
+
+// ১. Read file
+async function readConfig() {
+  try {
+    const content = await fs.readFile("config.json", "utf-8");
+    return JSON.parse(content);
+  } catch (err) {
+    if (err.code === "ENOENT") return {}; // file নেই — default
+    throw err;
+  }
+}
+
+// ২. Write file
+async function saveConfig(config) {
+  await fs.writeFile("config.json", JSON.stringify(config, null, 2), "utf-8");
+}
+
+// ৩. Append file
+async function appendLog(message) {
+  const timestamp = new Date().toISOString();
+  await fs.appendFile("app.log", `${timestamp}: ${message}
+`);
+}
+
+// ৪. Directory operations
+async function setupDirectories() {
+  await fs.mkdir("uploads/images", { recursive: true }); // nested create
+  const files = await fs.readdir("uploads");
+  console.log("Files:", files);
+}
+
+// ৫. File metadata
+const stat = await fs.stat("file.txt");
+console.log(stat.size, stat.mtime, stat.isDirectory());
+
+// ৬. Copy, rename, delete
+await fs.copyFile("source.txt", "dest.txt");
+await fs.rename("old.txt", "new.txt");
+await fs.unlink("temp.txt");           // file delete
+await fs.rm("old-folder", { recursive: true }); // folder delete
+
+// ৭. Path utilities
+const filePath = path.join(__dirname, "data", "users.json");
+const ext = path.extname("photo.jpg");      // ".jpg"
+const base = path.basename("/path/file.js"); // "file.js"
+const dir = path.dirname("/path/file.js");   // "/path"
+```
+
+---
+
+## ৮.৯ Streams
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Streams** — large data একসাথে memory-তে না নিয়ে chunk-by-chunk process করা। 1GB file read করতে 1GB memory লাগে না।
+
+### 💻 Streams Examples
+
+```javascript
+const fs = require("fs");
+const { pipeline } = require("stream/promises");
+const zlib = require("zlib");
+
+// ১. Readable Stream — file read
+const readable = fs.createReadStream("large-file.txt", { encoding: "utf-8" });
+readable.on("data", (chunk) => {
+  console.log(`Received ${chunk.length} bytes`);
+});
+readable.on("end", () => console.log("Done reading"));
+readable.on("error", (err) => console.error(err));
+
+// ২. Writable Stream — file write
+const writable = fs.createWriteStream("output.txt");
+writable.write("প্রথম লাইন
+");
+writable.write("দ্বিতীয় লাইন
+");
+writable.end(); // close
+
+// ৩. Pipe — read → write (copy file)
+const readStream = fs.createReadStream("input.txt");
+const writeStream = fs.createWriteStream("output.txt");
+readStream.pipe(writeStream);
+
+// ৪. Transform Stream — modify while piping
+// File compress করা (large file, low memory)
+await pipeline(
+  fs.createReadStream("big-file.txt"),
+  zlib.createGzip(),                         // compress
+  fs.createWriteStream("big-file.txt.gz")
+);
+console.log("Compressed!");
+
+// ৫. HTTP response streaming
+app.get("/download", (req, res) => {
+  const file = fs.createReadStream("large-report.pdf");
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", "attachment; filename=report.pdf");
+  file.pipe(res); // directly stream to client
+});
+```
+
+---
+
+## ৮.১০ Environment Variables
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 dotenv ও Config Management
+
+```bash
+# .env file (কখনো git-এ commit করবেন না!)
+PORT=3000
+NODE_ENV=development
+JWT_SECRET=your-super-secret-key-here
+REFRESH_SECRET=another-secret-key
+DB_URL=mongodb://localhost:27017/myapp
+EMAIL_USER=noreply@myapp.com
+EMAIL_PASS=email-password
+CLOUDINARY_URL=cloudinary://...
+```
+
+```javascript
+// index.js — সবার আগে load
+require("dotenv").config();
+
+// Access
+const port = process.env.PORT || 3000;
+const jwtSecret = process.env.JWT_SECRET;
+const isProduction = process.env.NODE_ENV === "production";
+
+// ✅ Config module — central management
+// config/index.js
+module.exports = {
+  port: parseInt(process.env.PORT) || 3000,
+  nodeEnv: process.env.NODE_ENV || "development",
+  jwt: {
+    secret: process.env.JWT_SECRET,
+    expiresIn: process.env.JWT_EXPIRES || "7d",
+    refreshSecret: process.env.REFRESH_SECRET,
+    refreshExpiresIn: "30d"
+  },
+  db: {
+    url: process.env.DB_URL
+  },
+  cors: {
+    origin: process.env.ALLOWED_ORIGIN || "http://localhost:5173"
+  }
+};
+
+// Validation — startup-এ required vars check
+function validateEnv() {
+  const required = ["JWT_SECRET", "REFRESH_SECRET", "DB_URL"];
+  const missing = required.filter(key => !process.env[key]);
+
+  if (missing.length > 0) {
+    console.error(`Missing env vars: ${missing.join(", ")}`);
+    process.exit(1);
+  }
+}
+
+validateEnv();
+```
+
+```bash
+# .env.example — টিম-এর জন্য (git-এ রাখুন, values ছাড়া)
+PORT=3000
+NODE_ENV=development
+JWT_SECRET=
+REFRESH_SECRET=
+DB_URL=
+EMAIL_USER=
+EMAIL_PASS=
+```
+
+---
+
+## ৮.১১ PART 8 — Interview Questions & Answers
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 Node.js & Express Core (Q1–Q12)</strong></summary>
+<br>
+
+**Q1: Node.js কী? Browser JavaScript থেকে কীভাবে আলাদা?**
+> **A:** Node.js হলো V8 engine-এর উপর তৈরি server-side JS runtime। Browser-এ `window`, `document` আছে কিন্তু file system, network server নেই। Node-এ file system (`fs`), HTTP server, OS access আছে কিন্তু DOM নেই। উভয়েই non-blocking, event-driven।
+
+**Q2: Node.js single-threaded হয়েও কীভাবে concurrent requests handle করে?**
+> **A:** Non-blocking I/O — file read, network call শুরু করে দিয়ে অন্য request handle করে। I/O শেষ হলে callback queue-তে রাখে, event loop call করে। CPU-intensive task block করে — Worker Threads ব্যবহার করুন।
+
+**Q3: Express.js-এ middleware কী? কীভাবে কাজ করে?**
+> **A:** Middleware হলো `(req, res, next)` signature-এর function। Request → Response-এর মাঝে চলে। `next()` call করলে পরের middleware। না করলে pipeline থামে। `app.use()` সব routes-এ, `app.get("/path", mw)` নির্দিষ্ট route-এ।
+
+**Q4: JWT কী? কীভাবে কাজ করে?**
+> **A:** JSON Web Token — stateless auth। Header(algo).Payload(data).Signature। Server secret দিয়ে sign করে — tamper করলে signature invalid। Stateless মানে server-এ session store দরকার নেই। AccessToken (short-lived) + RefreshToken (long-lived) pattern।
+
+**Q5: bcrypt কেন পাসওয়ার্ড hash করতে ব্যবহার করা হয়? MD5/SHA256 কেন নয়?**
+> **A:** MD5/SHA256 দ্রুত — brute force attack সহজ। bcrypt intentionally slow এবং salt যোগ করে — rainbow table attack রোধ। Cost factor বাড়ালে আরও slow। SHA256 password hashing-এ unsuitable।
+
+**Q6: REST API-তে HTTP status codes কীভাবে ব্যবহার করবেন?**
+> **A:** 200 OK, 201 Created, 204 No Content, 400 Bad Request (validation), 401 Unauthorized (no/invalid token), 403 Forbidden (no permission), 404 Not Found, 409 Conflict, 429 Too Many Requests, 500 Internal Server Error। Semantic ব্যবহার করুন — client বুঝতে পারবে।
+
+**Q7: Node.js-এ error handling কীভাবে করবেন?**
+> **A:** Sync: try/catch। Async: try/catch + async/await বা `.catch()`। Express error middleware: `(err, req, res, next)` — 4 params। Unhandled promise: `process.on("unhandledRejection")`। Uncaught exception: `process.on("uncaughtException")` — তারপর graceful shutdown।
+
+**Q8: CommonJS এবং ES Modules-এর পার্থক্য?**
+> **A:** CommonJS: `require()` / `module.exports`, synchronous, dynamic (runtime)। ES Modules: `import` / `export`, static (parse time), tree-shakable। Node.js-এ CJS default; `.mjs` বা `"type": "module"` দিলে ESM।
+
+**Q9: npm এবং npx-এর পার্থক্য?**
+> **A:** `npm` — package install/manage। `npx` — package install না করে সরাসরি run করে (temp install + execute)। `npx create-react-app` — locally install না করে CRA চালায়।
+
+**Q10: Stream কেন ব্যবহার করবেন?**
+> **A:** Large file/data process করতে পুরো file memory-তে না নিয়ে chunk-by-chunk। 1GB file — 1GB memory না লাগিয়ে MB-তে process। HTTP response streaming — client আগেই পেতে শুরু করে।
+
+**Q11: CORS কী? কেন দরকার?**
+> **A:** CORS (Cross-Origin Resource Sharing) — browser security policy। `http://localhost:3000` থেকে `http://localhost:5000/api` call করলে browser block করে। Server-এ `Access-Control-Allow-Origin` header দিলে browser allow করে। `cors` package দিয়ে configure করুন।
+
+**Q12: Environment variables কেন .env file-এ রাখেন?**
+> **A:** Secrets (API keys, passwords) code-এ hardcode করলে git-এ expose হয়। `.env` file-এ রাখলে `.gitignore`-এ add করা যায়। Development, staging, production-এ আলাদা values ব্যবহার করা যায়। `.env.example` team-এর জন্য template।
+
+</details>
+
+<details>
+<summary><strong>🔹 Advanced & Security (Q13–Q20)</strong></summary>
+<br>
+
+**Q13: SQL Injection বা NoSQL Injection থেকে কীভাবে রক্ষা করবেন?**
+> **A:** Parameterized queries বা ORM ব্যবহার করুন। Raw query-তে user input সরাসরি দেবেন না। Mongoose-এ schema validation — invalid type reject হয়। Input sanitize করুন। `mongoose-sanitize` বা similar package।
+
+**Q14: Rate limiting কেন দরকার?**
+> **A:** DDoS, brute force, API abuse রোধ করতে। একই IP থেকে নির্দিষ্ট সময়ে নির্দিষ্ট request limit করে। `express-rate-limit` package বা custom middleware।
+
+**Q15: Refresh Token কীভাবে access token refresh করে?**
+> **A:** AccessToken expire হলে client RefreshToken পাঠায় (`/api/auth/refresh` endpoint-এ)। Server verify করে নতুন AccessToken দেয়। RefreshToken HttpOnly cookie-তে রাখলে JS access করতে পারে না (XSS safe)।
+
+**Q16: Node.js-এ memory leak কীভাবে হয়?**
+> **A:** Global variable-এ data accumulate। Closed-over variable long-lived closure-এ। Event listener remove না করা। Cache unbounded grow। `process.memoryUsage()` দিয়ে monitor, `--inspect` flag দিয়ে Chrome DevTools-এ heap snapshot।
+
+**Q17: Graceful shutdown কী?**
+> **A:** Server stop হওয়ার সময় চলমান requests complete হতে দেওয়া, DB connection বন্ধ করা, তারপর exit।
+```javascript
+process.on("SIGTERM", async () => {
+  await server.close();
+  await db.disconnect();
+  process.exit(0);
+});
+```
+
+**Q18: PUT এবং PATCH-এর পার্থক্য?**
+> **A:** PUT: সম্পূর্ণ resource replace — missing fields null/default হয়। PATCH: partial update — শুধু পাঠানো fields update হয়। API design-এ PATCH বেশি user-friendly।
+
+**Q19: Express-এ async route handler-এ error catch করবেন কীভাবে?**
+> **A:** প্রতিটি-তে try/catch অথবা wrapper:
+```javascript
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+app.get("/users", asyncHandler(async (req, res) => {
+  const users = await User.find();
+  res.json(users);
+}));
+// error → Express error middleware-এ যাবে
+```
+
+**Q20: API versioning কীভাবে করবেন?**
+> **A:** URL-based: `/api/v1/users`, `/api/v2/users` — সবচেয়ে সাধারণ। Header-based: `Accept: application/vnd.api.v2+json`। Query param: `/api/users?version=2`। Breaking change-এ নতুন version — পুরনো maintain করুন কিছুদিন।
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 9 আসছে:** Coding Interview Preparation — 150 Theoretical Questions, 100 Coding Questions, 30 Tricky Questions, 20 Rapid-fire Viva, 30 Scenario-based Questions (সব উত্তর সহ)।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 9 দাও" লিখুন।
