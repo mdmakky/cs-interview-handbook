@@ -7038,3 +7038,987 @@ function deepFreeze(obj) {
 > **🚀 PART 7 আসছে:** JavaScript in Frontend Development — SPA basics, Virtual DOM, React fundamentals, Component architecture, State management, API integration, Routing।
 >
 > **💬 পরবর্তী PART পেতে:** "PART 7 দাও" লিখুন।
+
+
+---
+
+<a id="part7"></a>
+
+# PART 7 — JavaScript in Frontend Development
+
+> **📍 এই PART-এর Sections:** [৭.১ SPA কী?](#৭১-spa-কী) · [৭.২ Virtual DOM](#৭২-virtual-dom) · [৭.৩ React Fundamentals](#৭৩-react-fundamentals) · [৭.৪ Components](#৭৪-components) · [৭.৫ Props ও State](#৭৫-props-ও-state) · [৭.৬ Hooks](#৭৬-hooks) · [৭.৭ State Management](#৭৭-state-management) · [৭.৮ React Router](#৭৮-react-router) · [৭.৯ API Integration](#৭৯-api-integration) · [৭.১০ Performance Optimization](#৭১০-performance-optimization) · [৭.১১ Interview Q&A](#৭১১-part-7--interview-questions--answers)
+
+---
+
+## ৭.১ SPA কী?
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**SPA (Single Page Application)** — একটিমাত্র HTML page load হয়, তারপর JavaScript dynamically content পরিবর্তন করে — page reload ছাড়াই। Facebook, Gmail, Twitter সব SPA।
+
+### 📊 MPA vs SPA তুলনা
+
+| | MPA (Multi-Page App) | SPA |
+|--|---------------------|-----|
+| **Page load** | প্রতিটি route-এ full reload | প্রথমবার একটি load |
+| **Speed** | ধীর (server round-trip) | দ্রুত (client-side render) |
+| **SEO** | ভালো | কঠিন (SSR দরকার) |
+| **Server load** | বেশি | কম |
+| **উদাহরণ** | WordPress, PHP sites | React, Vue, Angular apps |
+
+### 💻 SPA-র মূল Concepts
+
+```javascript
+// SPA-তে URL পরিবর্তন — page reload ছাড়াই
+// History API ব্যবহার করে
+window.history.pushState({ page: "about" }, "About", "/about");
+
+// URL-এ /about হলেও page reload হয়নি
+// JavaScript content পরিবর্তন করে
+
+// Hash-based routing (পুরনো পদ্ধতি)
+window.location.hash = "#about"; // URL: domain.com/#about
+
+// Popstate — back/forward button
+window.addEventListener("popstate", (e) => {
+  renderPage(e.state?.page || "home");
+});
+
+// Simple SPA router example
+const routes = {
+  "/": () => renderHome(),
+  "/about": () => renderAbout(),
+  "/contact": () => renderContact()
+};
+
+function navigate(path) {
+  window.history.pushState({}, "", path);
+  routes[path]?.() || render404();
+}
+
+// Links handle করা
+document.querySelectorAll("a[data-spa]").forEach(link => {
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigate(link.getAttribute("href"));
+  });
+});
+```
+
+---
+
+## ৭.২ Virtual DOM
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 সংজ্ঞা
+
+**Virtual DOM** — real DOM-এর একটি JavaScript object-based lightweight copy। React state পরিবর্তনে সরাসরি real DOM update না করে, Virtual DOM diff করে শুধু পরিবর্তিত অংশ update করে।
+
+### 💻 Virtual DOM কীভাবে কাজ করে
+
+```
+State পরিবর্তন হলে React:
+
+১. নতুন Virtual DOM tree তৈরি
+   ┌─── VNode ───┐
+   │ type: "div" │
+   │ props: {}   │
+   │ children:   │
+   │  ├── VNode "h1" → "Hello"
+   │  └── VNode "p"  → "World"  (নতুন)
+   └─────────────┘
+
+২. পুরনো Virtual DOM-এর সাথে Diff (Reconciliation)
+   পরিবর্তন: <p> element যোগ হয়েছে
+
+৩. শুধু real DOM-এ <p> যোগ করা
+   (পুরো DOM নয়, শুধু পরিবর্তিত অংশ)
+```
+
+```javascript
+// Virtual DOM node (React-এর JSX এটাই তৈরি করে)
+// JSX: <div className="box"><h1>Hello</h1></div>
+// compiled to:
+React.createElement("div", { className: "box" },
+  React.createElement("h1", null, "Hello")
+);
+
+// VNode structure
+const vNode = {
+  type: "div",
+  props: { className: "box" },
+  children: [
+    { type: "h1", props: null, children: ["Hello"] }
+  ]
+};
+
+// Simple Virtual DOM implementation (concept)
+function createElement(type, props, ...children) {
+  return { type, props: props || {}, children };
+}
+
+function render(vNode, container) {
+  if (typeof vNode === "string") {
+    container.appendChild(document.createTextNode(vNode));
+    return;
+  }
+  const el = document.createElement(vNode.type);
+  Object.entries(vNode.props).forEach(([key, val]) => {
+    el.setAttribute(key, val);
+  });
+  vNode.children.forEach(child => render(child, el));
+  container.appendChild(el);
+}
+```
+
+### 📊 Virtual DOM এর সুবিধা
+
+| সুবিধা | ব্যাখ্যা |
+|--------|---------|
+| **Performance** | Batch update — একবারে real DOM update |
+| **Declarative** | "UI কেমন দেখাবে" লিখুন, React বের করে কী পরিবর্তন হবে |
+| **Predictable** | State → UI, always consistent |
+| **Cross-platform** | React Native-এ same approach (different renderer) |
+
+---
+
+## ৭.৩ React Fundamentals
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 📖 React কী?
+
+React হলো UI তৈরির JavaScript library (Facebook)। Component-based, Virtual DOM, one-way data flow।
+
+### 💻 JSX
+
+```jsx
+// JSX — JavaScript + HTML-like syntax
+// Browser বোঝে না, Babel compile করে
+const element = <h1 className="title">Hello, {name}!</h1>;
+
+// Compiled to:
+const element = React.createElement("h1", { className: "title" }, `Hello, ${name}!`);
+
+// JSX Rules:
+// ১. className (না class)
+// ২. htmlFor (না for)
+// ৩. camelCase attributes: onClick, onChange, tabIndex
+// ৪. Single root element (বা Fragment)
+// ৫. {} দিয়ে JS expression
+// ৬. Self-closing: <img />, <input />
+
+// ✅ Fragment — extra div ছাড়া
+function Example() {
+  return (
+    <>
+      <h1>Title</h1>
+      <p>Paragraph</p>
+    </>
+  );
+}
+
+// Conditional rendering
+function Greeting({ isLoggedIn, name }) {
+  return (
+    <div>
+      {isLoggedIn ? <h1>Welcome, {name}!</h1> : <h1>Please log in</h1>}
+      {isLoggedIn && <button>Logout</button>}
+    </div>
+  );
+}
+
+// List rendering
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>  // key বাধ্যতামূলক!
+      ))}
+    </ul>
+  );
+}
+```
+
+---
+
+## ৭.৪ Components
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Functional Components (Modern React)
+
+```jsx
+// Simple functional component
+function Button({ label, onClick, variant = "primary", disabled = false }) {
+  return (
+    <button
+      className={`btn btn-${variant}`}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {label}
+    </button>
+  );
+}
+
+// Arrow function
+const Card = ({ title, body, footer }) => (
+  <div className="card">
+    <div className="card-header"><h3>{title}</h3></div>
+    <div className="card-body"><p>{body}</p></div>
+    {footer && <div className="card-footer">{footer}</div>}
+  </div>
+);
+
+// Component composition
+function App() {
+  return (
+    <div className="app">
+      <Card
+        title="JavaScript Tips"
+        body="Learn modern JS features"
+        footer={<Button label="Read More" onClick={() => navigate("/tips")} />}
+      />
+    </div>
+  );
+}
+
+// Children prop
+function Modal({ children, title, onClose }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>{title}</h2>
+          <button onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// Usage:
+<Modal title="Confirm" onClose={() => setOpen(false)}>
+  <p>আপনি কি নিশ্চিত?</p>
+  <Button label="হ্যাঁ" onClick={confirm} />
+</Modal>
+```
+
+---
+
+## ৭.৫ Props ও State
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Props — Read-only Data
+
+```jsx
+// Props: parent → child data passing (one-way)
+function UserProfile({ name, email, avatar, role = "User" }) {
+  return (
+    <div className="profile">
+      <img src={avatar} alt={name} />
+      <h2>{name}</h2>
+      <p>{email}</p>
+      <span className="badge">{role}</span>
+    </div>
+  );
+}
+
+// Parent passes props
+<UserProfile
+  name="Rahim Ahmed"
+  email="rahim@bd.com"
+  avatar="/photos/rahim.jpg"
+  role="Admin"
+/>
+
+// Props spreading (spread operator)
+const userProps = { name: "Karim", email: "karim@bd.com" };
+<UserProfile {...userProps} avatar="/default.jpg" />
+```
+
+### 💻 State — Mutable Component Data
+
+```jsx
+import { useState } from "react";
+
+function Counter() {
+  const [count, setCount] = useState(0); // [value, setter]
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>+</button>
+      <button onClick={() => setCount(prev => prev - 1)}>-</button>
+      <button onClick={() => setCount(0)}>Reset</button>
+    </div>
+  );
+}
+
+// Object state — spread করে update
+function UserForm() {
+  const [user, setUser] = useState({ name: "", email: "", age: "" });
+
+  const handleChange = (e) => {
+    setUser(prev => ({
+      ...prev,                        // পুরনো values রাখো
+      [e.target.name]: e.target.value // শুধু পরিবর্তিতটি update
+    }));
+  };
+
+  return (
+    <form>
+      <input name="name" value={user.name} onChange={handleChange} />
+      <input name="email" value={user.email} onChange={handleChange} />
+      <input name="age" value={user.age} onChange={handleChange} />
+    </form>
+  );
+}
+```
+
+### 📊 Props vs State
+
+| | Props | State |
+|--|-------|-------|
+| **কে দেয়** | Parent component | Component নিজে |
+| **Mutable?** | ❌ Read-only | ✅ `setState` দিয়ে |
+| **Re-render** | Parent re-render হলে | `setState` হলে |
+| **Use case** | Configuration, data passing | User interaction, dynamic data |
+
+---
+
+## ৭.৬ Hooks
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 useEffect
+
+```jsx
+import { useState, useEffect } from "react";
+
+function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // ১. Component mount-এ fetch
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchUsers() {
+      try {
+        const res = await fetch("/api/users");
+        if (!res.ok) throw new Error("Fetch failed");
+        const data = await res.json();
+        if (!cancelled) setUsers(data);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchUsers();
+    return () => { cancelled = true; }; // cleanup
+  }, []); // [] = শুধু mount-এ
+
+  // ২. Dependency পরিবর্তনে re-run
+  const [userId, setUserId] = useState(1);
+  useEffect(() => {
+    fetchUser(userId).then(setUsers);
+  }, [userId]); // userId পরিবর্তনে re-run
+
+  // ৩. Cleanup — event listeners, subscriptions, timers
+  useEffect(() => {
+    const handler = () => console.log("scrolled");
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler); // cleanup
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  return <ul>{users.map(u => <li key={u.id}>{u.name}</li>)}</ul>;
+}
+```
+
+### 💻 useRef
+
+```jsx
+import { useRef, useEffect } from "react";
+
+function InputFocus() {
+  const inputRef = useRef(null);
+
+  // DOM element access
+  useEffect(() => {
+    inputRef.current.focus(); // mount-এ focus
+  }, []);
+
+  return <input ref={inputRef} placeholder="Auto-focused" />;
+}
+
+// Mutable value (re-render ছাড়া)
+function Timer() {
+  const [count, setCount] = useState(0);
+  const timerRef = useRef(null);
+
+  const start = () => {
+    timerRef.current = setInterval(() => {
+      setCount(prev => prev + 1);
+    }, 1000);
+  };
+
+  const stop = () => clearInterval(timerRef.current);
+
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={start}>Start</button>
+      <button onClick={stop}>Stop</button>
+    </div>
+  );
+}
+```
+
+### 💻 useMemo ও useCallback
+
+```jsx
+import { useMemo, useCallback, useState } from "react";
+
+function ExpensiveComponent({ numbers, onItemClick }) {
+  // useMemo — expensive calculation cache করা
+  const sum = useMemo(() => {
+    console.log("Calculating sum...");
+    return numbers.reduce((acc, n) => acc + n, 0);
+  }, [numbers]); // numbers পরিবর্তনেই recalculate
+
+  // useCallback — function reference stable রাখা
+  const handleClick = useCallback((id) => {
+    onItemClick(id);
+  }, [onItemClick]); // onItemClick পরিবর্তনেই নতুন function
+
+  return (
+    <div>
+      <p>Sum: {sum}</p>
+      {numbers.map((n, i) => (
+        <span key={i} onClick={() => handleClick(i)}>{n}</span>
+      ))}
+    </div>
+  );
+}
+```
+
+### 💻 Custom Hooks
+
+```jsx
+// Custom hook — reusable logic
+function useFetch(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+
+    fetch(url)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then(data => { if (!cancelled) { setData(data); setLoading(false); } })
+      .catch(err => { if (!cancelled) { setError(err.message); setLoading(false); } });
+
+    return () => { cancelled = true; };
+  }, [url]);
+
+  return { data, loading, error };
+}
+
+// ব্যবহার
+function UserProfile({ userId }) {
+  const { data: user, loading, error } = useFetch(`/api/users/${userId}`);
+
+  if (loading) return <Spinner />;
+  if (error) return <ErrorMessage message={error} />;
+  return <div>{user.name}</div>;
+}
+
+// useLocalStorage custom hook
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(key)) ?? initialValue;
+    } catch {
+      return initialValue;
+    }
+  });
+
+  const setStoredValue = (newValue) => {
+    setValue(newValue);
+    localStorage.setItem(key, JSON.stringify(newValue));
+  };
+
+  return [value, setStoredValue];
+}
+
+// ব্যবহার
+const [theme, setTheme] = useLocalStorage("theme", "light");
+```
+
+---
+
+## ৭.৭ State Management
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Context API
+
+```jsx
+import { createContext, useContext, useState } from "react";
+
+// ১. Context তৈরি
+const AuthContext = createContext(null);
+
+// ২. Provider — state সরবরাহ করে
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+
+  const login = async (credentials) => {
+    const res = await fetch("/api/login", {
+      method: "POST",
+      body: JSON.stringify(credentials)
+    });
+    const { user, token } = await res.json();
+    setUser(user);
+    setToken(token);
+    localStorage.setItem("token", token);
+  };
+
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem("token");
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, token, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// ৩. Consumer — যেকোনো nested component
+function Header() {
+  const { user, logout } = useContext(AuthContext);
+  return (
+    <header>
+      {user ? (
+        <>
+          <span>Welcome, {user.name}</span>
+          <button onClick={logout}>Logout</button>
+        </>
+      ) : (
+        <a href="/login">Login</a>
+      )}
+    </header>
+  );
+}
+
+// ৪. App-এ wrap
+function App() {
+  return (
+    <AuthProvider>
+      <Header />
+      <Main />
+    </AuthProvider>
+  );
+}
+```
+
+### 💻 useReducer — Complex State
+
+```jsx
+import { useReducer } from "react";
+
+// Reducer function
+function cartReducer(state, action) {
+  switch (action.type) {
+    case "ADD_ITEM":
+      const existing = state.items.find(i => i.id === action.item.id);
+      if (existing) {
+        return {
+          ...state,
+          items: state.items.map(i =>
+            i.id === action.item.id ? { ...i, qty: i.qty + 1 } : i
+          )
+        };
+      }
+      return { ...state, items: [...state.items, { ...action.item, qty: 1 }] };
+
+    case "REMOVE_ITEM":
+      return { ...state, items: state.items.filter(i => i.id !== action.id) };
+
+    case "CLEAR_CART":
+      return { ...state, items: [] };
+
+    default:
+      return state;
+  }
+}
+
+function Cart() {
+  const [cart, dispatch] = useReducer(cartReducer, { items: [] });
+
+  const total = cart.items.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+  return (
+    <div>
+      {cart.items.map(item => (
+        <div key={item.id}>
+          {item.name} × {item.qty}
+          <button onClick={() => dispatch({ type: "REMOVE_ITEM", id: item.id })}>
+            Remove
+          </button>
+        </div>
+      ))}
+      <p>Total: ৳{total}</p>
+      <button onClick={() => dispatch({ type: "CLEAR_CART" })}>Clear</button>
+    </div>
+  );
+}
+```
+
+---
+
+## ৭.৮ React Router
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 React Router v6
+
+```jsx
+import { BrowserRouter, Routes, Route, Link, NavLink,
+         useNavigate, useParams, useLocation, Navigate } from "react-router-dom";
+
+// Route setup
+function App() {
+  return (
+    <BrowserRouter>
+      <nav>
+        <NavLink to="/" end className={({ isActive }) => isActive ? "active" : ""}>
+          Home
+        </NavLink>
+        <NavLink to="/users">Users</NavLink>
+      </nav>
+
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/users" element={<UserList />} />
+        <Route path="/users/:id" element={<UserDetail />} />
+        <Route path="/about" element={<About />} />
+
+        {/* Protected route */}
+        <Route path="/dashboard" element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
+
+        {/* 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+// Route params
+function UserDetail() {
+  const { id } = useParams(); // /users/123 → id = "123"
+  const { data: user, loading } = useFetch(`/api/users/${id}`);
+
+  if (loading) return <Spinner />;
+  return <div>{user?.name}</div>;
+}
+
+// Programmatic navigation
+function LoginForm() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await login(credentials);
+    const from = location.state?.from || "/dashboard";
+    navigate(from, { replace: true });
+  };
+}
+
+// Protected route
+function ProtectedRoute({ children }) {
+  const { user } = useContext(AuthContext);
+  const location = useLocation();
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+  return children;
+}
+```
+
+---
+
+## ৭.৯ API Integration
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 Complete CRUD with React
+
+```jsx
+function UserManagement() {
+  const [users, setUsers] = useState([]);
+  const [form, setForm] = useState({ name: "", email: "" });
+  const [editingId, setEditingId] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // READ
+  useEffect(() => {
+    fetch("/api/users")
+      .then(r => r.json())
+      .then(setUsers);
+  }, []);
+
+  // CREATE
+  const createUser = async () => {
+    setLoading(true);
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form)
+    });
+    const newUser = await res.json();
+    setUsers(prev => [...prev, newUser]);
+    setForm({ name: "", email: "" });
+    setLoading(false);
+  };
+
+  // UPDATE
+  const updateUser = async () => {
+    const res = await fetch(`/api/users/${editingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form)
+    });
+    const updated = await res.json();
+    setUsers(prev => prev.map(u => u.id === editingId ? updated : u));
+    setEditingId(null);
+    setForm({ name: "", email: "" });
+  };
+
+  // DELETE
+  const deleteUser = async (id) => {
+    await fetch(`/api/users/${id}`, { method: "DELETE" });
+    setUsers(prev => prev.filter(u => u.id !== id));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    editingId ? updateUser() : createUser();
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
+               placeholder="নাম" required />
+        <input value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+               placeholder="ইমেইল" type="email" required />
+        <button type="submit" disabled={loading}>
+          {editingId ? "Update" : "Create"}
+        </button>
+        {editingId && <button type="button" onClick={() => setEditingId(null)}>Cancel</button>}
+      </form>
+
+      <ul>
+        {users.map(user => (
+          <li key={user.id}>
+            {user.name} — {user.email}
+            <button onClick={() => { setEditingId(user.id); setForm(user); }}>Edit</button>
+            <button onClick={() => deleteUser(user.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+---
+
+## ৭.১০ Performance Optimization
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+### 💻 React.memo ও Optimization
+
+```jsx
+import { memo, useMemo, useCallback } from "react";
+
+// React.memo — props না পরিবর্তনে re-render রোধ
+const ExpensiveList = memo(function ExpensiveList({ items, onDelete }) {
+  console.log("ExpensiveList rendered");
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id}>
+          {item.name}
+          <button onClick={() => onDelete(item.id)}>Delete</button>
+        </li>
+      ))}
+    </ul>
+  );
+});
+
+function Parent() {
+  const [items, setItems] = useState(initialItems);
+  const [count, setCount] = useState(0);
+
+  // useCallback — onDelete reference stable থাকে
+  const handleDelete = useCallback((id) => {
+    setItems(prev => prev.filter(item => item.id !== id));
+  }, []); // dependency নেই
+
+  // useMemo — sorted list cache
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => a.name.localeCompare(b.name)),
+    [items]
+  );
+
+  return (
+    <div>
+      <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>
+      {/* count পরিবর্তনে ExpensiveList re-render হবে না */}
+      <ExpensiveList items={sortedItems} onDelete={handleDelete} />
+    </div>
+  );
+}
+
+// Lazy loading
+import { lazy, Suspense } from "react";
+const HeavyChart = lazy(() => import("./HeavyChart"));
+
+function Dashboard() {
+  return (
+    <Suspense fallback={<div>Chart loading...</div>}>
+      <HeavyChart />
+    </Suspense>
+  );
+}
+```
+
+---
+
+## ৭.১১ PART 7 — Interview Questions & Answers
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+<details>
+<summary><strong>🔹 React & Frontend Core (Q1–Q12)</strong></summary>
+<br>
+
+**Q1: Virtual DOM কী? কেন সরাসরি real DOM update করা হয় না?**
+> **A:** Virtual DOM হলো real DOM-এর lightweight JS object copy। সরাসরি real DOM update expensive — reflow, repaint trigger করে। React state পরিবর্তনে নতুন Virtual DOM তৈরি করে, পুরনোর সাথে diff করে (Reconciliation), শুধু পরিবর্তিত অংশ real DOM-এ update করে (batched)।
+
+**Q2: React-এ key prop কেন দরকার?**
+> **A:** List render-এ React কোন item পরিবর্তিত হয়েছে বোঝার জন্য key ব্যবহার করে। Unique, stable key (ID prefer, index last resort) না থাকলে performance খারাপ হয় এবং state bug হতে পারে।
+
+**Q3: Props এবং State-এর পার্থক্য?**
+> **A:** Props: parent থেকে child-এ, read-only, component নিজে পরিবর্তন করতে পারে না। State: component নিজের internal data, `useState` দিয়ে পরিবর্তন হলে re-render trigger করে।
+
+**Q4: useEffect-এর dependency array কী করে?**
+> **A:** `[]` — শুধু mount-এ (componentDidMount)। `[dep]` — mount-এ এবং dep পরিবর্তনে। dependency ছাড়া (`useEffect(fn)`) — প্রতিটি render-এ। Cleanup function (return value) — unmount বা re-run আগে।
+
+**Q5: useState-এ functional update কখন দরকার?**
+> **A:** পূর্ববর্তী state-এর উপর নির্ভর করে update করলে: `setCount(prev => prev + 1)` — batch update-এ stale closure এড়ায়। `setCount(count + 1)` — multiple rapid updates-এ একই পুরনো count ব্যবহার করতে পারে।
+
+**Q6: useCallback এবং useMemo-এর পার্থক্য?**
+> **A:** `useMemo` — expensive calculation-এর result cache করে। `useCallback` — function-এর reference stable রাখে। উভয়ই re-render optimization। `useCallback(fn, deps)` = `useMemo(() => fn, deps)`।
+
+**Q7: Context API কখন ব্যবহার করবেন? Redux কখন?**
+> **A:** Context: simple global state (auth, theme, language) — few updates। Redux/Zustand: complex state, frequent updates, devtools দরকার, large team। Context-এ value পরিবর্তনে সব consumers re-render হয়।
+
+**Q8: React-এ controlled ও uncontrolled component কী?**
+> **A:** Controlled: form value React state-এ, `value` prop ও `onChange` handler সহ — React data control করে। Uncontrolled: `ref` দিয়ে DOM-এ সরাসরি access, `defaultValue` ব্যবহার। Controlled prefer করা হয় — predictable, validation সহজ।
+
+**Q9: useReducer কখন useState-এর বদলে ব্যবহার করবেন?**
+> **A:** Complex state logic, multiple sub-values interconnected, পরবর্তী state পূর্ববর্তীর উপর নির্ভরশীল, action-based update (form, cart, CRUD) — useReducer ভালো। Simple counter বা toggle — useState যথেষ্ট।
+
+**Q10: React.memo কীভাবে কাজ করে? কখন ব্যবহার করবেন?**
+> **A:** Component wrap করলে, parent re-render হলে props পরিবর্তন না হলে re-render skip করে (shallow comparison)। Expensive components, frequent parent re-render, stable props থাকলে। Over-optimization করবেন না — profiling করে সমস্যা দেখে তারপর।
+
+**Q11: SPA-র SEO সমস্যা কী? সমাধান কী?**
+> **A:** SPA-তে initial HTML খালি থাকে — crawlers content দেখতে পায় না। সমাধান: SSR (Server-Side Rendering, Next.js), SSG (Static Site Generation), Pre-rendering। Meta tags dynamic করতে `react-helmet`।
+
+**Q12: Custom Hook তৈরির নিয়ম কী?**
+> **A:** নাম `use` দিয়ে শুরু হতে হবে (Rules of Hooks enforce করতে)। Hooks এর ভেতরে অন্য hooks ব্যবহার করা যায়। Reusable stateful logic extract করতে। `useFetch`, `useLocalStorage`, `useDebounce` — common patterns।
+
+</details>
+
+<details>
+<summary><strong>🔹 Practical & Advanced (Q13–Q20)</strong></summary>
+<br>
+
+**Q13: Memory leak কীভাবে React-এ হয়? কীভাবে এড়াবেন?**
+> **A:** Component unmount-এর পরে state set করা — async fetch, setTimeout। Fix: cleanup function-এ cancelled flag, AbortController। Event listener `useEffect` cleanup-এ remove করা।
+
+**Q14: Reconciliation কী?**
+> **A:** React-এর diff algorithm। নতুন vs পুরনো Virtual DOM compare করে minimum DOM operations বের করে। Same type element: attributes update। Different type: subtree সম্পূর্ণ replace। List-এ key দিয়ে reorder efficient।
+
+**Q15: React-এ form handling-এর best practice?**
+> **A:** Controlled components, single `handleChange` function (computed property name: `[e.target.name]: e.target.value`), `onSubmit` handler-এ `e.preventDefault()`, validation library (react-hook-form, Formik), error state প্রতিটি field-এর জন্য।
+
+**Q16: useEffect-এ async function সরাসরি দেওয়া যায় না কেন?**
+> **A:** `useEffect` cleanup function return করে (বা nothing)। async function Promise return করে — React warning দেয়। Fix: ভেতরে async function define করে call করুন।
+
+**Q17: Prop drilling কী? কীভাবে এড়াবেন?**
+> **A:** Props অনেক nested components-এর মধ্যে দিয়ে pass করা — intermediate components-এর এটা দরকার না হলেও pass করতে হয়। সমাধান: Context API, state management library, component composition।
+
+**Q18: React-এ কেন state directly mutate করা উচিত নয়?**
+> **A:** `state.count++` করলে React জানতে পারে না state পরিবর্তিত হয়েছে — re-render হয় না। React shallow comparison করে — নতুন object/array reference দরকার। সবসময় spread বা নতুন value: `setState({ ...state, count: state.count + 1 })`।
+
+**Q19: Lazy loading ও Code Splitting কীভাবে React-এ করবেন?**
+> **A:** `React.lazy(() => import("./Component"))` + `<Suspense fallback>`. Route-level splitting: প্রতিটি route-এর component lazy load। Bundle size কমে, initial load দ্রুত।
+
+**Q20: একটি React app-এর folder structure কেমন হওয়া উচিত?**
+> **A:**
+```
+src/
+  components/     # Reusable UI components
+  pages/          # Route-level components
+  hooks/          # Custom hooks
+  context/        # Context providers
+  services/       # API calls
+  utils/          # Helper functions
+  store/          # State management
+  assets/         # Images, fonts
+```
+Feature-based structure বড় project-এ ভালো: `features/auth/`, `features/users/`।
+
+</details>
+
+---
+
+<div align="right">
+  <a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a>
+</div>
+
+---
+
+> **🚀 PART 8 আসছে:** Node.js & Backend JavaScript — What is Node.js, Event-driven architecture, npm/package.json, Express.js, REST API, Middleware, JWT Authentication, File System, Streams, Environment Variables।
+>
+> **💬 পরবর্তী PART পেতে:** "PART 8 দাও" লিখুন।
