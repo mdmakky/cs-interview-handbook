@@ -5284,8 +5284,459 @@ async def websocket_endpoint(ws: WebSocket):
 
 ---
 
-> **📌 PART 11 & 12:** Coming Soon — Interview Q&A Bank + Bangladesh Interview Prep
+<a id="part11"></a>
+
+# PART 11: Interview Q&A Bank
+
+## Theoretical Questions & Answers
+
+**Q1: ASGI এবং WSGI এর মধ্যে পার্থক্য?**
+
+> WSGI synchronous, একবারে একটি request। ASGI async, একসাথে multiple requests handle করতে পারে। FastAPI → ASGI (uvicorn), Django → WSGI (gunicorn)।
+
+**Q2: Pydantic কেন ব্যবহার করি?**
+
+> Data validation এবং serialization। Type hints থেকে automatic validation। JSON schema generate করে।
+
+**Q3: Dependency Injection pattern কী?**
+
+> Function এর parameter এ dependency pass করা। FastAPI তে `Depends()` ব্যবহার করে। Database connection, auth token, configuration ইত্যাদি inject করতে পারি।
+
+**Q4: `async def` vs `def`?**
+
+> `async def` non-blocking (I/O wait করে অন্য কাজ করে)। `def` blocking (কাজ শেষ হওয়া পর্যন্ত অপেক্ষা)। FastAPI দুটোই support করে, কিন্তু async বেশি efficient।
+
+**Q5: N+1 Query Problem কী?**
+
+> একটি user fetch করলে 1 query, তার সব posts fetch করতে 100 query (প্রতি post এর জন্য 1)। Total = 101। Solution: `joinedload()` or `selectinload()`।
+
+**Q6: JWT Token expiry কেন প্রয়োজন?**
+
+> Security। Token leak হলে সীমিত সময়ের জন্য access দেয়। Refresh token দিয়ে নতুন token নিতে পারে।
+
+**Q7: CORS কী এবং কেন?**
+
+> Cross-Origin Resource Sharing। Browser security। Frontend (domain A) থেকে Backend (domain B) এ request আটকায়। CORS configure করলে allow করা যায়।
+
+**Q8: Rate Limiting কেন প্রয়োজন?**
+
+> DDoS থেকে রক্ষা। একটি IP থেকে অনেক requests আলাদা করে। স্প্যামার, bot detect করা।
+
+**Q9: WebSocket vs REST API?**
+
+> REST: request-response, stateless। WebSocket: bidirectional, persistent connection, real-time।
+
+**Q10: Database Migration কী?**
+
+> Schema version control। `Alembic` দিয়ে করি। নতুন column add, type change, data transformation ইত্যাদি track করে।
+
+**Q11: Connection Pooling কী?**
+
+> Database connections reuse করা। প্রতি request এ নতুন connection না খুলে, pool থেকে নেওয়া। Performance improve করে।
+
+**Q12: Middleware কী?**
+
+> Request processing এর আগে এবং পরে logic চালানো। Logging, CORS, authentication, compression ইত্যাদি।
+
+**Q13: Background Tasks কেন?**
+
+> Long-running operations। Email send, file processing, analytics ইত্যাদি। User এর response এর সাথে block না করে background এ চালাই।
+
+**Q14: Docker কেন ব্যবহার করি?**
+
+> Environment consistency। Development, staging, production এ same image। Deployment সহজ হয়।
+
+**Q15: API versioning কেন?**
+
+> Backward compatibility। `/v1/users` এবং `/v2/users` আলাদা। Old clients break না হয়।
+
+| প্রশ্ন | উত্তর |
+|--------|----------|
+| FastAPI এর speed কত? | ~99,000 req/sec (benchmark) |
+| Pydantic version? | v2 (FastAPI recommend করে) |
+| Python min version? | 3.7+ (async সাপোর্টের জন্য) |
+| Popular FastAPI apps? | Netflix, Uber, Airbnb (internally) |
+| Testing library? | pytest + pytest-asyncio |
 
 ---
 
-*এই হ্যান্ডবুক Bangladesh এর Junior SWE ও Python Backend Developer interview এর জন্য তৈরি। সব PART 360° coverage দেয়।*
+## Coding Interview Questions
+
+**Q1: Simple Authentication Endpoint বানান**
+
+```python
+@app.post("/login")
+def login(username: str, password: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not verify_password(password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    token = create_access_token({"sub": user.id})
+    return {"access_token": token, "token_type": "bearer"}
+```
+
+**Q2: Pagination Implementation**
+
+```python
+@app.get("/posts")
+def list_posts(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    posts = db.query(Post).offset(skip).limit(limit).all()
+    total = db.query(Post).count()
+    return {"total": total, "posts": posts}
+```
+
+**Q3: Rate Limiting**
+
+```python
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI()
+app.state.limiter = limiter
+
+@app.get("/api/search")
+@limiter.limit("5/minute")
+def search(q: str):
+    return {"results": []}
+```
+
+**Q4: Caching with Redis**
+
+```python
+import redis
+
+redis = redis.Redis()
+
+@app.get("/user/{uid}")
+def get_user(uid: int):
+    cached = redis.get(f"user:{uid}")
+    if cached:
+        return json.loads(cached)
+    
+    user = db.query(User).get(uid)
+    redis.setex(f"user:{uid}", 300, json.dumps(user))
+    return user
+```
+
+**Q5: Bulk Insert**
+
+```python
+@app.post("/bulk-insert")
+def bulk_insert(items: list[ItemCreate], db: Session = Depends(get_db)):
+    db_items = [Item(**item.dict()) for item in items]
+    db.add_all(db_items)
+    db.commit()
+    return {"inserted": len(db_items)}
+```
+
+**Q6: Search with Filtering**
+
+```python
+@app.get("/products")
+def search_products(
+    name: Optional[str] = None,
+    min_price: Optional[float] = None,
+    max_price: Optional[float] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Product)
+    if name:
+        query = query.filter(Product.name.ilike(f"%{name}%"))
+    if min_price:
+        query = query.filter(Product.price >= min_price)
+    if max_price:
+        query = query.filter(Product.price <= max_price)
+    
+    return query.all()
+```
+
+**Q7: File Upload**
+
+```python
+from fastapi import File, UploadFile
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    content = await file.read()
+    with open(f"uploads/{file.filename}", "wb") as f:
+        f.write(content)
+    return {"filename": file.filename}
+```
+
+**Q8: Custom Exception Handler**
+
+```python
+class CustomException(Exception):
+    pass
+
+@app.exception_handler(CustomException)
+async def custom_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": str(exc)}
+    )
+
+@app.get("/test")
+def test():
+    raise CustomException("Custom error message")
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part12"></a>
+
+# PART 12: Bangladesh Interview Preparation
+
+## Bangladesh এর Tech Companies এ FastAPI Usage
+
+| Company | Stack | Interview Focus |
+|---------|-------|-----------------|
+| **Pathao** | FastAPI + PostgreSQL | System Design, Microservices |
+| **Nirapon** | FastAPI + Redis | Caching, Performance |
+| **10 Minute School** | FastAPI + Docker | Deployment, DevOps |
+| **SSL Wireless** | FastAPI + AWS | Cloud Architecture |
+| **Daraz** | FastAPI + Kubernetes | Scalability |
+
+---
+
+## Bangladesh এ Junior SWE কে প্রশ্ন করা হয়
+
+**আপনার প্রজেক্ট Bengali support করে কীভাবে?**
+
+```python
+# Encoding support
+@app.get("/search")
+def search(q: str):
+    # Bengali unicode handling
+    results = db.query(Product).filter(
+        Product.name.ilike(f"%{q}%")  # Case-insensitive search
+    ).all()
+    return results
+```
+
+---
+
+**Takas, Users, Transactions handling কীভাবে করবেন?**
+
+```python
+from decimal import Decimal
+from datetime import datetime
+
+class Transaction(Base):
+    __tablename__ = "transactions"
+    id = Column(Integer, primary_key=True)
+    amount = Column(Numeric(10, 2))  # TK amounts
+    from_user_id = Column(Integer, ForeignKey("users.id"))
+    to_user_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+@app.post("/transfer")
+async def transfer_money(
+    to_user_id: int,
+    amount: Decimal,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if current_user.balance < amount:
+        raise HTTPException(status_code=400, detail="Insufficient balance")
+    
+    current_user.balance -= amount
+    recipient = db.query(User).get(to_user_id)
+    recipient.balance += amount
+    
+    transaction = Transaction(
+        amount=amount,
+        from_user_id=current_user.id,
+        to_user_id=to_user_id
+    )
+    db.add(transaction)
+    db.commit()
+    
+    return {"status": "success", "transaction_id": transaction.id}
+```
+
+---
+
+## Common Bangladesh Interview Scenarios
+
+**Scenario 1: Startup Scale Challenge**
+
+> "আপনার app ১০ জন user থেকে ১ লাখ user এ স্কেল করতে হবে। আপনি কী করবেন?"
+
+**উত্তর:**
+1. Database read replicas (Pathao model)
+2. Caching with Redis (10MS products)
+3. API Gateway + load balancing
+4. Microservices divide (separate auth, product, payment services)
+5. CDN for static assets
+
+---
+
+**Scenario 2: Payment Integration**
+
+> "bKash, Nagad, Rocket integration করতে হবে। Error handling কীভাবে?"
+
+```python
+@app.post("/payment/bkash")
+async def payment_bkash(
+    amount: int,
+    phone: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        # Call bKash API (mock)
+        response = await httpx.post(
+            "https://bkash-api.example.com/payment",
+            json={"amount": amount, "phone": phone}
+        )
+        
+        if response.status_code != 200:
+            raise HTTPException(status_code=400, detail="Payment failed")
+        
+        # Record transaction
+        transaction = Transaction(
+            user_id=current_user.id,
+            amount=amount,
+            status="completed",
+            provider="bkash"
+        )
+        db.add(transaction)
+        db.commit()
+        
+        return {"transaction_id": transaction.id}
+    
+    except Exception as e:
+        # Log error, return to user gracefully
+        return HTTPException(status_code=500, detail="Server error")
+```
+
+---
+
+**Scenario 3: SMS/Email at Scale**
+
+> "প্রতিদিন ১ লাখ SMS পাঠাতে হবে। কীভাবে করবেন?"
+
+```python
+# Use Celery + Redis for queuing
+from celery import Celery
+
+celery = Celery('tasks', broker='redis://localhost:6379')
+
+@celery.task
+def send_sms(phone: str, message: str):
+    # Twilio or TeleBirr API call
+    try:
+        response = requests.post(
+            "https://sms-provider-api.example.com/send",
+            json={"phone": phone, "message": message}
+        )
+        return {"status": "sent"}
+    except Exception as e:
+        # Retry logic
+        send_sms.retry(exc=e, countdown=60)
+
+@app.post("/otp")
+def send_otp(phone: str):
+    otp = generate_otp()
+    send_sms.delay(phone, f"Your OTP is {otp}")
+    return {"message": "OTP sent"}
+```
+
+---
+
+## Mock Interview Questions (Bangladesh Context)
+
+**Interviewer: "Daraz থেকে Flash Sale এ ১ লাখ user একসাথে browse করছে। Server down হয়েছে। আপনি দায়ী। কী হয়েছে এবং কীভাবে ঠিক করবেন?"**
+
+**আপনার উত্তর হওয়া উচিত:**
+1. **Database সমস্যা**: Connection pool exhausted → আরও connections যোগ করুন, read replicas ব্যবহার করুন
+2. **API bottleneck**: Caching missing → Redis cache product এবং category data
+3. **Server capacity**: Worker shortage → আরও uvicorn workers চালান, load balancer ব্যবহার করুন
+4. **Network**: Bandwidth issue → CDN integrate করুন (images, static assets)
+
+---
+
+**Interviewer: "একটি user এর Bank Account hack হয়েছে এবং ১০,০০০ টাকা transfer হয়েছে। Log দেখাতে পারেন?"**
+
+```python
+# Audit logging
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer)
+    action = Column(String)  # "transfer", "login", "password_change"
+    ip_address = Column(String)
+    user_agent = Column(String)
+    details = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+# Middleware এ log করুন
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    client_ip = request.client.host
+    user_agent = request.headers.get("user-agent")
+    
+    response = await call_next(request)
+    
+    # Log to database
+    # db.add(AuditLog(...))
+    
+    return response
+```
+
+---
+
+**Interviewer: "আপনার API documentation (Swagger) access পাচ্ছি না production এ। কেন এবং কীভাবে secure করবেন?"**
+
+```python
+# Production এ docs disable করুন
+app = FastAPI(
+    docs_url=None if os.getenv("ENV") == "production" else "/docs",
+    redoc_url=None if os.getenv("ENV") == "production" else "/redoc"
+)
+
+# অথবা basic auth protect করুন
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
+security = HTTPBasic()
+
+def get_current_user(credentials: HTTPBasicCredentials = Depends(security)):
+    if credentials.username != DOCS_USERNAME or credentials.password != DOCS_PASSWORD:
+        raise HTTPException(status_code=401)
+    return credentials.username
+
+@app.get("/docs", dependencies=[Depends(get_current_user)])
+async def get_docs():
+    pass
+```
+
+---
+
+## Bangladesh SWE Interview Tips
+
+| টিপস | উদাহরণ |
+|------|--------|
+| **English এ কথা বলুন** | "We need to use connection pooling for better performance" |
+| **সমস্যা-সমাধান focus করুন** | "Scale করার জন্য caching add করি" — না শুধু theory |
+| **Local Context বুঝান** | "Daraz, Pathao এর মতো scale এ ..." |
+| **Code লিখতে পারেন দেখান** | Interview এ live coding থাকে |
+| **Trade-offs discuss করুন** | "PostgreSQL vs MongoDB, কখন কোনটি use করি" |
+| **Performance numbers জানুন** | "Redis ~1 microsecond latency, Database ~10ms" |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+*এই সম্পূর্ণ FastAPI হ্যান্ডবুক Bangladesh এর Python Backend Developer interview এর জন্য বিশেষভাবে ডিজাইন করা হয়েছে। সব ১২ PART কভার করে fundamentals থেকে advanced production patterns পর্যন্ত। Good luck with your interviews! 🚀*
