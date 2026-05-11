@@ -6274,4 +6274,1730 @@ print(group_anagrams(["eat","tea","tan","ate","nat","bat"]))
 
 ---
 
-> **📌 পরবর্তী:** PART 9 — Testing & Best Practices *(Next request এ লিখব)*
+<a id="part9"></a>
+
+## 📋 PART 9 সূচিপত্র — Testing & Best Practices
+
+| # | Topic | What You Will Learn |
+|---|---|---|
+| 1 | [Unit Testing — unittest](#p9-unittest) | TestCase, assertions, setUp/tearDown |
+| 2 | [pytest](#p9-pytest) | Fixtures, parametrize, markers, coverage |
+| 3 | [Mocking](#p9-mocking) | `unittest.mock`, patch, MagicMock |
+| 4 | [PEP 8 — Style Guide](#p9-pep8) | Naming, indentation, line length rules |
+| 5 | [Clean Code Principles](#p9-clean-code) | Readable, maintainable Python |
+| 6 | [Virtual Environment](#p9-venv) | venv, pip, requirements.txt |
+| 7 | [Project Structure](#p9-structure) | Standard layout, packaging |
+| 8 | [Git Workflow](#p9-git) | Branching, commit messages, .gitignore |
+
+---
+
+<a id="p9-unittest"></a>
+
+## 1. Unit Testing — unittest
+
+**Definition:**
+Unit testing মানে code-এর সবচেয়ে ছোট unit (function, method) আলাদাভাবে test করা। Python-এর built-in `unittest` module এর জন্য।
+
+**Real-life Analogy:**
+Unit testing হলো **factory QA** — প্রতিটি part আলাদাভাবে check করা, final product assemble করার আগে।
+
+**Key Assertion Methods:**
+
+| Method | চেক করে |
+|---|---|
+| `assertEqual(a, b)` | a == b |
+| `assertNotEqual(a, b)` | a != b |
+| `assertTrue(x)` | bool(x) is True |
+| `assertFalse(x)` | bool(x) is False |
+| `assertIsNone(x)` | x is None |
+| `assertIn(a, b)` | a in b |
+| `assertRaises(exc)` | exception raised |
+| `assertAlmostEqual(a, b)` | float equality |
+
+**Interview-style Explanation:**
+> "`setUp()` প্রতিটি test-এর আগে এবং `tearDown()` প্রতিটি test-এর পরে চলে। `setUpClass()` পুরো class-এ একবার চলে — expensive resource (DB connection) এর জন্য। Test method-এর নাম `test_` দিয়ে শুরু হতে হয়।"
+
+**Common Mistakes:**
+- test method `test_` prefix না দেওয়া — run হবে না
+- test-এ external dependency (DB, API) সরাসরি call করা — mock করুন
+- test isolation না করা — একটি test আরেকটির উপর depend করা
+
+**Follow-up Interview Questions:**
+1. `setUp()` আর `setUpClass()` পার্থক্য?
+2. Test isolation কেন দরকার?
+3. `assertRaises()` কীভাবে use করবেন?
+
+**Code Example:**
+```python
+import unittest
+from unittest import TestCase
+
+# Code under test
+class BankAccount:
+    def __init__(self, owner: str, balance: float = 0):
+        if balance < 0:
+            raise ValueError("Balance cannot be negative")
+        self.owner = owner
+        self.balance = balance
+        self._transactions = []
+
+    def deposit(self, amount: float) -> float:
+        if amount <= 0:
+            raise ValueError("Deposit amount must be positive")
+        self.balance += amount
+        self._transactions.append(("deposit", amount))
+        return self.balance
+
+    def withdraw(self, amount: float) -> float:
+        if amount <= 0:
+            raise ValueError("Withdraw amount must be positive")
+        if amount > self.balance:
+            raise ValueError(f"Insufficient funds: balance={self.balance}")
+        self.balance -= amount
+        self._transactions.append(("withdraw", amount))
+        return self.balance
+
+    def get_history(self) -> list:
+        return self._transactions.copy()
+
+
+# Test class
+class TestBankAccount(TestCase):
+
+    def setUp(self):
+        """Runs before each test"""
+        self.account = BankAccount("Rahim", 10000)
+
+    def tearDown(self):
+        """Runs after each test (cleanup)"""
+        pass
+
+    def test_initial_balance(self):
+        self.assertEqual(self.account.balance, 10000)
+        self.assertEqual(self.account.owner, "Rahim")
+
+    def test_deposit_valid(self):
+        new_balance = self.account.deposit(5000)
+        self.assertEqual(new_balance, 15000)
+        self.assertEqual(self.account.balance, 15000)
+
+    def test_deposit_invalid(self):
+        with self.assertRaises(ValueError):
+            self.account.deposit(-100)
+        with self.assertRaises(ValueError):
+            self.account.deposit(0)
+
+    def test_withdraw_valid(self):
+        new_balance = self.account.withdraw(3000)
+        self.assertEqual(new_balance, 7000)
+
+    def test_withdraw_insufficient_funds(self):
+        with self.assertRaises(ValueError) as ctx:
+            self.account.withdraw(50000)
+        self.assertIn("Insufficient funds", str(ctx.exception))
+
+    def test_negative_initial_balance_raises(self):
+        with self.assertRaises(ValueError):
+            BankAccount("Karim", -100)
+
+    def test_transaction_history(self):
+        self.account.deposit(2000)
+        self.account.withdraw(1000)
+        history = self.account.get_history()
+        self.assertEqual(len(history), 2)
+        self.assertIn(("deposit", 2000), history)
+        self.assertIn(("withdraw", 1000), history)
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
+```
+
+---
+
+<a id="p9-pytest"></a>
+
+## 2. pytest
+
+**Definition:**
+`pytest` Python-এর most popular testing framework। `unittest`-এর চেয়ে concise syntax, powerful fixtures, parametrize, এবং rich plugin ecosystem।
+
+**unittest vs pytest:**
+
+| | unittest | pytest |
+|---|---|---|
+| Setup | `class TestCase` | Function-based (class optional) |
+| Assertions | `self.assertEqual()` | Plain `assert` |
+| Fixtures | `setUp`/`tearDown` | `@pytest.fixture` (reusable) |
+| Parametrize | Manual | `@pytest.mark.parametrize` |
+| Output | Basic | Rich, colored |
+
+**Practical Use Case:**
+- FastAPI endpoint testing
+- database layer testing
+- utility function testing
+
+**Interview-style Explanation:**
+> "pytest-এ plain `assert` ব্যবহার করি — pytest automatically introspects assertion failure। `@pytest.fixture` reusable test setup বানায়, `scope` দিয়ে lifetime control করা যায় (function/class/module/session)।"
+
+**Common Mistakes:**
+- fixture scope না বোঝা — `session` scope fixture একবার তৈরি হয় সব test-এ
+- `conftest.py` এর role না জানা — shared fixtures এখানে রাখা হয়
+- test file `test_` prefix না দেওয়া — pytest discover করবে না
+
+**Follow-up Interview Questions:**
+1. pytest fixture কী? `setUp()` থেকে কীভাবে আলাদা?
+2. `conftest.py` কী?
+3. pytest দিয়ে coverage কীভাবে check করবেন?
+
+**Code Example:**
+```python
+# test_bank.py
+import pytest
+from bank import BankAccount   # previous example
+
+# ──── Fixtures ────
+@pytest.fixture
+def account():
+    """Function-scoped — প্রতি test-এ নতুন"""
+    return BankAccount("Rahim", 10000)
+
+@pytest.fixture(scope="module")
+def read_only_account():
+    """Module-scoped — এই file-এ একবার"""
+    return BankAccount("ReadOnly", 100000)
+
+# ──── Basic tests ────
+def test_deposit(account):
+    result = account.deposit(5000)
+    assert result == 15000
+    assert account.balance == 15000
+
+def test_withdraw(account):
+    account.withdraw(3000)
+    assert account.balance == 7000
+
+def test_negative_balance_raises():
+    with pytest.raises(ValueError, match="cannot be negative"):
+        BankAccount("X", -1)
+
+# ──── Parametrize ────
+@pytest.mark.parametrize("amount,expected", [
+    (1000, 11000),
+    (5000, 15000),
+    (9999, 19999),
+])
+def test_deposit_parametrized(account, amount, expected):
+    assert account.deposit(amount) == expected
+
+@pytest.mark.parametrize("invalid_amount", [-100, 0, -0.01])
+def test_deposit_invalid_amounts(account, invalid_amount):
+    with pytest.raises(ValueError):
+        account.deposit(invalid_amount)
+
+# ──── Markers ────
+@pytest.mark.slow
+def test_large_operations(account):
+    for _ in range(10000):
+        account.deposit(1)
+    assert account.balance == 20000
+
+# Run: pytest test_bank.py -v
+# Run with coverage: pytest --cov=bank --cov-report=term-missing
+# Skip slow: pytest -m "not slow"
+```
+
+```ini
+# pytest.ini
+[pytest]
+testpaths = tests
+addopts = -v --tb=short
+markers =
+    slow: marks tests as slow
+    integration: marks integration tests
+```
+
+---
+
+<a id="p9-mocking"></a>
+
+## 3. Mocking
+
+**Definition:**
+Mock হলো real object-এর fake version যা test-এ external dependency (DB, API, email) replace করে। `unittest.mock` module use হয়।
+
+**Real-life Analogy:**
+Mock হলো **film set** — আসল বাড়ি নয়, কিন্তু দেখতে বাড়ির মতো। Actor-রা real জায়গায় না গিয়েই scene করে।
+
+**Key Mock Tools:**
+
+| Tool | কাজ |
+|---|---|
+| `MagicMock()` | All-purpose mock object |
+| `patch()` | Temporarily replace an object |
+| `patch.object()` | Replace specific method |
+| `Mock(return_value=x)` | Set return value |
+| `mock.assert_called_once_with(args)` | Verify call |
+| `mock.call_count` | How many times called |
+
+**Interview-style Explanation:**
+> "Mock দিয়ে external API, database, email, payment gateway — সব fake করা যায়। Test fast থাকে, external service-এর উপর depend করে না। `patch()` context manager বা decorator হিসেবে use করি।"
+
+**Common Mistakes:**
+- patch করার path ভুল দেওয়া — যেখানে import হয়েছে সেখানে patch করতে হবে
+- `assert_called_with()` আর `assert_called_once_with()` confuse করা
+- mock করার প্রয়োজন নেই এমন কিছু mock করা
+
+**Follow-up Interview Questions:**
+1. Mock কেন দরকার?
+2. `patch` decorator কীভাবে কাজ করে?
+3. `MagicMock` আর `Mock` পার্থক্য?
+
+**Code Example:**
+```python
+import pytest
+from unittest.mock import MagicMock, patch, call
+
+# ──── Code to test ────
+import requests
+
+class WeatherService:
+    BASE_URL = "https://api.weather.com/v1"
+
+    def get_temperature(self, city: str) -> float:
+        response = requests.get(f"{self.BASE_URL}/temp?city={city}", timeout=5)
+        response.raise_for_status()
+        return response.json()["temperature"]
+
+class NotificationService:
+    def send_email(self, to: str, subject: str, body: str) -> bool:
+        # external email API call
+        pass
+
+class UserService:
+    def __init__(self, notifier: NotificationService):
+        self.notifier = notifier
+
+    def register_user(self, email: str, name: str) -> dict:
+        user = {"id": 1, "email": email, "name": name}
+        self.notifier.send_email(
+            to=email,
+            subject="Welcome!",
+            body=f"Hello {name}, welcome to our platform!"
+        )
+        return user
+
+
+# ──── Tests with mock ────
+class TestWeatherService:
+
+    @patch("requests.get")   # patch where it's used
+    def test_get_temperature_success(self, mock_get):
+        # Setup mock response
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"temperature": 32.5}
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+
+        service = WeatherService()
+        temp = service.get_temperature("Dhaka")
+
+        assert temp == 32.5
+        mock_get.assert_called_once_with(
+            "https://api.weather.com/v1/temp?city=Dhaka",
+            timeout=5
+        )
+
+    @patch("requests.get")
+    def test_get_temperature_api_error(self, mock_get):
+        mock_get.side_effect = requests.exceptions.ConnectionError("Network error")
+
+        service = WeatherService()
+        with pytest.raises(requests.exceptions.ConnectionError):
+            service.get_temperature("Dhaka")
+
+
+class TestUserService:
+
+    def test_register_sends_welcome_email(self):
+        mock_notifier = MagicMock(spec=NotificationService)
+        mock_notifier.send_email.return_value = True
+
+        service = UserService(mock_notifier)
+        user = service.register_user("rahim@example.com", "Rahim")
+
+        assert user["email"] == "rahim@example.com"
+        mock_notifier.send_email.assert_called_once_with(
+            to="rahim@example.com",
+            subject="Welcome!",
+            body="Hello Rahim, welcome to our platform!"
+        )
+
+    def test_register_calls_notifier_exactly_once(self):
+        mock_notifier = MagicMock(spec=NotificationService)
+        service = UserService(mock_notifier)
+
+        service.register_user("a@b.com", "Alice")
+        service.register_user("c@d.com", "Bob")
+
+        assert mock_notifier.send_email.call_count == 2
+```
+
+---
+
+<a id="p9-pep8"></a>
+
+## 4. PEP 8 — Style Guide
+
+**Definition:**
+PEP 8 হলো Python-এর official coding style guide। Readable, consistent Python code-এর standard।
+
+**Key Rules:**
+
+| Category | Rule | Example |
+|---|---|---|
+| Indentation | 4 spaces (no tabs) | `def func():` → 4 space indent |
+| Line length | Max 79 chars (99 acceptable) | Long line → backslash বা parentheses |
+| Blank lines | 2 lines between top-level, 1 inside class | `def f():` — 2 blank lines before |
+| Imports | One per line, grouped | stdlib → third-party → local |
+| Naming | `snake_case` for variables/functions | `user_name`, `get_user()` |
+| Naming | `PascalCase` for classes | `UserService`, `BankAccount` |
+| Naming | `UPPER_CASE` for constants | `MAX_RETRY`, `BASE_URL` |
+| Naming | `_single_leading` for protected | `_internal_method` |
+| Naming | `__double_leading` for private | `__private_attr` |
+| Whitespace | Around operators | `x = 1 + 2` not `x=1+2` |
+| Whitespace | No space before `(` in call | `func()` not `func ()` |
+| Comments | Full sentence, `# ` space after `#` | `# This calculates total` |
+| Docstrings | `"""Triple quotes"""` | Public function-এ always |
+
+**Tools:**
+- `flake8` — style checker
+- `black` — auto-formatter
+- `isort` — import sorter
+- `pylint` — full linter
+
+**Interview-style Explanation:**
+> "PEP 8 follow করলে team-এ code review সহজ হয়, code readable থাকে। Production project-এ `black` দিয়ে auto-format করি, CI/CD-এ `flake8` check রাখি।"
+
+**Code Example:**
+```python
+# ❌ Bad PEP 8
+import os,sys
+from pathlib import Path
+x=1+2
+def getUserById( id,db ):
+    user=db.query(User).filter(User.id==id).first()
+    return(user)
+class userService:
+    def __init__(self,db):
+        self.db=db
+
+# ✅ Good PEP 8
+import os
+import sys
+from pathlib import Path
+
+# Third-party
+from sqlalchemy.orm import Session
+
+# Local
+from models import User
+
+MAX_RETRY = 3
+BASE_URL = "https://api.example.com"
+
+
+def get_user_by_id(user_id: int, db: Session):
+    """Retrieve a user by their primary key.
+
+    Args:
+        user_id: The user's database ID.
+        db: SQLAlchemy database session.
+
+    Returns:
+        User object or None if not found.
+    """
+    return db.query(User).filter(User.id == user_id).first()
+
+
+class UserService:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def get_user(self, user_id: int):
+        return get_user_by_id(user_id, self.db)
+```
+
+---
+
+<a id="p9-clean-code"></a>
+
+## 5. Clean Code Principles
+
+**Definition:**
+Clean code মানে code যা পড়া সহজ, বোঝা সহজ, এবং maintain করা সহজ। Robert C. Martin-এর "Clean Code" বইয়ের principles।
+
+**Key Principles:**
+
+| Principle | মানে |
+|---|---|
+| Meaningful names | Variable/function নাম দেখেই বোঝা যায় কী করে |
+| Small functions | একটি function একটি কাজ করে (SRP) |
+| No magic numbers | `86400` নয়, `SECONDS_PER_DAY = 86400` |
+| DRY | Don't Repeat Yourself — duplication avoid |
+| Early return | Nested `if` কমানো, early guard clause |
+| Avoid deep nesting | Max 2-3 level nesting |
+
+**Interview-style Explanation:**
+> "Clean code-এর সবচেয়ে important rule: code একবার লেখা হয়, বারবার পড়া হয়। Function নাম দেখলেই বোঝা যাওয়া উচিত কী করে — comment-এর দরকার নেই। Magic number কখনো না।"
+
+**Code Example:**
+```python
+# ❌ Bad — Magic numbers, unclear names, deep nesting
+def calc(x, lst):
+    r = []
+    for i in lst:
+        if i["type"] == 1:
+            if i["active"] == True:
+                if i["val"] > 0:
+                    r.append(i["val"] * x * 0.18)
+    return r
+
+# ✅ Clean
+TAX_RATE = 0.18
+PRODUCT_TYPE_PHYSICAL = 1
+
+def calculate_tax_for_active_physical_products(
+    multiplier: float,
+    products: list[dict]
+) -> list[float]:
+    return [
+        product["val"] * multiplier * TAX_RATE
+        for product in products
+        if _is_taxable_product(product)
+    ]
+
+def _is_taxable_product(product: dict) -> bool:
+    return (
+        product["type"] == PRODUCT_TYPE_PHYSICAL
+        and product["active"]
+        and product["val"] > 0
+    )
+
+# ❌ Bad — no early return, deep nesting
+def process_order(order):
+    if order is not None:
+        if order["status"] == "pending":
+            if order["items"]:
+                if order["total"] > 0:
+                    # actual logic here
+                    return True
+    return False
+
+# ✅ Clean — early return / guard clause
+def process_order(order: dict) -> bool:
+    if order is None:
+        return False
+    if order["status"] != "pending":
+        return False
+    if not order["items"]:
+        return False
+    if order["total"] <= 0:
+        return False
+
+    # actual logic — no nesting
+    return True
+```
+
+---
+
+<a id="p9-venv"></a>
+
+## 6. Virtual Environment
+
+**Definition:**
+Virtual environment হলো isolated Python environment — প্রতিটি project-এর আলাদা dependencies, system Python-এ conflict নেই।
+
+**Real-life Analogy:**
+Virtual environment কে **আলাদা apartment** হিসেবে ভাবুন। প্রতিটি apartment-এর নিজস্ব furniture — একটির পরিবর্তন অন্যটিতে effect করে না।
+
+**Essential Commands:**
+
+```bash
+# Create
+python3 -m venv venv
+
+# Activate
+source venv/bin/activate        # Linux/macOS
+venv\Scripts\activate           # Windows
+
+# Deactivate
+deactivate
+
+# Install packages
+pip install fastapi uvicorn sqlalchemy
+
+# Save dependencies
+pip freeze > requirements.txt
+
+# Install from requirements
+pip install -r requirements.txt
+
+# Check installed
+pip list
+pip show fastapi
+```
+
+**requirements.txt best practices:**
+```text
+# requirements.txt — pinned versions
+fastapi==0.115.0
+uvicorn[standard]==0.32.0
+sqlalchemy==2.0.36
+pydantic==2.10.0
+python-dotenv==1.0.0
+
+# requirements-dev.txt — dev only
+pytest==8.3.0
+pytest-cov==6.0.0
+black==24.10.0
+flake8==7.1.1
+```
+
+**Interview-style Explanation:**
+> "প্রতিটি project-এ `venv` তৈরি করি — system Python dirty করা উচিত নয়। `requirements.txt`-এ exact version pin করি production-এ। `.venv` folder সবসময় `.gitignore`-এ রাখি।"
+
+**Common Mistakes:**
+- `venv` folder git-এ commit করা — `.gitignore`-এ add করুন
+- `requirements.txt` update না রাখা — নতুন package install করলে freeze করুন
+- exact version pin না করা — `fastapi` নয়, `fastapi==0.115.0`
+
+---
+
+<a id="p9-structure"></a>
+
+## 7. Project Structure
+
+**Definition:**
+Standard project structure Python project-কে maintainable, scalable করে। Packaging, testing, configuration আলাদা রাখা হয়।
+
+**Standard Layout:**
+```text
+my_project/
+├── src/
+│   └── my_app/
+│       ├── __init__.py
+│       ├── main.py
+│       ├── models/
+│       │   ├── __init__.py
+│       │   └── user.py
+│       ├── services/
+│       │   ├── __init__.py
+│       │   └── user_service.py
+│       ├── routers/
+│       │   ├── __init__.py
+│       │   └── users.py
+│       └── utils/
+│           └── helpers.py
+├── tests/
+│   ├── conftest.py
+│   ├── test_models.py
+│   └── test_services.py
+├── .env
+├── .env.example          ← commit এটি, .env নয়
+├── .gitignore
+├── requirements.txt
+├── requirements-dev.txt
+├── README.md
+└── pyproject.toml        ← modern project config
+```
+
+**`.gitignore` essentials:**
+```text
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtual env
+venv/
+.venv/
+env/
+
+# Environment
+.env
+*.env
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+```
+
+---
+
+<a id="p9-git"></a>
+
+## 8. Git Workflow
+
+**Definition:**
+Git workflow হলো team-এ code collaborate করার systematic approach। Branching strategy, commit messages, code review।
+
+**Conventional Commit Format:**
+```text
+<type>(<scope>): <short description>
+
+feat(auth): add JWT token refresh endpoint
+fix(payment): handle bKash timeout gracefully
+docs(readme): update installation instructions
+test(user): add unit tests for user service
+refactor(db): extract connection pool setup
+chore(deps): upgrade fastapi to 0.115.0
+```
+
+**Common Branch Strategy:**
+```text
+main          ← production-ready
+develop       ← integration branch
+feature/xxx   ← new feature
+bugfix/xxx    ← bug fix
+hotfix/xxx    ← urgent production fix
+```
+
+**Interview-style Explanation:**
+> "Conventional commits দিয়ে changelog auto-generate করা যায়। `git rebase` করি feature branch-কে main-এর উপরে রাখতে। `git stash` দিয়ে incomplete work সাময়িক সরিয়ে রাখি। Squash commit করি PR merge-এর আগে।"
+
+**Essential Git Commands:**
+```bash
+# Branch
+git checkout -b feature/user-auth
+git branch -d feature/user-auth
+
+# Stash
+git stash push -m "WIP: user auth"
+git stash pop
+
+# Rebase (keep history clean)
+git fetch origin
+git rebase origin/main
+
+# Interactive rebase — squash commits
+git rebase -i HEAD~3
+
+# Undo last commit (keep changes)
+git reset HEAD~1 --soft
+
+# Check what changed
+git diff HEAD
+git log --oneline --graph -10
+```
+
+---
+
+## PART 9 Quick Revision Table
+
+| Topic | Key Takeaway | Interview Must-Know |
+|---|---|---|
+| unittest | `TestCase`, `setUp`/`tearDown` | `assertRaises()`, `assert*` methods |
+| pytest | Fixtures, parametrize, plain assert | `conftest.py`, `--cov` flag |
+| Mocking | Replace external deps in tests | `patch()` path = where imported |
+| PEP 8 | Naming, spacing, import order | `black` auto-formatter |
+| Clean Code | Readable names, small functions, no magic numbers | Guard clause / early return |
+| venv | Isolated environment per project | `.gitignore` venv, pin versions |
+| Project Structure | src/, tests/, conftest.py | `.env.example` commit, `.env` no |
+| Git | Conventional commits, branching | `rebase` vs `merge`, `stash` |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part10"></a>
+
+## 📋 PART 10 সূচিপত্র — Python Projects
+
+| # | Project | Skills Practiced |
+|---|---|---|
+| 1 | [Student Management CLI](#p10-student-mgmt) | OOP, file I/O, JSON, CRUD |
+| 2 | [CLI Todo App](#p10-todo) | argparse, JSON persistence, clean code |
+| 3 | [File Organizer Script](#p10-organizer) | os, shutil, pathlib, automation |
+| 4 | [Weather CLI App](#p10-weather) | requests, API integration, error handling |
+| 5 | [REST API with FastAPI](#p10-rest-api) | FastAPI, Pydantic, SQLAlchemy, CRUD |
+| 6 | [JWT Auth System](#p10-auth) | FastAPI, JWT, hashing, middleware |
+| 7 | [Web Scraper](#p10-scraper) | requests, BeautifulSoup, CSV export |
+| 8 | [Task Automation Script](#p10-automation) | subprocess, schedule, logging |
+
+---
+
+<a id="p10-student-mgmt"></a>
+
+## 1. Student Management CLI
+
+**Skills:** OOP, JSON persistence, CRUD, input validation
+
+**Project Overview:**
+Terminal-based student management system — add, list, search, update, delete student records। JSON file-এ data persist করা।
+
+```python
+# student_manager.py
+import json
+import os
+from dataclasses import dataclass, asdict
+from typing import Optional
+from pathlib import Path
+
+DATA_FILE = Path("students.json")
+
+
+@dataclass
+class Student:
+    student_id: str
+    name: str
+    age: int
+    department: str
+    gpa: float
+
+    def __post_init__(self):
+        if not (0.0 <= self.gpa <= 4.0):
+            raise ValueError(f"GPA must be 0.0–4.0, got {self.gpa}")
+        if self.age < 16 or self.age > 60:
+            raise ValueError(f"Invalid age: {self.age}")
+
+
+class StudentManager:
+    def __init__(self):
+        self._students: dict[str, Student] = {}
+        self._load()
+
+    def _load(self):
+        if DATA_FILE.exists():
+            with open(DATA_FILE, encoding="utf-8") as f:
+                data = json.load(f)
+                self._students = {
+                    sid: Student(**info) for sid, info in data.items()
+                }
+
+    def _save(self):
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(
+                {sid: asdict(s) for sid, s in self._students.items()},
+                f, indent=2, ensure_ascii=False
+            )
+
+    def add(self, student: Student) -> bool:
+        if student.student_id in self._students:
+            print(f"Student {student.student_id} already exists")
+            return False
+        self._students[student.student_id] = student
+        self._save()
+        return True
+
+    def get(self, student_id: str) -> Optional[Student]:
+        return self._students.get(student_id)
+
+    def list_all(self, dept: str = None) -> list[Student]:
+        students = list(self._students.values())
+        if dept:
+            students = [s for s in students if s.department == dept]
+        return sorted(students, key=lambda s: s.name)
+
+    def update_gpa(self, student_id: str, new_gpa: float) -> bool:
+        student = self._students.get(student_id)
+        if not student:
+            return False
+        if not (0.0 <= new_gpa <= 4.0):
+            raise ValueError("Invalid GPA")
+        student.gpa = new_gpa
+        self._save()
+        return True
+
+    def delete(self, student_id: str) -> bool:
+        if student_id not in self._students:
+            return False
+        del self._students[student_id]
+        self._save()
+        return True
+
+    def search(self, query: str) -> list[Student]:
+        q = query.lower()
+        return [
+            s for s in self._students.values()
+            if q in s.name.lower() or q in s.department.lower()
+        ]
+
+    def top_students(self, n: int = 5) -> list[Student]:
+        return sorted(
+            self._students.values(), key=lambda s: s.gpa, reverse=True
+        )[:n]
+
+
+def print_student(s: Student):
+    print(f"  [{s.student_id}] {s.name} | {s.department} | Age: {s.age} | GPA: {s.gpa:.2f}")
+
+
+def main():
+    mgr = StudentManager()
+    while True:
+        print("\n=== Student Management System ===")
+        print("1. Add Student  2. List All  3. Search")
+        print("4. Update GPA   5. Delete    6. Top Students  0. Exit")
+        choice = input("Choice: ").strip()
+
+        if choice == "1":
+            try:
+                s = Student(
+                    student_id=input("ID: ").strip(),
+                    name=input("Name: ").strip(),
+                    age=int(input("Age: ")),
+                    department=input("Dept: ").strip(),
+                    gpa=float(input("GPA (0.0–4.0): "))
+                )
+                if mgr.add(s):
+                    print(f"Added: {s.name}")
+            except ValueError as e:
+                print(f"Error: {e}")
+
+        elif choice == "2":
+            dept = input("Filter by dept (Enter to skip): ").strip() or None
+            students = mgr.list_all(dept)
+            for s in students:
+                print_student(s)
+            print(f"Total: {len(students)}")
+
+        elif choice == "3":
+            query = input("Search name/dept: ").strip()
+            for s in mgr.search(query):
+                print_student(s)
+
+        elif choice == "4":
+            sid = input("Student ID: ").strip()
+            try:
+                gpa = float(input("New GPA: "))
+                print("Updated" if mgr.update_gpa(sid, gpa) else "Not found")
+            except ValueError as e:
+                print(f"Error: {e}")
+
+        elif choice == "5":
+            sid = input("Student ID to delete: ").strip()
+            print("Deleted" if mgr.delete(sid) else "Not found")
+
+        elif choice == "6":
+            for s in mgr.top_students(5):
+                print_student(s)
+
+        elif choice == "0":
+            print("Goodbye!")
+            break
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+<a id="p10-todo"></a>
+
+## 2. CLI Todo App
+
+**Skills:** `argparse`, JSON persistence, dataclasses, clean code
+
+```python
+# todo.py — run: python todo.py add "Buy groceries" --priority high
+import json
+import argparse
+from dataclasses import dataclass, asdict, field
+from pathlib import Path
+from datetime import datetime
+from enum import Enum
+
+DATA_FILE = Path.home() / ".todo_data.json"
+
+
+class Priority(str, Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+@dataclass
+class Todo:
+    id: int
+    title: str
+    priority: str = Priority.MEDIUM
+    done: bool = False
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+
+class TodoStore:
+    def __init__(self):
+        self.todos: list[Todo] = []
+        self._next_id = 1
+        self._load()
+
+    def _load(self):
+        if DATA_FILE.exists():
+            data = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+            self.todos = [Todo(**t) for t in data]
+            self._next_id = max((t.id for t in self.todos), default=0) + 1
+
+    def _save(self):
+        DATA_FILE.write_text(
+            json.dumps([asdict(t) for t in self.todos], indent=2),
+            encoding="utf-8"
+        )
+
+    def add(self, title: str, priority: str = "medium") -> Todo:
+        todo = Todo(id=self._next_id, title=title, priority=priority)
+        self.todos.append(todo)
+        self._next_id += 1
+        self._save()
+        return todo
+
+    def complete(self, todo_id: int) -> bool:
+        for t in self.todos:
+            if t.id == todo_id:
+                t.done = True
+                self._save()
+                return True
+        return False
+
+    def delete(self, todo_id: int) -> bool:
+        original = len(self.todos)
+        self.todos = [t for t in self.todos if t.id != todo_id]
+        if len(self.todos) < original:
+            self._save()
+            return True
+        return False
+
+    def list_todos(self, show_done: bool = False) -> list[Todo]:
+        items = self.todos if show_done else [t for t in self.todos if not t.done]
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        return sorted(items, key=lambda t: priority_order.get(t.priority, 1))
+
+
+def format_todo(t: Todo) -> str:
+    status = "✅" if t.done else "⬜"
+    priority_icons = {"high": "🔴", "medium": "🟡", "low": "🟢"}
+    icon = priority_icons.get(t.priority, "⬜")
+    return f"  [{t.id}] {status} {icon} {t.title}"
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="CLI Todo App")
+    sub = parser.add_subparsers(dest="command")
+
+    add_p = sub.add_parser("add", help="Add a new todo")
+    add_p.add_argument("title", help="Todo title")
+    add_p.add_argument("--priority", choices=["low","medium","high"],
+                       default="medium")
+
+    done_p = sub.add_parser("done", help="Mark todo as complete")
+    done_p.add_argument("id", type=int)
+
+    del_p = sub.add_parser("delete", help="Delete a todo")
+    del_p.add_argument("id", type=int)
+
+    list_p = sub.add_parser("list", help="List todos")
+    list_p.add_argument("--all", action="store_true", help="Include done items")
+
+    return parser
+
+
+def main():
+    parser = build_parser()
+    args = parser.parse_args()
+    store = TodoStore()
+
+    if args.command == "add":
+        todo = store.add(args.title, args.priority)
+        print(f"Added: {format_todo(todo)}")
+
+    elif args.command == "done":
+        print("Marked done!" if store.complete(args.id) else "Not found")
+
+    elif args.command == "delete":
+        print("Deleted!" if store.delete(args.id) else "Not found")
+
+    elif args.command == "list":
+        todos = store.list_todos(show_done=args.all)
+        if not todos:
+            print("No todos!")
+        for t in todos:
+            print(format_todo(t))
+        print(f"\n{len(todos)} item(s)")
+
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+<a id="p10-organizer"></a>
+
+## 3. File Organizer Script
+
+**Skills:** `pathlib`, `shutil`, automation, logging
+
+```python
+# organizer.py — python organizer.py ~/Downloads
+import argparse
+import logging
+import shutil
+from pathlib import Path
+from datetime import datetime
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%H:%M:%S"
+)
+logger = logging.getLogger(__name__)
+
+FOLDER_MAP = {
+    "Images":    {".jpg",".jpeg",".png",".gif",".webp",".svg",".bmp"},
+    "Documents": {".pdf",".docx",".doc",".txt",".pptx",".xlsx",".odt"},
+    "Data":      {".csv",".json",".xml",".yaml",".yml",".sql"},
+    "Code":      {".py",".js",".ts",".html",".css",".java",".cpp",".go"},
+    "Archives":  {".zip",".tar",".gz",".rar",".7z"},
+    "Videos":    {".mp4",".mkv",".avi",".mov",".wmv"},
+    "Audio":     {".mp3",".wav",".flac",".aac",".ogg"},
+}
+
+def build_ext_map() -> dict[str, str]:
+    return {ext: folder for folder, exts in FOLDER_MAP.items() for ext in exts}
+
+def unique_path(dest_dir: Path, filename: str) -> Path:
+    stem = Path(filename).stem
+    suffix = Path(filename).suffix
+    dest = dest_dir / filename
+    counter = 1
+    while dest.exists():
+        dest = dest_dir / f"{stem}_{counter}{suffix}"
+        counter += 1
+    return dest
+
+def organize(source_dir: str, dry_run: bool = False) -> dict:
+    source = Path(source_dir).expanduser().resolve()
+    if not source.is_dir():
+        raise ValueError(f"Not a directory: {source}")
+
+    ext_map = build_ext_map()
+    stats = {"moved": 0, "skipped": 0, "errors": 0}
+
+    for file in source.iterdir():
+        if not file.is_file():
+            continue
+        if file.name.startswith("."):
+            continue
+
+        folder = ext_map.get(file.suffix.lower(), "Others")
+        dest_dir = source / folder
+        dest = unique_path(dest_dir, file.name)
+
+        if dry_run:
+            logger.info(f"[DRY RUN] {file.name} → {folder}/")
+            stats["moved"] += 1
+            continue
+
+        try:
+            dest_dir.mkdir(exist_ok=True)
+            shutil.move(str(file), str(dest))
+            logger.info(f"Moved: {file.name} → {folder}/")
+            stats["moved"] += 1
+        except Exception as e:
+            logger.error(f"Failed to move {file.name}: {e}")
+            stats["errors"] += 1
+
+    return stats
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Organize files by type")
+    parser.add_argument("directory", help="Directory to organize")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Preview without moving")
+    args = parser.parse_args()
+
+    stats = organize(args.directory, dry_run=args.dry_run)
+    print(f"\nDone: moved={stats['moved']}, errors={stats['errors']}")
+```
+
+---
+
+<a id="p10-weather"></a>
+
+## 4. Weather CLI App
+
+**Skills:** `requests`, API integration, error handling, argparse
+
+```python
+# weather.py — python weather.py Dhaka
+# Uses OpenWeatherMap free API (api.openweathermap.org)
+import os
+import sys
+import argparse
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.environ.get("OPENWEATHER_API_KEY", "")
+BASE_URL = "https://api.openweathermap.org/data/2.5"
+
+def get_weather(city: str, units: str = "metric") -> dict:
+    if not API_KEY:
+        raise RuntimeError("OPENWEATHER_API_KEY not set in .env")
+    response = requests.get(
+        f"{BASE_URL}/weather",
+        params={"q": city, "appid": API_KEY, "units": units},
+        timeout=10
+    )
+    if response.status_code == 404:
+        raise ValueError(f"City not found: {city}")
+    response.raise_for_status()
+    return response.json()
+
+def display_weather(data: dict, units: str):
+    unit_sym = "°C" if units == "metric" else "°F"
+    city = data["name"]
+    country = data["sys"]["country"]
+    temp = data["main"]["temp"]
+    feels_like = data["main"]["feels_like"]
+    humidity = data["main"]["humidity"]
+    description = data["weather"][0]["description"].title()
+    wind = data["wind"]["speed"]
+
+    print(f"\n{'='*35}")
+    print(f"  📍 {city}, {country}")
+    print(f"  🌡  Temperature : {temp}{unit_sym} (feels like {feels_like}{unit_sym})")
+    print(f"  💧 Humidity    : {humidity}%")
+    print(f"  🌬  Wind        : {wind} m/s")
+    print(f"  ☁  Condition   : {description}")
+    print(f"{'='*35}\n")
+
+def main():
+    parser = argparse.ArgumentParser(description="Weather CLI")
+    parser.add_argument("city", help="City name (e.g., Dhaka)")
+    parser.add_argument("--units", choices=["metric","imperial"],
+                        default="metric")
+    args = parser.parse_args()
+
+    try:
+        data = get_weather(args.city, args.units)
+        display_weather(data, args.units)
+    except ValueError as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+    except requests.exceptions.ConnectionError:
+        print("Error: No internet connection")
+        sys.exit(1)
+    except RuntimeError as e:
+        print(f"Config error: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+<a id="p10-rest-api"></a>
+
+## 5. REST API with FastAPI
+
+**Skills:** FastAPI, Pydantic, SQLAlchemy, CRUD, error handling
+
+```python
+# main.py — uvicorn main:app --reload
+from fastapi import FastAPI, Depends, HTTPException, status
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
+from pydantic import BaseModel, field_validator
+from typing import Optional
+import os
+
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./products.db")
+engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# ──── Model ────
+class ProductDB(Base):
+    __tablename__ = "products"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, index=True)
+    price = Column(Float, nullable=False)
+    stock = Column(Integer, default=0)
+    active = Column(Boolean, default=True)
+
+Base.metadata.create_all(bind=engine)
+
+# ──── Schemas ────
+class ProductCreate(BaseModel):
+    name: str
+    price: float
+    stock: int = 0
+
+    @field_validator("price")
+    @classmethod
+    def price_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Price must be positive")
+        return round(v, 2)
+
+class ProductUpdate(BaseModel):
+    name: Optional[str] = None
+    price: Optional[float] = None
+    stock: Optional[int] = None
+
+class ProductResponse(BaseModel):
+    id: int
+    name: str
+    price: float
+    stock: int
+    active: bool
+
+    class Config:
+        from_attributes = True
+
+# ──── Dependency ────
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# ──── App ────
+app = FastAPI(title="Products API", version="1.0.0")
+
+@app.get("/products", response_model=list[ProductResponse])
+def list_products(
+    skip: int = 0,
+    limit: int = 20,
+    db: Session = Depends(get_db)
+):
+    return db.query(ProductDB).filter(
+        ProductDB.active == True
+    ).offset(skip).limit(limit).all()
+
+@app.post("/products", response_model=ProductResponse,
+          status_code=status.HTTP_201_CREATED)
+def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+    db_product = ProductDB(**product.model_dump())
+    db.add(db_product)
+    db.commit()
+    db.refresh(db_product)
+    return db_product
+
+@app.get("/products/{product_id}", response_model=ProductResponse)
+def get_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
+@app.patch("/products/{product_id}", response_model=ProductResponse)
+def update_product(
+    product_id: int,
+    updates: ProductUpdate,
+    db: Session = Depends(get_db)
+):
+    product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    for key, value in updates.model_dump(exclude_unset=True).items():
+        setattr(product, key, value)
+    db.commit()
+    db.refresh(product)
+    return product
+
+@app.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(ProductDB).filter(ProductDB.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    product.active = False   # soft delete
+    db.commit()
+```
+
+---
+
+<a id="p10-auth"></a>
+
+## 6. JWT Auth System
+
+**Skills:** FastAPI, JWT, bcrypt password hashing, OAuth2
+
+```python
+# auth.py — JWT authentication with FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+from pydantic import BaseModel
+from datetime import datetime, timedelta
+from typing import Optional
+import os
+
+# ──── Config ────
+SECRET_KEY = os.environ.get("SECRET_KEY", "change-this-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# ──── Security ────
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    to_encode["exp"] = expire
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+# ──── Fake DB ────
+USERS_DB = {
+    "rahim": {
+        "username": "rahim",
+        "hashed_password": hash_password("secret123"),
+        "email": "rahim@example.com",
+        "role": "user",
+    }
+}
+
+# ──── Schemas ────
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class UserResponse(BaseModel):
+    username: str
+    email: str
+    role: str
+
+# ──── Auth dependency ────
+async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = USERS_DB.get(username)
+    if not user:
+        raise credentials_exception
+    return user
+
+# ──── App ────
+app = FastAPI(title="Auth API")
+
+@app.post("/auth/login", response_model=Token)
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = USERS_DB.get(form_data.username)
+    if not user or not verify_password(form_data.password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token = create_access_token(
+        data={"sub": user["username"]},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.get("/me", response_model=UserResponse)
+async def get_me(current_user: dict = Depends(get_current_user)):
+    return current_user
+
+@app.get("/protected")
+async def protected_route(current_user: dict = Depends(get_current_user)):
+    return {"message": f"Hello {current_user['username']}! This is protected."}
+```
+
+---
+
+<a id="p10-scraper"></a>
+
+## 7. Web Scraper
+
+**Skills:** `requests`, `BeautifulSoup`, CSV export, rate limiting
+
+```python
+# scraper.py — Scrape quotes.toscrape.com and export to CSV
+import csv
+import time
+import logging
+import requests
+from bs4 import BeautifulSoup
+from dataclasses import dataclass, fields, astuple
+from pathlib import Path
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
+logger = logging.getLogger(__name__)
+
+BASE_URL = "http://quotes.toscrape.com"
+OUTPUT_FILE = Path("quotes.csv")
+DELAY_SECONDS = 1.0
+
+
+@dataclass
+class Quote:
+    text: str
+    author: str
+    tags: str   # comma-joined
+
+
+def scrape_page(url: str, session: requests.Session) -> tuple[list[Quote], str | None]:
+    response = session.get(url, timeout=10)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    quotes = []
+    for div in soup.find_all("div", class_="quote"):
+        text = div.find("span", class_="text").get_text(strip=True)
+        author = div.find("small", class_="author").get_text(strip=True)
+        tags = ",".join(t.get_text() for t in div.find_all("a", class_="tag"))
+        quotes.append(Quote(text=text, author=author, tags=tags))
+
+    next_li = soup.find("li", class_="next")
+    next_url = BASE_URL + next_li.find("a")["href"] if next_li else None
+    return quotes, next_url
+
+
+def save_to_csv(quotes: list[Quote], path: Path):
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([field.name for field in fields(Quote)])
+        for q in quotes:
+            writer.writerow(astuple(q))
+    logger.info(f"Saved {len(quotes)} quotes to {path}")
+
+
+def scrape_all() -> list[Quote]:
+    all_quotes = []
+    url = BASE_URL
+    page = 1
+
+    with requests.Session() as session:
+        session.headers.update({"User-Agent": "QuoteScraper/1.0"})
+
+        while url:
+            logger.info(f"Scraping page {page}: {url}")
+            try:
+                quotes, url = scrape_page(url, session)
+                all_quotes.extend(quotes)
+                logger.info(f"  Found {len(quotes)} quotes")
+            except requests.RequestException as e:
+                logger.error(f"Request failed: {e}")
+                break
+
+            page += 1
+            if url:
+                time.sleep(DELAY_SECONDS)   # polite delay
+
+    return all_quotes
+
+
+if __name__ == "__main__":
+    quotes = scrape_all()
+    save_to_csv(quotes, OUTPUT_FILE)
+    print(f"\nTotal quotes scraped: {len(quotes)}")
+    print(f"Saved to: {OUTPUT_FILE}")
+```
+
+---
+
+<a id="p10-automation"></a>
+
+## 8. Task Automation Script
+
+**Skills:** `subprocess`, `schedule`, `logging`, `pathlib`, system automation
+
+```python
+# automation.py — Daily automation: backup, health check, log cleanup
+import schedule
+import time
+import shutil
+import logging
+import subprocess
+from datetime import datetime
+from pathlib import Path
+
+# ──── Logging ────
+LOG_DIR = Path("logs")
+LOG_DIR.mkdir(exist_ok=True)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_DIR / "automation.log", encoding="utf-8"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# ──── Config ────
+BACKUP_SOURCE = Path("data")
+BACKUP_DEST = Path("backups")
+LOG_RETENTION_DAYS = 7
+API_ENDPOINT = "http://localhost:8000/health"
+
+
+# ──── Tasks ────
+def daily_backup():
+    """Daily zip backup of data directory"""
+    if not BACKUP_SOURCE.exists():
+        logger.warning(f"Source not found: {BACKUP_SOURCE}")
+        return
+
+    BACKUP_DEST.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M")
+    archive = BACKUP_DEST / f"backup_{timestamp}"
+
+    try:
+        shutil.make_archive(str(archive), "zip", str(BACKUP_SOURCE))
+        size = archive.with_suffix(".zip").stat().st_size
+        logger.info(f"Backup created: {archive}.zip ({size:,} bytes)")
+    except Exception as e:
+        logger.error(f"Backup failed: {e}")
+
+
+def clean_old_logs():
+    """Delete logs older than retention period"""
+    cutoff = time.time() - (LOG_RETENTION_DAYS * 86400)
+    deleted = 0
+    for log_file in LOG_DIR.glob("*.log.*"):   # rotated logs
+        if log_file.stat().st_mtime < cutoff:
+            log_file.unlink()
+            deleted += 1
+    logger.info(f"Log cleanup: {deleted} old files removed")
+
+
+def api_health_check():
+    """Ping local API and log status"""
+    try:
+        import requests
+        resp = requests.get(API_ENDPOINT, timeout=5)
+        if resp.status_code == 200:
+            logger.info(f"Health check OK: {API_ENDPOINT}")
+        else:
+            logger.warning(f"Health check returned {resp.status_code}")
+    except Exception as e:
+        logger.error(f"Health check FAILED: {e}")
+
+
+def git_auto_commit():
+    """Auto-commit any changes in current repo"""
+    try:
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True, text=True, check=True
+        )
+        if not status.stdout.strip():
+            logger.info("No git changes to commit")
+            return
+        subprocess.run(["git", "add", "-A"], check=True)
+        msg = f"auto: scheduled backup {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        subprocess.run(["git", "commit", "-m", msg], check=True)
+        logger.info(f"Auto-committed: {msg}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Git commit failed: {e}")
+
+
+def system_report():
+    """Log basic system info"""
+    try:
+        disk = shutil.disk_usage("/")
+        used_pct = disk.used / disk.total * 100
+        if used_pct > 90:
+            logger.warning(f"Disk usage high: {used_pct:.1f}%")
+        else:
+            logger.info(f"Disk usage: {used_pct:.1f}%")
+    except Exception as e:
+        logger.error(f"System report failed: {e}")
+
+
+# ──── Schedule ────
+schedule.every().day.at("02:00").do(daily_backup)
+schedule.every().day.at("03:00").do(clean_old_logs)
+schedule.every(5).minutes.do(api_health_check)
+schedule.every().hour.do(system_report)
+# schedule.every().day.at("23:55").do(git_auto_commit)
+
+logger.info("Automation scheduler started")
+logger.info(f"Next backup at 02:00 | Health check every 5 min")
+
+if __name__ == "__main__":
+    # Run once immediately on start
+    system_report()
+    api_health_check()
+
+    while True:
+        schedule.run_pending()
+        time.sleep(30)
+```
+
+---
+
+## PART 10 Quick Revision Table
+
+| Project | Core Skills | Key Takeaway |
+|---|---|---|
+| Student Management | OOP, dataclass, JSON CRUD | `dataclass` + `asdict()` for JSON |
+| CLI Todo | argparse, Enum, persistence | `argparse` subcommands |
+| File Organizer | pathlib, shutil, automation | `shutil.move()`, duplicate handling |
+| Weather App | requests, .env, error handling | API key from env, `raise_for_status()` |
+| REST API | FastAPI, Pydantic, SQLAlchemy | Soft delete, `Depends()`, validators |
+| JWT Auth | bcrypt, JWT, OAuth2 | `passlib`, `python-jose`, `OAuth2PasswordBearer` |
+| Web Scraper | bs4, CSV, polite scraping | `time.sleep()`, `User-Agent` header |
+| Task Automation | schedule, subprocess, logging | `schedule.run_pending()` loop |
+
+---
+
+## PART 10 Interview Tips
+
+**Project-based questions:** Bangladesh-এর interview-এ প্রায়ই জিজ্ঞেস করা হয়:
+
+1. **"আপনার কোনো personal project আছে?"** → এই projects GitHub-এ upload করুন, README ভালো করে লিখুন।
+
+2. **"Biggest challenge কী ছিল project-এ?"** → Authentication-এ JWT refresh token handle করা, database relation setup করা।
+
+3. **"কীভাবে deploy করেছেন?"** → FastAPI project → Render/Railway/DigitalOcean, Docker container।
+
+4. **"Testing করেছেন?"** → pytest দিয়ে unit test, coverage ৮০%+ রাখার চেষ্টা।
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 11 — Python Interview Questions Bank *(Next request এ লিখব)*
