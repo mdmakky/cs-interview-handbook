@@ -6,7 +6,7 @@
 ![Language](https://img.shields.io/badge/Language-বাংলা-green?style=for-the-badge)
 ![Target](https://img.shields.io/badge/Target-Junior%20SWE-blue?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
-![Handbooks](https://img.shields.io/badge/Handbooks-4%20Available-blue?style=for-the-badge)
+![Handbooks](https://img.shields.io/badge/Handbooks-5%20Available-blue?style=for-the-badge)
 ![Contributions](https://img.shields.io/badge/Contributions-Welcome-orange?style=for-the-badge)
 
 </div>
@@ -31,7 +31,7 @@
 |---|------|------|--------|------------|
 | 01 | 🧩 **Object-Oriented Programming (OOP)** | [OOP Guide →](./OOP_Junior_Engineer_BD_QA.md) | ✅ **Available** | Encapsulation, Inheritance, Polymorphism, Design Patterns, SOLID, Mock Interview |
 | 02 | 🗄️ **Database & SQL** | [Database Guide →](./Database_Junior_Engineer_BD_QA.md) | ✅ **Available** | SQL Queries, Normalization, Indexing, Transactions, NoSQL |
-| 03 | ⚡ **JavaScript** | _Coming Soon_ | 🔜 **Coming Soon** | Closures, Event Loop, Promises, ES6+, Prototype Chain |
+| 03 | ⚡ **JavaScript** | [JavaScript Guide →](./JavaScript_Junior_Engineer_BD_QA.md) | ✅ **Available** | Variables, DOM, Async/Await, ES6+, React, Node.js, Performance |
 | 04 | ⚛️ **React** | _Coming Soon_ | 🔜 **Coming Soon** | Hooks, State Management, Virtual DOM, Performance, Testing |
 | 05 | 📊 **Data Structures & Algorithms** | [DSA Guide →](./DSA_Junior_Engineer_BD_QA.md) | ✅ **Available** | Array, Linked List, Stack, Queue, Tree, Graph, Sorting, DP, Backtracking, Bit Manipulation |
 | 06 | 🏗️ **System Design** | [System Design Guide →](./SystemDesign_Junior_Engineer_BD_QA.md) | ✅ **Available** | Scalability, CAP Theorem, Load Balancing, CDN, REST, JWT, Caching, Microservices |
@@ -86,7 +86,7 @@ Junior SWE Interview এর জন্য নিচের ক্রমে পড�
 Example:
   OOP_Junior_Engineer_BD_QA.md        ✅ (already exists)
   Database_Junior_Engineer_BD_QA.md   🔜
-  JavaScript_Junior_Engineer_BD_QA.md 🔜
+  JavaScript_Junior_Engineer_BD_QA.md ✅
 ```
 
 ---
@@ -114,6 +114,6 @@ Example:
 
 **শুভকামনা তোমার Interview এ! 💪**
 
-_Last Updated: May 11, 2026 | Available Handbooks: OOP ✅ | Database ✅ | DSA ✅ | System Design ✅_
+_Last Updated: May 11, 2026 | Available Handbooks: OOP ✅ | Database ✅ | DSA ✅ | System Design ✅ | JavaScript ✅_
 
 </div>

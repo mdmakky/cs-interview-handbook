@@ -54,6 +54,7 @@
 - [৯.৯ Final Study Plan](#৯৯-final-study-plan)
 
 </details>
+
 <details>
 <summary><strong>📃 PART 8 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
@@ -69,6 +70,7 @@
 - [৮.৯ PART 8 — Interview Q&A](#৮৯-part-8--interview-questions--answers)
 
 </details>
+
 <details>
 <summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
@@ -83,6 +85,7 @@
 - [৭.৮ PART 7 — Interview Q&A](#৭৮-part-7--interview-questions--answers)
 
 </details>
+
 <details>
 <summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
@@ -97,6 +100,7 @@
 - [৬.৮ Database Cheat Sheet](#৬৮-database-cheat-sheet)
 
 </details>
+
 <details>
 <summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
@@ -117,6 +121,7 @@
 - [৫.১৪ PART 5 — Interview Q&A](#৫১৪-part-5--interview-questions--answers)
 
 </details>
+
 <details>
 <summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
@@ -137,6 +142,7 @@
 - [৪.১৪ PART 4 — Interview Q&A](#৪১৪-part-4--interview-questions--answers)
 
 </details>
+
 <details>
 <summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
@@ -160,8 +166,9 @@
 - [৩.১৭ PART 3 — Interview Q&A](#৩১৭-part-3--interview-questions--answers)
 
 </details>
+
 <details>
-<summary><strong>� PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
+<summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
 - [২.১ SELECT](#২১-select)
@@ -189,7 +196,7 @@
 </details>
 
 <details>
-<summary><strong>�📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
+<summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
 - [১.১ Database কী?](#১১-database-কী)
