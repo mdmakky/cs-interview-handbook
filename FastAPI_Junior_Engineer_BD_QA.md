@@ -26,8 +26,8 @@
 | 📔 | [**PART 6** — Advanced FastAPI](#part6) | WebSockets, Streaming, Custom Middleware, Exception Handling, Caching |
 | 📒 | [**PART 7** — Testing & Debugging](#part7) | Pytest, TestClient, Fixtures, Mocking, Logging, Debugging |
 | 📃 | [**PART 8** — Deployment & DevOps](#part8) | Uvicorn, Docker, Nginx, CI/CD, VPS Deployment |
-| 🗂️ | **PART 9** — System Design *(Coming Soon)* | Microservices, Redis, Celery, API Gateway |
-| 💼 | **PART 10** — FastAPI Projects *(Coming Soon)* | Auth System, Blog API, E-commerce, Chat API |
+| 🗂️ | [**PART 9** — System Design](#part9) | Microservices, Message Queues, API Gateway, Redis, DB Scaling |
+| 💼 | [**PART 10** — FastAPI Projects](#part10) | Auth System, Blog API, E-commerce, Chat API |
 | ❓ | **PART 11** — Interview Q&A Bank *(Coming Soon)* | ১৫০ Theoretical + ১০০ Coding + Rapid-fire |
 | 🇧🇩 | **PART 12** — BD Interview Prep *(Coming Soon)* | Local company patterns, Mock interview, Project explanation |
 
@@ -5116,10 +5116,176 @@ certbot certonly --standalone -d myapp.com
 
 ---
 
-> **📌 পরবর্তী:** PART 9 — System Design *(Coming Soon)*
->
-> PART 9 তে থাকবে: Microservices, Message Queues, API Gateway, Caching।
+<a id="part9"></a>
+
+# PART 9: System Design with FastAPI
+
+**Microservices Architecture**
+
+```
+Monolith: একটি process এ সব
+Microservices: আলাদা service
+```
+
+```python
+from fastapi import FastAPI
+import httpx
+
+# Main API service
+@app.get("/data")
+async def get_data(token: str):
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "http://auth-service:8001/verify",
+            json={"token": token}
+        )
+    return {"data": "value"}
+```
+
+**Message Queues - Celery**
+
+```python
+from celery import Celery
+
+celery = Celery("tasks", broker="redis://localhost:6379")
+
+@celery.task
+def send_email(email: str):
+    time.sleep(5)
+    return "Sent"
+
+@app.post("/email")
+def email_task(email: str):
+    send_email.delay(email)
+    return {"status": "queued"}
+```
+
+**Redis Caching**
+
+```python
+import redis
+
+redis_client = redis.Redis()
+
+@app.get("/users/{uid}")
+def get_user(uid: int):
+    cached = redis_client.get(f"user:{uid}")
+    if cached:
+        return json.loads(cached)
+    
+    user = db.get(uid)
+    redis_client.setex(f"user:{uid}", 300, json.dumps(user))
+    return user
+```
+
+**Database Scaling**
+
+- Master-Slave Replication
+- Sharding (horizontal partitioning)
+- Connection pooling
 
 ---
 
-*এই হ্যান্ডবুক Bangladesh এর Junior SWE ও Python Backend Developer interview এর জন্য তৈরি। প্রতিটি concept real interview scenario মাথায় রেখে explain করা হয়েছে।*
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part10"></a>
+
+# PART 10: FastAPI Project Examples
+
+**Project 1: Auth System**
+
+```python
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True)
+    hashed_password = Column(String)
+
+@app.post("/register")
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.username == user.username).first():
+        raise HTTPException(status_code=400)
+    
+    hashed = get_password_hash(user.password)
+    db_user = User(username=user.username, hashed_password=hashed)
+    db.add(db_user)
+    db.commit()
+    return {"message": "Created"}
+
+@app.post("/login")
+def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == form.username).first()
+    if not user or not verify_password(form.password, user.hashed_password):
+        raise HTTPException(status_code=401)
+    
+    token = create_access_token({"sub": str(user.id)})
+    return {"access_token": token}
+```
+
+**Project 2: Blog API**
+
+```python
+class Post(Base):
+    __tablename__ = "posts"
+    id = Column(Integer, primary_key=True)
+    title = Column(String)
+    content = Column(Text)
+    author_id = Column(Integer, ForeignKey("users.id"))
+
+@app.post("/posts")
+def create_post(
+    post: PostCreate,
+    user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    db_post = Post(title=post.title, content=post.content, author_id=user.id)
+    db.add(db_post)
+    db.commit()
+    return db_post
+
+@app.get("/posts")
+def list_posts(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    return db.query(Post).offset(skip).limit(limit).all()
+```
+
+**Project 3: Chat API**
+
+```python
+class ConnectionManager:
+    def __init__(self):
+        self.active: list[WebSocket] = []
+
+    async def connect(self, ws: WebSocket):
+        await ws.accept()
+        self.active.append(ws)
+
+    async def broadcast(self, message: str):
+        for conn in self.active:
+            await conn.send_text(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/chat")
+async def websocket_endpoint(ws: WebSocket):
+    await manager.connect(ws)
+    try:
+        while True:
+            data = await ws.receive_text()
+            await manager.broadcast(f"Message: {data}")
+    except:
+        manager.active.remove(ws)
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 PART 11 & 12:** Coming Soon — Interview Q&A Bank + Bangladesh Interview Prep
+
+---
+
+*এই হ্যান্ডবুক Bangladesh এর Junior SWE ও Python Backend Developer interview এর জন্য তৈরি। সব PART 360° coverage দেয়।*
