@@ -36,15 +36,15 @@
 <summary><strong>📄 PART 9 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৯.১ বাংলাদেশের IT Job Market](#৯১-বাংলাদেশের-it-job-market)
-- [৯.২ Interview Process — BD Companies](#৯২-interview-process--bd-companies)
-- [৯.৩ সবচেয়ে Common Interview Questions](#৯৩-সবচেয়ে-common-interview-questions)
-- [৯.৪ সাধারণ ভুল ও কীভাবে এড়াবেন](#৯৪-সাধারণ-ভুল-ও-কীভাবে-এড়াবেন)
-- [৯.৫ CV ও Portfolio Tips](#৯৫-cv-ও-portfolio-tips)
-- [৯.৬ SQL Cheat Sheet — Quick Revision](#৯৬-sql-cheat-sheet--quick-revision)
-- [৯.৭ Mock Interview — Full Session](#৯৭-mock-interview--full-session)
-- [৯.৮ Interview Day Checklist](#৯৮-interview-day-checklist)
-- [৯.৯ Final Study Plan](#৯৯-final-study-plan)
+- ৯.১ বাংলাদেশের IT Job Market [↗](#৯১-বাংলাদেশের-it-job-market)
+- ৯.২ Interview Process — BD Companies [↗](#৯২-interview-process--bd-companies)
+- ৯.৩ সবচেয়ে Common Interview Questions [↗](#৯৩-সবচেয়ে-common-interview-questions)
+- ৯.৪ সাধারণ ভুল ও কীভাবে এড়াবেন [↗](#৯৪-সাধারণ-ভুল-ও-কীভাবে-এড়াবেন)
+- ৯.৫ CV ও Portfolio Tips [↗](#৯৫-cv-ও-portfolio-tips)
+- ৯.৬ SQL Cheat Sheet — Quick Revision [↗](#৯৬-sql-cheat-sheet--quick-revision)
+- ৯.৭ Mock Interview — Full Session [↗](#৯৭-mock-interview--full-session)
+- ৯.৮ Interview Day Checklist [↗](#৯৮-interview-day-checklist)
+- ৯.৯ Final Study Plan [↗](#৯৯-final-study-plan)
 
 </details>
 
@@ -52,15 +52,15 @@
 <summary><strong>📃 PART 8 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৮.১ NoSQL কী?](#৮১-nosql-কী)
-- [৮.২ SQL vs NoSQL](#৮২-sql-vs-nosql)
-- [৮.৩ CAP Theorem](#৮৩-cap-theorem)
-- [৮.৪ MongoDB — Document Database](#৮৪-mongodb--document-database)
-- [৮.৫ Redis — Key-Value Store](#৮৫-redis--key-value-store)
-- [৮.৬ Elasticsearch — Search Engine](#৮৬-elasticsearch--search-engine)
-- [৮.৭ Cassandra — Wide-Column Store](#৮৭-cassandra--wide-column-store)
-- [৮.৮ কোন Database কখন?](#৮৮-কোন-database-কখন)
-- [৮.৯ PART 8 — Interview Q&A](#৮৯-part-8--interview-questions--answers)
+- ৮.১ NoSQL কী? [↗](#৮১-nosql-কী)
+- ৮.২ SQL vs NoSQL [↗](#৮২-sql-vs-nosql)
+- ৮.৩ CAP Theorem [↗](#৮৩-cap-theorem)
+- ৮.৪ MongoDB — Document Database [↗](#৮৪-mongodb--document-database)
+- ৮.৫ Redis — Key-Value Store [↗](#৮৫-redis--key-value-store)
+- ৮.৬ Elasticsearch — Search Engine [↗](#৮৬-elasticsearch--search-engine)
+- ৮.৭ Cassandra — Wide-Column Store [↗](#৮৭-cassandra--wide-column-store)
+- ৮.৮ কোন Database কখন? [↗](#৮৮-কোন-database-কখন)
+- ৮.৯ PART 8 — Interview Q&A [↗](#৮৯-part-8--interview-questions--answers)
 
 </details>
 
@@ -68,14 +68,14 @@
 <summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৭.১ PHP ও MySQL](#৭১-php-ও-mysql)
-- [৭.২ Laravel Database (Eloquent & Query Builder)](#৭২-laravel-database-eloquent--query-builder)
-- [৭.৩ Python ও MySQL](#৭৩-python-ও-mysql)
-- [৭.৪ Django ORM — বিস্তারিত](#৭৪-django-orm--বিস্তারিত)
-- [৭.৫ Node.js ও MySQL](#৭৫-nodejs-ও-mysql)
-- [৭.৬ Environment Configuration & Security](#৭৬-environment-configuration--security)
-- [৭.৭ Database Testing](#৭৭-database-testing)
-- [৭.৮ PART 7 — Interview Q&A](#৭৮-part-7--interview-questions--answers)
+- ৭.১ PHP ও MySQL [↗](#৭১-php-ও-mysql)
+- ৭.২ Laravel Database (Eloquent & Query Builder) [↗](#৭২-laravel-database-eloquent--query-builder)
+- ৭.৩ Python ও MySQL [↗](#৭৩-python-ও-mysql)
+- ৭.৪ Django ORM — বিস্তারিত [↗](#৭৪-django-orm--বিস্তারিত)
+- ৭.৫ Node.js ও MySQL [↗](#৭৫-nodejs-ও-mysql)
+- ৭.৬ Environment Configuration & Security [↗](#৭৬-environment-configuration--security)
+- ৭.৭ Database Testing [↗](#৭৭-database-testing)
+- ৭.৮ PART 7 — Interview Q&A [↗](#৭৮-part-7--interview-questions--answers)
 
 </details>
 
@@ -83,14 +83,14 @@
 <summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৬.১ Database Fundamentals Q&A](#৬১-database-fundamentals-qa)
-- [৬.২ SQL Q&A](#৬২-sql-qa)
-- [৬.৩ Advanced Concepts Q&A](#৬৩-advanced-concepts-qa)
-- [৬.৪ Design & Normalization Q&A](#৬৪-design--normalization-qa)
-- [৬.৫ Performance & Optimization Q&A](#৬৫-performance--optimization-qa)
-- [৬.৬ Scenario-based Questions](#৬৬-scenario-based-questions)
-- [৬.৭ বাংলাদেশি কোম্পানির বাস্তব প্রশ্ন](#৬৭-বাংলাদেশি-কোম্পানির-বাস্তব-প্রশ্ন)
-- [৬.৮ Database Cheat Sheet](#৬৮-database-cheat-sheet)
+- ৬.১ Database Fundamentals Q&A [↗](#৬১-database-fundamentals-qa)
+- ৬.২ SQL Q&A [↗](#৬২-sql-qa)
+- ৬.৩ Advanced Concepts Q&A [↗](#৬৩-advanced-concepts-qa)
+- ৬.৪ Design & Normalization Q&A [↗](#৬৪-design--normalization-qa)
+- ৬.৫ Performance & Optimization Q&A [↗](#৬৫-performance--optimization-qa)
+- ৬.৬ Scenario-based Questions [↗](#৬৬-scenario-based-questions)
+- ৬.৭ বাংলাদেশি কোম্পানির বাস্তব প্রশ্ন [↗](#৬৭-বাংলাদেশি-কোম্পানির-বাস্তব-প্রশ্ন)
+- ৬.৮ Database Cheat Sheet [↗](#৬৮-database-cheat-sheet)
 
 </details>
 
@@ -98,20 +98,20 @@
 <summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৫.১ ORM কী?](#৫১-orm-কী)
-- [৫.২ ORM vs Raw SQL](#৫২-orm-vs-raw-sql)
-- [৫.৩ Database Migration](#৫৩-database-migration)
-- [৫.৪ Connection Pooling](#৫৪-connection-pooling)
-- [৫.৫ N+1 Query Problem](#৫৫-n1-query-problem)
-- [৫.৬ Database Caching](#৫৬-database-caching)
-- [৫.৭ Pagination — Best Practices](#৫৭-pagination--best-practices)
-- [৫.৮ Soft Delete Pattern](#৫৮-soft-delete-pattern)
-- [৫.৯ Audit Trail Pattern](#৫৯-audit-trail-pattern)
-- [৫.১০ Multi-tenancy Design](#৫১০-multi-tenancy-design)
-- [৫.১১ Database Security](#৫১১-database-security)
-- [৫.১২ Backup & Recovery](#৫১২-backup--recovery)
-- [৫.১৩ Real Project — Job Portal Schema](#৫১৩-real-project--job-portal-schema)
-- [৫.১৪ PART 5 — Interview Q&A](#৫১৪-part-5--interview-questions--answers)
+- ৫.১ ORM কী? [↗](#৫১-orm-কী)
+- ৫.২ ORM vs Raw SQL [↗](#৫২-orm-vs-raw-sql)
+- ৫.৩ Database Migration [↗](#৫৩-database-migration)
+- ৫.৪ Connection Pooling [↗](#৫৪-connection-pooling)
+- ৫.৫ N+1 Query Problem [↗](#৫৫-n1-query-problem)
+- ৫.৬ Database Caching [↗](#৫৬-database-caching)
+- ৫.৭ Pagination — Best Practices [↗](#৫৭-pagination--best-practices)
+- ৫.৮ Soft Delete Pattern [↗](#৫৮-soft-delete-pattern)
+- ৫.৯ Audit Trail Pattern [↗](#৫৯-audit-trail-pattern)
+- ৫.১০ Multi-tenancy Design [↗](#৫১০-multi-tenancy-design)
+- ৫.১১ Database Security [↗](#৫১১-database-security)
+- ৫.১২ Backup & Recovery [↗](#৫১২-backup--recovery)
+- ৫.১৩ Real Project — Job Portal Schema [↗](#৫১৩-real-project--job-portal-schema)
+- ৫.১৪ PART 5 — Interview Q&A [↗](#৫১৪-part-5--interview-questions--answers)
 
 </details>
 
@@ -119,20 +119,20 @@
 <summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৪.১ Normalization কী?](#৪১-normalization-কী)
-- [৪.২ 1NF — First Normal Form](#৪২-1nf--first-normal-form)
-- [৪.৩ 2NF — Second Normal Form](#৪৩-2nf--second-normal-form)
-- [৪.৪ 3NF — Third Normal Form](#৪৪-3nf--third-normal-form)
-- [৪.৫ BCNF — Boyce-Codd Normal Form](#৪৫-bcnf--boyce-codd-normal-form)
-- [৪.৬ 4NF ও 5NF](#৪৬-4nf-ও-5nf)
-- [৪.৭ Denormalization](#৪৭-denormalization)
-- [৪.৮ ER Diagram থেকে Schema](#৪৮-er-diagram-থেকে-schema)
-- [৪.৯ Data Types নির্বাচন](#৪৯-data-types-নির্বাচন)
-- [৪.১০ Constraints — বিস্তারিত](#৪১০-constraints--বিস্তারিত)
-- [৪.১১ Relationships Implementation](#৪১১-relationships-implementation)
-- [৪.১২ Schema Design Best Practices](#৪১২-schema-design-best-practices)
-- [৪.১৩ Real Project Schema Design](#৪১৩-real-project-schema-design)
-- [৪.১৪ PART 4 — Interview Q&A](#৪১৪-part-4--interview-questions--answers)
+- ৪.১ Normalization কী? [↗](#৪১-normalization-কী)
+- ৪.২ 1NF — First Normal Form [↗](#৪২-1nf--first-normal-form)
+- ৪.৩ 2NF — Second Normal Form [↗](#৪৩-2nf--second-normal-form)
+- ৪.৪ 3NF — Third Normal Form [↗](#৪৪-3nf--third-normal-form)
+- ৪.৫ BCNF — Boyce-Codd Normal Form [↗](#৪৫-bcnf--boyce-codd-normal-form)
+- ৪.৬ 4NF ও 5NF [↗](#৪৬-4nf-ও-5nf)
+- ৪.৭ Denormalization [↗](#৪৭-denormalization)
+- ৪.৮ ER Diagram থেকে Schema [↗](#৪৮-er-diagram-থেকে-schema)
+- ৪.৯ Data Types নির্বাচন [↗](#৪৯-data-types-নির্বাচন)
+- ৪.১০ Constraints — বিস্তারিত [↗](#৪১০-constraints--বিস্তারিত)
+- ৪.১১ Relationships Implementation [↗](#৪১১-relationships-implementation)
+- ৪.১২ Schema Design Best Practices [↗](#৪১২-schema-design-best-practices)
+- ৪.১৩ Real Project Schema Design [↗](#৪১৩-real-project-schema-design)
+- ৪.১৪ PART 4 — Interview Q&A [↗](#৪১৪-part-4--interview-questions--answers)
 
 </details>
 
@@ -140,23 +140,23 @@
 <summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৩.১ Indexing](#৩১-indexing)
-- [৩.২ Clustered vs Non-clustered Index](#৩২-clustered-vs-non-clustered-index)
-- [৩.৩ Transactions](#৩৩-transactions)
-- [৩.৪ ACID Properties](#৩৪-acid-properties)
-- [৩.৫ Isolation Levels](#৩৫-isolation-levels)
-- [৩.৬ Deadlock](#৩৬-deadlock)
-- [৩.৭ Views](#৩৭-views)
-- [৩.৮ Stored Procedure](#৩৮-stored-procedure)
-- [৩.৯ Trigger](#৩৯-trigger)
-- [৩.১০ Cursor](#৩১০-cursor)
-- [৩.১১ Functions (User-Defined)](#৩১১-functions-user-defined)
-- [৩.১২ Query Optimization](#৩১২-query-optimization)
-- [৩.১৩ Query Execution Plan](#৩১৩-query-execution-plan)
-- [৩.১৪ Partitioning](#৩১৪-partitioning)
-- [৩.১৫ Sharding](#৩১৫-sharding)
-- [৩.১৬ Replication](#৩১৬-replication)
-- [৩.১৭ PART 3 — Interview Q&A](#৩১৭-part-3--interview-questions--answers)
+- ৩.১ Indexing [↗](#৩১-indexing)
+- ৩.২ Clustered vs Non-clustered Index [↗](#৩২-clustered-vs-non-clustered-index)
+- ৩.৩ Transactions [↗](#৩৩-transactions)
+- ৩.৪ ACID Properties [↗](#৩৪-acid-properties)
+- ৩.৫ Isolation Levels [↗](#৩৫-isolation-levels)
+- ৩.৬ Deadlock [↗](#৩৬-deadlock)
+- ৩.৭ Views [↗](#৩৭-views)
+- ৩.৮ Stored Procedure [↗](#৩৮-stored-procedure)
+- ৩.৯ Trigger [↗](#৩৯-trigger)
+- ৩.১০ Cursor [↗](#৩১০-cursor)
+- ৩.১১ Functions (User-Defined) [↗](#৩১১-functions-user-defined)
+- ৩.১২ Query Optimization [↗](#৩১২-query-optimization)
+- ৩.১৩ Query Execution Plan [↗](#৩১৩-query-execution-plan)
+- ৩.১৪ Partitioning [↗](#৩১৪-partitioning)
+- ৩.১৫ Sharding [↗](#৩১৫-sharding)
+- ৩.১৬ Replication [↗](#৩১৬-replication)
+- ৩.১৭ PART 3 — Interview Q&A [↗](#৩১৭-part-3--interview-questions--answers)
 
 </details>
 
@@ -164,27 +164,27 @@
 <summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [২.১ SELECT](#২১-select)
-- [২.২ WHERE](#২২-where)
-- [২.৩ ORDER BY](#২৩-order-by)
-- [২.৪ GROUP BY](#২৪-group-by)
-- [২.৫ HAVING](#২৫-having)
-- [২.৬ DISTINCT](#২৬-distinct)
-- [২.৭ LIMIT](#২৭-limit)
-- [২.৮ INSERT](#২৮-insert)
-- [২.৯ UPDATE](#২৯-update)
-- [২.১০ DELETE](#২১০-delete)
-- [২.১১ LIKE](#২১১-like)
-- [২.১২ IN](#২১২-in)
-- [২.১৩ BETWEEN](#২১৩-between)
-- [২.১৪ INNER JOIN](#২১৪-inner-join)
-- [২.১৫ LEFT JOIN](#২১৫-left-join)
-- [২.১৬ RIGHT JOIN](#২১৬-right-join)
-- [২.১৭ FULL JOIN](#২১৭-full-join)
-- [২.১৮ SELF JOIN](#২১৮-self-join)
-- [২.১৯ UNION vs UNION ALL](#২১৯-union-vs-union-all)
-- [২.২০ Subquery ও Nested Query](#২২০-subquery-ও-nested-query)
-- [২.২১ PART 2 — Interview Q&A](#২২১-part-2--interview-questions--answers)
+- ২.১ SELECT [↗](#২১-select)
+- ২.২ WHERE [↗](#২২-where)
+- ২.৩ ORDER BY [↗](#২৩-order-by)
+- ২.৪ GROUP BY [↗](#২৪-group-by)
+- ২.৫ HAVING [↗](#২৫-having)
+- ২.৬ DISTINCT [↗](#২৬-distinct)
+- ২.৭ LIMIT [↗](#২৭-limit)
+- ২.৮ INSERT [↗](#২৮-insert)
+- ২.৯ UPDATE [↗](#২৯-update)
+- ২.১০ DELETE [↗](#২১০-delete)
+- ২.১১ LIKE [↗](#২১১-like)
+- ২.১২ IN [↗](#২১২-in)
+- ২.১৩ BETWEEN [↗](#২১৩-between)
+- ২.১৪ INNER JOIN [↗](#২১৪-inner-join)
+- ২.১৫ LEFT JOIN [↗](#২১৫-left-join)
+- ২.১৬ RIGHT JOIN [↗](#২১৬-right-join)
+- ২.১৭ FULL JOIN [↗](#২১৭-full-join)
+- ২.১৮ SELF JOIN [↗](#২১৮-self-join)
+- ২.১৯ UNION vs UNION ALL [↗](#২১৯-union-vs-union-all)
+- ২.২০ Subquery ও Nested Query [↗](#২২০-subquery-ও-nested-query)
+- ২.২১ PART 2 — Interview Q&A [↗](#২২১-part-2--interview-questions--answers)
 
 </details>
 
@@ -192,26 +192,26 @@
 <summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [১.১ Database কী?](#১১-database-কী)
-- [১.২ DBMS vs RDBMS](#১২-dbms-vs-rdbms)
-- [১.৩ Database এর সুবিধা](#১৩-database-এর-সুবিধা)
-- [১.৪ Database এর প্রকারভেদ](#১৪-database-এর-প্রকারভেদ)
-- [১.৫ Relational Database](#১৫-relational-database)
-- [১.৬ Table, Row, Column](#১৬-table-row-column)
-- [১.৭ Primary Key](#১৭-primary-key)
-- [১.৮ Foreign Key](#১৮-foreign-key)
-- [১.৯ Candidate Key](#১৯-candidate-key)
-- [১.১০ Super Key](#১১০-super-key)
-- [১.১১ Composite Key](#১১১-composite-key)
-- [১.১২ Unique Key](#১১২-unique-key)
-- [১.১৩ NULL](#১১৩-null)
-- [১.১৪ Constraints](#১১৪-constraints)
-- [১.১৫ Relationships](#১১৫-relationships)
-- [১.১৬ ER Diagram](#১১৬-er-diagram)
-- [১.১৭ Schema vs Instance](#১১৭-schema-vs-instance)
-- [১.১৮ Data Integrity](#১১৮-data-integrity)
-- [১.১৯ Normalization Overview](#১১৯-normalization-overview)
-- [১.২০ PART 1 — Interview Q&A](#১২০-part-1--interview-questions--answers)
+- ১.১ Database কী? [↗](#১১-database-কী)
+- ১.২ DBMS vs RDBMS [↗](#১২-dbms-vs-rdbms)
+- ১.৩ Database এর সুবিধা [↗](#১৩-database-এর-সুবিধা)
+- ১.৪ Database এর প্রকারভেদ [↗](#১৪-database-এর-প্রকারভেদ)
+- ১.৫ Relational Database [↗](#১৫-relational-database)
+- ১.৬ Table, Row, Column [↗](#১৬-table-row-column)
+- ১.৭ Primary Key [↗](#১৭-primary-key)
+- ১.৮ Foreign Key [↗](#১৮-foreign-key)
+- ১.৯ Candidate Key [↗](#১৯-candidate-key)
+- ১.১০ Super Key [↗](#১১০-super-key)
+- ১.১১ Composite Key [↗](#১১১-composite-key)
+- ১.১২ Unique Key [↗](#১১২-unique-key)
+- ১.১৩ NULL [↗](#১১৩-null)
+- ১.১৪ Constraints [↗](#১১৪-constraints)
+- ১.১৫ Relationships [↗](#১১৫-relationships)
+- ১.১৬ ER Diagram [↗](#১১৬-er-diagram)
+- ১.১৭ Schema vs Instance [↗](#১১৭-schema-vs-instance)
+- ১.১৮ Data Integrity [↗](#১১৮-data-integrity)
+- ১.১৯ Normalization Overview [↗](#১১৯-normalization-overview)
+- ১.২০ PART 1 — Interview Q&A [↗](#১২০-part-1--interview-questions--answers)
 
 </details>
 

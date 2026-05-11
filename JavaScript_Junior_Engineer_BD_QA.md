@@ -35,22 +35,22 @@
 <summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [১.১ JavaScript কী?](#১১-javascript-কী)
-- [১.২ JavaScript-এর ইতিহাস](#১২-javascript-এর-ইতিহাস)
-- [১.৩ JavaScript কীভাবে কাজ করে — Engine ও Runtime](#১৩-javascript-কীভাবে-কাজ-করে--engine-ও-runtime)
-- [১.৪ Variables — var, let, const](#১৪-variables--var-let-const)
-- [১.৫ Data Types — Primitive vs Non-Primitive](#১৫-data-types--primitive-vs-non-primitive)
-- [১.৬ Type Conversion ও Type Coercion](#১৬-type-conversion-ও-type-coercion)
-- [১.৭ Operators](#১৭-operators)
-- [১.৮ Conditions (if/else, switch, ternary)](#১৮-conditions)
-- [১.৯ Loops](#১৯-loops)
-- [১.১০ Functions](#১১০-functions)
-- [১.১১ Arrow Functions](#১১১-arrow-functions)
-- [১.১২ Scope](#১১২-scope)
-- [১.১৩ Hoisting](#১১৩-hoisting)
-- [১.১৪ Closures](#১১৪-closures)
-- [১.১৫ Template Literals](#১১৫-template-literals)
-- [১.১৬ PART 1 — Interview Questions & Answers](#১১৬-part-1--interview-questions--answers)
+- ১.১ JavaScript কী? [↗](#১১-javascript-কী)
+- ১.২ JavaScript-এর ইতিহাস [↗](#১২-javascript-এর-ইতিহাস)
+- ১.৩ JavaScript কীভাবে কাজ করে — Engine ও Runtime [↗](#১৩-javascript-কীভাবে-কাজ-করে--engine-ও-runtime)
+- ১.৪ Variables — var, let, const [↗](#১৪-variables--var-let-const)
+- ১.৫ Data Types — Primitive vs Non-Primitive [↗](#১৫-data-types--primitive-vs-non-primitive)
+- ১.৬ Type Conversion ও Type Coercion [↗](#১৬-type-conversion-ও-type-coercion)
+- ১.৭ Operators [↗](#১৭-operators)
+- ১.৮ Conditions (if/else, switch, ternary) [↗](#১৮-conditions)
+- ১.৯ Loops [↗](#১৯-loops)
+- ১.১০ Functions [↗](#১১০-functions)
+- ১.১১ Arrow Functions [↗](#১১১-arrow-functions)
+- ১.১২ Scope [↗](#১১২-scope)
+- ১.১৩ Hoisting [↗](#১১৩-hoisting)
+- ১.১৪ Closures [↗](#১১৪-closures)
+- ১.১৫ Template Literals [↗](#১১৫-template-literals)
+- ১.১৬ PART 1 — Interview Questions & Answers [↗](#১১৬-part-1--interview-questions--answers)
 
 </details>
 
@@ -58,26 +58,26 @@
 <summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [২.১ Execution Context](#২১-execution-context)
-- [২.২ Call Stack](#২২-call-stack)
-- [২.৩ Memory Heap](#২৩-memory-heap)
-- [২.৪ Event Loop](#২৪-event-loop)
-- [২.৫ Callback Queue ও Microtask Queue](#২৫-callback-queue--microtask-queue)
-- [২.৬ Callback Functions](#২৬-callback-functions)
-- [২.৭ Promises](#২৭-promises)
-- [২.৮ Async/Await](#২৮-asyncawait)
-- [২.৯ Fetch API](#২৯-fetch-api)
-- [২.১০ this keyword](#২১০-this-keyword)
-- [২.১১ bind, call, apply](#২১১-bind-call-apply)
-- [২.১২ Prototype](#২১২-prototype)
-- [২.১৩ Prototype Chain](#২১৩-prototype-chain)
-- [২.১৪ Inheritance](#২১৪-inheritance-in-javascript)
-- [২.১৫ Classes](#২১৫-classes)
-- [২.১৬ Modules](#২১৬-modules)
-- [২.১৭ Debouncing ও Throttling](#২১৭-debouncing--throttling)
-- [২.১৮ Currying](#২১৮-currying)
-- [২.১৯ Memoization](#২১৯-memoization)
-- [২.২০ Interview Q&A](#২২০-part-2--interview-questions--answers)
+- ২.১ Execution Context [↗](#২১-execution-context)
+- ২.২ Call Stack [↗](#২২-call-stack)
+- ২.৩ Memory Heap [↗](#২৩-memory-heap)
+- ২.৪ Event Loop [↗](#২৪-event-loop)
+- ২.৫ Callback Queue ও Microtask Queue [↗](#২৫-callback-queue--microtask-queue)
+- ২.৬ Callback Functions [↗](#২৬-callback-functions)
+- ২.৭ Promises [↗](#২৭-promises)
+- ২.৮ Async/Await [↗](#২৮-asyncawait)
+- ২.৯ Fetch API [↗](#২৯-fetch-api)
+- ২.১০ this keyword [↗](#২১০-this-keyword)
+- ২.১১ bind, call, apply [↗](#২১১-bind-call-apply)
+- ২.১২ Prototype [↗](#২১২-prototype)
+- ২.১৩ Prototype Chain [↗](#২১৩-prototype-chain)
+- ২.১৪ Inheritance [↗](#২১৪-inheritance-in-javascript)
+- ২.১৫ Classes [↗](#২১৫-classes)
+- ২.১৬ Modules [↗](#২১৬-modules)
+- ২.১৭ Debouncing ও Throttling [↗](#২১৭-debouncing--throttling)
+- ২.১৮ Currying [↗](#২১৮-currying)
+- ২.১৯ Memoization [↗](#২১৯-memoization)
+- ২.২০ Interview Q&A [↗](#২২০-part-2--interview-questions--answers)
 
 </details>
 
@@ -85,19 +85,19 @@
 <summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৩.১ DOM কী?](#৩১-dom-কী)
-- [৩.২ DOM Manipulation](#৩২-dom-manipulation)
-- [৩.৩ DOM Traversal](#৩৩-dom-traversal)
-- [৩.৪ Event Handling](#৩৪-event-handling)
-- [৩.৫ Event Bubbling](#৩৫-event-bubbling)
-- [৩.৬ Event Capturing](#৩৬-event-capturing)
-- [৩.৭ Event Delegation](#৩৭-event-delegation)
-- [৩.৮ Local Storage](#৩৮-local-storage)
-- [৩.৯ Session Storage](#৩৯-session-storage)
-- [৩.১০ Cookies](#৩১০-cookies)
-- [৩.১১ Browser APIs](#৩১১-browser-apis)
-- [৩.১২ Form Validation](#৩১২-form-validation)
-- [৩.১৩ Interview Q&A](#৩১৩-part-3--interview-questions--answers)
+- ৩.১ DOM কী? [↗](#৩১-dom-কী)
+- ৩.২ DOM Manipulation [↗](#৩২-dom-manipulation)
+- ৩.৩ DOM Traversal [↗](#৩৩-dom-traversal)
+- ৩.৪ Event Handling [↗](#৩৪-event-handling)
+- ৩.৫ Event Bubbling [↗](#৩৫-event-bubbling)
+- ৩.৬ Event Capturing [↗](#৩৬-event-capturing)
+- ৩.৭ Event Delegation [↗](#৩৭-event-delegation)
+- ৩.৮ Local Storage [↗](#৩৮-local-storage)
+- ৩.৯ Session Storage [↗](#৩৯-session-storage)
+- ৩.১০ Cookies [↗](#৩১০-cookies)
+- ৩.১১ Browser APIs [↗](#৩১১-browser-apis)
+- ৩.১২ Form Validation [↗](#৩১২-form-validation)
+- ৩.১৩ Interview Q&A [↗](#৩১৩-part-3--interview-questions--answers)
 
 </details>
 
@@ -105,19 +105,19 @@
 <summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৪.১ Destructuring](#৪১-destructuring)
-- [৪.২ Spread Operator](#৪২-spread-operator)
-- [৪.৩ Rest Operator](#৪৩-rest-operator)
-- [৪.৪ Optional Chaining](#৪৪-optional-chaining)
-- [৪.৫ Nullish Coalescing](#৪৫-nullish-coalescing)
-- [৪.৬ Map](#৪৬-map)
-- [৪.৭ Set](#৪৭-set)
-- [৪.৮ WeakMap ও WeakSet](#৪৮-weakmap-ও-weakset)
-- [৪.৯ Array Methods](#৪৯-array-methods)
-- [৪.১০ Object Methods](#৪১০-object-methods)
-- [৪.১১ Iterators ও Generators](#৪১১-iterators-ও-generators)
-- [৪.১২ Dynamic Import](#৪১২-dynamic-import)
-- [৪.১৩ Interview Q&A](#৪১৩-part-4--interview-questions--answers)
+- ৪.১ Destructuring [↗](#৪১-destructuring)
+- ৪.২ Spread Operator [↗](#৪২-spread-operator)
+- ৪.৩ Rest Operator [↗](#৪৩-rest-operator)
+- ৪.৪ Optional Chaining [↗](#৪৪-optional-chaining)
+- ৪.৫ Nullish Coalescing [↗](#৪৫-nullish-coalescing)
+- ৪.৬ Map [↗](#৪৬-map)
+- ৪.৭ Set [↗](#৪৭-set)
+- ৪.৮ WeakMap ও WeakSet [↗](#৪৮-weakmap-ও-weakset)
+- ৪.৯ Array Methods [↗](#৪৯-array-methods)
+- ৪.১০ Object Methods [↗](#৪১০-object-methods)
+- ৪.১১ Iterators ও Generators [↗](#৪১১-iterators-ও-generators)
+- ৪.১২ Dynamic Import [↗](#৪১২-dynamic-import)
+- ৪.১৩ Interview Q&A [↗](#৪১৩-part-4--interview-questions--answers)
 
 </details>
 
@@ -125,17 +125,17 @@
 <summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৫.১ Synchronous vs Asynchronous](#৫১-synchronous-vs-asynchronous)
-- [৫.২ setTimeout ও setInterval](#৫২-settimeout-ও-setinterval)
-- [৫.৩ Callback Hell](#৫৩-callback-hell)
-- [৫.৪ Promise](#৫৪-promise)
-- [৫.৫ Promise Chaining](#৫৫-promise-chaining)
-- [৫.৬ Promise Combinators](#৫৬-promise-combinators)
-- [৫.৭ Async/Await](#৫৭-asyncawait)
-- [৫.৮ Error Handling](#৫৮-error-handling)
-- [৫.৯ Real API Calls](#৫৯-real-api-calls)
-- [৫.১০ AbortController](#৫১০-abortcontroller)
-- [৫.১১ Interview Q&A](#৫১১-part-5--interview-questions--answers)
+- ৫.১ Synchronous vs Asynchronous [↗](#৫১-synchronous-vs-asynchronous)
+- ৫.২ setTimeout ও setInterval [↗](#৫২-settimeout-ও-setinterval)
+- ৫.৩ Callback Hell [↗](#৫৩-callback-hell)
+- ৫.৪ Promise [↗](#৫৪-promise)
+- ৫.৫ Promise Chaining [↗](#৫৫-promise-chaining)
+- ৫.৬ Promise Combinators [↗](#৫৬-promise-combinators)
+- ৫.৭ Async/Await [↗](#৫৭-asyncawait)
+- ৫.৮ Error Handling [↗](#৫৮-error-handling)
+- ৫.৯ Real API Calls [↗](#৫৯-real-api-calls)
+- ৫.১০ AbortController [↗](#৫১০-abortcontroller)
+- ৫.১১ Interview Q&A [↗](#৫১১-part-5--interview-questions--answers)
 
 </details>
 
@@ -143,17 +143,17 @@
 <summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৬.১ Objects](#৬১-objects)
-- [৬.২ Constructor Functions](#৬২-constructor-functions)
-- [৬.৩ Prototype](#৬৩-prototype)
-- [৬.৪ Prototype Chain](#৬৪-prototype-chain)
-- [৬.৫ ES6 Classes](#৬৫-es6-classes)
-- [৬.৬ Encapsulation](#৬৬-encapsulation)
-- [৬.৭ Inheritance](#৬৭-inheritance)
-- [৬.৮ Polymorphism](#৬৮-polymorphism)
-- [৬.৯ Abstraction](#৬৯-abstraction)
-- [৬.১০ SOLID Principles in JavaScript](#৬১০-solid-principles-in-javascript)
-- [৬.১১ Interview Q&A](#৬১১-part-6--interview-questions--answers)
+- ৬.১ Objects [↗](#৬১-objects)
+- ৬.২ Constructor Functions [↗](#৬২-constructor-functions)
+- ৬.৩ Prototype [↗](#৬৩-prototype)
+- ৬.৪ Prototype Chain [↗](#৬৪-prototype-chain)
+- ৬.৫ ES6 Classes [↗](#৬৫-es6-classes)
+- ৬.৬ Encapsulation [↗](#৬৬-encapsulation)
+- ৬.৭ Inheritance [↗](#৬৭-inheritance)
+- ৬.৮ Polymorphism [↗](#৬৮-polymorphism)
+- ৬.৯ Abstraction [↗](#৬৯-abstraction)
+- ৬.১০ SOLID Principles in JavaScript [↗](#৬১০-solid-principles-in-javascript)
+- ৬.১১ Interview Q&A [↗](#৬১১-part-6--interview-questions--answers)
 
 </details>
 
@@ -161,17 +161,17 @@
 <summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৭.১ SPA কী?](#৭১-spa-কী)
-- [৭.২ Virtual DOM](#৭২-virtual-dom)
-- [৭.৩ React Fundamentals](#৭৩-react-fundamentals)
-- [৭.৪ Components](#৭৪-components)
-- [৭.৫ Props ও State](#৭৫-props-ও-state)
-- [৭.৬ Hooks](#৭৬-hooks)
-- [৭.৭ State Management](#৭৭-state-management)
-- [৭.৮ React Router](#৭৮-react-router)
-- [৭.৯ API Integration](#৭৯-api-integration)
-- [৭.১০ Performance Optimization](#৭১০-performance-optimization)
-- [৭.১১ Interview Q&A](#৭১১-part-7--interview-questions--answers)
+- ৭.১ SPA কী? [↗](#৭১-spa-কী)
+- ৭.২ Virtual DOM [↗](#৭২-virtual-dom)
+- ৭.৩ React Fundamentals [↗](#৭৩-react-fundamentals)
+- ৭.৪ Components [↗](#৭৪-components)
+- ৭.৫ Props ও State [↗](#৭৫-props-ও-state)
+- ৭.৬ Hooks [↗](#৭৬-hooks)
+- ৭.৭ State Management [↗](#৭৭-state-management)
+- ৭.৮ React Router [↗](#৭৮-react-router)
+- ৭.৯ API Integration [↗](#৭৯-api-integration)
+- ৭.১০ Performance Optimization [↗](#৭১০-performance-optimization)
+- ৭.১১ Interview Q&A [↗](#৭১১-part-7--interview-questions--answers)
 
 </details>
 
@@ -179,17 +179,17 @@
 <summary><strong>📃 PART 8 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৮.১ Node.js কী?](#৮১-nodejs-কী)
-- [৮.২ Event-Driven Architecture](#৮২-event-driven-architecture)
-- [৮.৩ npm ও package.json](#৮৩-npm-ও-packagejson)
-- [৮.৪ Express.js](#৮৪-expressjs)
-- [৮.৫ REST API](#৮৫-rest-api)
-- [৮.৬ Middleware](#৮৬-middleware)
-- [৮.৭ Authentication ও JWT](#৮৭-authentication-ও-jwt)
-- [৮.৮ File System](#৮৮-file-system)
-- [৮.৯ Streams](#৮৯-streams)
-- [৮.১০ Environment Variables](#৮১০-environment-variables)
-- [৮.১১ Interview Q&A](#৮১১-part-8--interview-questions--answers)
+- ৮.১ Node.js কী? [↗](#৮১-nodejs-কী)
+- ৮.২ Event-Driven Architecture [↗](#৮২-event-driven-architecture)
+- ৮.৩ npm ও package.json [↗](#৮৩-npm-ও-packagejson)
+- ৮.৪ Express.js [↗](#৮৪-expressjs)
+- ৮.৫ REST API [↗](#৮৫-rest-api)
+- ৮.৬ Middleware [↗](#৮৬-middleware)
+- ৮.৭ Authentication ও JWT [↗](#৮৭-authentication-ও-jwt)
+- ৮.৮ File System [↗](#৮৮-file-system)
+- ৮.৯ Streams [↗](#৮৯-streams)
+- ৮.১০ Environment Variables [↗](#৮১০-environment-variables)
+- ৮.১১ Interview Q&A [↗](#৮১১-part-8--interview-questions--answers)
 
 </details>
 
@@ -197,12 +197,12 @@
 <summary><strong>📑 PART 9 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [৯.১ JavaScript Theoretical Q&A](#৯১-javascript-theoretical-qa)
-- [৯.২ Common Coding Problems](#৯২-common-coding-problems)
-- [৯.৩ Tricky JavaScript Questions](#৯৩-tricky-javascript-questions)
-- [৯.৪ Rapid-Fire Viva](#৯৪-rapid-fire-viva)
-- [৯.৫ Scenario-Based Questions](#৯৫-scenario-based-questions)
-- [৯.৬ Output বলো Questions](#৯৬-output-বলো-questions)
+- ৯.১ JavaScript Theoretical Q&A [↗](#৯১-javascript-theoretical-qa)
+- ৯.২ Common Coding Problems [↗](#৯২-common-coding-problems)
+- ৯.৩ Tricky JavaScript Questions [↗](#৯৩-tricky-javascript-questions)
+- ৯.৪ Rapid-Fire Viva [↗](#৯৪-rapid-fire-viva)
+- ৯.৫ Scenario-Based Questions [↗](#৯৫-scenario-based-questions)
+- ৯.৬ Output বলো Questions [↗](#৯৬-output-বলো-questions)
 
 </details>
 
@@ -210,13 +210,13 @@
 <summary><strong>🗂️ PART 10 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [১০.১ Todo App](#১০১-todo-app)
-- [১০.২ Weather App](#১০২-weather-app)
-- [১০.৩ Calculator](#১০৩-calculator)
-- [১০.৪ Authentication System](#১০৪-authentication-system)
-- [১০.৫ CRUD App with Express](#১০৫-crud-app-with-express)
-- [১০.৬ Real-Time Chat (WebSocket)](#১০৬-real-time-chat-websocket)
-- [১০.৭ Interview Project Tips](#১০৭-interview-project-tips)
+- ১০.১ Todo App [↗](#১০১-todo-app)
+- ১০.২ Weather App [↗](#১০২-weather-app)
+- ১০.৩ Calculator [↗](#১০৩-calculator)
+- ১০.৪ Authentication System [↗](#১০৪-authentication-system)
+- ১০.৫ CRUD App with Express [↗](#১০৫-crud-app-with-express)
+- ১০.৬ Real-Time Chat (WebSocket) [↗](#১০৬-real-time-chat-websocket)
+- ১০.৭ Interview Project Tips [↗](#১০৭-interview-project-tips)
 
 </details>
 
@@ -224,17 +224,17 @@
 <summary><strong>⚡ PART 11 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [১১.১ Browser Rendering Pipeline](#১১১-browser-rendering-pipeline)
-- [১১.২ Core Web Vitals](#১১২-core-web-vitals)
-- [১১.৩ Lazy Loading](#১১৩-lazy-loading)
-- [১১.৪ Code Splitting & Bundle Optimization](#১১৪-code-splitting--bundle-optimization)
-- [১১.৫ Memory Management](#১১৫-memory-management)
-- [১১.৬ Network Optimization](#১১৬-network-optimization)
-- [১১.৭ React Performance](#১১৭-react-performance)
-- [১১.৮ Web Workers](#১১৮-web-workers)
-- [১১.৯ Caching Strategies](#১১৯-caching-strategies)
-- [১১.১০ Performance Measurement](#১১১০-performance-measurement)
-- [১১.১১ Interview Q&A](#১১১১-part-11--interview-questions--answers)
+- ১১.১ Browser Rendering Pipeline [↗](#১১১-browser-rendering-pipeline)
+- ১১.২ Core Web Vitals [↗](#১১২-core-web-vitals)
+- ১১.৩ Lazy Loading [↗](#১১৩-lazy-loading)
+- ১১.৪ Code Splitting & Bundle Optimization [↗](#১১৪-code-splitting--bundle-optimization)
+- ১১.৫ Memory Management [↗](#১১৫-memory-management)
+- ১১.৬ Network Optimization [↗](#১১৬-network-optimization)
+- ১১.৭ React Performance [↗](#১১৭-react-performance)
+- ১১.৮ Web Workers [↗](#১১৮-web-workers)
+- ১১.৯ Caching Strategies [↗](#১১৯-caching-strategies)
+- ১১.১০ Performance Measurement [↗](#১১১০-performance-measurement)
+- ১১.১১ Interview Q&A [↗](#১১১১-part-11--interview-questions--answers)
 
 </details>
 
@@ -242,16 +242,16 @@
 <summary><strong>🇧🇩 PART 12 — বিস্তারিত সূচি দেখুন</strong></summary>
 <br>
 
-- [১২.১ BD Job Market Overview](#১২১-bd-job-market-overview)
-- [১২.২ Fresher Interview Pattern](#১২২-fresher-interview-pattern)
-- [১২.৩ BD Company-Specific Questions](#১২৩-bd-company-specific-questions)
-- [১২.৪ Mock Interview Script](#১২৪-mock-interview-script)
-- [১২.৫ Resume Tips for JS Developers](#১২৫-resume-tips-for-js-developers)
-- [১২.৬ Portfolio ও GitHub Profile](#১২৬-portfolio-ও-github-profile)
-- [১২.৭ Salary Negotiation](#১২৭-salary-negotiation)
-- [১২.৮ Common Mistakes to Avoid](#১২৮-common-mistakes-to-avoid)
-- [১২.৯ 30-Day Preparation Plan](#১২৯-30-day-preparation-plan)
-- [১২.১০ Final Revision Checklist](#১২১০-final-revision-checklist)
+- ১২.১ BD Job Market Overview [↗](#১২১-bd-job-market-overview)
+- ১২.২ Fresher Interview Pattern [↗](#১২২-fresher-interview-pattern)
+- ১২.৩ BD Company-Specific Questions [↗](#১২৩-bd-company-specific-questions)
+- ১২.৪ Mock Interview Script [↗](#১২৪-mock-interview-script)
+- ১২.৫ Resume Tips for JS Developers [↗](#১২৫-resume-tips-for-js-developers)
+- ১২.৬ Portfolio ও GitHub Profile [↗](#১২৬-portfolio-ও-github-profile)
+- ১২.৭ Salary Negotiation [↗](#১২৭-salary-negotiation)
+- ১২.৮ Common Mistakes to Avoid [↗](#১২৮-common-mistakes-to-avoid)
+- ১২.৯ 30-Day Preparation Plan [↗](#১২৯-30-day-preparation-plan)
+- ১২.১০ Final Revision Checklist [↗](#১২১০-final-revision-checklist)
 
 </details>
 
@@ -9354,7 +9354,7 @@ console.log(mostFrequentChar("hello world")); // "l"
 **P15: Title Case করো**
 ```javascript
 const titleCase = str =>
-  str.toLowerCase().replace(/\w/g, ch => ch.toUpperCase());
+  str.toLowerCase().replace(/\w/g, ch => ch.toUpperCase());
 console.log(titleCase("hello world from bangladesh")); // "Hello World From Bangladesh"
 ```
 
