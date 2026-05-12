@@ -5615,4 +5615,1517 @@ uses: 8398a7/action-slack@v3
 
 ---
 
-> **📌 পরবর্তী:** PART 7 — Advanced GitHub Features *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 7 — Advanced GitHub Features
+
+---
+
+<a id="part7"></a>
+## PART 7: Advanced GitHub Features
+
+> GitHub-এর power features যা professional developer-রা ব্যবহার করেন — Security scanning, Dependabot, GitHub Packages, GitHub CLI, Codespaces, Copilot এবং আরো। এই PART জানলে interview-এ আপনি একটু আলাদা হয়ে উঠবেন।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [GitHub Security Features](#p7-security) |
+| 2 | [Dependabot — Automated Dependency Updates](#p7-dependabot) |
+| 3 | [GitHub Packages — Package Registry](#p7-packages) |
+| 4 | [GitHub CLI (gh)](#p7-cli) |
+| 5 | [GitHub Codespaces](#p7-codespaces) |
+| 6 | [GitHub Copilot](#p7-copilot) |
+| 7 | [GitHub Pages — Advanced](#p7-pages-advanced) |
+| 8 | [GitHub Webhooks](#p7-webhooks) |
+| 9 | [GitHub API (REST ও GraphQL)](#p7-api) |
+| 10 | [Repository Insights ও Analytics](#p7-insights) |
+
+---
+
+<a id="p7-security"></a>
+**Topic 1: GitHub Security Features**
+
+**GitHub-এর security layers:**
+
+```
+Code Scanning (CodeQL)
+  → Code-এ vulnerability automatically detect করে
+
+Secret Scanning
+  → API key, password accidentally commit হলে alert
+
+Dependabot Alerts
+  → Known vulnerability থাকা dependency detect করে
+
+Security Policy (SECURITY.md)
+  → কীভাবে vulnerability report করবেন
+
+Private Vulnerability Reporting
+  → Public issue ছাড়া private security report
+```
+
+**Code Scanning — CodeQL:**
+```yaml
+# .github/workflows/codeql.yml
+name: CodeQL Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'   # সাপ্তাহিক
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    strategy:
+      matrix:
+        language: [python, javascript]   # বা: java, csharp, go, ruby
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+```
+
+**Secret Scanning:**
+```
+GitHub → Repository → Settings → Security → Secret scanning
+→ Enable secret scanning ✅
+→ Push protection ✅ (push block করে যদি secret detect করে)
+
+Supported: AWS keys, GitHub tokens, Stripe keys, Google API keys, 200+ patterns
+
+Accidental commit হলে:
+1. GitHub alert পাঠাবে
+2. সেই key/token immediately revoke করুন
+3. git filter-repo দিয়ে history থেকে সরান
+4. Force push করুন (team-কে জানান)
+```
+
+**SECURITY.md:**
+```markdown
+# Security Policy
+
+## Supported Versions
+
+| Version | Supported |
+| ------- | --------- |
+| 2.x     | ✅ |
+| 1.x     | ❌ |
+
+## Reporting a Vulnerability
+
+**Please do NOT create public issues for security vulnerabilities.**
+
+Email: security@example.com
+Response time: 48 hours
+
+আমরা সমস্যা confirm করে 90 দিনের মধ্যে fix করব।
+Fix হওয়ার পরে CVE publish করা হবে।
+```
+
+---
+
+<a id="p7-dependabot"></a>
+**Topic 2: Dependabot — Automated Dependency Updates**
+
+**Dependabot কী:**
+GitHub-এর bot যা automatically dependency updates এবং security patches-এর PR তৈরি করে।
+
+**দুই ধরনের Dependabot:**
+```
+1. Dependabot Alerts — Known vulnerability থাকা packages-এ alert
+2. Dependabot Version Updates — Regular dependency version updates PR
+```
+
+**dependabot.yml configuration:**
+```yaml
+# .github/dependabot.yml
+version: 2
+
+updates:
+  # Python (pip)
+  - package-ecosystem: pip
+    directory: /                    # requirements.txt কোথায়
+    schedule:
+      interval: weekly              # daily / weekly / monthly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Dhaka
+    open-pull-requests-limit: 5
+    reviewers:
+      - lead-developer
+    labels:
+      - dependencies
+      - automated
+    ignore:
+      - dependency-name: django
+        versions: ["4.x"]           # Major update ignore
+    groups:
+      django-ecosystem:
+        patterns:
+          - "django*"
+          - "djangorestframework*"
+
+  # Node.js (npm)
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    versioning-strategy: increase
+
+  # Docker
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+
+  # GitHub Actions
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+```
+
+**Dependabot PR দেখতে পাবেন:**
+```
+PR title: "chore(deps): bump requests from 2.28.0 to 2.31.0"
+Label: dependencies
+Auto-assigned reviewer
+
+Merge করার আগে check করুন:
+✅ CHANGELOG দেখুন — breaking change আছে?
+✅ CI tests pass করছে?
+✅ Major version bump-এ সাবধান
+```
+
+**Security alert response:**
+```
+GitHub → Security → Dependabot alerts
+→ Critical/High alerts সবার আগে fix করুন
+
+Alert-এ থাকবে:
+- CVE number
+- Affected version range
+- Fixed version
+- CVSS score
+- Description
+- Suggested fix (PR)
+```
+
+---
+
+<a id="p7-packages"></a>
+**Topic 3: GitHub Packages — Package Registry**
+
+**GitHub Packages কী:**
+GitHub-এ নিজের packages (npm, pip, Docker images, Maven, etc.) publish ও host করা যায়।
+
+**Docker image publish:**
+```yaml
+# .github/workflows/docker-publish.yml
+name: Publish Docker Image
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}   # Auto-provided!
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+```
+
+**Docker image pull করুন:**
+```bash
+# Public image
+docker pull ghcr.io/username/my-app:latest
+
+# Private image (auth দরকার)
+echo $GITHUB_TOKEN | docker login ghcr.io -u USERNAME --password-stdin
+docker pull ghcr.io/username/private-app:v1.0.0
+```
+
+**npm package publish:**
+```bash
+# package.json-এ:
+{
+  "name": "@username/my-package",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}
+
+# .npmrc:
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+@username:registry=https://npm.pkg.github.com
+```
+
+---
+
+<a id="p7-cli"></a>
+**Topic 4: GitHub CLI (gh)**
+
+**GitHub CLI কী:**
+Terminal থেকে GitHub-এর সব কাজ করা যায় — PR তৈরি, issue manage, workflow run, release create।
+
+**Install:**
+```bash
+# Linux
+sudo apt install gh             # Ubuntu/Debian
+sudo dnf install gh             # Fedora
+
+# macOS
+brew install gh
+
+# Login
+gh auth login
+# → GitHub.com
+# → HTTPS / SSH
+# → Authenticate via browser
+```
+
+**সবচেয়ে useful commands:**
+```bash
+# ──────────────────────────────────────────────
+# Repository
+# ──────────────────────────────────────────────
+gh repo create my-project --public --clone
+gh repo clone username/project
+gh repo view                    # Current repo info
+gh repo view --web              # Browser-এ খুলুন
+gh repo fork username/project --clone
+
+# ──────────────────────────────────────────────
+# Pull Requests
+# ──────────────────────────────────────────────
+gh pr create --title "feat: add login" --body "Adds JWT auth"
+gh pr create --fill                    # Branch name + commits থেকে auto-fill
+gh pr list
+gh pr list --state open --assignee @me
+gh pr view 42
+gh pr view --web                       # Browser-এ খুলুন
+gh pr checkout 42                      # PR branch checkout
+gh pr review 42 --approve
+gh pr review 42 --request-changes --body "Please fix the tests"
+gh pr merge 42 --squash --delete-branch
+
+# ──────────────────────────────────────────────
+# Issues
+# ──────────────────────────────────────────────
+gh issue create --title "Bug: login crash" --label "bug"
+gh issue list --label "bug" --state open
+gh issue view 15
+gh issue close 15 --comment "Fixed in PR #42"
+
+# ──────────────────────────────────────────────
+# GitHub Actions
+# ──────────────────────────────────────────────
+gh workflow list
+gh workflow run ci.yml                 # Manual trigger
+gh workflow run deploy.yml -f env=staging
+gh run list --workflow=ci.yml
+gh run view 1234567890
+gh run watch                           # Live watch running workflow
+
+# ──────────────────────────────────────────────
+# Releases
+# ──────────────────────────────────────────────
+gh release create v1.0.0 --title "First Release" --notes "Initial release"
+gh release list
+gh release download v1.0.0
+
+# ──────────────────────────────────────────────
+# Secrets
+# ──────────────────────────────────────────────
+gh secret set DATABASE_URL
+gh secret set API_KEY --body "actual-key-value"
+gh secret list
+
+# ──────────────────────────────────────────────
+# GitHub Codespaces
+# ──────────────────────────────────────────────
+gh cs create --repo username/project
+gh cs list
+gh cs ssh                              # SSH into codespace
+```
+
+**Productivity aliases:**
+```bash
+# ~/.bashrc বা ~/.zshrc
+alias ghpr='gh pr create --fill'
+alias ghpl='gh pr list'
+alias ghil='gh issue list'
+alias ghwv='gh run watch'
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "GitHub CLI কীভাবে আপনার workflow improve করেছে?"
+
+উত্তর: "gh pr create --fill দিয়ে seconds-এ PR তৈরি করি — browser
+খুলতে হয় না। gh run watch দিয়ে terminal-এই CI status দেখি।
+gh pr checkout দিয়ে colleague-এর PR locally test করি।
+Scripts-এ GitHub API call-এর বদলে gh CLI ব্যবহার করি — simpler।"
+```
+
+---
+
+<a id="p7-codespaces"></a>
+**Topic 5: GitHub Codespaces**
+
+**GitHub Codespaces কী:**
+Browser বা VS Code-এ cloud-based development environment। Local setup ছাড়াই project-এ কাজ করা যায়।
+
+```
+GitHub → Repository → Code → Codespaces → Create codespace on main
+→ VS Code in browser (অথবা desktop VS Code)
+→ সব extensions, settings, terminal ready
+→ Commit ও push করা যায় directly
+```
+
+**devcontainer.json — Custom environment:**
+```json
+// .devcontainer/devcontainer.json
+{
+  "name": "Python Development",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "editor.formatOnSave": true
+      }
+    }
+  },
+  
+  "postCreateCommand": "pip install -r requirements.txt",
+  "forwardPorts": [8000, 5432],
+  
+  "remoteEnv": {
+    "DATABASE_URL": "${localEnv:DATABASE_URL}"
+  }
+}
+```
+
+**কেন Codespaces useful:**
+```
+✅ "Works on my machine" সমস্যা নেই — সবার same environment
+✅ New developer onboarding: minutes, not days
+✅ Contribute to open-source: browser-এই কাজ করুন
+✅ Low-spec machine-এও powerful development
+✅ Secrets safe — local-এ সংরক্ষণ নেই
+```
+
+---
+
+<a id="p7-copilot"></a>
+**Topic 6: GitHub Copilot**
+
+**GitHub Copilot কী:**
+OpenAI Codex (GPT-4 based) দিয়ে তৈরি AI pair programmer যা code suggest করে।
+
+```
+Features:
+→ Inline code completion
+→ Copilot Chat (conversation-based)
+→ Copilot in CLI: gh copilot suggest "command to do X"
+→ Copilot for PRs: PR description auto-generate
+→ Copilot Workspace: Task-based development
+```
+
+**Effective Copilot usage:**
+```python
+# ভালো comment লিখলে ভালো suggestion পায়
+# Function to validate Bengali phone number (01XXXXXXXXX format)
+def validate_bd_phone(phone: str) -> bool:
+    # Copilot এখানে regex সহ implementation suggest করবে
+
+# Type hints দিলে better suggestions
+def calculate_discount(price: float, discount_percent: float) -> float:
+    # ...
+
+# Test লেখার সময় বিশেষ useful
+# Test that login returns 401 for invalid credentials
+def test_login_invalid_credentials():
+    # Copilot complete test লিখে দেবে
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "GitHub Copilot ব্যবহার করেন? কীভাবে?"
+
+উত্তর: "হ্যাঁ, boilerplate code, unit tests এবং documentation লেখায়
+খুব helpful। তবে সব suggestion blindly accept করি না — code review
+করি, security implications বুঝি।
+
+বিশেষত repetitive patterns যেমন CRUD endpoints, test cases,
+regex validation-এ productivity অনেক বাড়ে। Core business logic
+নিজেই লিখি।"
+```
+
+---
+
+<a id="p7-pages-advanced"></a>
+**Topic 7: GitHub Pages — Advanced**
+
+```bash
+# Custom domain setup:
+# 1. Repository → Settings → Pages → Custom domain
+# 2. DNS provider-এ CNAME record add করুন:
+#    CNAME www.example.com username.github.io
+
+# HTTPS enforce:
+# Settings → Pages → Enforce HTTPS ✅
+
+# Jekyll theme (built-in static site generator):
+# _config.yml
+theme: minima
+title: My Portfolio
+description: Software Engineer Portfolio
+
+# GitHub Pages কোন folder-এ build করবে:
+# Settings → Pages → Source
+# → Deploy from branch: /root বা /docs
+# → Deploy from GitHub Actions (recommended)
+
+# SPA (React/Vue) routing fix:
+# 404.html = index.html copy করুন
+# বা: HashRouter ব্যবহার করুন React-এ
+```
+
+---
+
+<a id="p7-webhooks"></a>
+**Topic 8: GitHub Webhooks**
+
+**Webhooks কী:**
+GitHub events হলে আপনার server-এ HTTP POST request পাঠানো হয়।
+
+```
+GitHub Events → Webhook → Your Server (HTTP POST)
+                              ↓
+                    Custom automation
+                    (Slack notification, deployment, etc.)
+```
+
+**Webhook setup:**
+```
+Repository → Settings → Webhooks → Add webhook
+→ Payload URL: https://your-server.com/webhook
+→ Content type: application/json
+→ Secret: (HMAC signature verify করতে)
+→ Events: push, pull_request, issues, etc.
+→ Active: ✅
+```
+
+**Webhook payload handle করুন (Python FastAPI):**
+```python
+import hashlib
+import hmac
+from fastapi import FastAPI, Request, HTTPException
+
+app = FastAPI()
+WEBHOOK_SECRET = "your-webhook-secret"
+
+def verify_signature(payload_body: bytes, signature: str) -> bool:
+    """GitHub webhook signature verify করুন"""
+    expected = hmac.new(
+        WEBHOOK_SECRET.encode(),
+        payload_body,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(f"sha256={expected}", signature)
+
+@app.post("/webhook")
+async def github_webhook(request: Request):
+    signature = request.headers.get("X-Hub-Signature-256", "")
+    body = await request.body()
+    
+    if not verify_signature(body, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+    
+    event = request.headers.get("X-GitHub-Event")
+    payload = await request.json()
+    
+    if event == "push" and payload["ref"] == "refs/heads/main":
+        # main-এ push হলে deploy trigger করুন
+        await trigger_deployment(payload)
+    
+    elif event == "pull_request" and payload["action"] == "opened":
+        # PR open হলে Slack notification
+        await notify_slack(f"New PR: {payload['pull_request']['title']}")
+    
+    return {"status": "ok"}
+```
+
+---
+
+<a id="p7-api"></a>
+**Topic 9: GitHub API (REST ও GraphQL)**
+
+**REST API:**
+```bash
+# Base URL: https://api.github.com
+
+# Authentication
+curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/user
+
+# Repository info
+curl https://api.github.com/repos/username/project
+
+# Create issue
+curl -X POST \
+  -H "Authorization: Bearer $GITHUB_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Bug found", "body": "Description here", "labels": ["bug"]}' \
+  https://api.github.com/repos/username/project/issues
+
+# List PRs
+curl -H "Authorization: Bearer $GITHUB_TOKEN" \
+  "https://api.github.com/repos/username/project/pulls?state=open"
+```
+
+**Python-এ PyGithub:**
+```python
+from github import Github
+
+g = Github("your-token")
+repo = g.get_repo("username/project")
+
+# Issues
+for issue in repo.get_issues(state="open", labels=["bug"]):
+    print(f"#{issue.number}: {issue.title}")
+
+# Create PR
+pr = repo.create_pull(
+    title="feat: add feature",
+    body="Description",
+    head="feature/my-feature",
+    base="main"
+)
+
+# Workflow trigger
+workflow = repo.get_workflow("deploy.yml")
+workflow.create_dispatch(ref="main", inputs={"env": "staging"})
+```
+
+---
+
+<a id="p7-insights"></a>
+**Topic 10: Repository Insights ও Analytics**
+
+```
+Repository → Insights
+
+Tabs:
+→ Pulse        — recent activity (PRs, issues, commits)
+→ Contributors — কে কতটুকু contribute করেছেন (commits, additions, deletions)
+→ Community    — README, CONTRIBUTING, LICENSE checklist
+→ Traffic      — Views, clones, popular content
+→ Commits      — Commit frequency graph
+→ Code frequency — Lines added/removed over time
+→ Dependency graph — Dependencies ও dependents
+→ Network      — Fork network visual
+→ Forks        — Who forked, their branches
+```
+
+**Traffic data (API দিয়ে):**
+```bash
+# Repository views
+curl -H "Authorization: Bearer $TOKEN" \
+  https://api.github.com/repos/user/repo/traffic/views
+
+# Clones
+curl -H "Authorization: Bearer $TOKEN" \
+  https://api.github.com/repos/user/repo/traffic/clones
+
+# Popular paths
+curl -H "Authorization: Bearer $TOKEN" \
+  https://api.github.com/repos/user/repo/traffic/popular/paths
+```
+
+---
+
+**PART 7 Quick Revision Table**
+
+| Feature | কী | কোথায় |
+|---------|----|----|
+| CodeQL | Automated security vulnerability scan | Security tab |
+| Secret Scanning | Accidentally committed secrets detect | Security tab |
+| Dependabot Alerts | Vulnerable dependency detect | Security tab |
+| dependabot.yml | Auto dependency update PR | `.github/dependabot.yml` |
+| GitHub Packages | Docker/npm/pip package registry | `ghcr.io` |
+| GitHub CLI | Terminal থেকে GitHub operations | `gh` command |
+| Codespaces | Cloud-based dev environment | Code → Codespaces |
+| devcontainer.json | Codespace environment config | `.devcontainer/` |
+| Webhooks | GitHub events → HTTP POST to server | Settings → Webhooks |
+| GITHUB_TOKEN | Auto-provided secret in Actions | `${{ secrets.GITHUB_TOKEN }}` |
+| Insights | Repo analytics | Repository → Insights |
+| gh pr create --fill | Auto-fill PR from branch/commits | gh CLI |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part8"></a>
+## PART 8: Git Best Practices & Professional Workflow
+
+> এই PART-এ সেইসব practices আলোচনা করা হয়েছে যা junior ও senior developer-দের আলাদা করে। Commit message standards, code review culture, GitOps, mono-repo, এবং real-world team workflow।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Conventional Commits Standard](#p8-conventional-commits) |
+| 2 | [Commit Message Best Practices](#p8-commit-msg) |
+| 3 | [Semantic Versioning (SemVer)](#p8-semver) |
+| 4 | [CHANGELOG Automation](#p8-changelog) |
+| 5 | [Git Aliases — Productivity Boost](#p8-aliases) |
+| 6 | [.gitignore Best Practices](#p8-gitignore) |
+| 7 | [Monorepo vs Polyrepo](#p8-monorepo) |
+| 8 | [GitOps](#p8-gitops) |
+| 9 | [Git for Data Science Projects](#p8-data-science) |
+| 10 | [Common Git Mistakes ও Prevention](#p8-mistakes) |
+| 11 | [Git Interview Cheat Sheet](#p8-cheatsheet) |
+
+---
+
+<a id="p8-conventional-commits"></a>
+**Topic 1: Conventional Commits Standard**
+
+**Conventional Commits কী:**
+একটি commit message format specification যা human-readable এবং machine-parseable উভয়ই।
+
+**Format:**
+```
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+**Types:**
+```
+feat     → নতুন feature
+fix      → Bug fix
+docs     → Documentation পরিবর্তন
+style    → Code style (formatting, semicolons) — logic change নয়
+refactor → Code restructure — feature বা bug fix নয়
+perf     → Performance improvement
+test     → Test add বা fix
+build    → Build system বা dependency পরিবর্তন (webpack, pip)
+ci       → CI configuration পরিবর্তন
+chore    → Maintenance (version bump, gitignore update)
+revert   → Previous commit revert
+```
+
+**Real examples:**
+```bash
+# Simple
+git commit -m "feat: add user registration endpoint"
+git commit -m "fix: resolve null pointer in payment service"
+git commit -m "docs: update API documentation for v2"
+git commit -m "style: apply black formatting to all files"
+git commit -m "refactor: extract auth logic to separate module"
+git commit -m "test: add unit tests for CartService"
+git commit -m "chore: upgrade Django from 4.2 to 5.0"
+git commit -m "ci: add Python 3.12 to test matrix"
+
+# With scope
+git commit -m "feat(auth): implement OAuth2 Google login"
+git commit -m "fix(cart): resolve quantity overflow on add"
+git commit -m "perf(db): add index on user.email column"
+git commit -m "test(api): add integration tests for order endpoints"
+
+# Breaking change (!)
+git commit -m "feat!: change API response format to JSON:API spec"
+git commit -m "feat(api)!: remove deprecated v1 endpoints"
+
+# With body
+git commit -m "fix(payment): handle Stripe webhook timeout
+
+Stripe webhooks can take up to 30 seconds to process.
+Increased timeout from 10s to 35s and added retry logic.
+
+Fixes #142"
+
+# With footer (issue reference, breaking change)
+git commit -m "feat(auth): add multi-factor authentication
+
+Implements TOTP-based MFA using pyotp library.
+Users can enable MFA from account settings.
+
+BREAKING CHANGE: /api/auth/login now returns 202 (MFA required)
+instead of 200 when MFA is enabled.
+Closes #89
+Reviewed-by: Alice <alice@example.com>"
+```
+
+**Conventional Commits-এর সুবিধা:**
+```
+✅ CHANGELOG automatic generation
+✅ Semantic version bump automatic
+✅ CI/CD-এ commit type দেখে decision নেওয়া যায়
+✅ git log পড়তে সহজ
+✅ Code review-এ context পাওয়া যায়
+```
+
+---
+
+<a id="p8-commit-msg"></a>
+**Topic 2: Commit Message Best Practices**
+
+**Golden rules:**
+
+```
+1. Subject line: 50 characters বা কম (imperative mood)
+   ✅ "Add user authentication"
+   ❌ "Added user authentication"
+   ❌ "Adding user authentication"
+   ❌ "I added user authentication to the codebase to allow users to..."
+
+2. Subject line: Capitalize first letter
+   ✅ "Fix payment timeout bug"
+   ❌ "fix payment timeout bug"
+
+3. Subject line-এর শেষে period নয়
+   ✅ "Update README"
+   ❌ "Update README."
+
+4. Subject ও body-এর মাঝে blank line
+   feat: add login
+
+   This implements JWT-based authentication...
+
+5. Body line: 72 characters wrap
+   (WHY explain করুন, WHAT নয় — code-ই what বলে)
+
+6. Footer-এ issue reference
+   Closes #42
+   Fixes #89
+```
+
+**Bad vs Good examples:**
+```bash
+# ❌ Bad commits (real examples!)
+git commit -m "fix"
+git commit -m "wip"
+git commit -m "asdf"
+git commit -m "changes"
+git commit -m "update code"
+git commit -m "fixed the bug that was causing issues with the login system when users tried to log in with incorrect passwords"
+
+# ✅ Good commits
+git commit -m "fix(auth): reject expired JWT tokens"
+git commit -m "feat: add password reset via email"
+git commit -m "perf: cache user permissions in Redis"
+git commit -m "docs: add API usage examples to README"
+git commit -m "test: add edge cases for empty cart checkout"
+```
+
+**Atomic commits:**
+```bash
+# ❌ Bad: একটি commit-এ সব
+git commit -m "add login, fix cart, update docs, bump version"
+
+# ✅ Good: প্রতিটি logical change আলাদা commit
+git commit -m "feat(auth): add login endpoint"
+git commit -m "fix(cart): resolve quantity overflow"
+git commit -m "docs: update API reference for login"
+git commit -m "chore: bump version to 1.2.0"
+```
+
+---
+
+<a id="p8-semver"></a>
+**Topic 3: Semantic Versioning (SemVer)**
+
+**Format: `MAJOR.MINOR.PATCH`**
+
+```
+v2.4.1
+│ │ └── PATCH: backward-compatible bug fixes
+│ └──── MINOR: backward-compatible new features
+└────── MAJOR: breaking changes (backward-incompatible)
+```
+
+**কখন কোনটা bump:**
+```bash
+# PATCH (2.4.1 → 2.4.2)
+# Bug fix, security patch, internal refactor
+git commit -m "fix: resolve login crash on iOS"
+
+# MINOR (2.4.1 → 2.5.0)
+# নতুন feature, backward-compatible
+git commit -m "feat: add dark mode support"
+
+# MAJOR (2.4.1 → 3.0.0)
+# Breaking change
+git commit -m "feat!: redesign API response format"
+# অথবা footer-এ: BREAKING CHANGE: ...
+```
+
+**Pre-release versions:**
+```
+1.0.0-alpha.1    → Alpha (unstable)
+1.0.0-beta.1     → Beta (feature complete, not stable)
+1.0.0-rc.1       → Release Candidate (ready for testing)
+1.0.0            → Stable release
+```
+
+**SemVer tools:**
+```bash
+# Python: bump2version বা bumpversion
+pip install bump2version
+bump2version patch   # 1.0.0 → 1.0.1
+bump2version minor   # 1.0.1 → 1.1.0
+bump2version major   # 1.1.0 → 2.0.0
+
+# Conventional commits থেকে auto version:
+# semantic-release, release-please
+```
+
+---
+
+<a id="p8-changelog"></a>
+**Topic 4: CHANGELOG Automation**
+
+**Manual CHANGELOG.md format:**
+```markdown
+# Changelog
+
+All notable changes documented here.
+Format: [Keep a Changelog](https://keepachangelog.com)
+Versioning: [SemVer](https://semver.org)
+
+## [Unreleased]
+### Added
+- Dark mode support
+
+## [2.1.0] — 2026-03-15
+### Added
+- Multi-factor authentication (#89)
+- Export to PDF feature (#102)
+
+### Fixed
+- Login crash on iOS Safari (#95)
+- Cart quantity overflow (#98)
+
+### Changed
+- Improved error messages for API validation
+
+### Deprecated
+- `/api/v1/users` endpoint (use `/api/v2/users`)
+
+## [2.0.0] — 2026-01-10
+### Breaking Changes
+- API response format changed to JSON:API spec
+- Minimum Python version: 3.10
+
+### Added
+- Complete API redesign
+```
+
+**Automated CHANGELOG — release-please (Google):**
+```yaml
+# .github/workflows/release-please.yml
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: python        # node / python / go / etc.
+```
+
+```
+কীভাবে কাজ করে:
+1. main-এ Conventional Commits push করুন
+2. release-please PR তৈরি করে: "Release 2.1.0"
+3. PR-এ CHANGELOG.md auto-updated থাকবে
+4. PR merge করলে → git tag + GitHub Release auto-create
+```
+
+---
+
+<a id="p8-aliases"></a>
+**Topic 5: Git Aliases — Productivity Boost**
+
+```bash
+# ~/.gitconfig বা git config --global alias.NAME 'command'
+git config --global alias.st 'status'
+git config --global alias.co 'checkout'
+git config --global alias.br 'branch'
+git config --global alias.ci 'commit'
+git config --global alias.unstage 'reset HEAD --'
+git config --global alias.last 'log -1 HEAD'
+
+# Useful log aliases
+git config --global alias.lg "log --oneline --graph --decorate --all"
+git config --global alias.hist "log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short"
+
+# Amend last commit
+git config --global alias.amend 'commit --amend --no-edit'
+
+# Undo last commit (keep changes)
+git config --global alias.undo 'reset HEAD~1 --mixed'
+
+# Show modified files
+git config --global alias.changed 'diff --name-only'
+
+# Delete merged branches
+git config --global alias.cleanup "!git branch --merged | grep -v '\\*\\|main\\|develop' | xargs -n 1 git branch -d"
+```
+
+**~/.gitconfig এর aliases section:**
+```ini
+[alias]
+    st = status
+    co = checkout
+    br = branch
+    ci = commit
+    unstage = reset HEAD --
+    last = log -1 HEAD
+    lg = log --oneline --graph --decorate --all
+    amend = commit --amend --no-edit
+    undo = reset HEAD~1 --mixed
+    cleanup = !git branch --merged | grep -v '\\*\\|main\\|develop' | xargs -n 1 git branch -d
+```
+
+**ব্যবহার:**
+```bash
+git st          # git status
+git lg          # beautiful log
+git undo        # last commit undo
+git cleanup     # merged branch delete
+```
+
+---
+
+<a id="p8-gitignore"></a>
+**Topic 6: .gitignore Best Practices**
+
+**Python project .gitignore:**
+```gitignore
+# .gitignore
+
+# ──────────────────────────────────────────────
+# Python
+# ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# ──────────────────────────────────────────────
+# Environment & Secrets ⚠️ CRITICAL
+# ──────────────────────────────────────────────
+.env
+.env.*
+!.env.example      # Example file commit করুন
+*.pem
+*.key
+*.p12
+secrets.json
+config/secrets.yml
+
+# ──────────────────────────────────────────────
+# Testing
+# ──────────────────────────────────────────────
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# ──────────────────────────────────────────────
+# Database
+# ──────────────────────────────────────────────
+*.db
+*.sqlite3
+*.sqlite
+db.sqlite3
+
+# ──────────────────────────────────────────────
+# IDE
+# ──────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store       # macOS
+
+# ──────────────────────────────────────────────
+# Logs
+# ──────────────────────────────────────────────
+*.log
+logs/
+```
+
+**Global gitignore (সব project-এ apply):**
+```bash
+# ~/.gitignore_global
+git config --global core.excludesfile ~/.gitignore_global
+
+# Content:
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+```
+
+**Tracked file ignore করুন:**
+```bash
+# Already tracked file gitignore করতে:
+git rm --cached .env           # Index থেকে সরান, file রাখুন
+echo ".env" >> .gitignore
+git add .gitignore
+git commit -m "chore: remove .env from tracking"
+```
+
+---
+
+<a id="p8-monorepo"></a>
+**Topic 7: Monorepo vs Polyrepo**
+
+| | Monorepo | Polyrepo |
+|--|----------|---------|
+| সব projects | একটি repo | আলাদা আলাদা repo |
+| Code sharing | সহজ | NPM/pip package দরকার |
+| CI/CD | Complex (affected packages only) | Simple per-repo |
+| Team autonomy | কম | বেশি |
+| Tooling | Nx, Turborepo, Bazel | সহজ |
+| Who uses | Google, Microsoft, Meta | Smaller teams |
+
+**Monorepo structure:**
+```
+my-company/
+├── apps/
+│   ├── web-app/           (React)
+│   ├── mobile-app/        (React Native)
+│   └── admin-dashboard/   (Vue)
+├── services/
+│   ├── auth-service/      (FastAPI)
+│   ├── payment-service/   (Node.js)
+│   └── notification/      (Go)
+├── packages/
+│   ├── ui-components/     (shared React components)
+│   ├── api-client/        (auto-generated SDK)
+│   └── utils/             (shared utilities)
+├── tools/
+│   └── scripts/
+├── package.json           (Nx/Turborepo config)
+└── turbo.json
+```
+
+**Turborepo (popular monorepo tool):**
+```bash
+npx create-turbo@latest
+# বা add to existing: npm install turbo -D
+
+# turbo.json
+{
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "test": {
+      "dependsOn": ["build"]
+    },
+    "lint": {}
+  }
+}
+
+# Affected packages only build/test:
+turbo run build --filter=[HEAD^1]
+turbo run test --filter=...web-app
+```
+
+---
+
+<a id="p8-gitops"></a>
+**Topic 8: GitOps**
+
+**GitOps কী:**
+Infrastructure ও application configuration-এর desired state Git repository-তে রাখা এবং Git-কে single source of truth হিসেবে ব্যবহার করা।
+
+```
+Developer → Git push → CI pipeline
+                            ↓
+                    GitOps operator (ArgoCD/Flux)
+                            ↓
+                    Kubernetes cluster update
+                    (desired state = Git state)
+```
+
+**Core principles:**
+```
+1. Git = Single source of truth
+2. Declarative: কী হওয়া উচিত (not how)
+3. Versioned: সব change git history-তে
+4. Automatic: Git state ≠ cluster state → auto fix
+5. Auditable: কে কখন কী deploy করেছে = git log
+```
+
+**ArgoCD example:**
+```yaml
+# argocd application
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: my-app
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/company/k8s-configs
+    targetRevision: main
+    path: apps/my-app
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true       # Git-এ না থাকলে cluster থেকে সরাও
+      selfHeal: true    # Manual change হলে Git-এ ফিরে যাও
+```
+
+**GitOps benefits:**
+```
+✅ Audit trail: কে কখন কী deploy করেছে
+✅ Rollback: git revert করলে infra rollback
+✅ Disaster recovery: repo থেকে পুরো infra recreate
+✅ Pull-based: cluster pulls from Git (more secure)
+✅ Review: infra change = PR + code review
+```
+
+---
+
+<a id="p8-data-science"></a>
+**Topic 9: Git for Data Science Projects**
+
+**Data Science-এ বিশেষ চ্যালেঞ্জ:**
+```
+❌ Large data files (CSV, model files) → Git-এ রাখা যায় না
+❌ Jupyter notebooks → merge conflict nightmare (JSON format)
+❌ Experiments → অনেক trial runs, কোনটা ভালো?
+❌ Model weights → GB size
+```
+
+**Solutions:**
+
+**DVC (Data Version Control):**
+```bash
+pip install dvc dvc-s3   # বা dvc-gdrive, dvc-azure
+
+# Initialize
+dvc init
+
+# Large data file track করুন
+dvc add data/raw/dataset.csv
+# .gitignore-এ add হয়, data/raw/dataset.csv.dvc file তৈরি হয়
+git add data/raw/dataset.csv.dvc data/.gitignore
+git commit -m "data: add raw dataset tracking"
+
+# Remote storage (S3, GDrive, etc.)
+dvc remote add -d myremote s3://my-bucket/dvc-store
+dvc push    # data remote-এ push করুন
+dvc pull    # data download করুন
+```
+
+**Jupyter Notebook best practices:**
+```bash
+# nbstripout — output সরিয়ে clean notebook commit করুন
+pip install nbstripout
+nbstripout --install    # git filter install
+
+# প্রতিটি save-এ automatically output strip হবে
+
+# Jupytext — notebook → Python script
+pip install jupytext
+jupytext --to py notebook.ipynb    # .py ফাইল তৈরি হবে
+# .py file-ই git-এ রাখুন — merge সহজ হয়
+```
+
+**MLflow — Experiment tracking:**
+```python
+import mlflow
+
+with mlflow.start_run():
+    mlflow.log_param("learning_rate", 0.01)
+    mlflow.log_param("epochs", 100)
+    mlflow.log_metric("accuracy", 0.95)
+    mlflow.sklearn.log_model(model, "model")
+```
+
+---
+
+<a id="p8-mistakes"></a>
+**Topic 10: Common Git Mistakes ও Prevention**
+
+**Top 10 Git mistakes:**
+
+```bash
+# ──────────────────────────────────────────────
+# Mistake 1: Commit to main directly
+# ──────────────────────────────────────────────
+# Prevention: Branch protection rules on GitHub
+# Fix: git reset --soft HEAD~1, create branch, commit
+
+# ──────────────────────────────────────────────
+# Mistake 2: Commit .env / secrets
+# ──────────────────────────────────────────────
+# Prevention: .gitignore + pre-commit hook + secret scanning
+# Fix:
+git rm --cached .env
+# History cleanup:
+git filter-repo --path .env --invert-paths
+# Immediately revoke the exposed key!
+
+# ──────────────────────────────────────────────
+# Mistake 3: Large file in repository
+# ──────────────────────────────────────────────
+# Prevention: .gitignore, DVC for data
+# Fix:
+git filter-repo --path large-file.zip --invert-paths
+
+# ──────────────────────────────────────────────
+# Mistake 4: Force push to shared branch
+# ──────────────────────────────────────────────
+# Prevention: Branch protection: "Do not allow force pushes"
+# Never: git push --force origin main
+# If needed: git push --force-with-lease (safer)
+
+# ──────────────────────────────────────────────
+# Mistake 5: Wrong branch merge
+# ──────────────────────────────────────────────
+# Fix: git revert -m 1 [merge-commit-hash]
+
+# ──────────────────────────────────────────────
+# Mistake 6: git reset --hard (lost work)
+# ──────────────────────────────────────────────
+# Fix: git reflog → git reset --hard [old-hash]
+
+# ──────────────────────────────────────────────
+# Mistake 7: Messy commit history
+# ──────────────────────────────────────────────
+# Prevention: Meaningful commits from start
+# Fix: git rebase -i (before push)
+
+# ──────────────────────────────────────────────
+# Mistake 8: Not pulling before push
+# ──────────────────────────────────────────────
+git pull --rebase origin main   # always before push
+# অথবা:
+git config --global pull.rebase true   # default pull = rebase
+
+# ──────────────────────────────────────────────
+# Mistake 9: Ignoring merge conflicts (<<<< left in code)
+# ──────────────────────────────────────────────
+# Prevention: pre-commit hook
+grep -r "<<<<<<" src/ && echo "Unresolved conflicts!" && exit 1
+
+# ──────────────────────────────────────────────
+# Mistake 10: git add . (staging unwanted files)
+# ──────────────────────────────────────────────
+# Better: git add -p (interactive, patch by patch)
+git add -p          # hunk by hunk review করুন
+git diff --staged   # সবসময় review করুন commit-এর আগে
+```
+
+---
+
+<a id="p8-cheatsheet"></a>
+**Topic 11: Git Interview Cheat Sheet**
+
+**সবচেয়ে বেশি জিজ্ঞেস করা প্রশ্ন:**
+
+```
+Q: git merge vs git rebase?
+A: merge — history preserve, merge commit তৈরি করে
+   rebase — linear history, commits re-apply করে
+   Public branch-এ rebase করবেন না (history rewrite)
+
+Q: git reset vs git revert?
+A: reset — HEAD move করে (history change)
+   revert — নতুন "undo" commit তৈরি করে (history safe)
+   Pushed commits = revert, local only = reset
+
+Q: git fetch vs git pull?
+A: fetch — remote-এর latest ডাউনলোড করে, merge করে না
+   pull = fetch + merge (বা fetch + rebase)
+   habit: fetch করুন, diff দেখুন, তারপর merge
+
+Q: HEAD কী?
+A: Current working position-এর pointer
+   সাধারণত latest commit of current branch
+
+Q: Staging area কেন দরকার?
+A: Commit-এর আগে কোন changes include করবেন select করতে
+   git add -p দিয়ে partial commit করা যায়
+
+Q: git stash কখন ব্যবহার?
+A: কাজ অসম্পন্ন, branch switch করতে হবে — stash করুন
+   git stash / git stash pop
+
+Q: Detached HEAD কী?
+A: HEAD কোনো branch-এ নয়, সরাসরি commit-এ
+   git switch -c new-branch দিয়ে বের হন
+
+Q: Fast-forward merge vs 3-way merge?
+A: FF — linear history, divergence নেই
+   3-way — দুই branch diverged, merge commit তৈরি হয়
+
+Q: Interactive rebase কী?
+A: git rebase -i HEAD~N — commit history rewrite
+   squash, reword, drop, fixup, reorder
+
+Q: Cherry-pick কখন?
+A: নির্দিষ্ট commit অন্য branch-এ নিতে
+   git cherry-pick [hash]
+
+Q: Fork vs Clone?
+A: Fork — GitHub server-এ আপনার account-এ copy
+   Clone — local machine-এ copy
+
+Q: PR merge strategies?
+A: Merge commit — full history
+   Squash and merge — clean, single commit
+   Rebase and merge — linear history
+
+Q: CI/CD কী?
+A: CI — প্রতি push-এ auto test
+   CD — verified code auto deploy
+
+Q: Branch protection কী?
+A: Direct push block, PR required, review required, CI must pass
+
+Q: CODEOWNERS কী?
+A: File/folder-এর owner define করে — PR-এ auto review request
+
+Q: git reflog কী?
+A: Local HEAD movements log — time machine, হারানো commit recover
+```
+
+---
+
+**PART 8 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| Conventional Commits | `type(scope): description` format |
+| feat/fix/docs/chore | Commit type — changelog auto-generate হয় |
+| Breaking change | `feat!:` বা footer-এ `BREAKING CHANGE:` |
+| Atomic commit | এক commit = এক logical change |
+| SemVer | MAJOR.MINOR.PATCH — breaking/feature/bugfix |
+| CHANGELOG | Conventional commits থেকে auto-generate |
+| release-please | Google-এর automated release workflow |
+| Git aliases | `~/.gitconfig` → `git lg`, `git undo` |
+| .gitignore | `.env`, `__pycache__`, `.venv` সবসময় ignore |
+| `git rm --cached` | Tracked file untrack করুন |
+| Monorepo | সব projects একটি repo — Turborepo, Nx |
+| GitOps | Git = infrastructure source of truth |
+| DVC | Large data files version control |
+| nbstripout | Jupyter output strip before commit |
+| `git add -p` | Selective staging (patch mode) |
+| `git push --force-with-lease` | Force push-এর safer alternative |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 9 — Git Internals Deep Dive ও Troubleshooting *(Next request এ লিখব)*
