@@ -219,7 +219,7 @@
 
 <a id="part1"></a>
 
-# PART 1: Database Fundamentals (মূল ধারণাসমূহ)
+## PART 1: Database Fundamentals (মূল ধারণাসমূহ)
 
 > **📍 এই PART এর Sections:** [১.১ Database কী?](#১১-database-কী) · [১.২ DBMS vs RDBMS](#১২-dbms-vs-rdbms) · [১.৩ সুবিধা](#১৩-database-এর-সুবিধা) · [১.৪ প্রকারভেদ](#১৪-database-এর-প্রকারভেদ)
 
@@ -1208,7 +1208,7 @@ Enrollment: (student_id, course_id)
 
 <a id="part2"></a>
 
-# PART 2: SQL Fundamentals (SQL এর মূল ভিত্তি)
+## PART 2: SQL Fundamentals (SQL এর মূল ভিত্তি)
 
 > **📍 এই PART এর Sections:** [Setup](#practice-database-setup) · [২.১ SELECT](#২১-select) · [২.২ WHERE](#২২-where) · [২.৩ ORDER BY](#২৩-order-by)
 
@@ -2148,7 +2148,7 @@ ORDER BY team_size DESC;
 
 <a id="part3"></a>
 
-# PART 3: Advanced SQL & Database Concepts (উন্নত ধারণাসমূহ)
+## PART 3: Advanced SQL & Database Concepts (উন্নত ধারণাসমূহ)
 
 > **📍 এই PART এর Sections:** [৩.১ Indexing](#৩১-indexing) · [৩.২ Clustered vs Non-clustered](#৩২-clustered-vs-non-clustered-index) · [৩.৩ Transactions](#৩৩-transactions) · [৩.৪ ACID](#৩৪-acid-properties)
 
@@ -3392,7 +3392,7 @@ SHOW SLAVE STATUS\G
 
 <a id="part4"></a>
 
-# PART 4: Normalization & Database Design (ডেটাবেজ ডিজাইন)
+## PART 4: Normalization & Database Design (ডেটাবেজ ডিজাইন)
 
 > **📍 এই PART এর Sections:** [৪.১ Normalization কী?](#৪১-normalization-কী) · [৪.২ 1NF](#৪২-1nf--first-normal-form) · [৪.৩ 2NF](#৪৩-2nf--second-normal-form) · [৪.৪ 3NF](#৪৪-3nf--third-normal-form)
 
@@ -4514,7 +4514,7 @@ CREATE INDEX idx_order_items_prod ON order_items(product_id);
 
 <a id="part5"></a>
 
-# PART 5: Backend & Real Project Database Design (ব্যাকএন্ড ও বাস্তব প্রজেক্ট)
+## PART 5: Backend & Real Project Database Design (ব্যাকএন্ড ও বাস্তব প্রজেক্ট)
 
 > **📍 এই PART এর Sections:** [৫.১ ORM কী?](#৫১-orm-কী) · [৫.২ ORM vs Raw SQL](#৫২-orm-vs-raw-sql) · [৫.৩ DB Migration](#৫৩-database-migration) · [৫.৪ Connection Pooling](#৫৪-connection-pooling)
 
@@ -5718,7 +5718,7 @@ WHERE j.status = 'active' AND (j.deadline IS NULL OR j.deadline >= CURDATE());
 
 <a id="part6"></a>
 
-# PART 6: Database Interview Questions (ইন্টারভিউ প্রশ্নোত্তর সংকলন)
+## PART 6: Database Interview Questions (ইন্টারভিউ প্রশ্নোত্তর সংকলন)
 
 > **📍 এই PART এর Sections:** [৬.১ Fundamentals Q&A](#৬১-database-fundamentals-qa) · [৬.২ SQL Q&A](#৬২-sql-qa) · [৬.৩ Advanced Q&A](#৬৩-advanced-concepts-qa) · [৬.৪ Design & Normalization Q&A](#৬৪-design--normalization-qa)
 
@@ -6327,7 +6327,7 @@ mysql -u root -p db_name < backup.sql
 
 <a id="part7"></a>
 
-# PART 7: Language & Framework Database Integration (ভাষা ও ফ্রেমওয়ার্ক)
+## PART 7: Language & Framework Database Integration (ভাষা ও ফ্রেমওয়ার্ক)
 
 > **📍 এই PART এর Sections:** [৭.১ PHP & MySQL](#৭১-php-ও-mysql) · [৭.২ Laravel Eloquent](#৭২-laravel-database-eloquent--query-builder) · [৭.৩ Python & MySQL](#৭৩-python-ও-mysql) · [৭.৪ Django ORM](#৭৪-django-orm--বিস্তারিত)
 
@@ -7265,7 +7265,7 @@ class EmployeeTest extends TestCase {
 
 <a id="part8"></a>
 
-# PART 8: NoSQL & Modern Databases
+## PART 8: NoSQL & Modern Databases
 
 > **📍 এই PART এর Sections:** [৮.১ NoSQL কী?](#৮১-nosql-কী) · [৮.২ SQL vs NoSQL](#৮২-sql-vs-nosql) · [৮.৩ CAP Theorem](#৮৩-cap-theorem) · [৮.৪ MongoDB](#৮৪-mongodb--document-database)
 
@@ -7967,7 +7967,7 @@ Trade-offs:
 
 <a id="part9"></a>
 
-# PART 9: Bangladeshi Interview Preparation (বাংলাদেশ ইন্টারভিউ প্রস্তুতি)
+## PART 9: Bangladeshi Interview Preparation (বাংলাদেশ ইন্টারভিউ প্রস্তুতি)
 
 > **📍 এই PART এর Sections:** [৯.১ BD IT Job Market](#৯১-বাংলাদেশের-it-job-market) · [৯.২ Interview Process](#৯২-interview-process--bd-companies) · [৯.৩ Common Questions](#৯৩-সবচেয়ে-common-interview-questions) · [৯.৪ Common Mistakes](#৯৪-সাধারণ-ভুল-ও-কীভাবে-এড়াবেন)
 

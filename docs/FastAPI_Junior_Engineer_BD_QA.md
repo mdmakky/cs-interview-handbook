@@ -114,7 +114,7 @@
 
 <a id="part1"></a>
 
-# PART 1: FastAPI Fundamentals (মূল ধারণাসমূহ)
+## PART 1: FastAPI Fundamentals (মূল ধারণাসমূহ)
 
 > **📍 এই PART এর Sections:** [১.১](#১১-fastapi-কী) · [১.২](#১২-fastapi-কেন-জনপ্রিয়) · [১.৩](#১৩-fastapi-vs-flask-vs-django) · [১.৪](#১৪-asgi-vs-wsgi) · [১.৫](#১৫-fastapi-architecture) · [১.৬](#১৬-fastapi-install-ও-project-structure) · [১.৭](#১৭-প্রথম-api-তৈরি) · [১.৮](#১৮-path-parameters) · [১.৯](#১৯-query-parameters) · [১.১০](#১১০-request-body) · [১.১১](#১১১-response-model) · [১.১২](#১১২-pydantic-basics) · [১.১৩](#১১৩-type-hints) · [১.১৪](#১১৪-validation) · [১.১৫](#১১৫-part-1--interview-questions--answers)
 
@@ -1410,7 +1410,7 @@ class Item(BaseModel):
 
 <a id="part2"></a>
 
-# PART 2: Routing & API Development
+## PART 2: Routing & API Development
 
 > **📍 এই PART এর Sections:** [২.১](#২১-apirouter) · [২.২](#২২-modular-routing) · [২.৩](#২৩-crud-apis-তৈরি) · [২.৪](#২৪-http-methods-বিস্তারিত) · [২.৫](#২৫-status-codes) · [২.৬](#২৬-response-handling) · [২.৭](#২৭-file-upload) · [২.৮](#২৮-form-data) · [২.৯](#২৯-header-handling) · [২.১০](#২১০-cookie-handling) · [২.১১](#২১১-dependency-injection) · [২.১২](#২১২-middleware) · [২.১৩](#২১৩-background-tasks) · [২.১৪](#২১৪-part-2--interview-questions--answers)
 
@@ -2542,7 +2542,7 @@ def partial_update(id: int, product: ProductPartial):
 
 <a id="part3"></a>
 
-# PART 3: Database Integration
+## PART 3: Database Integration
 
 > **📍 এই PART এর Sections:** [৩.১](#৩১-sqlalchemy-কী) · [৩.২](#৩২-fastapi-তে-sqlalchemy-setup) · [৩.৩](#৩৩-database-models) · [৩.৪](#৩৪-pydantic-schemas-vs-db-models) · [৩.৫](#৩৫-database-session-dependency) · [৩.৬](#৩৬-crud-operations-with-db) · [৩.৭](#৩৭-relationships) · [৩.৮](#৩৮-alembic-migration) · [৩.৯](#৩৯-async-sqlalchemy) · [৩.১০](#৩১০-connection-pooling-ও-transactions) · [৩.১১](#৩১১-part-3--interview-questions--answers)
 
@@ -3417,7 +3417,7 @@ def transfer_money(
 
 <a id="part4"></a>
 
-# PART 4: Authentication & Security
+## PART 4: Authentication & Security
 
 > **📍 এই PART এর Sections:** [৪.১](#৪১-authentication-vs-authorization) · [৪.২](#৪২-password-hashing) · [৪.৩](#৪৩-jwt-authentication) · [৪.৪](#৪৪-oauth2-with-password-flow) · [৪.৫](#৪৫-refresh-tokens) · [৪.৬](#৪৬-role-based-access-control-rbac) · [৪.৭](#৪৭-cors) · [৪.৮](#৪৮-rate-limiting) · [৪.৯](#৪৯-environment-variables-ও-secrets) · [৪.১০](#৪১০-api-security-best-practices) · [৪.১১](#৪১১-part-4--interview-questions--answers)
 
@@ -4150,7 +4150,7 @@ async def add_security_headers(request, call_next):
 
 <a id="part5"></a>
 
-# PART 5: Async Programming
+## PART 5: Async Programming
 
 > **📍 এই PART এর Sections:** [৫.१](#५१-asyncawait-পরিচয়) · [५.२](#५२-event-loop) · [५.३](#५३-asyncio-module) · [५.४](#०५४-fastapi-এ-async-endpoints) · [०५.५](#०५५-concurrent-http-requests) · [०५.६](#०५६-async-context-managers) · [००५.७](#०५७-asyncio-tasks-ও-task-management) · [००५.८](#००५८-background-tasks) · [००५.९](#००५९-part-5--interview-questions--answers)
 
@@ -4401,7 +4401,7 @@ async def register(user_data: dict, background_tasks: BackgroundTasks):
 
 <a id=\"part6\"></a>
 
-# PART 6: Advanced FastAPI
+## PART 6: Advanced FastAPI
 
 > **📍 এই PART এর Sections:** [६.१](#०६१-websockets) · [०६.२](#०६२-streaming-responses) · [०६.३](#००६३-custom-middleware) · [००६.४](#०००६४-exception-handling) · [०००६.५](#०००००६५-custom-validation) · [०००००६.६](#०००००००६६-lifespan-events) · [००००००६.७](#०००००००००६७-dependency-overrides) · [०००००००००००६.८](#०००००००००००००६८-pagination-filtering-searching) · [००००००००००००००६.९](#००००००००००००००००६९-caching-with-redis) · [०००००००००००००००००६.१०](#०००००००००००००००००००००६१०-part-6--interview-questions--answers)
 
@@ -4655,7 +4655,7 @@ def get_data():
 
 <a id="part7"></a>
 
-# PART 7: Testing & Debugging
+## PART 7: Testing & Debugging
 
 > **📍 এই PART এর Sections:** [७.१](#७१-pytest-setup) · [७.२](#७२-testclient) · [७.३](#७३-fixtures) · [७.४](#७४-mocking) · [०७.५](#०७५-logging) · [०००७.६](#०००७६-debugging) · [००००७.७](#००००७७-coverage) · [०००००००७.८](#०००००००७८-part-7--interview-questions--answers)
 
@@ -4915,7 +4915,7 @@ pytest --cov=app --cov-report=html tests/  # HTML report
 
 <a id="part8"></a>
 
-# PART 8: Deployment & DevOps
+## PART 8: Deployment & DevOps
 
 > **📍 এই PART এর Sections:** [०८.१](#०८१-uvicorn-configuration) · [०८.२](#०८२-docker) · [०८.३](#०८३-nginx) · [०८.४](#०८४-cicd-with-github-actions) · [०८.५](#०८५-vps-deployment) · [०८.६](#०८६-production-checklist) · [०८.७](#०८७-part-8--interview-questions--answers)
 
@@ -5118,7 +5118,7 @@ certbot certonly --standalone -d myapp.com
 
 <a id="part9"></a>
 
-# PART 9: System Design with FastAPI
+## PART 9: System Design with FastAPI
 
 **Microservices Architecture**
 
@@ -5192,7 +5192,7 @@ def get_user(uid: int):
 
 <a id="part10"></a>
 
-# PART 10: FastAPI Project Examples
+## PART 10: FastAPI Project Examples
 
 **Project 1: Auth System**
 
@@ -5286,7 +5286,7 @@ async def websocket_endpoint(ws: WebSocket):
 
 <a id="part11"></a>
 
-# PART 11: Interview Q&A Bank
+## PART 11: Interview Q&A Bank
 
 ## Theoretical Questions & Answers
 
@@ -5494,7 +5494,7 @@ def test():
 
 <a id="part12"></a>
 
-# PART 12: Bangladesh Interview Preparation
+## PART 12: Bangladesh Interview Preparation
 
 ## Bangladesh এর Tech Companies এ FastAPI Usage
 

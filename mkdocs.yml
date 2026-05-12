@@ -61,12 +61,13 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - tables
+  - md_in_html
   - toc:
       permalink: true
       toc_depth: 3
 
 nav:
-  - Home: README.md
+  - Home: index.md
   - Backend:
       - Node.js: NodeJS_Junior_Engineer_BD_QA.md
       - Python: Python_Junior_Engineer_BD_QA.md

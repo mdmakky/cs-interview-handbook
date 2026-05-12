@@ -202,7 +202,7 @@
 
 <a id="part1"></a>
 
-# PART 1: DSA Fundamentals (মূল ধারণাসমূহ)
+## PART 1: DSA Fundamentals (মূল ধারণাসমূহ)
 
 > **📍 এই PART এর Sections:** [১.১ Data Structure কী?](#১১-data-structure-কী) · [১.২ Algorithm কী?](#১২-algorithm-কী) · [১.৩ কেন গুরুত্বপূর্ণ?](#১৩-dsa-কেন-গুরুত্বপূর্ণ) · [১.৪ Time Complexity](#১৪-time-complexity)
 
@@ -985,7 +985,7 @@ infinite()
 
 <a id="part2"></a>
 
-# PART 2: Arrays & Strings (অ্যারে ও স্ট্রিং)
+## PART 2: Arrays & Strings (অ্যারে ও স্ট্রিং)
 
 > **📍 এই PART এর Sections:** [২.১ Array Basics](#২১-array-basics) · [২.২ Static vs Dynamic](#২২-static-vs-dynamic-array) · [২.৩ String Operations](#২৩-string-operations) · [২.৪ Prefix Sum](#২৪-prefix-sum)
 
@@ -2199,7 +2199,7 @@ Hard:
 
 <a id="part3"></a>
 
-# PART 3: Linked List (লিংকড লিস্ট)
+## PART 3: Linked List (লিংকড লিস্ট)
 
 > **📍 এই PART এর Sections:** [৩.১ Linked List কী?](#৩১-linked-list-কী) · [৩.২ Singly Linked List](#৩২-singly-linked-list) · [৩.৩ Doubly Linked List](#৩৩-doubly-linked-list) · [৩.৪ Circular Linked List](#৩৪-circular-linked-list)
 
@@ -2980,7 +2980,7 @@ def add_two_numbers(l1, l2):
 
 <a id="part4"></a>
 
-# PART 4: Stack & Queue (স্ট্যাক ও কিউ)
+## PART 4: Stack & Queue (স্ট্যাক ও কিউ)
 
 > **📍 এই PART এর Sections:** [৪.১ Stack](#৪১-stack) · [৪.২ Queue](#৪২-queue) · [৪.৩ Circular Queue](#৪৩-circular-queue) · [৪.৪ Deque](#৪৪-deque-double-ended-queue)
 
@@ -3849,7 +3849,7 @@ def evaluate_infix(expression):
 
 <a id="part5"></a>
 
-# PART 5: Trees & Binary Trees (ট্রি ও বাইনারি ট্রি)
+## PART 5: Trees & Binary Trees (ট্রি ও বাইনারি ট্রি)
 
 > **📍 এই PART এর Sections:** [৫.১ Tree কী?](#৫১-tree-কী) · [৫.২ Binary Tree](#৫২-binary-tree) · [৫.৩ BST](#৫৩-binary-search-tree-bst) · [৫.৪ Tree Traversal](#৫৪-tree-traversal)
 
@@ -4534,7 +4534,7 @@ class Trie:
 
 <a id="part6"></a>
 
-# PART 6: Graphs (গ্রাফ)
+## PART 6: Graphs (গ্রাফ)
 
 > **📍 এই PART এর Sections:** [৬.১ Graph কী?](#৬১-graph-কী) · [৬.২ Graph Representation](#৬২-graph-representation) · [৬.৩ BFS](#৬৩-bfs) · [৬.৪ DFS](#৬৪-dfs)
 
@@ -5215,7 +5215,7 @@ def kruskal_mst(n, edges):
 
 <a id="part7"></a>
 
-# PART 7: Sorting & Searching (সর্টিং ও সার্চিং)
+## PART 7: Sorting & Searching (সর্টিং ও সার্চিং)
 
 > **📍 এই PART এর Sections:** [৭.১ Sorting Overview](#৭১-sorting-overview) · [৭.২ Bubble Sort](#৭২-bubble-sort) · [৭.৩ Selection Sort](#৭৩-selection-sort) · [৭.৪ Insertion Sort](#৭৪-insertion-sort)
 
@@ -5743,7 +5743,7 @@ def search_rotated(nums, target):
 
 <a id="part8"></a>
 
-# PART 8: Dynamic Programming & Greedy (ডায়নামিক প্রোগ্রামিং ও গ্রিডি)
+## PART 8: Dynamic Programming & Greedy (ডায়নামিক প্রোগ্রামিং ও গ্রিডি)
 
 > **📍 এই PART এর Sections:** [৮.১ DP কী?](#৮১-dynamic-programming-কী) · [৮.২ Memoization](#৮২-memoization-top-down) · [৮.৩ Tabulation](#৮৩-tabulation-bottom-up) · [৮.৪ Fibonacci ও Classic DP](#৮৪-fibonacci-ও-classic-dp)
 
@@ -6304,7 +6304,7 @@ def can_complete_circuit(gas, cost):
 
 <a id="part9"></a>
 
-# PART 9: Advanced DSA (উন্নত ডেটা স্ট্রাকচার ও অ্যালগরিদম)
+## PART 9: Advanced DSA (উন্নত ডেটা স্ট্রাকচার ও অ্যালগরিদম)
 
 > **📍 এই PART এর Sections:** [৯.১ Hash Map](#৯১-hash-map-ও-hash-table) · [৯.২ Hash Patterns](#৯২-hash-map-patterns) · [৯.৩ Bit Manipulation](#৯৩-bit-manipulation) · [৯.৪ Bit Problems](#৯৪-bit-manipulation-problems)
 
@@ -6881,7 +6881,7 @@ def rabin_karp(text, pattern):
 
 <a id="part10"></a>
 
-# PART 10: Coding Interview Q&A (টপ ইন্টারভিউ প্রশ্নোত্তর)
+## PART 10: Coding Interview Q&A (টপ ইন্টারভিউ প্রশ্নোত্তর)
 
 > **📍 এই PART এর Sections:** [১০.১ Array & String Q&A](#১০১-array--string-top-qa) · [১০.২ Linked List Q&A](#১০২-linked-list-top-qa) · [১০.৩ Stack & Queue Q&A](#১০৩-stack--queue-top-qa) · [১০.৪ Tree & Graph Q&A](#১০৪-tree--graph-top-qa)
 
@@ -7145,7 +7145,7 @@ Need all-pairs shortest path?      → Floyd-Warshall
 
 <a id="part11"></a>
 
-# PART 11: Problem Solving Strategy (সমস্যা সমাধানের কৌশল)
+## PART 11: Problem Solving Strategy (সমস্যা সমাধানের কৌশল)
 
 > **📍 এই PART এর Sections:** [১১.১ UMPIRE Method](#১১১-umpire-method) · [১১.২ 14 Core Patterns](#১১২-14-core-problem-patterns) · [১১.৩ Pattern Recognition](#১১৩-pattern-recognition-guide) · [১১.৪ Interview Dos & Donts](#১১৪-interview-dos--donts)
 
@@ -7458,7 +7458,7 @@ Advanced (৬ মাস+):
 
 <a id="part12"></a>
 
-# PART 12: Bangladeshi Interview Prep (বাংলাদেশি ইন্টারভিউ প্রস্তুতি)
+## PART 12: Bangladeshi Interview Prep (বাংলাদেশি ইন্টারভিউ প্রস্তুতি)
 
 > **📍 এই PART এর Sections:** [১২.১ BD Top Companies](#১২১-বাংলাদেশের-top-tech-companies) · [১২.২ Company Interview Pattern](#১২২-company-wise-interview-pattern) · [১২.৩ HR Q&A](#১২৩-hr-interview-qa-বাংলায়) · [১২.৪ Salary Negotiation](#১২৪-salary-negotiation)
 

@@ -217,7 +217,7 @@
 
 ---
 
-# PART 1: System Design Fundamentals
+## PART 1: System Design Fundamentals
 ### 🏗️ System Design এর মূল ভিত্তি
 
 > **Interview টিপস:** System Design interview তে প্রথমেই interviewer দেখতে চায় তুমি একটা problem কে কতটা structured ভাবে ভাবতে পারো। Definition জানার চেয়ে বেশি জরুরি হলো real-world analogy দিয়ে explain করতে পারা।
@@ -1202,7 +1202,7 @@ Big bang migration করবো না — too risky।
 
 ---
 
-# PART 2: Networking & Communication Basics
+## PART 2: Networking & Communication Basics
 ### 🌐 System Design এর Communication Layer
 
 > **Interview টিপস:** Networking concepts system design এর backbone। Load Balancer, CDN, API Gateway — এগুলো বুঝলে তুমি যেকোনো architecture diagram explain করতে পারবে।
@@ -2546,7 +2546,7 @@ HTTP/2 এ একটা connection এ multiple request simultaneously চলে
 
 ---
 
-# PART 3: Database Design in System Design
+## PART 3: Database Design in System Design
 ### 🗄️ System এ Database এর ভূমিকা
 
 > **Interview টিপস:** System Design interview এ database নিয়ে সবচেয়ে বেশি প্রশ্ন আসে। "কোন database use করবে এবং কেন?" — এই প্রশ্নের confident উত্তর দিতে পারলে interviewer impressed হবে।
@@ -3444,7 +3444,7 @@ def transfer(from_id, to_id, amount):
 
 ---
 
-# PART 4: Caching & Performance Optimization
+## PART 4: Caching & Performance Optimization
 ### ⚡ System কে দ্রুত করার কৌশল
 
 > **Interview টিপস:** Caching system design এর সবচেয়ে powerful tool। "System slow হচ্ছে, কী করবে?" — প্রায় সব ক্ষেত্রে answer এ cache আসবে। এটা ভালো বুঝলে interview এ অনেক এগিয়ে থাকবে।
@@ -4501,7 +4501,7 @@ Queue: Redis বা RabbitMQ। Worker: Celery (Python), Bull (Node.js), Sidekiq
 
 ---
 
-# PART 5: Message Queues & Distributed Systems
+## PART 5: Message Queues & Distributed Systems
 ### 📨 Async Communication ও Distributed Architecture
 
 > **Interview টিপস:** Message Queue এবং Event-driven architecture বড় system এর backbone। "Order place হলে email, SMS, inventory update — সব কীভাবে handle করবে?" — এই প্রশ্নে Message Queue explain করতে পারলে interviewer impressed হবে।
@@ -5547,7 +5547,7 @@ def get_profile(user_id, requesting_user_id):
 
 ---
 
-# PART 6: System Design Case Studies
+## PART 6: System Design Case Studies
 ### 🏗️ Real Systems Design করা শেখো
 
 > **Interview টিপস:** Case study questions এ interviewer দেখতে চায় তুমি কীভাবে একটা real system ধাপে ধাপে design করো। Requirements clarify করো, scale estimate করো, architecture আঁকো, bottleneck ধরো — এই flow follow করলে যেকোনো system design করতে পারবে।
@@ -6582,7 +6582,7 @@ CDN এর edge servers এই chunks cache করে। User কাছের CD
 
 ---
 
-# PART 7: Low-Level Design (LLD)
+## PART 7: Low-Level Design (LLD)
 ### 🧩 SOLID, Design Patterns ও Object-Oriented Design
 
 > **Interview টিপস:** LLD interview এ interviewer দেখতে চায় তুমি real-world problem কে clean, maintainable code এ রূপ দিতে পারো কিনা। SOLID principles ও common Design Patterns জানলে যেকোনো LLD প্রশ্নে confident থাকবে।
@@ -7935,7 +7935,7 @@ notifier.notify(user_id=123, message="Your order is confirmed!")
 
 ---
 
-# PART 8: Cloud & DevOps Basics
+## PART 8: Cloud & DevOps Basics
 ### ☁️ AWS, Docker, Kubernetes, CI/CD
 
 > **Interview টিপস:** Junior engineer হিসেবে Cloud/DevOps এর basics জানা এখন mandatory। "তোমার project টা কীভাবে deploy করলে?" বা "Docker কী?" — এই প্রশ্নগুলো এখন common। এই PART এ practical knowledge focus করা হয়েছে।
@@ -9193,7 +9193,7 @@ Error rate → Latency → Traffic → Saturation
 
 ---
 
-# PART 9: System Design Interview Q&A Bank
+## PART 9: System Design Interview Q&A Bank
 ### ❓ 150+ প্রশ্ন ও বিস্তারিত উত্তর
 
 > **এই PART এর ব্যবহার:** প্রতিটা section আলাদাভাবে পড়ো। Interview এর আগে Quick Answers গুলো মুখস্থ না করে **বুঝে** পড়ো। যেকোনো প্রশ্নে নিজের ভাষায় explain করতে পারাটাই লক্ষ্য।
@@ -10542,7 +10542,7 @@ scheduler.cancel(task)  # Cancel before it runs
 
 ---
 
-# PART 10: Bangladeshi Interview Preparation
+## PART 10: Bangladeshi Interview Preparation
 ### 🇧🇩 BD Company Patterns, Mock Interviews ও Career Advice
 
 > **এই PART এর উদ্দেশ্য:** Bangladesh এর tech job market এ সফলভাবে interview দেওয়ার জন্য specific preparation। BD company গুলোর প্রশ্নের pattern, common mistakes, project কীভাবে explain করবে — সব এখানে।
