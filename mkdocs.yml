@@ -82,3 +82,5 @@ nav:
       - Database: Database_Junior_Engineer_BD_QA.md
   - Tools:
       - Git: Git_Junior_Engineer_BD_QA.md
+  - .NET:
+      - .NET & C#: DotNet_Junior_Engineer_BD_QA.md
