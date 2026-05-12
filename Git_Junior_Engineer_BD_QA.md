@@ -7128,4 +7128,1501 @@ A: Local HEAD movements log — time machine, হারানো commit recover
 
 ---
 
-> **📌 পরবর্তী:** PART 9 — Git Internals Deep Dive ও Troubleshooting *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 9 — Git Internals Deep Dive ও Troubleshooting
+
+---
+
+<a id="part9"></a>
+## PART 9: Git Internals Deep Dive ও Troubleshooting
+
+> Git-এর ভেতরের কাজকর্ম বোঝা এবং সমস্যা সমাধান করার advanced skills। `git bisect`, `git blame`, `git log` advanced filters, pack files, garbage collection এবং performance tuning।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [git bisect — Binary Search for Bugs](#p9-bisect) |
+| 2 | [git blame — কে কী লিখেছে](#p9-blame) |
+| 3 | [git log Advanced Filtering](#p9-log-advanced) |
+| 4 | [git diff Advanced](#p9-diff-advanced) |
+| 5 | [git grep — Repository-wide Search](#p9-grep) |
+| 6 | [git show ও git cat-file](#p9-show) |
+| 7 | [Pack Files ও Object Storage](#p9-packfiles) |
+| 8 | [Garbage Collection (git gc)](#p9-gc) |
+| 9 | [git fsck — Repository Integrity](#p9-fsck) |
+| 10 | [Performance Tuning](#p9-performance) |
+| 11 | [Common Error Messages ও Fix](#p9-errors) |
+| 12 | [git worktree — Multiple Working Directories](#p9-worktree) |
+
+---
+
+<a id="p9-bisect"></a>
+**Topic 1: git bisect — Binary Search for Bugs**
+
+**সংজ্ঞা:**
+"কোন commit-এ bug টি introduce হয়েছিল?" — এই প্রশ্নের উত্তর binary search দিয়ে খুঁজে বের করে `git bisect`।
+
+**কীভাবে কাজ করে:**
+```
+Commits: A ─── B ─── C ─── D ─── E ─── F ─── G
+                                             ↑
+                                           HEAD (bug আছে)
+
+git bisect: D test করো → bad
+            B test করো → good
+            C test করো → bad → C-তেই bug introduce হয়েছে!
+```
+
+**Manual bisect:**
+```bash
+# Start
+git bisect start
+
+# Current state (HEAD) — bad
+git bisect bad
+
+# Known good state (যে version-এ bug ছিল না)
+git bisect good v1.0.0
+# অথবা commit hash:
+git bisect good 3a7f8b2
+
+# Git এখন middle commit checkout করবে
+# Test করুন...
+# Bug আছে:
+git bisect bad
+# Bug নেই:
+git bisect good
+
+# Git আবার middle-এ যাবে → test → bad/good
+# কয়েক step পরে:
+# "3a7f8b2 is the first bad commit"
+
+# End
+git bisect reset    # original HEAD-এ ফিরে যান
+```
+
+**Automated bisect — test script দিয়ে:**
+```bash
+# test.sh
+#!/bin/bash
+python -m pytest tests/test_login.py::test_user_login -q
+# exit 0 = good, exit 1 = bad
+
+# Automated run
+git bisect start
+git bisect bad HEAD
+git bisect good v2.0.0
+git bisect run ./test.sh   # automatically সব steps!
+
+# Output:
+# Running: ./test.sh
+# ...
+# b2c4d5e is the first bad commit
+# commit b2c4d5e
+# Author: Bob <bob@example.com>
+# Date:   Mon Mar 10 14:30:00 2026
+#     feat: refactor auth middleware
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "Production-এ bug আছে কিন্তু কোন commit থেকে এলো জানেন না।
+কীভাবে খুঁজবেন?"
+
+উত্তর: "git bisect ব্যবহার করব। একটি known-good commit
+(যেমন last stable tag) এবং current bad state দিয়ে bisect শুরু করব।
+Git binary search করে মাঝের commit checkout করবে।
+Test করব — bad বা good mark করব।
+কয়েক step পরে Git নির্দিষ্ট commit বলে দেবে।
+
+Test script থাকলে git bisect run দিয়ে fully automated করা যায়।"
+```
+
+---
+
+<a id="p9-blame"></a>
+**Topic 2: git blame — কে কী লিখেছে**
+
+**সংজ্ঞা:**
+`git blame` প্রতিটি line-এর জন্য দেখায় কে, কখন, কোন commit-এ লিখেছে।
+
+```bash
+git blame src/auth/login.py
+
+# Output:
+# a1b2c3d4 (Alice     2026-03-10 14:30 +0600  1) def login(email: str, password: str):
+# b2c4d5e6 (Bob       2026-02-15 09:00 +0600  2)     user = get_user_by_email(email)
+# a1b2c3d4 (Alice     2026-03-10 14:30 +0600  3)     if not user:
+# c3d4e5f6 (Charlie   2026-01-20 11:00 +0600  4)         raise AuthError("User not found")
+# b2c4d5e6 (Bob       2026-02-15 09:00 +0600  5)     if not verify_password(password, user.password_hash):
+# d4e5f6a7 (Alice     2026-03-15 16:00 +0600  6)         raise AuthError("Invalid credentials")
+# a1b2c3d4 (Alice     2026-03-10 14:30 +0600  7)     return generate_token(user)
+```
+
+**Useful options:**
+```bash
+# Specific lines (5 থেকে 20)
+git blame -L 5,20 src/auth/login.py
+
+# Function/method blame
+git blame -L '/def login/,/^def/' src/auth/login.py
+
+# Whitespace ignore করুন
+git blame -w src/auth/login.py
+
+# Copy/move detect করুন (refactoring)
+git blame -C src/auth/login.py   # same file-এর copy
+git blame -CC src/auth/login.py  # অন্য file-এর copy
+
+# Specific commit-এর সময়ের blame
+git blame v1.0.0 -- src/auth/login.py
+
+# Email দেখুন (name-এর বদলে)
+git blame -e src/auth/login.py
+
+# Date format
+git blame --date=short src/auth/login.py
+```
+
+**VS Code-এ GitLens:**
+```
+Extension: GitLens (eamodio.gitlens)
+→ প্রতিটি line-এ inline blame দেখা যায়
+→ Author, date, commit message
+→ Commit history navigation
+```
+
+**Real use case:**
+```bash
+# একটি mysterious bug খুঁজে পেলেন line 145-এ
+git blame src/payment.py -L 145,145
+# b2c4d5e6 (Bob 2026-02-15) 145) return amount * 1.15  # VAT
+
+# Bob-এর সেই commit দেখুন
+git show b2c4d5e6
+# Context বুঝলেন — সমস্যা fix করলেন
+```
+
+---
+
+<a id="p9-log-advanced"></a>
+**Topic 3: git log Advanced Filtering**
+
+```bash
+# ──────────────────────────────────────────────
+# Author/Committer filter
+# ──────────────────────────────────────────────
+git log --author="Alice"
+git log --author="alice@example.com"
+git log --committer="Bob"
+
+# ──────────────────────────────────────────────
+# Date filter
+# ──────────────────────────────────────────────
+git log --since="2026-01-01"
+git log --until="2026-03-31"
+git log --since="2 weeks ago"
+git log --after="yesterday"
+git log --since="2026-01-01" --until="2026-03-31"
+
+# ──────────────────────────────────────────────
+# Message search
+# ──────────────────────────────────────────────
+git log --grep="fix"              # message-এ "fix" আছে
+git log --grep="feat" --grep="auth" --all-match   # দুটোই থাকতে হবে
+git log --grep="fix" -i           # case-insensitive
+
+# ──────────────────────────────────────────────
+# Code change search (Pickaxe)
+# ──────────────────────────────────────────────
+git log -S "verify_password"      # এই string add/remove করা commits
+git log -G "def login"            # regex match
+
+# ──────────────────────────────────────────────
+# File/path filter
+# ──────────────────────────────────────────────
+git log -- src/auth/login.py      # specific file-এর history
+git log -- src/auth/             # directory
+git log -- "*.py"                 # pattern
+
+# ──────────────────────────────────────────────
+# Limit
+# ──────────────────────────────────────────────
+git log -5                        # শেষ 5টি
+git log -n 10                     # শেষ 10টি
+
+# ──────────────────────────────────────────────
+# Format
+# ──────────────────────────────────────────────
+git log --oneline
+git log --oneline --graph --all --decorate
+git log --stat                    # changed files count
+git log -p                        # full diff (patch)
+git log --name-only               # শুধু file names
+git log --name-status             # A/M/D status সহ
+
+# Custom format
+git log --pretty=format:"%h | %an | %ad | %s" --date=short
+# a1b2c3d | Alice | 2026-03-10 | feat: add login
+
+# ──────────────────────────────────────────────
+# Range
+# ──────────────────────────────────────────────
+git log main..feature/login       # feature-এ আছে, main-এ নেই
+git log main...feature/login      # দুই দিক থেকে আলাদা commits
+git log v1.0.0..v2.0.0           # release-এর মধ্যে
+
+# ──────────────────────────────────────────────
+# Merge commits
+# ──────────────────────────────────────────────
+git log --merges                  # শুধু merge commits
+git log --no-merges               # merge commits বাদে
+git log --first-parent            # merge branch history বাদে, main line শুধু
+```
+
+---
+
+<a id="p9-diff-advanced"></a>
+**Topic 4: git diff Advanced**
+
+```bash
+# ──────────────────────────────────────────────
+# Basic diffs
+# ──────────────────────────────────────────────
+git diff                         # working dir vs staging
+git diff --staged                # staging vs last commit
+git diff --cached                # same as --staged
+git diff HEAD                    # working dir vs last commit
+
+# ──────────────────────────────────────────────
+# Commit comparison
+# ──────────────────────────────────────────────
+git diff HEAD~1 HEAD             # last two commits
+git diff v1.0.0 v2.0.0          # between tags
+git diff main feature/login      # between branches
+git diff a1b2c3d b2c4d5e         # between hashes
+
+# ──────────────────────────────────────────────
+# Specific file
+# ──────────────────────────────────────────────
+git diff HEAD -- src/auth.py
+git diff main..feature -- src/
+
+# ──────────────────────────────────────────────
+# Stat (summary only)
+# ──────────────────────────────────────────────
+git diff --stat main..feature
+# src/auth.py   | 25 +++++++++---------
+# tests/test_auth.py | 40 ++++++++++++++++++++++
+
+git diff --shortstat main..feature
+# 2 files changed, 65 insertions(+), 9 deletions(-)
+
+# ──────────────────────────────────────────────
+# Word-level diff (ভালো readability)
+# ──────────────────────────────────────────────
+git diff --word-diff
+git diff --word-diff=color
+
+# ──────────────────────────────────────────────
+# Whitespace ignore
+# ──────────────────────────────────────────────
+git diff -w                      # সব whitespace ignore
+git diff -b                      # trailing whitespace ignore
+
+# ──────────────────────────────────────────────
+# Name only (changed files list)
+# ──────────────────────────────────────────────
+git diff --name-only HEAD~3
+git diff --name-status HEAD~3    # A/M/D status
+
+# ──────────────────────────────────────────────
+# External diff tool
+# ──────────────────────────────────────────────
+git difftool                     # configured tool
+git difftool --tool=vimdiff
+git config --global diff.tool vscode
+git config --global difftool.vscode.cmd 'code --wait --diff $LOCAL $REMOTE'
+```
+
+---
+
+<a id="p9-grep"></a>
+**Topic 5: git grep — Repository-wide Search**
+
+```bash
+# Basic search
+git grep "verify_password"
+git grep "TODO"
+
+# Case-insensitive
+git grep -i "todo"
+
+# Regex
+git grep -E "def (login|logout)"
+
+# Line numbers
+git grep -n "api_key"
+
+# Count matches per file
+git grep -c "import"
+
+# Only file names
+git grep -l "DATABASE_URL"
+
+# Context lines (before/after)
+git grep -B 3 -A 3 "raise AuthError"
+
+# Specific branch বা commit
+git grep "old_function" main
+git grep "old_function" v1.0.0
+
+# Multiple patterns
+git grep -e "login" --and -e "password"
+
+# All branches
+git grep "deprecated" $(git rev-list --all)
+
+# Practical: Find all TODO comments with file+line
+git grep -n "TODO\|FIXME\|HACK" --include="*.py"
+```
+
+**git grep vs grep:**
+```
+git grep:
+✅ .gitignore respect করে
+✅ Faster (git index ব্যবহার করে)
+✅ Branch/commit-এ search করা যায়
+✅ Binary files skip করে automatically
+
+grep/ripgrep:
+✅ git repository ছাড়াও কাজ করে
+✅ More advanced regex
+✅ ripgrep (rg) সবচেয়ে fast
+```
+
+---
+
+<a id="p9-show"></a>
+**Topic 6: git show ও git cat-file**
+
+**git show:**
+```bash
+# Commit details + diff
+git show HEAD
+git show a1b2c3d
+git show v1.0.0
+
+# শুধু commit info (diff ছাড়া)
+git show --stat HEAD
+git show --name-only HEAD
+
+# Specific file at commit
+git show HEAD:src/auth.py        # HEAD-এর auth.py দেখুন
+git show v1.0.0:README.md        # v1.0.0-এর README
+
+# Tag details
+git show v1.0.0
+
+# Stash
+git show stash@{0}
+
+# Branch tip
+git show main
+git show origin/main
+```
+
+**git cat-file — low-level object inspection:**
+```bash
+# Object type
+git cat-file -t HEAD
+# commit
+
+git cat-file -t HEAD^{tree}
+# tree
+
+# Object size
+git cat-file -s HEAD
+# 287  (bytes)
+
+# Object content
+git cat-file -p HEAD
+# tree 7b8c...
+# parent 3a7f...
+# author Alice <alice@example.com> 1715500000 +0600
+# committer Alice <alice@example.com> 1715500000 +0600
+#
+# feat: add login functionality
+
+git cat-file -p HEAD^{tree}
+# 100644 blob a8c3... README.md
+# 040000 tree b2d4... src
+# 100644 blob c5e6... requirements.txt
+
+# File content at specific commit
+git cat-file blob HEAD:src/auth.py
+```
+
+---
+
+<a id="p9-packfiles"></a>
+**Topic 7: Pack Files ও Object Storage**
+
+**Loose objects vs Pack files:**
+
+```bash
+# Loose objects: .git/objects/ab/cdef...
+# প্রতিটি object আলাদা file
+ls .git/objects/
+# 3a/  b2/  c4/  pack/  info/
+
+# Pack files: অনেক objects একটি compressed file-এ
+ls .git/objects/pack/
+# pack-abc123.idx   (index — fast lookup)
+# pack-abc123.pack  (data)
+# pack-abc123.rev   (reverse index)
+```
+
+**কীভাবে pack file তৈরি হয়:**
+```bash
+# Git automatically করে:
+# 1. git gc চালালে
+# 2. git fetch/clone-এ remote থেকে
+# 3. 50+ loose objects হলে
+
+# Manual repack:
+git repack -a -d -f           # সব loose objects pack করুন, old pack delete
+
+# Pack file inspect করুন
+git verify-pack -v .git/objects/pack/pack-abc123.idx | head -20
+# sha1 type size size-in-packfile offset-in-packfile
+# a1b2c3d commit 287 215 12
+# b2c4d5e blob   1024 456 227
+```
+
+**Delta compression:**
+```
+Pack files use delta compression:
+- Similar objects (file versions) → base + diff store করে
+- Large space savings for text files (source code)
+- git log history চলার সাথে সাথে rebuild করে
+```
+
+---
+
+<a id="p9-gc"></a>
+**Topic 8: Garbage Collection (git gc)**
+
+**git gc কী:**
+Unreachable objects, old reflog entries এবং loose objects cleanup করে।
+
+```bash
+# Manual garbage collection
+git gc
+
+# Aggressive GC (more thorough, slower)
+git gc --aggressive
+
+# Prune করুন (unreachable objects delete)
+git gc --prune=now        # সব unreachable এখনই delete
+git gc --prune=2.weeks.ago  # 2 সপ্তাহের পুরোনো unreachable delete (default)
+
+# Auto GC (already runs automatically)
+git gc --auto
+
+# GC stats দেখুন
+git count-objects -v
+# count: 5          (loose objects)
+# size: 20          (KB)
+# in-pack: 1523     (packed objects)
+# packs: 1
+# size-pack: 423    (KB)
+# prune-packable: 0
+# garbage: 0
+# size-garbage: 0
+```
+
+**Auto GC trigger:**
+```bash
+# Default: 6700+ loose objects বা 50+ packs হলে auto
+git config gc.auto 6700        # loose object threshold
+git config gc.autopacklimit 50 # pack file threshold
+git config gc.autoDetach true  # background-এ চলে
+```
+
+**reflog expiry:**
+```bash
+# Reflog entries কতদিন রাখবে
+git config gc.reflogExpire "90 days"          # default
+git config gc.reflogExpireUnreachable "30 days"
+
+# Manual expire
+git reflog expire --expire=30.days --all
+```
+
+---
+
+<a id="p9-fsck"></a>
+**Topic 9: git fsck — Repository Integrity**
+
+**git fsck কী:**
+Git repository-র integrity check করে — corrupt বা dangling objects খুঁজে বের করে।
+
+```bash
+# Full integrity check
+git fsck
+
+# Output examples:
+# Checking object directory...
+# Checking connectivity...
+# dangling blob a1b2c3d     ← unreachable blob
+# dangling commit b2c4d5e  ← unreachable commit (সম্ভবত reset --hard-এ হারিয়েছে)
+# unreachable tree c3d4e5f
+
+# Dangling commits (হারানো commits recover করতে পারেন)
+git fsck --lost-found
+# .git/lost-found/commit/a1b2c3d  (dangling commits)
+# .git/lost-found/other/b2c4d5e   (dangling blobs/trees)
+
+# Verbose
+git fsck --verbose
+
+# Specific object check
+git fsck --full
+
+# Strict mode
+git fsck --strict
+```
+
+**হারানো commit recover করুন:**
+```bash
+# git fsck দিয়ে dangling commits খুঁজুন
+git fsck --lost-found
+
+# Dangling commit দেখুন
+git log --oneline .git/lost-found/commit/
+
+# অথবা সরাসরি
+git show a1b2c3d   # dangling commit দেখুন
+
+# Branch তৈরি করে recover করুন
+git checkout -b recovered a1b2c3d
+```
+
+---
+
+<a id="p9-performance"></a>
+**Topic 10: Performance Tuning**
+
+**Large repository performance:**
+
+```bash
+# ──────────────────────────────────────────────
+# Shallow clone (full history দরকার নেই)
+# ──────────────────────────────────────────────
+git clone --depth=1 https://github.com/org/repo.git
+# শুধু latest commit — CI/CD-এর জন্য ideal
+
+# Specific branch, shallow
+git clone --depth=1 --branch main https://github.com/org/repo.git
+
+# Shallow → full (পরে full history দরকার হলে)
+git fetch --unshallow
+
+# ──────────────────────────────────────────────
+# Sparse checkout (partial checkout)
+# ──────────────────────────────────────────────
+git clone --filter=blob:none --sparse https://github.com/org/monorepo.git
+cd monorepo
+git sparse-checkout set apps/web-app packages/ui-components
+# শুধু নির্দিষ্ট directories checkout হবে
+
+# ──────────────────────────────────────────────
+# Partial clone (blob filter)
+# ──────────────────────────────────────────────
+git clone --filter=blob:none https://github.com/org/repo.git
+# Blobs on-demand fetch করে — large binary files clone-এ skip
+
+# ──────────────────────────────────────────────
+# File system monitor
+# ──────────────────────────────────────────────
+git config core.fsmonitor true         # FS events watch করে
+git config core.untrackedCache true    # Untracked file cache
+
+# ──────────────────────────────────────────────
+# Index optimization
+# ──────────────────────────────────────────────
+git update-index --index-version 4    # Faster index format
+
+# ──────────────────────────────────────────────
+# Maintenance (background tasks)
+# ──────────────────────────────────────────────
+git maintenance start                  # Background maintenance enable
+git maintenance run --task=gc
+git maintenance run --task=commit-graph
+git maintenance run --task=prefetch
+```
+
+**Commit graph (faster log/merge-base):**
+```bash
+# Commit graph file তৈরি করুন (very large repos-এ helpful)
+git commit-graph write --reachable
+git config core.commitGraph true
+git config fetch.writeCommitGraph true
+```
+
+---
+
+<a id="p9-errors"></a>
+**Topic 11: Common Error Messages ও Fix**
+
+```bash
+# ──────────────────────────────────────────────
+# Error: "Your local changes would be overwritten by merge"
+# ──────────────────────────────────────────────
+git stash
+git pull
+git stash pop
+
+# ──────────────────────────────────────────────
+# Error: "fatal: refusing to merge unrelated histories"
+# ──────────────────────────────────────────────
+# হয়: দুটি আলাদা git init হওয়া repo connect করলে
+git pull origin main --allow-unrelated-histories
+
+# ──────────────────────────────────────────────
+# Error: "error: failed to push some refs"
+# "hint: Updates were rejected because the remote contains work"
+# ──────────────────────────────────────────────
+git pull --rebase origin main   # বা git pull origin main
+git push origin main
+
+# ──────────────────────────────────────────────
+# Error: "CONFLICT (content): Merge conflict in file.py"
+# ──────────────────────────────────────────────
+git status             # conflict files দেখুন
+# Manually resolve করুন (<<<< ==== >>>> markers সরান)
+git add file.py
+git commit
+
+# ──────────────────────────────────────────────
+# Error: "detached HEAD state"
+# ──────────────────────────────────────────────
+git switch -c new-branch    # নতুন branch তৈরি করুন
+# অথবা: git checkout main   # main-এ ফিরুন
+
+# ──────────────────────────────────────────────
+# Error: "git push rejected — non-fast-forward"
+# ──────────────────────────────────────────────
+git pull --rebase origin main   # rebase করুন
+git push origin main
+
+# ──────────────────────────────────────────────
+# Error: "cannot lock ref" বা "ref file exists"
+# ──────────────────────────────────────────────
+rm .git/refs/heads/branch-name   # lock file সরান
+# অথবা:
+rm .git/index.lock               # index lock
+
+# ──────────────────────────────────────────────
+# Error: "SSL certificate problem"
+# ──────────────────────────────────────────────
+# Corporate proxy-তে হয়
+git config --global http.sslVerify false   # ⚠️ শুধু trusted network-এ
+# Better: CA certificate configure করুন
+
+# ──────────────────────────────────────────────
+# Error: "Permission denied (publickey)"
+# ──────────────────────────────────────────────
+# SSH key issue
+ssh-add ~/.ssh/id_ed25519        # agent-এ key add করুন
+ssh -T git@github.com            # test করুন
+
+# ──────────────────────────────────────────────
+# Error: "repository not found"
+# ──────────────────────────────────────────────
+git remote -v                    # URL check করুন
+git remote set-url origin git@github.com:user/repo.git  # fix করুন
+
+# ──────────────────────────────────────────────
+# Error: "LF will be replaced by CRLF" (Windows)
+# ──────────────────────────────────────────────
+git config --global core.autocrlf input   # Linux/Mac
+git config --global core.autocrlf true    # Windows
+# .gitattributes:
+# * text=auto
+# *.py text eol=lf
+
+# ──────────────────────────────────────────────
+# Error: "index file smaller than expected"
+# ──────────────────────────────────────────────
+# Corrupt index
+rm .git/index
+git reset   # index rebuild করবে
+```
+
+---
+
+<a id="p9-worktree"></a>
+**Topic 12: git worktree — Multiple Working Directories**
+
+**git worktree কী:**
+একটি repository-র একাধিক branch একসাথে আলাদা directory-তে checkout করা — clone না করেই।
+
+```bash
+# বর্তমান worktrees দেখুন
+git worktree list
+
+# নতুন worktree add করুন
+git worktree add ../hotfix-branch hotfix/payment-crash
+# ../hotfix-branch directory-তে hotfix/payment-crash branch checkout হবে
+
+# নতুন branch সহ
+git worktree add -b hotfix/new-fix ../my-hotfix main
+
+# কাজ করুন hotfix-এ (আলাদা terminal)
+cd ../hotfix-branch
+# ... fix করুন, commit করুন ...
+
+# Worktree remove করুন
+git worktree remove ../hotfix-branch
+git worktree prune    # stale worktrees cleanup
+
+# ──────────────────────────────────────────────
+# Real use case: Feature-এ কাজ করছেন, urgent hotfix দরকার
+# ──────────────────────────────────────────────
+# আগে: stash করতেন, branch switch করতেন
+# এখন: worktree add করুন — দুটি directory, দুটি branch একসাথে!
+
+git worktree add ../urgent-fix main
+cd ../urgent-fix
+git checkout -b hotfix/critical-bug
+# fix করুন
+git commit -m "fix: critical payment bug"
+# Main project-এ ফিরে যান
+cd ../original-project
+# feature কাজ continue করুন — কিছুই হারায়নি!
+```
+
+---
+
+**PART 9 Quick Revision Table**
+
+| Command | কী করে |
+|---------|--------|
+| `git bisect start/bad/good` | Binary search — bug-introducing commit খুঁজুন |
+| `git bisect run script.sh` | Automated bisect |
+| `git blame -L 5,20 file.py` | Line-by-line author history |
+| `git log -S "string"` | Code string add/remove করা commits |
+| `git log -G "regex"` | Regex match করা diff-এর commits |
+| `git log --author="Alice"` | Specific author-এর commits |
+| `git log main..feature` | feature-এ আছে, main-এ নেই |
+| `git diff --word-diff` | Word-level diff |
+| `git grep -n "pattern"` | Repo-wide search with line numbers |
+| `git show HEAD:file.py` | Specific commit-এ file দেখুন |
+| `git cat-file -p HEAD` | Low-level object content |
+| `git gc --aggressive` | Thorough garbage collection |
+| `git fsck --lost-found` | Dangling objects → lost-found |
+| `git clone --depth=1` | Shallow clone (CI/CD-এর জন্য) |
+| `git sparse-checkout set` | Partial checkout |
+| `git worktree add` | Multiple branches, multiple directories |
+| `rm .git/index.lock` | Lock file error fix |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part10"></a>
+## PART 10: Real-World Git Scenarios ও Interview Masterclass
+
+> এই PART হলো complete interview preparation। Real-world scenarios, system design questions, complete Q&A bank এবং quick reference card — সব এক জায়গায়।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Real-World Scenarios — Simulation](#p10-scenarios) |
+| 2 | [System Design: Git Workflow for Large Team](#p10-system-design) |
+| 3 | [Junior Engineer Interview Q&A Bank](#p10-junior-qa) |
+| 4 | [Senior Engineer Interview Questions](#p10-senior-qa) |
+| 5 | [GitHub Actions Interview Questions](#p10-actions-qa) |
+| 6 | [Practical Coding Test Tips](#p10-practical) |
+| 7 | [Complete Git Command Quick Reference](#p10-reference) |
+| 8 | [One-Page Cheat Sheet](#p10-cheatsheet) |
+
+---
+
+<a id="p10-scenarios"></a>
+**Topic 1: Real-World Scenarios — Simulation**
+
+এই scenarios গুলো interview-তে "কী করবেন?" ধরনের প্রশ্নে হুবহু ব্যবহার করতে পারবেন।
+
+---
+
+**Scenario A: Production-এ critical bug, আপনি feature কাজ করছেন**
+
+```bash
+# আপনি feature/payment-redesign branch-এ কাজ করছেন
+git status
+# modified: src/payment/checkout.py
+
+# Step 1: কাজ save করুন
+git stash push -m "WIP: payment redesign"
+# অথবা: commit করুন draft হিসেবে
+git add . && git commit -m "wip: payment redesign (in progress)"
+
+# Step 2: main থেকে hotfix branch
+git checkout main
+git pull origin main
+git checkout -b hotfix/login-500-error
+
+# Step 3: Bug fix করুন
+# ... fix করলেন ...
+git add src/auth/login.py
+git commit -m "fix(auth): resolve 500 error on concurrent login"
+
+# Step 4: PR দিন বা direct merge করুন (emergency)
+git checkout main
+git merge --no-ff hotfix/login-500-error
+git push origin main
+git tag v2.1.1 -m "hotfix: login 500 error"
+git push origin v2.1.1
+
+# Step 5: Feature-এ ফিরুন
+git checkout feature/payment-redesign
+git stash pop   # অথবা: কাজ already commit-এ আছে
+git rebase main  # latest main changes নিন
+```
+
+---
+
+**Scenario B: Team member-এর PR-এ conflict, আপনার review**
+
+```bash
+# PR review করতে branch checkout করুন
+gh pr checkout 45
+# = git fetch origin pull/45/head:pr-45 && git checkout pr-45
+
+# Conflict test করুন (local-এ main-এর সাথে merge করে দেখুন)
+git merge main
+# CONFLICT (content): Merge conflict in src/models/user.py
+
+# Conflict resolve করুন
+# ... edit করলেন ...
+git add src/models/user.py
+git commit -m "merge: resolve conflict with main"
+
+# PR-এ comment দিন:
+# "Conflict found with main. Please rebase: git rebase main"
+
+# GitHub-এ review:
+gh pr review 45 --request-changes \
+  --body "Please rebase your branch on main to resolve the conflict in user.py"
+```
+
+---
+
+**Scenario C: Accidental commit to main, team shared**
+
+```bash
+# main-এ ভুলে commit করেছেন
+git log --oneline -3
+# a1b2c3d (HEAD -> main, origin/main) feat: add broken feature
+# b2c4d5e (origin/main) fix: update auth
+
+# Wait — origin/main মানে আগেই push হয়েছে!
+# git reset --hard করা যাবে না — team break হবে
+
+# Safe fix: git revert
+git revert a1b2c3d --no-edit
+git push origin main
+
+# Team-কে জানান:
+# "Reverted accidental commit a1b2c3d. Please pull."
+# git pull --rebase করলেই হবে তাদের
+```
+
+---
+
+**Scenario D: পুরো feature delete করতে হবে (not merged yet)**
+
+```bash
+# feature/dark-mode branch — stakeholder বললেন বাদ দিতে
+git branch -D feature/dark-mode    # local delete
+
+# Remote delete
+git push origin --delete feature/dark-mode
+
+# প্রথমে GitHub-এ PR close করুন (don't merge)
+gh pr close 67 --comment "Feature cancelled per product decision"
+
+# যদি কোনো commits main-এ চলে গিয়ে থাকে:
+git log --oneline main | grep "dark-mode"
+# c3d4e5f feat: add dark mode toggle
+
+# Revert করুন
+git revert c3d4e5f --no-edit
+git push origin main
+```
+
+---
+
+**Scenario E: Release tag করুন এবং deploy করুন**
+
+```bash
+# Release branch তৈরি করুন
+git checkout develop
+git pull origin develop
+git checkout -b release/2.0.0
+
+# Version bump করুন
+sed -i 's/version = "1.9.0"/version = "2.0.0"/' setup.py
+git add setup.py
+git commit -m "chore: bump version to 2.0.0"
+
+# Final testing করুন (CI pass হলে)
+
+# Main-এ merge
+git checkout main
+git pull origin main
+git merge --no-ff release/2.0.0
+git tag -a v2.0.0 -m "Release 2.0.0 — Major redesign"
+git push origin main --tags
+
+# Develop-এও merge
+git checkout develop
+git merge --no-ff release/2.0.0
+git push origin develop
+
+# Release branch delete
+git branch -d release/2.0.0
+git push origin --delete release/2.0.0
+
+# GitHub Release তৈরি করুন
+gh release create v2.0.0 \
+  --title "v2.0.0 — Major Redesign" \
+  --notes "$(cat CHANGELOG.md | head -50)" \
+  --target main
+```
+
+---
+
+<a id="p10-system-design"></a>
+**Topic 2: System Design: Git Workflow for Large Team**
+
+**Interview question:** "১০০ জন developer-এর team-এ Git workflow কীভাবে setup করবেন?"
+
+**Answer structure:**
+
+```
+1. Repository Strategy:
+   - Monorepo (shared tooling, Nx/Bazel)
+   - অথবা: Service-per-repo (microservices)
+   - Decision factor: code sharing, team autonomy
+
+2. Branching Strategy:
+   - GitHub Flow (continuous deployment web app)
+   - Git Flow (versioned mobile/desktop app)
+   - Trunk-Based (very mature CI, feature flags)
+
+3. Branch Protection:
+   - main: PR required, 2 reviewers, CI must pass
+   - develop: PR required, 1 reviewer
+   - No direct push, no force push
+   - CODEOWNERS for domain-specific review
+
+4. CI/CD Pipeline:
+   PR opened:    lint + unit tests (fast, < 5 min)
+   PR approved:  integration tests
+   Merge to main: full suite + staging deploy
+   Tag pushed:   production deploy
+
+5. Code Quality Gates:
+   - Linting (flake8, ESLint)
+   - Type checking (mypy, TypeScript)
+   - Test coverage minimum (e.g., 80%)
+   - Security scan (CodeQL, Snyk)
+   - Dependency scan (Dependabot)
+
+6. Commit Standards:
+   - Conventional Commits enforced via commitlint + Husky
+   - PR title = squash commit message
+   - Auto CHANGELOG via release-please
+
+7. Access Control:
+   - GitHub Organization + Teams
+   - Least privilege principle
+   - Periodic access review (quarterly)
+   - SSO integration (SAML/OIDC)
+
+8. Developer Experience:
+   - devcontainer.json for consistent env
+   - Pre-commit hooks (local fast checks)
+   - Git aliases, good documentation
+   - Onboarding checklist
+```
+
+---
+
+<a id="p10-junior-qa"></a>
+**Topic 3: Junior Engineer Interview Q&A Bank**
+
+**প্রশ্ন ১: Git কী এবং কেন ব্যবহার করি?**
+```
+Git একটি distributed version control system। Code-এর সব পরিবর্তন
+track করে, যেকোনো সময় আগের version-এ ফিরতে পারা যায়, team-এর
+সবাই একসাথে কাজ করতে পারে conflict ছাড়াই।
+
+Distributed মানে প্রতিজনের কাছে full history আছে — server down
+হলেও কাজ চলে।
+```
+
+**প্রশ্ন ২: git add এবং git commit-এর পার্থক্য?**
+```
+git add: পরিবর্তনগুলো staging area-তে রাখে — "commit করার জন্য prepare"
+git commit: staging area-র সব changes repository-তে save করে
+           একটি permanent snapshot তৈরি করে
+
+Staging area-র কারণ: কিছু changes commit করব, কিছু না —
+selective করা যায়।
+```
+
+**প্রশ্ন ৩: git pull এবং git fetch-এর পার্থক্য?**
+```
+git fetch: remote-এর latest changes download করে, কিন্তু
+           working directory-তে apply করে না।
+           Safe — কী এলো আগে দেখা যায়।
+
+git pull: fetch + merge (বা fetch + rebase)।
+          Immediately working branch update হয়।
+
+Best practice: git fetch করুন, git diff origin/main দেখুন, তারপর merge।
+```
+
+**প্রশ্ন ৪: Merge conflict কীভাবে resolve করবেন?**
+```
+1. git status দিয়ে conflict files দেখি
+2. File খুলি — <<<<<<, =======, >>>>>>> markers দেখি
+3. কোন version রাখব decide করি (বা দুটো মিলিয়ে)
+4. Markers সরিয়ে দিই
+5. git add করি
+6. git commit দিই
+
+IDE/VS Code-এর merge editor অনেক সহজ করে দেয়।
+```
+
+**প্রশ্ন ৫: Branch কী? কেন ব্যবহার করি?**
+```
+Branch হলো main codebase থেকে আলাদা একটি line of development।
+feature/login branch-এ কাজ করলে main branch-এ কোনো impact নেই।
+
+কেন: Isolation — experiment করা যায়, টিমের অন্যদের কাজ break হয় না।
+Multiple features parallel-এ develop করা যায়।
+```
+
+**প্রশ্ন ৬: git stash কী?**
+```
+Uncommitted changes temporarily save করার জায়গা।
+Branch switch করতে হবে কিন্তু commit করতে চাই না — git stash করি।
+পরে git stash pop দিয়ে ফিরিয়ে আনি।
+```
+
+**প্রশ্ন ৭: .gitignore কী?**
+```
+Git কোন files track করবে না সেটা বলে দেওয়ার file।
+.env (secrets), __pycache__, node_modules, build output — এগুলো
+repository-তে থাকা উচিত নয়।
+```
+
+**প্রশ্ন ৮: Fork এবং Clone পার্থক্য?**
+```
+Clone: repository local machine-এ copy করা।
+Fork: GitHub-এ নিজের account-এ repository-র copy করা।
+
+Open-source contribute করতে Fork করি — নিজের copy-তে কাজ করি,
+তারপর Pull Request দিই।
+```
+
+**প্রশ্ন ৯: Pull Request (PR) কী?**
+```
+GitHub-এ "এই changes main branch-এ নিন" এর formal request।
+Code review, discussion, automated tests — সব এক জায়গায়।
+Team-এ code quality maintain করার প্রধান mechanism।
+```
+
+**প্রশ্ন ১০: git rebase কী? Merge থেকে কীভাবে আলাদা?**
+```
+Merge: দুটি branch-এর history combine করে, merge commit তৈরি হয়।
+Rebase: feature branch-এর commits main-এর latest-এর উপর re-apply করে
+        — linear, clean history।
+
+Main branch-এ already আছে এমন commits rebase করবেন না (history rewrite,
+team-এর সমস্যা)।
+```
+
+---
+
+<a id="p10-senior-qa"></a>
+**Topic 4: Senior Engineer Interview Questions**
+
+**প্রশ্ন ১: Large team-এ Git workflow কীভাবে design করবেন?**
+```
+(Topic 2-এর system design answer দিন)
+Key points: Branch strategy, protection rules, CI gates, CODEOWNERS,
+commit standards, access control
+```
+
+**প্রশ্ন ২: Git history rewrite করার risks কী?**
+```
+git rebase, git reset --hard, git commit --amend, git filter-repo —
+এগুলো history rewrite করে।
+
+Risks:
+- Pushed commits rewrite করলে team-এর সবার repo diverge হয়
+- Force push দরকার হয় — অন্যদের local branch corrupted হতে পারে
+- CI/CD pipeline-এ cached state invalid হয়
+
+Safe rule: Never rewrite public/shared branch history.
+Local, unpushed commits — যা খুশি করুন।
+```
+
+**প্রশ্ন ৩: Monorepo vs Polyrepo — কখন কোনটা?**
+```
+Monorepo:
++ Code sharing সহজ, atomic cross-project changes
++ Single CI/CD, consistent tooling
+- Build complexity (affected packages only)
+- Requires mature tooling (Nx, Bazel, Turborepo)
+
+Polyrepo:
++ Team autonomy, simpler CI per repo
++ Clearer ownership
+- Code sharing কঠিন (versioned packages দরকার)
+- Cross-repo changes অনেক PRs
+
+Decision: shared code অনেক → monorepo; independent services → polyrepo
+```
+
+**প্রশ্ন ৪: GitOps কী? কীভাবে implement করবেন?**
+```
+Git = single source of truth for infrastructure.
+Desired state Git-এ থাকে। ArgoCD/Flux Git-এ watch করে,
+cluster state align করে।
+
+Benefits: audit trail, rollback via git revert, disaster recovery,
+PR-based infra changes।
+
+Implementation:
+1. k8s manifests বা Helm charts একটি Git repo-তে
+2. ArgoCD install → repo watch করে
+3. Push to Git → auto sync to cluster
+4. Manual change → auto revert (self-healing)
+```
+
+**প্রশ্ন ৫: CI/CD pipeline কীভাবে setup করবেন? Security কী কী দেখবেন?**
+```
+Stages:
+PR: lint → unit test → security scan (CodeQL, Snyk)
+Merge: integration test → staging deploy → smoke test
+Tag/Release: production deploy → health check → notify
+
+Security:
+- Secrets never in code, always in GitHub Secrets
+- Dependency scan (Dependabot + Snyk)
+- SAST (CodeQL) on every PR
+- Container scan (Trivy for Docker images)
+- Least privilege: GITHUB_TOKEN minimal permissions
+- Pin action versions (@v4, not @latest)
+- Self-hosted runner isolation
+```
+
+---
+
+<a id="p10-actions-qa"></a>
+**Topic 5: GitHub Actions Interview Questions**
+
+```
+Q: GitHub Actions-এ Secrets কীভাবে pass করবেন?
+A: Repository → Settings → Secrets-এ encrypted store করি।
+   Workflow-এ: ${{ secrets.MY_SECRET }} দিয়ে access করি।
+   Command args-এ নয়, env দিয়ে pass করি।
+
+Q: Matrix build কখন ব্যবহার করবেন?
+A: Multiple OS বা language version-এ same test চালাতে।
+   strategy.matrix দিয়ে combinations define করি — parallel jobs।
+
+Q: Job-এর মধ্যে data কীভাবে share করবেন?
+A: Artifacts দিয়ে: upload-artifact → download-artifact।
+   অথবা: outputs + needs.[job].outputs.value।
+
+Q: GitHub Actions-এর free tier limit কী?
+A: Public repo: unlimited।
+   Private repo (free plan): 2000 min/month। Ubuntu runner।
+
+Q: Self-hosted runner কখন দরকার?
+A: Private network access, specific hardware (GPU), cost saving,
+   custom software, faster machines।
+
+Q: workflow_dispatch কী?
+A: Manual trigger — GitHub UI বা gh CLI দিয়ে।
+   Inputs define করা যায় (choice, boolean, string)।
+
+Q: Reusable workflow কী? কীভাবে কাজ করে?
+A: workflow_call trigger দিয়ে অন্য workflow থেকে call করা যায়।
+   DRY principle — common CI steps একবার define।
+
+Q: GITHUB_TOKEN কী?
+A: Actions-এ automatically provided secret।
+   Repository-র operations (PR comment, release create) করতে।
+   Scope: current repository only।
+```
+
+---
+
+<a id="p10-practical"></a>
+**Topic 6: Practical Coding Test Tips**
+
+**সাধারণ practical Git test-এ যা দেওয়া হয়:**
+
+```bash
+# Task 1: Feature branch তৈরি করুন
+git checkout -b feature/your-name-test
+
+# Task 2: File তৈরি করুন ও commit করুন
+echo "Hello World" > hello.txt
+git add hello.txt
+git commit -m "feat: add hello.txt"
+
+# Task 3: Commit message Conventional Commits format-এ
+git commit -m "feat(greeting): add hello world file"
+
+# Task 4: Branch-এ conflict তৈরি করে resolve করুন
+# (interviewer দুটো branch-এ same file change করে দেবে)
+git merge main
+# Conflict resolve করুন
+git add conflicted-file.txt
+git commit -m "merge: resolve conflict in greeting"
+
+# Task 5: Interactive rebase — 3টি commit squash করুন
+git rebase -i HEAD~3
+# squash/fixup দিয়ে একটিতে combine করুন
+
+# Task 6: git log দিয়ে specific author-এর commits দেখুন
+git log --author="Your Name" --oneline
+
+# Task 7: .gitignore তৈরি করুন
+echo "*.pyc\n.env\n__pycache__/" > .gitignore
+git add .gitignore
+git commit -m "chore: add .gitignore"
+```
+
+**Interview-এ কথা বলতে বলতে করুন:**
+```
+"এখন main থেকে একটি feature branch নিচ্ছি — কারণ main সবসময়
+deployable রাখতে চাই। Branch-এ কাজ শেষে PR দেব।
+
+Commit message Conventional Commits format-এ দিচ্ছি — feat:, fix:,
+docs: ইত্যাদি। এতে CHANGELOG auto-generate করা যায়।
+
+Conflict resolve করার সময় — আমি আগে দুটো version-ই পড়ি,
+বুঝি কোনটা রাখা উচিত, তারপর markers সরাই।"
+```
+
+---
+
+<a id="p10-reference"></a>
+**Topic 7: Complete Git Command Quick Reference**
+
+**Setup:**
+```bash
+git config --global user.name "Name"
+git config --global user.email "email"
+git config --global core.editor "code --wait"
+git config --list
+```
+
+**Repository:**
+```bash
+git init                          # নতুন repo
+git clone <url>                   # clone
+git clone --depth=1 <url>         # shallow clone
+git remote -v                     # remotes দেখুন
+git remote add origin <url>       # remote add
+git remote set-url origin <url>   # URL change
+```
+
+**Basic workflow:**
+```bash
+git status                        # অবস্থা দেখুন
+git add .                         # সব stage করুন
+git add -p                        # interactive staging
+git commit -m "message"           # commit
+git commit --amend                # last commit edit
+git push origin branch            # push
+git push -u origin branch         # push + upstream set
+git pull                          # pull
+git pull --rebase                 # pull with rebase
+git fetch origin                  # fetch (no merge)
+```
+
+**Branch:**
+```bash
+git branch                        # list branches
+git branch -a                     # remote সহ
+git branch new-branch             # তৈরি করুন
+git checkout new-branch           # switch
+git switch new-branch             # modern switch
+git checkout -b new-branch        # তৈরি + switch
+git switch -c new-branch          # modern
+git branch -d branch              # delete (merged)
+git branch -D branch              # force delete
+git push origin --delete branch   # remote delete
+git branch -m old new             # rename
+```
+
+**Merge ও Rebase:**
+```bash
+git merge branch                  # merge
+git merge --no-ff branch          # merge commit সবসময়
+git merge --squash branch         # squash merge
+git rebase main                   # rebase on main
+git rebase -i HEAD~3              # interactive rebase
+git rebase --continue             # conflict resolve-এর পরে
+git rebase --abort                # rebase cancel
+git cherry-pick abc1234           # specific commit
+```
+
+**Undo:**
+```bash
+git reset HEAD~1                  # last commit undo (mixed)
+git reset --soft HEAD~1           # undo, changes staged
+git reset --hard HEAD~1           # undo, changes deleted ⚠️
+git revert abc1234                # safe undo (new commit)
+git restore file.py               # working dir restore
+git restore --staged file.py      # unstage
+git stash                         # stash changes
+git stash pop                     # stash apply + drop
+git stash list                    # all stashes
+git stash apply stash@{2}         # specific stash
+git reflog                        # all HEAD movements
+```
+
+**Inspection:**
+```bash
+git log --oneline --graph --all   # visual log
+git log -p                        # log with diff
+git log --author="Name"           # by author
+git log -S "string"               # code search
+git log -- file.py                # file history
+git diff                          # unstaged diff
+git diff --staged                 # staged diff
+git diff main..feature            # branch diff
+git blame file.py                 # line-by-line author
+git show abc1234                  # commit details
+git bisect start/bad/good         # bug search
+git grep "pattern"                # repo search
+```
+
+**Tag:**
+```bash
+git tag                           # list tags
+git tag v1.0.0                    # lightweight tag
+git tag -a v1.0.0 -m "message"   # annotated tag
+git push origin --tags            # push all tags
+git push origin v1.0.0            # push specific tag
+git tag -d v1.0.0                 # delete local
+git push origin --delete v1.0.0   # delete remote
+```
+
+**Stash:**
+```bash
+git stash push -m "description"   # named stash
+git stash list                    # সব stash
+git stash show stash@{0}          # stash content
+git stash pop                     # apply + delete
+git stash apply                   # apply, keep stash
+git stash drop stash@{0}          # delete stash
+git stash clear                   # সব delete ⚠️
+git stash branch new-branch       # branch থেকে stash
+```
+
+**Advanced:**
+```bash
+git worktree add ../dir branch    # multiple workdirs
+git submodule add <url> path      # submodule
+git gc --aggressive               # garbage collection
+git fsck --lost-found             # integrity check
+git count-objects -v              # object stats
+git filter-repo --path f --invert-paths  # history rewrite
+git maintenance start             # auto maintenance
+```
+
+---
+
+<a id="p10-cheatsheet"></a>
+**Topic 8: One-Page Cheat Sheet**
+
+**Daily workflow:**
+```
+সকালে: git pull --rebase origin main
+কাজ: git checkout -b feature/task-name
+     ... code করুন ...
+     git add -p (selective)
+     git commit -m "feat(scope): description"
+শেষে: git push origin feature/task-name
+      → GitHub-এ PR তৈরি করুন
+Merge-এর পরে: git checkout main && git pull
+```
+
+**Emergency commands:**
+```
+হারানো commit  → git reflog → git reset --hard [hash]
+Secret commit   → git rm --cached .env + filter-repo
+Wrong branch    → git stash + git checkout correct-branch + git stash pop
+Last commit fix → git commit --amend (push না হলে)
+Production undo → git revert HEAD → git push
+Detached HEAD   → git switch -c new-branch
+Conflict        → edit + git add + git commit
+```
+
+**বড় পার্থক্য মনে রাখুন:**
+```
+merge vs rebase     → history vs linear
+reset vs revert     → local vs safe (pushed)
+fetch vs pull       → download vs download+merge
+fork vs clone       → GitHub copy vs local copy
+HEAD vs head        → current position vs latest commit (branch tip)
+origin vs upstream  → your fork's remote vs original repo
+```
+
+**সংখ্যা মনে রাখুন:**
+```
+SHA-1 hash: 40 characters (7 = short)
+reflog expires: 90 days (default)
+gc threshold: 6700 loose objects
+commit subject: ≤50 characters ideal, ≤72 max
+body line wrap: 72 characters
+```
+
+---
+
+**PART 10 Quick Revision Table**
+
+| Scenario | সমাধান |
+|---------|--------|
+| Feature-এ কাজ, urgent hotfix | `git stash` → hotfix branch → fix → merge → `git stash pop` |
+| Accidental push to main | `git revert HEAD` → push (team safe) |
+| PR-এ conflict | `git rebase main` → resolve → push |
+| Bug কোন commit-এ? | `git bisect start/bad/good` |
+| কে লিখেছে এই line? | `git blame -L N,M file.py` |
+| হারানো commit recover | `git reflog` → `git reset --hard [hash]` |
+| .env committed | `git rm --cached .env` + filter-repo + revoke key |
+| Release করতে হবে | tag → push --tags → gh release create |
+| Messy commits clean করুন | `git rebase -i HEAD~N` → squash |
+| Multiple branches একসাথে | `git worktree add ../dir branch` |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **✅ Git & GitHub Junior Engineer Handbook সম্পূর্ণ হয়েছে! PART 1–10 cover করা হয়েছে।**
