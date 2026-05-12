@@ -3996,4 +3996,1623 @@ What recruiters see:
 
 ---
 
-> **📌 পরবর্তী:** PART 5 — GitHub Collaboration & Team Workflow *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 5 — GitHub Collaboration & Team Workflow
+
+---
+
+<a id="part5"></a>
+## PART 5: GitHub Collaboration & Team Workflow
+
+> Solo project-এ Git ব্যবহার এক রকম, কিন্তু team-এ কাজ করতে হলে সঠিক workflow জানা আবশ্যক। এই PART-এ branching strategies, team collaboration tools, CODEOWNERS, PR templates এবং organization management বিস্তারিত আলোচনা করা হয়েছে।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Branching Strategies — GitHub Flow, Git Flow, Trunk-Based](#p5-branch-strategy) |
+| 2 | [GitHub Flow — Step by Step](#p5-github-flow) |
+| 3 | [Git Flow — Complete Guide](#p5-git-flow) |
+| 4 | [Trunk-Based Development](#p5-trunk-based) |
+| 5 | [Branch Naming Conventions](#p5-branch-naming) |
+| 6 | [CODEOWNERS — Automatic Review Assignment](#p5-codeowners) |
+| 7 | [PR Templates ও Issue Templates](#p5-templates) |
+| 8 | [.github Folder Structure](#p5-github-folder) |
+| 9 | [Collaborators vs Teams vs Organizations](#p5-org) |
+| 10 | [Forking vs Branching for Contribution](#p5-fork-vs-branch) |
+| 11 | [Conflict Prevention Strategies](#p5-conflict-prevention) |
+| 12 | [GitHub Notifications ও Watching](#p5-notifications) |
+
+---
+
+<a id="p5-branch-strategy"></a>
+**Topic 1: Branching Strategies — GitHub Flow, Git Flow, Trunk-Based**
+
+Team-এ কোন branching strategy ব্যবহার করবেন সেটা project-এর size, release cycle এবং team size-এর উপর নির্ভর করে।
+
+**তিনটি প্রধান strategy:**
+
+| | GitHub Flow | Git Flow | Trunk-Based |
+|--|------------|---------|------------|
+| Branch count | কম (main + feature) | অনেক (main, develop, release, hotfix) | সর্বনিম্ন (শুধু main) |
+| Release cycle | Continuous | Scheduled | Continuous |
+| Complexity | Simple | Complex | Simple |
+| Best for | Web apps, SaaS | Versioned software | Large teams, CI/CD |
+| Teams | Small-medium | Medium-large | Large (Google, Facebook) |
+
+---
+
+<a id="p5-github-flow"></a>
+**Topic 2: GitHub Flow — Step by Step**
+
+**GitHub Flow কী:**
+GitHub নিজেই যে workflow ব্যবহার করে — সহজ এবং continuous deployment-এর জন্য ideal।
+
+**Core rule:** `main` branch সবসময় deployable থাকবে।
+
+```
+GitHub Flow:
+                    ┌─ feature/login ──────────────┐
+main ──────────────────────────────── merge ─────── main (deploy)
+                    └─ fix/payment-bug ────────────┘
+
+Steps:
+1. main থেকে feature branch তৈরি
+2. Feature branch-এ commits
+3. PR open করুন (যত তাড়াতাড়ি সম্ভব, draft হলেও)
+4. Review ও automated tests
+5. Deploy to staging (preview environment)
+6. Approve হলে merge to main
+7. Main থেকে production deploy
+```
+
+**Practical commands:**
+```bash
+# Step 1: Always start from updated main
+git checkout main
+git pull origin main
+
+# Step 2: New feature branch
+git checkout -b feature/user-profile
+
+# Step 3: কাজ করুন, commit করুন
+git add .
+git commit -m "feat(profile): add user avatar upload"
+git commit -m "feat(profile): add bio field"
+
+# Step 4: Push and create PR
+git push origin feature/user-profile
+# GitHub-এ PR তৈরি করুন
+
+# Step 5: Review comments address করুন
+git add .
+git commit -m "fix: address review comments"
+git push origin feature/user-profile
+
+# Step 6: After merge, cleanup
+git checkout main
+git pull origin main
+git branch -d feature/user-profile  # local cleanup
+```
+
+**GitHub Flow-এর সুবিধা:**
+```
+✅ Simple — নতুন developer সহজে বোঝে
+✅ Always deployable main
+✅ Fast feedback loop
+✅ Less merge conflicts (branches ছোট রাখলে)
+✅ Continuous delivery-এর জন্য perfect
+```
+
+---
+
+<a id="p5-git-flow"></a>
+**Topic 3: Git Flow — Complete Guide**
+
+**Git Flow কী:**
+Vincent Driessen-এর branching model — scheduled release (যেমন software package, mobile app) project-এর জন্য।
+
+**Branches:**
+```
+main       — production code, tagged releases
+develop    — integration branch, next release
+feature/*  — নতুন features
+release/*  — release preparation (version bump, docs)
+hotfix/*   — production bug fix
+```
+
+**Git Flow diagram:**
+```
+main     ────────────────── v1.0 ──────────────────── v1.1
+              ↑ merge                      ↑ merge
+develop  ──── ──────────────────────────── ─────────────
+              ↑            ↑ merge
+feature  ─────             │
+              └── feat/login ──┘
+                                    ┌─ release/1.1 ─┐
+develop                ────────────── ──────────────── ─────
+                                    ↑ merge             ↑
+main                                                  v1.1
+
+hotfix   ─── hotfix/payment ──── merge to main + develop
+```
+
+**Git Flow commands:**
+```bash
+# git-flow tool install করুন (optional, কিন্তু helpful)
+sudo apt install git-flow      # Linux
+brew install git-flow          # macOS
+
+# Initialize
+git flow init
+# Default branch names accept করুন (Enter key)
+
+# Feature শুরু
+git flow feature start user-auth
+# = git checkout -b feature/user-auth develop
+
+# Feature শেষ (develop-এ merge হয়)
+git flow feature finish user-auth
+# = git checkout develop && git merge feature/user-auth && git branch -d feature/user-auth
+
+# Release শুরু
+git flow release start 1.2.0
+# = git checkout -b release/1.2.0 develop
+
+# Release শেষ
+git flow release finish 1.2.0
+# = develop + main-এ merge, tag v1.2.0, branch delete
+
+# Hotfix শুরু (main থেকে)
+git flow hotfix start payment-crash
+# = git checkout -b hotfix/payment-crash main
+
+# Hotfix শেষ
+git flow hotfix finish payment-crash
+# = main + develop-এ merge, tag, branch delete
+```
+
+**Manual Git Flow (tool ছাড়া):**
+```bash
+# Feature branch
+git checkout develop
+git pull origin develop
+git checkout -b feature/payment-gateway
+
+# ... কাজ করুন ...
+
+git checkout develop
+git merge --no-ff feature/payment-gateway  # --no-ff = merge commit রাখুন
+git push origin develop
+git branch -d feature/payment-gateway
+
+# Release
+git checkout develop
+git checkout -b release/2.0.0
+# version bump করুন (package.json, setup.py, etc.)
+git commit -m "chore: bump version to 2.0.0"
+
+# Testing done, release করুন
+git checkout main
+git merge --no-ff release/2.0.0
+git tag -a v2.0.0 -m "Release version 2.0.0"
+git push origin main --tags
+
+git checkout develop
+git merge --no-ff release/2.0.0
+git push origin develop
+git branch -d release/2.0.0
+```
+
+---
+
+<a id="p5-trunk-based"></a>
+**Topic 4: Trunk-Based Development**
+
+**Trunk-Based Development কী:**
+সবাই `main` (trunk) branch-এ সরাসরি কাজ করে বা খুব short-lived branches (1-2 দিন) ব্যবহার করে। Google, Facebook এই model ব্যবহার করে।
+
+```
+Trunk-Based:
+main ─── commit ─── commit ─── commit ─── commit ─── (always green)
+              ↑           ↑
+        Small, frequent commits   No long-lived feature branches
+```
+
+**Key practices:**
+```bash
+# Feature Flags দিয়ে incomplete features hide করুন
+# code push হয়, কিন্তু UI/API disabled থাকে
+
+# config.py
+FEATURES = {
+    "new_payment": False,   # disable in production
+    "dark_mode": True,
+}
+
+# code-এ:
+if FEATURES["new_payment"]:
+    # new code
+else:
+    # old code
+
+# CI/CD mandatory — প্রতি commit-এ automated test
+# যদি test fail করে → immediately fix করতে হবে
+```
+
+**কখন কোন strategy:**
+```
+GitHub Flow → Web app, SaaS, small-medium team
+Git Flow    → Mobile app, npm package, scheduled release
+Trunk-Based → Large team, microservices, very mature CI/CD
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "আপনার previous project-এ কোন Git workflow ব্যবহার হতো?"
+
+উত্তর: "আমরা GitHub Flow ব্যবহার করতাম। main branch সবসময়
+deployable রাখতাম। Feature branch তৈরি করতাম, PR দিতাম, review
+হলে merge করতাম। Simple এবং continuous deployment-এর জন্য
+এটাই best ছিল আমাদের ছোট team-এর জন্য।
+
+Git Flow জানি — versioned software বা mobile app-এ যেখানে
+scheduled release cycle আছে, সেখানে Git Flow ভালো।"
+```
+
+---
+
+<a id="p5-branch-naming"></a>
+**Topic 5: Branch Naming Conventions**
+
+**Standard convention:**
+```bash
+# Format: type/short-description
+# type: feature, fix, hotfix, release, chore, docs, refactor, test
+
+feature/user-authentication
+feature/payment-gateway-integration
+fix/login-crash-mobile
+fix/cart-quantity-overflow
+hotfix/production-data-loss
+release/2.0.0
+chore/update-dependencies
+docs/api-documentation
+refactor/auth-module
+test/payment-unit-tests
+
+# Issue number include করলে traceability ভালো হয়
+feature/45-user-authentication
+fix/52-login-crash-mobile
+```
+
+**Branch naming rules:**
+```bash
+# ✅ Good
+feature/user-profile-upload
+fix/42-payment-timeout
+docs/setup-guide
+
+# ❌ Bad
+mywork              # no type, vague
+Feature/Login Page  # spaces not allowed
+john/test-stuff     # person name (not meaningful)
+temp                # too vague
+```
+
+**Git-এ branch pattern enforce (pre-receive hook):**
+```bash
+#!/bin/sh
+# Server-side hook: pre-receive
+while read oldrev newrev refname; do
+    branch=$(echo "$refname" | sed 's/refs\/heads\///')
+    if ! echo "$branch" | grep -qE "^(main|develop|feature|fix|hotfix|release|chore|docs|refactor|test)\/.+"; then
+        echo "❌ Branch name '$branch' doesn't follow convention!"
+        echo "   Use: type/description (e.g., feature/user-auth)"
+        exit 1
+    fi
+done
+exit 0
+```
+
+---
+
+<a id="p5-codeowners"></a>
+**Topic 6: CODEOWNERS — Automatic Review Assignment**
+
+**CODEOWNERS কী:**
+একটি special file যা define করে কোন file বা directory-র জন্য কোন team member-কে automatically review request পাঠানো হবে।
+
+**File location:**
+```
+.github/CODEOWNERS    ← recommended
+CODEOWNERS            ← root-এও কাজ করে
+docs/CODEOWNERS       ← docs folder-এর জন্য
+```
+
+**CODEOWNERS syntax:**
+```bash
+# .github/CODEOWNERS
+
+# Default owners (সব file)
+*                           @lead-developer
+
+# Backend code
+src/api/**                  @backend-team
+src/api/auth/**             @security-team @backend-team
+
+# Frontend code
+src/frontend/**             @frontend-team
+src/frontend/components/**  @alice @bob
+
+# Database migrations
+migrations/**               @dba-team @backend-team
+
+# CI/CD configuration
+.github/**                  @devops-team
+Dockerfile                  @devops-team
+docker-compose.yml          @devops-team
+
+# Documentation
+docs/**                     @tech-writer
+*.md                        @tech-writer
+
+# Package files (dependency changes require approval)
+package.json                @lead-developer
+requirements.txt            @lead-developer
+Pipfile                     @lead-developer
+
+# Security-sensitive files
+src/auth/**                 @security-team
+src/payment/**              @security-team @payment-team
+```
+
+**CODEOWNERS-এর সুবিধা:**
+```
+✅ Automatic reviewer assignment — manually tag করতে হয় না
+✅ Domain experts সবসময় review করেন
+✅ Security-sensitive code extra review পায়
+✅ PR merge-এর আগে CODEOWNER approval required করা যায়
+```
+
+**Branch protection + CODEOWNERS:**
+```
+GitHub → Settings → Branches → Branch protection rules
+→ ✅ Require review from Code Owners
+```
+
+---
+
+<a id="p5-templates"></a>
+**Topic 7: PR Templates ও Issue Templates**
+
+**Pull Request Template:**
+```markdown
+<!-- .github/pull_request_template.md -->
+## কী পরিবর্তন করেছি
+<!-- সংক্ষেপে describe করুন -->
+
+## কেন এই পরিবর্তন
+<!-- Motivation, context -->
+
+## Related Issue
+Closes #<!-- issue number -->
+
+## Testing করেছেন?
+- [ ] Unit tests pass করছে
+- [ ] Manual testing করেছি
+- [ ] Edge cases check করেছি
+
+## Screenshots (UI change হলে)
+<!-- Before/After screenshots -->
+
+## Checklist
+- [ ] Code review guidelines follow করেছি
+- [ ] No hardcoded secrets
+- [ ] Documentation update করেছি (যদি দরকার)
+- [ ] No console.log / debug statements
+```
+
+**Multiple PR templates (type-based):**
+```bash
+# .github/PULL_REQUEST_TEMPLATE/ folder
+.github/
+  PULL_REQUEST_TEMPLATE/
+    feature.md      # ?template=feature
+    bugfix.md       # ?template=bugfix
+    hotfix.md       # ?template=hotfix
+    documentation.md
+```
+
+**Issue Templates:**
+```markdown
+<!-- .github/ISSUE_TEMPLATE/bug_report.md -->
+---
+name: Bug Report
+about: Report a bug to help us improve
+title: '[BUG] '
+labels: bug
+assignees: ''
+---
+
+## Bug Description
+<!-- কী সমস্যা হচ্ছে -->
+
+## Steps to Reproduce
+1. 
+2. 
+3. 
+
+## Expected Behavior
+<!-- কী হওয়া উচিত -->
+
+## Actual Behavior
+<!-- কী হচ্ছে -->
+
+## Environment
+- OS: 
+- Browser/Version: 
+- App Version: 
+
+## Screenshots
+<!-- যদি থাকে -->
+```
+
+```markdown
+<!-- .github/ISSUE_TEMPLATE/feature_request.md -->
+---
+name: Feature Request
+about: Suggest a new feature
+title: '[FEAT] '
+labels: enhancement
+assignees: ''
+---
+
+## Feature Description
+<!-- কী feature চান -->
+
+## Problem it Solves
+<!-- কোন problem solve করবে -->
+
+## Proposed Solution
+<!-- কীভাবে implement করা যেতে পারে -->
+
+## Alternatives Considered
+<!-- অন্য কোন approach ভেবেছেন? -->
+```
+
+---
+
+<a id="p5-github-folder"></a>
+**Topic 8: .github Folder Structure**
+
+`.github` folder-এ GitHub-specific configuration files রাখা হয়।
+
+```
+.github/
+├── CODEOWNERS                          # Auto reviewer assignment
+├── FUNDING.yml                         # Sponsor button
+├── SECURITY.md                         # Security policy
+├── SUPPORT.md                          # Support info
+│
+├── ISSUE_TEMPLATE/                     # Issue templates
+│   ├── bug_report.md
+│   ├── feature_request.md
+│   └── config.yml                      # Template chooser config
+│
+├── PULL_REQUEST_TEMPLATE/              # PR templates
+│   ├── feature.md
+│   └── bugfix.md
+│   (or single file:)
+├── pull_request_template.md
+│
+└── workflows/                          # GitHub Actions
+    ├── ci.yml                          # Run tests on PR
+    ├── deploy.yml                      # Deploy on merge to main
+    ├── release.yml                     # Create release
+    └── codeql.yml                      # Security scanning
+```
+
+**ISSUE_TEMPLATE/config.yml:**
+```yaml
+# .github/ISSUE_TEMPLATE/config.yml
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/user/repo/discussions
+    about: General questions এখানে করুন
+  - name: 📖 Documentation
+    url: https://docs.example.com
+    about: Docs দেখুন আগে
+```
+
+---
+
+<a id="p5-org"></a>
+**Topic 9: Collaborators vs Teams vs Organizations**
+
+**তিনটির পার্থক্য:**
+
+**Collaborators (Personal Repository):**
+```
+Personal repo → Settings → Collaborators
+→ GitHub username add করুন
+→ Permission: Read / Write / Admin
+
+ব্যবহার: ছোট project, 1-5 জন
+```
+
+**Teams (Organization):**
+```
+Organization → Teams → New Team
+→ Team name: backend-team
+→ Members add করুন
+→ Repository access: org/project → Maintain / Write
+
+ব্যবহার: department বা squad-based access
+```
+
+**Organizations:**
+```
+github.com/organizations/new
+→ Organization name: my-company
+→ Billing plan
+→ Members invite করুন
+
+Organization benefits:
+✅ Shared repository ownership
+✅ Team-based permissions
+✅ Audit logs
+✅ SSO (Single Sign-On) support
+✅ Centralized billing
+```
+
+**Permission levels:**
+
+| Level | Read | Write | Triage | Maintain | Admin |
+|-------|------|-------|--------|----------|-------|
+| Code read | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Issues manage | | | ✅ | ✅ | ✅ |
+| Push code | | ✅ | | ✅ | ✅ |
+| Manage branches | | | | ✅ | ✅ |
+| Settings change | | | | | ✅ |
+
+**Interview tip:**
+```
+প্রশ্ন: "Team-এ GitHub access কীভাবে manage করবেন?"
+
+উত্তর: "Company project-এ Organization তৈরি করব। Team structure
+অনুযায়ী Teams তৈরি করব — backend-team, frontend-team, devops-team।
+Least privilege principle follow করব — developer-দের Write,
+lead-দের Maintain, শুধু 1-2 জনকে Admin।
+
+CODEOWNERS দিয়ে ensure করব sensitive code-এ (auth, payment)
+সঠিক team auto-assign হচ্ছে।"
+```
+
+---
+
+<a id="p5-fork-vs-branch"></a>
+**Topic 10: Forking vs Branching for Contribution**
+
+**কখন Fork, কখন Branch:**
+
+| | Branch | Fork |
+|--|--------|------|
+| Repository access আছে? | হ্যাঁ | না |
+| Open-source project? | না | হ্যাঁ |
+| Team member? | হ্যাঁ | না |
+| External contributor? | না | হ্যাঁ |
+
+**Internal team workflow (Branch):**
+```bash
+# Team member → সরাসরি repository-তে access আছে
+git clone https://github.com/company/project.git
+git checkout -b feature/new-feature
+# কাজ করুন, push করুন
+git push origin feature/new-feature
+# PR দিন company/project-এ
+```
+
+**Open-source contribution (Fork):**
+```bash
+# External contributor → সরাসরি access নেই
+# GitHub-এ Fork করুন
+git clone https://github.com/YOUR-USER/project.git  # fork
+git remote add upstream https://github.com/original/project.git
+git checkout -b fix/typo
+# কাজ করুন
+git push origin fix/typo
+# PR দিন: YOUR-USER/project → original/project
+```
+
+---
+
+<a id="p5-conflict-prevention"></a>
+**Topic 11: Conflict Prevention Strategies**
+
+**Merge conflict কেন হয়:**
+দুইজন developer একই file-এর একই line পরিবর্তন করলে Git বুঝতে পারে না কোনটা রাখবে।
+
+**Prevention strategies:**
+
+```bash
+# ──────────────────────────────────────────────
+# Strategy 1: Branch ছোট রাখুন
+# ──────────────────────────────────────────────
+# ❌ Bad: 2 সপ্তাহ ধরে বড় feature branch
+# ✅ Good: 1-3 দিনের ছোট focused changes
+
+# ──────────────────────────────────────────────
+# Strategy 2: main থেকে নিয়মিত sync করুন
+# ──────────────────────────────────────────────
+git fetch origin
+git rebase origin/main   # অথবা:
+git merge origin/main
+
+# Daily habit:
+git checkout main && git pull && git checkout feature/my-feature && git rebase main
+
+# ──────────────────────────────────────────────
+# Strategy 3: Team communication
+# ──────────────────────────────────────────────
+# Same file-এ কে কাজ করছে জানুন
+# GitHub Projects বা Slack-এ coordinate করুন
+
+# ──────────────────────────────────────────────
+# Strategy 4: Modular code structure
+# ──────────────────────────────────────────────
+# একটি file-এ সব না রেখে ছোট modules-এ ভাগ করুন
+# src/auth/login.py, src/auth/logout.py
+# → different developers different files-এ কাজ করতে পারবেন
+
+# ──────────────────────────────────────────────
+# Strategy 5: PR-এ up-to-date requirement
+# ──────────────────────────────────────────────
+# Branch protection-এ "Require branches to be up to date"
+# merge করার আগে latest main-এ rebase করতে হবে
+```
+
+**Conflict হলে কী করবেন:**
+```bash
+git merge origin/main
+# Auto-merging failed; fix conflicts and then commit
+
+git status
+# both modified: src/auth/user.py
+
+# user.py-তে দেখুন:
+<<<<<<< HEAD (আপনার changes)
+def get_user(user_id: int):
+    return db.query(User).filter(User.id == user_id).first()
+=======
+def get_user(user_id: int) -> Optional[User]:
+    return db.session.get(User, user_id)
+>>>>>>> origin/main (incoming)
+
+# Resolve: সঠিকটা রাখুন, markers সরান
+def get_user(user_id: int) -> Optional[User]:
+    return db.query(User).filter(User.id == user_id).first()
+
+git add src/auth/user.py
+git commit -m "merge: resolve conflict in get_user"
+```
+
+**Visual merge tool:**
+```bash
+# VS Code-এ merge editor
+git config --global merge.tool vscode
+git config --global mergetool.vscode.cmd 'code --wait $MERGED'
+git mergetool
+
+# IntelliJ/PyCharm-এ build-in merge editor আছে
+```
+
+---
+
+<a id="p5-notifications"></a>
+**Topic 12: GitHub Notifications ও Watching**
+
+```bash
+# Repository Watching:
+# GitHub → Repository → Watch → Options:
+#   Participating and @mentions (recommended)
+#   All Activity (noisy)
+#   Ignore
+#   Custom (Issues/PRs/Releases)
+
+# Notification settings:
+# github.com/settings/notifications
+# Email/Web/Mobile (GitHub app)
+
+# @mention করা:
+# PR comment-এ: "@alice এটা দেখুন"
+# Issue-এ: "@backend-team এই bug আপনাদের area"
+
+# Team mention:
+# @org/backend-team → পুরো team notification পাবে
+```
+
+---
+
+**PART 5 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| GitHub Flow | main সবসময় deployable, feature branch → PR → merge |
+| Git Flow | main + develop + feature + release + hotfix |
+| Trunk-Based | সবাই main-এ, feature flags ব্যবহার |
+| Branch naming | `type/description` (feature/fix/hotfix/chore) |
+| CODEOWNERS | Auto reviewer assignment by file/directory |
+| PR Template | `.github/pull_request_template.md` |
+| Issue Template | `.github/ISSUE_TEMPLATE/*.md` |
+| .github folder | CODEOWNERS, templates, workflows |
+| Organization | Company-level GitHub account |
+| Teams | Group-based repository permissions |
+| Least privilege | যতটুকু দরকার ততটুকু permission |
+| Conflict prevention | ছোট branch, নিয়মিত rebase, modular code |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part6"></a>
+## PART 6: GitHub Actions — CI/CD Automation
+
+> GitHub Actions হলো GitHub-এর built-in automation platform। Code push থেকে শুরু করে production deploy পর্যন্ত সব automated করা যায়। এই PART-এ CI/CD concepts, workflow syntax, practical examples এবং real-world automation বিস্তারিত আলোচনা করা হয়েছে।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [CI/CD কী এবং কেন দরকার](#p6-cicd) |
+| 2 | [GitHub Actions — মূল Concepts](#p6-concepts) |
+| 3 | [Workflow YAML Syntax](#p6-yaml) |
+| 4 | [Triggers — কখন Workflow চলবে](#p6-triggers) |
+| 5 | [Runners](#p6-runners) |
+| 6 | [Environment Variables ও Secrets](#p6-secrets) |
+| 7 | [Practical Example — Python CI](#p6-python-ci) |
+| 8 | [Practical Example — Node.js CI](#p6-node-ci) |
+| 9 | [Matrix Builds](#p6-matrix) |
+| 10 | [Caching Dependencies](#p6-cache) |
+| 11 | [Deploy to GitHub Pages](#p6-pages) |
+| 12 | [Reusable Workflows ও Composite Actions](#p6-reusable) |
+
+---
+
+<a id="p6-cicd"></a>
+**Topic 1: CI/CD কী এবং কেন দরকার**
+
+**CI — Continuous Integration:**
+প্রতিটি code change-এ automatically:
+- Build করা
+- Tests run করা
+- Code quality check করা
+- Security scan করা
+
+**CD — Continuous Delivery / Deployment:**
+- **Continuous Delivery:** Staging-এ automatically deploy, production-এ manual approval
+- **Continuous Deployment:** Production-এ automatically deploy (approval ছাড়া)
+
+**CI/CD ছাড়া সমস্যা:**
+```
+❌ "Works on my machine" — local-এ চলে, server-এ চলে না
+❌ Integration-এ late bug discovery — days/weeks পরে
+❌ Manual deployment — slow, error-prone
+❌ Inconsistent environments
+❌ Fear of deploying on Fridays
+```
+
+**CI/CD থাকলে:**
+```
+✅ প্রতি PR-এ automatic test — bug early catch
+✅ Consistent build environment
+✅ Fast feedback (5-10 min)
+✅ Automated deployment — human error কম
+✅ Deploy anytime, confidently
+✅ Code quality gate — linting, security scan
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "CI/CD কী? কেন important?"
+
+উত্তর: "CI হলো প্রতিটি code change-এ automatically build ও test
+চালানো — integration bug early catch করতে। CD হলো verified code
+automatically staging বা production-এ deploy করা।
+
+GitHub Actions দিয়ে করেছি: PR open হলে pytest run হয়, main-এ
+merge হলে automatic deploy হয় Railway-তে। Manual step নেই,
+human error নেই, সবসময় tested code deploy হয়।"
+```
+
+---
+
+<a id="p6-concepts"></a>
+**Topic 2: GitHub Actions — মূল Concepts**
+
+**পাঁচটি core concepts:**
+
+```
+Workflow
+  └── Event (trigger: push, PR, schedule)
+        └── Job (parallel বা sequential)
+              └── Step (sequential)
+                    └── Action (reusable unit) / Run (shell command)
+```
+
+**Visual:**
+```
+Workflow: ci.yml
+│
+├── Event: push to main
+│
+└── Job: test
+      ├── Step 1: Checkout code       (uses: actions/checkout@v4)
+      ├── Step 2: Setup Python        (uses: actions/setup-python@v5)
+      ├── Step 3: Install deps        (run: pip install -r requirements.txt)
+      ├── Step 4: Run lint            (run: flake8 src/)
+      └── Step 5: Run tests           (run: pytest tests/ -v)
+```
+
+**Terms:**
+
+| Term | কী | Example |
+|------|----|---------|
+| Workflow | Automation pipeline | `.github/workflows/ci.yml` |
+| Event | Trigger condition | `push`, `pull_request`, `schedule` |
+| Job | Group of steps (একটি runner-এ চলে) | `test`, `build`, `deploy` |
+| Step | Individual task | Run command বা use action |
+| Action | Reusable step | `actions/checkout@v4` |
+| Runner | Virtual machine যেখানে job চলে | `ubuntu-latest` |
+| Artifact | Build output | compiled binary, test report |
+| Secret | Encrypted variable | API key, password |
+
+---
+
+<a id="p6-yaml"></a>
+**Topic 3: Workflow YAML Syntax**
+
+**Complete workflow structure:**
+```yaml
+# .github/workflows/ci.yml
+
+name: CI Pipeline                  # Workflow নাম (GitHub UI-তে দেখা যায়)
+
+on:                                # Trigger(s)
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:                               # Global environment variables
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+
+jobs:                              # একটি বা একাধিক job
+  
+  test:                            # Job ID (unique within workflow)
+    name: Run Tests                # Job display name
+    runs-on: ubuntu-latest         # Runner
+    
+    steps:                         # Sequential steps
+      
+      - name: Checkout code        # Step display name
+        uses: actions/checkout@v4  # Pre-built action ব্যবহার
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:                      # Action-এর inputs
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |                     # Multi-line shell command
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Run lint
+        run: flake8 src/ tests/
+      
+      - name: Run tests
+        run: pytest tests/ -v --tb=short
+        env:                       # Step-level env vars
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      
+      - name: Upload test results  # Artifact upload
+        uses: actions/upload-artifact@v4
+        if: always()               # Always run (even on failure)
+        with:
+          name: test-results
+          path: reports/
+
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: test                    # test job সফল হলেই চলবে
+    if: github.ref == 'refs/heads/main'  # Only on main branch
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Deploy
+        run: ./scripts/deploy.sh
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+```
+
+**Common YAML patterns:**
+```yaml
+# Conditional step
+- name: Only on failure
+  if: failure()
+  run: echo "Something went wrong!"
+
+- name: Only on main
+  if: github.ref == 'refs/heads/main'
+  run: ./deploy.sh
+
+# Working directory
+- name: Run in subdirectory
+  working-directory: ./backend
+  run: pytest tests/
+
+# Timeout
+- name: Long test
+  timeout-minutes: 30
+  run: pytest tests/integration/
+
+# Continue on error
+- name: Optional lint
+  continue-on-error: true
+  run: flake8 src/
+
+# Multi-line run
+- name: Setup and install
+  run: |
+    echo "Installing dependencies..."
+    pip install -r requirements.txt
+    echo "Done!"
+```
+
+---
+
+<a id="p6-triggers"></a>
+**Topic 4: Triggers — কখন Workflow চলবে**
+
+```yaml
+on:
+  # ──────────────────────────────────────────
+  # Code events
+  # ──────────────────────────────────────────
+  push:
+    branches:
+      - main
+      - develop
+      - 'release/**'       # wildcard
+    tags:
+      - 'v*'               # v1.0.0 এর মতো tag
+    paths:
+      - 'src/**'           # শুধু src/ পরিবর্তনে
+      - '!docs/**'         # docs/ বাদে
+
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]  # PR events
+    paths-ignore:
+      - '**.md'            # markdown changes ignore
+
+  # ──────────────────────────────────────────
+  # Scheduled (cron)
+  # ──────────────────────────────────────────
+  schedule:
+    - cron: '0 2 * * *'   # প্রতিদিন রাত ২টায় (UTC)
+    - cron: '0 9 * * 1'   # প্রতি সোমবার সকাল ৯টায়
+
+  # ──────────────────────────────────────────
+  # Manual trigger
+  # ──────────────────────────────────────────
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy to which environment?'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+      debug:
+        description: 'Enable debug mode'
+        type: boolean
+        default: false
+
+  # ──────────────────────────────────────────
+  # Other workflow calls this one
+  # ──────────────────────────────────────────
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+  # ──────────────────────────────────────────
+  # Release published
+  # ──────────────────────────────────────────
+  release:
+    types: [published, created]
+```
+
+---
+
+<a id="p6-runners"></a>
+**Topic 5: Runners**
+
+**GitHub-hosted runners:**
+```yaml
+runs-on: ubuntu-latest     # Ubuntu 24.04 (most common)
+runs-on: ubuntu-22.04      # Specific version
+runs-on: windows-latest    # Windows Server 2022
+runs-on: macos-latest      # macOS 14 (Sonoma)
+runs-on: macos-13          # Specific macOS version
+```
+
+**Self-hosted runners:**
+```yaml
+# Company server-এ নিজের runner চালানো
+runs-on: self-hosted
+runs-on: [self-hosted, linux, x64]
+runs-on: [self-hosted, linux, gpu]  # GPU machine
+
+# কেন self-hosted?
+# ✅ Private network access (database, internal services)
+# ✅ Faster (powerful hardware)
+# ✅ Cost saving (large projects)
+# ✅ Custom software pre-installed
+```
+
+**GitHub-hosted runner specs:**
+```
+ubuntu-latest:
+  CPU: 4 cores
+  RAM: 16 GB
+  Storage: 14 GB
+  Cost: Free (2000 min/month for free plan)
+```
+
+---
+
+<a id="p6-secrets"></a>
+**Topic 6: Environment Variables ও Secrets**
+
+**Secrets (encrypted):**
+```
+GitHub → Repository → Settings → Secrets and variables → Actions
+→ New repository secret
+→ Name: DATABASE_URL
+→ Value: postgresql://user:pass@host:5432/db
+```
+
+**Environment variables (plaintext):**
+```
+Settings → Secrets and variables → Variables tab
+→ New repository variable
+→ Name: APP_ENV
+→ Value: staging
+```
+
+**Workflow-এ ব্যবহার:**
+```yaml
+env:
+  # Plain variable (not secret)
+  APP_ENV: production
+  LOG_LEVEL: info
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    env:
+      # Job-level env
+      DEPLOY_ENV: staging
+    
+    steps:
+      - name: Use secrets
+        run: |
+          echo "Deploying to $APP_ENV"
+          # Secrets print হয় না — *** দেখায়
+          curl -H "Authorization: Bearer $API_KEY" https://api.example.com/deploy
+        env:
+          API_KEY: ${{ secrets.API_KEY }}              # Secret
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}    # Secret
+          APP_VERSION: ${{ vars.APP_VERSION }}         # Variable (non-secret)
+```
+
+**Context variables:**
+```yaml
+# GitHub context
+${{ github.sha }}          # Commit hash
+${{ github.ref }}          # Branch/tag ref
+${{ github.event_name }}   # Trigger event name
+${{ github.actor }}        # Who triggered
+${{ github.repository }}   # owner/repo
+${{ github.run_number }}   # Workflow run number
+
+# Runner context
+${{ runner.os }}           # Linux/Windows/macOS
+${{ runner.temp }}         # Temp directory
+
+# Job context
+${{ job.status }}          # success/failure/cancelled
+```
+
+**⚠️ Secrets security:**
+```yaml
+# ✅ Good
+- name: Deploy
+  env:
+    API_KEY: ${{ secrets.API_KEY }}  # env দিয়ে pass করুন
+
+# ❌ Bad — log-এ expose হতে পারে
+- name: Deploy
+  run: ./deploy.sh ${{ secrets.API_KEY }}  # command args-এ না দিন
+
+# Secret কখনো echo করবেন না:
+# run: echo ${{ secrets.API_KEY }}  # GitHub mask করে, তবু bad practice
+```
+
+---
+
+<a id="p6-python-ci"></a>
+**Topic 7: Practical Example — Python CI**
+
+```yaml
+# .github/workflows/python-ci.yml
+name: Python CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip                        # pip cache
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      
+      - name: Run linting (flake8)
+        run: |
+          flake8 src/ tests/ --max-line-length=120 \
+            --exclude=migrations/
+      
+      - name: Run type check (mypy)
+        run: mypy src/ --ignore-missing-imports
+        continue-on-error: true
+      
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ -v \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=term-missing \
+            --tb=short
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: "False"
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.python-version }}
+          path: |
+            reports/
+            coverage.xml
+```
+
+---
+
+<a id="p6-node-ci"></a>
+**Topic 8: Practical Example — Node.js CI**
+
+```yaml
+# .github/workflows/node-ci.yml
+name: Node.js CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm                  # npm cache
+      
+      - name: Install dependencies
+        run: npm ci                   # npm install-এর চেয়ে stricter
+      
+      - name: Run ESLint
+        run: npm run lint
+      
+      - name: Type check (TypeScript)
+        run: npm run type-check
+      
+      - name: Run tests
+        run: npm test -- --coverage --watchAll=false
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: dist/
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+```
+
+---
+
+<a id="p6-matrix"></a>
+**Topic 9: Matrix Builds**
+
+**Matrix strategy কী:**
+একটি job বিভিন্ন combinations-এ parallel-এ run করা।
+
+```yaml
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+        # 3 × 3 = 9 parallel jobs!
+      
+      fail-fast: false    # একটি fail করলে বাকিগুলো বন্ধ না করতে
+      max-parallel: 4     # একসাথে সর্বোচ্চ 4টি job
+    
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pytest tests/
+
+  # ──────────────────────────────────────────────
+  # Matrix include/exclude
+  # ──────────────────────────────────────────────
+  test-advanced:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        experimental: [false]
+        include:
+          - python-version: "3.13"   # Extra combination add
+            experimental: true
+        exclude:
+          - python-version: "3.10"   # Specific combination remove
+            os: macos-latest
+    
+    continue-on-error: ${{ matrix.experimental }}
+    steps:
+      - run: pytest tests/
+```
+
+---
+
+<a id="p6-cache"></a>
+**Topic 10: Caching Dependencies**
+
+**Cache কেন দরকার:**
+প্রতি run-এ `pip install` বা `npm install` করা সময়সাপেক্ষ। Cache দিয়ে 60-80% time বাঁচানো যায়।
+
+```yaml
+# ──────────────────────────────────────────────
+# Python pip cache
+# ──────────────────────────────────────────────
+- uses: actions/setup-python@v5
+  with:
+    python-version: "3.11"
+    cache: pip                    # Built-in cache
+
+# Manual cache (more control):
+- name: Cache pip
+  uses: actions/cache@v4
+  with:
+    path: ~/.cache/pip
+    key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+    restore-keys: |
+      ${{ runner.os }}-pip-
+
+# ──────────────────────────────────────────────
+# Node.js npm cache
+# ──────────────────────────────────────────────
+- uses: actions/setup-node@v4
+  with:
+    node-version: "20"
+    cache: npm                    # Built-in npm cache
+
+# pnpm:
+- uses: pnpm/action-setup@v3
+  with:
+    version: 9
+- uses: actions/setup-node@v4
+  with:
+    node-version: "20"
+    cache: pnpm
+
+# ──────────────────────────────────────────────
+# Docker layer cache
+# ──────────────────────────────────────────────
+- name: Set up Docker Buildx
+  uses: docker/setup-buildx-action@v3
+
+- name: Build and push
+  uses: docker/build-push-action@v6
+  with:
+    cache-from: type=gha       # GitHub Actions cache
+    cache-to: type=gha,mode=max
+```
+
+---
+
+<a id="p6-pages"></a>
+**Topic 11: Deploy to GitHub Pages**
+
+```yaml
+# .github/workflows/deploy-pages.yml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# GitHub Pages permissions
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Prevent multiple concurrent deployments
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build           # dist/ বা build/ folder তৈরি হবে
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/             # build output folder
+  
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+**GitHub Pages enable করুন:**
+```
+Repository → Settings → Pages
+→ Source: GitHub Actions
+→ Save
+```
+
+---
+
+<a id="p6-reusable"></a>
+**Topic 12: Reusable Workflows ও Composite Actions**
+
+**Reusable Workflow — একটি workflow অন্য workflow-এ call করুন:**
+```yaml
+# .github/workflows/reusable-test.yml (reusable)
+name: Reusable Test Workflow
+
+on:
+  workflow_call:                  # Called by other workflows
+    inputs:
+      python-version:
+        required: true
+        type: string
+    secrets:
+      DATABASE_URL:
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+      - run: pytest tests/
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+```
+
+```yaml
+# .github/workflows/ci.yml (caller)
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  call-test:
+    uses: ./.github/workflows/reusable-test.yml    # Same repo
+    with:
+      python-version: "3.11"
+    secrets:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+```
+
+**Workflow status badge — README-এ:**
+```markdown
+![CI Status](https://github.com/username/repo/actions/workflows/ci.yml/badge.svg)
+
+![Deploy](https://github.com/username/repo/actions/workflows/deploy.yml/badge.svg?branch=main)
+```
+
+**Popular marketplace actions:**
+```yaml
+# Code checkout
+uses: actions/checkout@v4
+
+# Language setup
+uses: actions/setup-python@v5
+uses: actions/setup-node@v4
+uses: actions/setup-java@v4
+
+# Cache
+uses: actions/cache@v4
+
+# Artifacts
+uses: actions/upload-artifact@v4
+uses: actions/download-artifact@v4
+
+# Docker
+uses: docker/login-action@v3
+uses: docker/build-push-action@v6
+
+# Security
+uses: github/codeql-action/analyze@v3
+uses: snyk/actions/python@master
+
+# Deployment
+uses: amondnet/vercel-action@v25
+uses: appleboy/ssh-action@v1      # SSH deploy
+uses: aws-actions/configure-aws-credentials@v4
+
+# Notifications
+uses: 8398a7/action-slack@v3
+```
+
+---
+
+**PART 6 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| CI | প্রতি code change-এ auto build + test |
+| CD | Auto deploy to staging/production |
+| Workflow | `.github/workflows/*.yml` file |
+| Event/Trigger | `push`, `pull_request`, `schedule`, `workflow_dispatch` |
+| Job | Steps-এর group, একটি runner-এ চলে |
+| Step | Individual task: `run` বা `uses` |
+| Action | Reusable step (Marketplace থেকে বা custom) |
+| Runner | `ubuntu-latest`, `windows-latest`, `macos-latest` |
+| Secret | Encrypted variable — `${{ secrets.NAME }}` |
+| Matrix | Same job multiple combinations-এ parallel run |
+| Cache | Dependencies cache — speed up workflows |
+| `needs` | Job dependency — A সফল হলে B চলবে |
+| `if` | Conditional step/job execution |
+| `workflow_call` | Reusable workflow trigger |
+| GitHub Pages | Static site auto-deploy |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 7 — Advanced GitHub Features *(Next request এ লিখব)*
