@@ -21,8 +21,8 @@
 | [PART 5](#part5) | ASP.NET Core Fundamentals | ✅ |
 | [PART 6](#part6) | Web API Development | ✅ |
 | [PART 7](#part7) | Database & Entity Framework Core | ✅ |
-| PART 8 | Authentication & Security | ⏳ |
-| PART 9 | Frontend Integration & Full Stack | ⏳ |
+| [PART 8](#part8) | Authentication & Security | ✅ |
+| [PART 9](#part9) | Frontend Integration & Full Stack | ✅ |
 | PART 10 | Testing & Debugging | ⏳ |
 | PART 11 | Deployment & DevOps Basics | ⏳ |
 | PART 12 | System Design with .NET | ⏳ |
@@ -9239,3 +9239,1768 @@ Pessimistic → lock ধরে রাখে। SELECT ... WITH (UPDLOCK)।
 ---
 
 > **📌 পরবর্তী:** PART 8 — Authentication ও Security (JWT, Cookie Auth, Identity, OAuth2/OIDC, Role-based & Policy-based Authorization, Data Protection এবং আরও...)
+
+---
+
+<a id="part8"></a>
+## PART 8: Authentication ও Security
+
+> JWT Authentication, Cookie Auth, ASP.NET Core Identity, OAuth2/OIDC, Role-based & Policy-based Authorization, Data Protection, OWASP Top 10।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Authentication vs Authorization](#p8-authn-authz) |
+| 2 | [JWT Authentication](#p8-jwt) |
+| 3 | [Refresh Tokens](#p8-refresh) |
+| 4 | [ASP.NET Core Identity](#p8-identity) |
+| 5 | [Role-based Authorization](#p8-roles) |
+| 6 | [Policy-based Authorization](#p8-policies) |
+| 7 | [OAuth2 ও OpenID Connect](#p8-oauth) |
+| 8 | [Data Protection ও Encryption](#p8-dataprotection) |
+| 9 | [OWASP Top 10 in .NET](#p8-owasp) |
+| 10 | [Security Best Practices](#p8-bestpractices) |
+
+---
+
+<a id="p8-authn-authz"></a>
+### Topic 1: Authentication vs Authorization
+
+```
+Authentication (AuthN) — "আপনি কে?"
+→ Identity verify করা। Login। JWT/Cookie validate।
+
+Authorization (AuthZ) — "আপনি কী করতে পারবেন?"
+→ Permission check। Role, Policy, Claim।
+
+Flow:
+Request → [Authentication Middleware] → [Authorization Middleware] → Endpoint
+             ↓ validates token/cookie        ↓ checks roles/policies
+             sets HttpContext.User            allows or 403 Forbidden
+```
+
+---
+
+<a id="p8-jwt"></a>
+### Topic 2: JWT Authentication
+
+**JWT Structure:**
+```
+Header.Payload.Signature
+eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0MiIsInJvbGUiOiJBZG1pbiJ9.xyz
+
+Header:  { "alg": "HS256", "typ": "JWT" }
+Payload: { "sub": "42", "name": "Rahim", "role": "Admin", "exp": 1234567890 }
+Signature: HMACSHA256(base64(header) + "." + base64(payload), secret)
+```
+
+```csharp
+// Install:
+// dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+// dotnet add package System.IdentityModel.Tokens.Jwt
+
+// ── JWT Service ───────────────────────────────────────
+public class JwtService
+{
+    private readonly JwtOptions _options;
+    public JwtService(IOptions<JwtOptions> options) => _options = options.Value;
+
+    public string GenerateToken(User user, IList<string> roles)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub,   user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(JwtRegisteredClaimNames.Name,  user.FullName),
+            new(JwtRegisteredClaimNames.Jti,   Guid.NewGuid().ToString()), // unique token id
+        };
+
+        // Add roles as claims
+        claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_options.Key)); // must be >= 32 chars!
+
+        var token = new JwtSecurityToken(
+            issuer:   _options.Issuer,
+            audience: _options.Audience,
+            claims:   claims,
+            expires:  DateTime.UtcNow.AddMinutes(_options.ExpiryMinutes),
+            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public ClaimsPrincipal? ValidateToken(string token)
+    {
+        var handler = new JwtSecurityTokenHandler();
+        try
+        {
+            return handler.ValidateToken(token,
+                new TokenValidationParameters
+                {
+                    ValidateIssuer           = true,
+                    ValidIssuer              = _options.Issuer,
+                    ValidateAudience         = true,
+                    ValidAudience            = _options.Audience,
+                    ValidateIssuerSigningKey  = true,
+                    IssuerSigningKey          = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(_options.Key)),
+                    ValidateLifetime         = true,
+                    ClockSkew                = TimeSpan.Zero, // no grace period
+                },
+                out _);
+        }
+        catch { return null; }
+    }
+}
+
+// ── Register JWT authentication ────────────────────────
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+            ValidateAudience         = true,
+            ValidAudience            = builder.Configuration["Jwt:Audience"],
+            ValidateIssuerSigningKey  = true,
+            IssuerSigningKey          = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            ValidateLifetime         = true,
+            ClockSkew                = TimeSpan.Zero
+        };
+
+        // SignalR — JWT from query string
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                var token = ctx.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(token) &&
+                    ctx.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                    ctx.Token = token;
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+// ── Auth controller ────────────────────────────────────
+[ApiController]
+[Route("api/auth")]
+public class AuthController : ControllerBase
+{
+    private readonly UserManager<AppUser> _userManager;
+    private readonly JwtService           _jwt;
+
+    public AuthController(UserManager<AppUser> userManager, JwtService jwt)
+    {
+        _userManager = userManager;
+        _jwt = jwt;
+    }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginDto dto)
+    {
+        var user = await _userManager.FindByEmailAsync(dto.Email);
+        if (user is null || !await _userManager.CheckPasswordAsync(user, dto.Password))
+            return Unauthorized(new { message = "Invalid credentials" });
+
+        var roles = await _userManager.GetRolesAsync(user);
+        var token = _jwt.GenerateToken(user, roles);
+
+        return Ok(new
+        {
+            token,
+            expiresIn = 3600,
+            user = new { user.Id, user.Email, user.FullName }
+        });
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register([FromBody] RegisterDto dto)
+    {
+        var user = new AppUser
+        {
+            UserName = dto.Email,
+            Email    = dto.Email,
+            FullName = dto.FullName
+        };
+
+        var result = await _userManager.CreateAsync(user, dto.Password);
+        if (!result.Succeeded)
+            return BadRequest(result.Errors);
+
+        await _userManager.AddToRoleAsync(user, "Customer");
+        return Ok(new { message = "Registered successfully" });
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var userId = User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        var user = await _userManager.FindByIdAsync(userId!);
+        return Ok(new { user!.Id, user.Email, user.FullName });
+    }
+}
+```
+
+---
+
+<a id="p8-refresh"></a>
+### Topic 3: Refresh Tokens
+
+```csharp
+// JWT short-lived (15-60 min) + refresh token long-lived (7-30 days)
+
+public class RefreshToken
+{
+    public int      Id        { get; set; }
+    public string   Token     { get; set; } = "";   // random, stored in DB
+    public int      UserId    { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    public bool     IsRevoked { get; set; }
+    public string?  ReplacedByToken { get; set; }  // rotation tracking
+}
+
+public class TokenService
+{
+    private readonly AppDbContext _db;
+    private readonly JwtService   _jwt;
+
+    public async Task<TokenPair> RefreshAsync(string refreshToken, CancellationToken ct)
+    {
+        var stored = await _db.RefreshTokens
+            .Include(r => r.User)
+            .FirstOrDefaultAsync(r => r.Token == refreshToken, ct);
+
+        if (stored is null || stored.IsRevoked || stored.ExpiresAt < DateTime.UtcNow)
+            throw new UnauthorizedAccessException("Invalid refresh token");
+
+        // Rotate — revoke old, issue new
+        stored.IsRevoked = true;
+
+        var newRefresh = new RefreshToken
+        {
+            Token     = GenerateSecureToken(),
+            UserId    = stored.UserId,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+        };
+        stored.ReplacedByToken = newRefresh.Token;
+
+        _db.RefreshTokens.Add(newRefresh);
+        await _db.SaveChangesAsync(ct);
+
+        var roles  = await _userManager.GetRolesAsync(stored.User);
+        var access = _jwt.GenerateToken(stored.User, roles);
+
+        return new TokenPair(access, newRefresh.Token);
+    }
+
+    private static string GenerateSecureToken() =>
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+}
+
+// ── Refresh endpoint ──────────────────────────────────
+[HttpPost("refresh")]
+public async Task<IActionResult> Refresh([FromBody] RefreshRequest dto)
+{
+    try
+    {
+        var tokens = await _tokenService.RefreshAsync(dto.RefreshToken, HttpContext.RequestAborted);
+        return Ok(tokens);
+    }
+    catch (UnauthorizedAccessException)
+    {
+        return Unauthorized(new { message = "Invalid or expired refresh token" });
+    }
+}
+```
+
+---
+
+<a id="p8-identity"></a>
+### Topic 4: ASP.NET Core Identity
+
+```csharp
+// Install: dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore
+
+// ── Custom AppUser ────────────────────────────────────
+public class AppUser : IdentityUser<int>  // int PK instead of string
+{
+    public string FullName   { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
+    public bool IsActive     { get; set; } = true;
+}
+
+// ── DbContext with Identity ───────────────────────────
+public class AppDbContext : IdentityDbContext<AppUser, IdentityRole<int>, int>
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+    // Identity tables auto-created: AspNetUsers, AspNetRoles, AspNetUserRoles, etc.
+}
+
+// ── Register Identity ──────────────────────────────────
+builder.Services
+    .AddIdentity<AppUser, IdentityRole<int>>(options =>
+    {
+        // Password policy
+        options.Password.RequiredLength         = 8;
+        options.Password.RequireDigit           = true;
+        options.Password.RequireUppercase       = true;
+        options.Password.RequireNonAlphanumeric = false;
+
+        // Lockout policy
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan  = TimeSpan.FromMinutes(15);
+        options.Lockout.AllowedForNewUsers       = true;
+
+        // User settings
+        options.User.RequireUniqueEmail = true;
+    })
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders(); // for email confirmation, password reset
+
+// ── UserManager common operations ─────────────────────
+public class UserService
+{
+    private readonly UserManager<AppUser> _users;
+    private readonly RoleManager<IdentityRole<int>> _roles;
+
+    // Create user
+    public async Task<IdentityResult> CreateAsync(string email, string password, string fullName)
+    {
+        var user = new AppUser { UserName = email, Email = email, FullName = fullName };
+        var result = await _users.CreateAsync(user, password);
+        if (result.Succeeded)
+            await _users.AddToRoleAsync(user, "Customer");
+        return result;
+    }
+
+    // Password reset flow
+    public async Task<string> GeneratePasswordResetTokenAsync(string email)
+    {
+        var user = await _users.FindByEmailAsync(email)
+            ?? throw new KeyNotFoundException();
+        return await _users.GeneratePasswordResetTokenAsync(user);
+    }
+
+    public async Task ResetPasswordAsync(string email, string token, string newPassword)
+    {
+        var user = await _users.FindByEmailAsync(email)
+            ?? throw new KeyNotFoundException();
+        var result = await _users.ResetPasswordAsync(user, token, newPassword);
+        if (!result.Succeeded)
+            throw new InvalidOperationException(string.Join(", ", result.Errors.Select(e => e.Description)));
+    }
+
+    // Email confirmation
+    public async Task<string> GenerateEmailConfirmationTokenAsync(AppUser user) =>
+        await _users.GenerateEmailConfirmationTokenAsync(user);
+
+    public async Task ConfirmEmailAsync(string userId, string token)
+    {
+        var user = await _users.FindByIdAsync(userId)
+            ?? throw new KeyNotFoundException();
+        await _users.ConfirmEmailAsync(user, token);
+    }
+}
+```
+
+---
+
+<a id="p8-roles"></a>
+### Topic 5: Role-based Authorization
+
+```csharp
+// ── Seed roles ────────────────────────────────────────
+var roleManager = app.Services.GetRequiredService<RoleManager<IdentityRole<int>>>();
+foreach (var role in new[] { "Admin", "Manager", "Customer" })
+{
+    if (!await roleManager.RoleExistsAsync(role))
+        await roleManager.CreateAsync(new IdentityRole<int>(role));
+}
+
+// ── Apply on endpoints ────────────────────────────────
+// Require authentication (any role)
+[Authorize]
+[HttpGet("profile")]
+public IActionResult GetProfile() => Ok(User.Identity!.Name);
+
+// Require specific role
+[Authorize(Roles = "Admin")]
+[HttpDelete("{id:int}")]
+public IActionResult Delete(int id) => Ok();
+
+// Multiple roles (OR — any one)
+[Authorize(Roles = "Admin,Manager")]
+[HttpGet("reports")]
+public IActionResult GetReports() => Ok();
+
+// ── Claims-based role check in code ──────────────────
+[HttpPost("{id:int}/approve")]
+[Authorize]
+public IActionResult Approve(int id)
+{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var isAdmin = User.IsInRole("Admin");
+    var email   = User.FindFirstValue(ClaimTypes.Email);
+
+    if (!isAdmin)
+        return Forbid(); // 403
+
+    return Ok();
+}
+```
+
+---
+
+<a id="p8-policies"></a>
+### Topic 6: Policy-based Authorization
+
+```csharp
+// More flexible than role-based — combine claims, roles, custom logic
+
+builder.Services.AddAuthorization(options =>
+{
+    // Simple role policy
+    options.AddPolicy("AdminOnly",    p => p.RequireRole("Admin"));
+    options.AddPolicy("ManagerOrAdmin", p => p.RequireRole("Admin", "Manager"));
+
+    // Claim-based
+    options.AddPolicy("VerifiedUser", p =>
+        p.RequireClaim("email_verified", "true"));
+
+    // Custom requirement
+    options.AddPolicy("MinimumAge18", p =>
+        p.Requirements.Add(new MinimumAgeRequirement(18)));
+
+    options.AddPolicy("SameUserOrAdmin", p =>
+        p.Requirements.Add(new SameUserOrAdminRequirement()));
+});
+
+// ── Custom requirement ────────────────────────────────
+public class MinimumAgeRequirement : IAuthorizationRequirement
+{
+    public int MinimumAge { get; }
+    public MinimumAgeRequirement(int age) => MinimumAge = age;
+}
+
+public class MinimumAgeHandler : AuthorizationHandler<MinimumAgeRequirement>
+{
+    protected override Task HandleRequirementAsync(
+        AuthorizationHandlerContext context,
+        MinimumAgeRequirement requirement)
+    {
+        var birthDateClaim = context.User.FindFirst("birthdate");
+        if (birthDateClaim is null)
+        {
+            context.Fail();
+            return Task.CompletedTask;
+        }
+
+        var birthDate = DateTime.Parse(birthDateClaim.Value);
+        var age = DateTime.Today.Year - birthDate.Year;
+        if (birthDate > DateTime.Today.AddYears(-age)) age--;
+
+        if (age >= requirement.MinimumAge)
+            context.Succeed(requirement);
+
+        return Task.CompletedTask;
+    }
+}
+
+// Register handler
+builder.Services.AddScoped<IAuthorizationHandler, MinimumAgeHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, SameUserOrAdminHandler>();
+
+// ── Resource-based authorization ──────────────────────
+public class SameUserOrAdminHandler
+    : AuthorizationHandler<SameUserOrAdminRequirement, Order>
+{
+    protected override Task HandleRequirementAsync(
+        AuthorizationHandlerContext context,
+        SameUserOrAdminRequirement requirement,
+        Order resource)
+    {
+        var userId = context.User.FindFirstValue(JwtRegisteredClaimNames.Sub);
+        if (context.User.IsInRole("Admin") || resource.CustomerId.ToString() == userId)
+            context.Succeed(requirement);
+        return Task.CompletedTask;
+    }
+}
+
+// ── Controller with policy ────────────────────────────
+[Authorize(Policy = "AdminOnly")]
+[HttpGet("admin/dashboard")]
+public IActionResult Dashboard() => Ok();
+
+[Authorize(Policy = "VerifiedUser")]
+[HttpPost("orders")]
+public IActionResult CreateOrder([FromBody] CreateOrderDto dto) => Ok();
+
+// Resource-based check in action
+[HttpDelete("{id:int}")]
+[Authorize]
+public async Task<IActionResult> Delete(int id)
+{
+    var order = await _service.GetByIdAsync(id);
+    if (order is null) return NotFound();
+
+    var authResult = await _authorizationService
+        .AuthorizeAsync(User, order, "SameUserOrAdmin");
+
+    if (!authResult.Succeeded) return Forbid();
+
+    await _service.DeleteAsync(id);
+    return NoContent();
+}
+```
+
+---
+
+<a id="p8-oauth"></a>
+### Topic 7: OAuth2 ও OpenID Connect
+
+```
+OAuth2 Flow (Authorization Code):
+──────────────────────────────────────────────────────
+1. User clicks "Login with Google"
+2. App redirects → Google Authorization Server
+3. User authenticates & consents
+4. Google redirects back → App with authorization code
+5. App exchanges code → Access Token (server-to-server)
+6. App uses Access Token to call Google APIs
+──────────────────────────────────────────────────────
+
+OAuth2 vs OpenID Connect:
+OAuth2      → Authorization। Access Token → API access।
+OpenID Connect (OIDC) → Authentication। ID Token (JWT) → user identity।
+OIDC is OAuth2 + identity layer।
+```
+
+```csharp
+// ── External login (Google, GitHub) ───────────────────
+// Install: dotnet add package Microsoft.AspNetCore.Authentication.Google
+
+builder.Services
+    .AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId     = builder.Configuration["Google:ClientId"]!;
+        options.ClientSecret = builder.Configuration["Google:ClientSecret"]!;
+        options.Scope.Add("profile");
+        options.Scope.Add("email");
+    })
+    .AddGitHub(options =>  // dotnet add package AspNet.Security.OAuth.GitHub
+    {
+        options.ClientId     = builder.Configuration["GitHub:ClientId"]!;
+        options.ClientSecret = builder.Configuration["GitHub:ClientSecret"]!;
+        options.Scope.Add("user:email");
+    });
+
+// ── Handle external login callback ────────────────────
+[HttpGet("external-callback")]
+public async Task<IActionResult> ExternalCallback()
+{
+    var info = await _signInManager.GetExternalLoginInfoAsync();
+    if (info is null) return BadRequest("External login failed");
+
+    // Try sign in with existing external login
+    var result = await _signInManager.ExternalLoginSignInAsync(
+        info.LoginProvider, info.ProviderKey, isPersistent: false);
+
+    if (result.Succeeded)
+    {
+        var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+        var roles = await _userManager.GetRolesAsync(user!);
+        return Ok(new { token = _jwt.GenerateToken(user!, roles) });
+    }
+
+    // New user — register
+    var email = info.Principal.FindFirstValue(ClaimTypes.Email)!;
+    var newUser = new AppUser
+    {
+        UserName = email,
+        Email    = email,
+        FullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email
+    };
+
+    var createResult = await _userManager.CreateAsync(newUser);
+    if (!createResult.Succeeded) return BadRequest(createResult.Errors);
+
+    await _userManager.AddLoginAsync(newUser, info);
+    await _userManager.AddToRoleAsync(newUser, "Customer");
+
+    var newRoles = await _userManager.GetRolesAsync(newUser);
+    return Ok(new { token = _jwt.GenerateToken(newUser, newRoles) });
+}
+```
+
+---
+
+<a id="p8-dataprotection"></a>
+### Topic 8: Data Protection ও Encryption
+
+```csharp
+// ── ASP.NET Core Data Protection ─────────────────────
+// Symmetric encryption, key rotation, key storage
+
+builder.Services
+    .AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/var/keys"))
+    .SetApplicationName("MyApp")
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
+
+// Usage — encrypt/decrypt strings
+public class EncryptionService
+{
+    private readonly IDataProtector _protector;
+
+    public EncryptionService(IDataProtectionProvider provider) =>
+        _protector = provider.CreateProtector("MyApp.SensitiveData");
+
+    public string Encrypt(string value) => _protector.Protect(value);
+
+    public string? Decrypt(string encrypted)
+    {
+        try { return _protector.Unprotect(encrypted); }
+        catch { return null; } // tampered or expired
+    }
+}
+
+// Time-limited tokens (email confirmation, password reset)
+public class TokenEncryptionService
+{
+    private readonly ITimeLimitedDataProtector _protector;
+
+    public TokenEncryptionService(IDataProtectionProvider provider) =>
+        _protector = provider
+            .CreateProtector("MyApp.Tokens")
+            .ToTimeLimitedDataProtector();
+
+    public string CreateToken(string userId, TimeSpan lifetime) =>
+        _protector.Protect(userId, lifetime);
+
+    public string? ValidateToken(string token)
+    {
+        try { return _protector.Unprotect(token); }
+        catch { return null; } // expired or invalid
+    }
+}
+
+// ── Password hashing ──────────────────────────────────
+// Identity handles this — but understanding is important
+public class PasswordHashService
+{
+    private readonly IPasswordHasher<AppUser> _hasher;
+    public PasswordHashService(IPasswordHasher<AppUser> hasher) => _hasher = hasher;
+
+    public string Hash(AppUser user, string password) =>
+        _hasher.HashPassword(user, password);
+
+    public bool Verify(AppUser user, string hash, string password) =>
+        _hasher.VerifyHashedPassword(user, hash, password)
+            != PasswordVerificationResult.Failed;
+}
+
+// ── Secrets management ────────────────────────────────
+// Development: dotnet user-secrets set "Jwt:Key" "..."
+// Production:  Azure Key Vault / AWS Secrets Manager / environment variables
+
+// Azure Key Vault:
+builder.Configuration.AddAzureKeyVault(
+    new Uri($"https://{vaultName}.vault.azure.net/"),
+    new DefaultAzureCredential());
+```
+
+---
+
+<a id="p8-owasp"></a>
+### Topic 9: OWASP Top 10 in .NET
+
+```csharp
+// ── A01: Broken Access Control ────────────────────────
+// ❌ Missing authorization
+[HttpGet("{id:int}")]
+public async Task<IActionResult> GetOrder(int id)
+{
+    var order = await _service.GetByIdAsync(id); // any user sees any order!
+    return Ok(order);
+}
+
+// ✅ Check ownership
+[HttpGet("{id:int}")]
+[Authorize]
+public async Task<IActionResult> GetOrder(int id)
+{
+    var userId = int.Parse(User.FindFirstValue("sub")!);
+    var order = await _service.GetByIdAsync(id);
+    if (order is null) return NotFound();
+    if (!User.IsInRole("Admin") && order.CustomerId != userId) return Forbid();
+    return Ok(order);
+}
+
+// ── A02: Cryptographic Failures ──────────────────────
+// ❌ Storing plain text passwords
+user.Password = password; // NEVER!
+
+// ✅ Identity handles bcrypt hashing
+await _userManager.CreateAsync(user, password); // hashed internally
+
+// ❌ Weak JWT secret
+"Jwt:Key": "secret"  // too short, guessable
+
+// ✅ Strong secret (min 32 chars), via env/secrets
+"Jwt:Key": "x7K9mP2qR5vN8wL3hJ6yT1bF4cD0eA" // stored in env var!
+
+// ── A03: Injection ────────────────────────────────────
+// ❌ SQL injection
+var sql = $"SELECT * FROM Users WHERE Email = '{email}'"; // NEVER!
+// email = "'; DROP TABLE Users; --"
+
+// ✅ Parameterized (EF Core / Dapper)
+var user = await _db.Users.Where(u => u.Email == email).FirstOrDefaultAsync();
+
+await _db.Database.ExecuteSqlInterpolated(
+    $"SELECT * FROM Users WHERE Email = {email}"); // safe — parameterized!
+
+// ── A04: Insecure Design ──────────────────────────────
+// ✅ Rate limit login — brute force prevention
+// ✅ Account lockout (Identity: MaxFailedAccessAttempts)
+// ✅ CAPTCHA on registration/login
+// ✅ Input validation everywhere
+
+// ── A05: Security Misconfiguration ────────────────────
+// ✅ Remove default/debug endpoints in production
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/error"); // no stack traces in prod!
+    app.UseHsts();
+}
+
+// ✅ Security headers middleware
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers["X-Content-Type-Options"]    = "nosniff";
+    ctx.Response.Headers["X-Frame-Options"]           = "DENY";
+    ctx.Response.Headers["X-XSS-Protection"]          = "1; mode=block";
+    ctx.Response.Headers["Referrer-Policy"]            = "strict-origin";
+    ctx.Response.Headers["Permissions-Policy"]         = "camera=(), microphone=()";
+    await next();
+});
+
+// ── A06: Vulnerable Components ────────────────────────
+// dotnet list package --vulnerable
+// dotnet outdated (install: dotnet tool install dotnet-outdated-tool)
+// GitHub Dependabot alerts
+
+// ── A07: Auth Failures ────────────────────────────────
+// ✅ JWT: short expiry (15-60 min), refresh tokens
+// ✅ Refresh token rotation — revoke on use
+// ✅ Token revocation list (Redis)
+// ✅ HTTPS everywhere
+
+// ── A08: Software & Data Integrity ───────────────────
+// ✅ Verify NuGet package signatures
+// ✅ Use official Microsoft packages
+// ✅ CI/CD pipeline security scanning (Snyk, OWASP Dependency Check)
+
+// ── A09: Logging & Monitoring ─────────────────────────
+// ✅ Log auth failures, access denied
+// ❌ Never log passwords, tokens, PII!
+_logger.LogWarning("Failed login attempt for {Email}", email); // OK
+_logger.LogInformation("User {Email} logged in with password {Password}", email, password); // NEVER!
+
+// ── A10: SSRF (Server-Side Request Forgery) ───────────
+// ❌ Fetching user-supplied URL
+var data = await _httpClient.GetStringAsync(userProvidedUrl); // dangerous!
+
+// ✅ Whitelist allowed domains
+var allowed = new[] { "api.trusted.com", "data.safe-service.com" };
+var uri = new Uri(userProvidedUrl);
+if (!allowed.Contains(uri.Host))
+    return BadRequest("URL not allowed");
+```
+
+---
+
+<a id="p8-bestpractices"></a>
+### Topic 10: Security Best Practices
+
+```csharp
+// ── 1. HTTPS enforcement ──────────────────────────────
+app.UseHttpsRedirection();
+app.UseHsts(); // HTTP Strict Transport Security
+
+// ── 2. Secure cookies ────────────────────────────────
+builder.Services.Configure<CookieAuthenticationOptions>(options =>
+{
+    options.Cookie.HttpOnly   = true;   // JS cannot access
+    options.Cookie.Secure     = true;   // HTTPS only
+    options.Cookie.SameSite   = SameSiteMode.Strict; // CSRF protection
+    options.ExpireTimeSpan    = TimeSpan.FromHours(1);
+    options.SlidingExpiration = true;
+});
+
+// ── 3. Anti-forgery (CSRF) ────────────────────────────
+// API with JWT → CSRF not needed (no cookies)
+// MVC with cookie auth → use [ValidateAntiForgeryToken]
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-CSRF-TOKEN"; // SPA usage
+});
+
+// ── 4. Input sanitization ─────────────────────────────
+// ❌ Storing raw HTML (XSS risk)
+post.Content = dto.Content; // what if it contains <script>?
+
+// ✅ Encode output (Razor does this automatically)
+// For stored HTML, use HtmlSanitizer library:
+// dotnet add package HtmlSanitizer
+var sanitizer = new HtmlSanitizer();
+post.Content = sanitizer.Sanitize(dto.Content);
+
+// ── 5. Secrets never in code/config ───────────────────
+// ❌ In appsettings.json — committed to git
+"ConnectionStrings": { "Default": "Server=prod;Password=realpassword" }
+
+// ✅ Environment variables or secrets manager
+Environment.GetEnvironmentVariable("ConnectionStrings__Default")
+
+// ── 6. Secure random ──────────────────────────────────
+// ❌ Random — predictable
+var token = new Random().Next(100000, 999999).ToString();
+
+// ✅ Cryptographically secure
+var bytes = RandomNumberGenerator.GetBytes(32);
+var token = Convert.ToBase64String(bytes);
+
+// ── 7. Minimal permissions ────────────────────────────
+// DB user should only have SELECT/INSERT/UPDATE on needed tables
+// Service account — minimal IAM permissions
+// API keys — scoped to specific resources
+
+// ── 8. Content Security Policy ───────────────────────
+app.Use(async (ctx, next) =>
+{
+    ctx.Response.Headers["Content-Security-Policy"] =
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'";
+    await next();
+});
+```
+
+---
+
+## PART 8 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| Authentication | Identity verify — "আপনি কে?" |
+| Authorization | Permission check — "আপনি কী করতে পারবেন?" |
+| JWT | Header.Payload.Signature — stateless token |
+| JWT Claims | sub, email, role, exp, jti |
+| `[Authorize]` | Requires authentication |
+| `[Authorize(Roles)]` | Role-based |
+| `[Authorize(Policy)]` | Policy-based |
+| Refresh Token | Long-lived, rotate on use, stored in DB |
+| Token Rotation | Old revoked, new issued on refresh |
+| Identity | UserManager, RoleManager, SignInManager |
+| Lockout | MaxFailedAccessAttempts — brute force |
+| Policy | IAuthorizationRequirement + Handler |
+| Resource Auth | `_authorizationService.AuthorizeAsync(User, resource, policy)` |
+| OAuth2 | Authorization framework — access token |
+| OIDC | OAuth2 + identity layer — ID token |
+| Data Protection | `IDataProtectionProvider` — encrypt/decrypt |
+| SQL Injection | Parameterized queries — EF Core / Dapper |
+| XSS | Output encoding, CSP, HtmlSanitizer |
+| CSRF | SameSite cookies, antiforgery tokens |
+| HTTPS | `UseHttpsRedirection()`, `UseHsts()` |
+| Security Headers | X-Frame-Options, CSP, X-Content-Type-Options |
+| Secrets | User Secrets (dev), Key Vault (prod) |
+| OWASP A01 | Broken Access Control |
+| OWASP A03 | Injection — SQL, LDAP |
+| OWASP A07 | Identification & Auth Failures |
+
+---
+
+## PART 8 Interview Q&A
+
+```
+প্রশ্ন: JWT-এর সুবিধা ও অসুবিধা?
+উত্তর:
+✅ Stateless — server session রাখতে হয় না।
+✅ Scalable — multiple servers-এ কাজ করে।
+✅ Mobile-friendly।
+❌ Revoke করা কঠিন — expiry পর্যন্ত valid।
+❌ Payload বড় হলে request size বাড়ে।
+❌ Secret compromise হলে সব token invalid করা কঠিন।
+
+প্রশ্ন: JWT token revoke কীভাবে করবেন?
+উত্তর:
+Short expiry (15 min) + refresh token pattern।
+Token blacklist (Redis-এ jti store)।
+Refresh token revocation (DB-তে mark করুন)।
+Key rotation (সব token invalid করতে)।
+
+প্রশ্ন: Cookie auth কখন, JWT কখন?
+উত্তর:
+Cookie → Traditional web app, MVC, same-origin।
+         Server-side session optional, CSRF protection দরকার।
+JWT → SPA, Mobile app, Microservices, Cross-domain API।
+      Stateless, scalable।
+
+প্রশ্ন: Role-based vs Policy-based পার্থক্য?
+উত্তর:
+Role-based → Simple। Admin/User/Manager।
+Policy-based → Complex। Multiple claims, custom logic, resource-based।
+              বেশি flexible। Production preference।
+
+প্রশ্ন: SQL Injection কীভাবে prevent করবেন .NET-এ?
+উত্তর:
+EF Core → LINQ queries auto-parameterized।
+Dapper → @Parameter syntax।
+FromSqlInterpolated → string interpolation but parameterized।
+NEVER string concatenation বা FromSqlRaw with user input।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 9 — Frontend Integration ও Full Stack (.NET + React/Angular, SignalR Real-time, Blazor, gRPC, Background Services এবং আরও...)
+
+---
+
+<a id="part9"></a>
+## PART 9: Frontend Integration ও Full Stack
+
+> .NET + React/Angular, HttpClient, SignalR, Blazor, gRPC, Background Services, Caching, IHostedService।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [.NET + React/Angular Integration](#p9-spa) |
+| 2 | [HttpClient ও IHttpClientFactory](#p9-httpclient) |
+| 3 | [SignalR — Real-time Communication](#p9-signalr) |
+| 4 | [Blazor](#p9-blazor) |
+| 5 | [gRPC](#p9-grpc) |
+| 6 | [Background Services ও IHostedService](#p9-background) |
+| 7 | [Caching Strategies](#p9-caching) |
+| 8 | [Distributed Systems Basics](#p9-distributed) |
+
+---
+
+<a id="p9-spa"></a>
+### Topic 1: .NET + React/Angular Integration
+
+```csharp
+// ── Option 1: Separate projects (preferred production) ─
+// Backend: ASP.NET Core Web API (port 5000)
+// Frontend: React/Angular (port 3000 dev, CDN/static in prod)
+// CORS configured on API → enables cross-origin calls
+
+// ── Option 2: SPA inside .NET project ────────────────
+// dotnet new react -o MyApp       (React template)
+// dotnet new angular -o MyApp     (Angular template)
+
+// Program.cs (SPA served from wwwroot/ClientApp/build)
+builder.Services.AddSpaStaticFiles(config =>
+    config.RootPath = "ClientApp/build");
+
+app.UseSpaStaticFiles();
+app.UseSpa(spa =>
+{
+    spa.Options.SourcePath = "ClientApp";
+    if (app.Environment.IsDevelopment())
+        spa.UseReactDevelopmentServer(npmScript: "start");
+});
+
+// ── Calling .NET API from React ───────────────────────
+// services/api.ts
+/*
+const API_BASE = process.env.REACT_APP_API_URL ?? '/api';
+
+const authFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`${API_BASE}${url}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+  if (res.status === 401) { logout(); return; }
+  if (!res.ok) throw await res.json();
+  return res.json();
+};
+
+export const orderApi = {
+  getAll:   () => authFetch('/orders'),
+  getById:  (id: number) => authFetch(`/orders/${id}`),
+  create:   (dto: CreateOrderDto) =>
+    authFetch('/orders', { method: 'POST', body: JSON.stringify(dto) }),
+};
+*/
+
+// ── Environment-specific CORS ─────────────────────────
+builder.Services.AddCors(opt =>
+    opt.AddPolicy("SpaPolicy", policy => policy
+        .WithOrigins(
+            "http://localhost:3000",  // React dev
+            "http://localhost:4200",  // Angular dev
+            "https://myapp.com")     // Production
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials()));
+
+app.UseCors("SpaPolicy");
+```
+
+---
+
+<a id="p9-httpclient"></a>
+### Topic 2: HttpClient ও IHttpClientFactory
+
+```csharp
+// ❌ Don't create HttpClient with new — socket exhaustion!
+// var client = new HttpClient(); // each call opens new TCP connection
+
+// ✅ IHttpClientFactory — pooled connections
+builder.Services.AddHttpClient();
+
+// Named client
+builder.Services.AddHttpClient("payments", client =>
+{
+    client.BaseAddress = new Uri("https://api.payment.com");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+// Typed client — preferred
+builder.Services.AddHttpClient<PaymentGatewayClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Payment:BaseUrl"]!);
+});
+
+public class PaymentGatewayClient
+{
+    private readonly HttpClient _http;
+    public PaymentGatewayClient(HttpClient http) => _http = http;
+
+    public async Task<PaymentResult> ChargeAsync(ChargeRequest request, CancellationToken ct)
+    {
+        var response = await _http.PostAsJsonAsync("/v1/charge", request, ct);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<PaymentResult>(cancellationToken: ct)
+            ?? throw new InvalidOperationException("Empty response");
+    }
+}
+
+// ── Polly resilience policies ─────────────────────────
+// dotnet add package Microsoft.Extensions.Http.Resilience
+
+builder.Services.AddHttpClient<ExternalApiClient>()
+    .AddStandardResilienceHandler(); // retry + circuit breaker + timeout
+
+// Custom policy:
+builder.Services.AddHttpClient<WeatherClient>()
+    .AddResilienceHandler("weather-pipeline", pipeline =>
+    {
+        pipeline.AddRetry(new HttpRetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,
+            Delay            = TimeSpan.FromSeconds(1),
+            BackoffType      = DelayBackoffType.Exponential,
+            ShouldHandle     = args => args.Outcome.Result?.IsSuccessStatusCode is false
+                ? PredicateResult.True() : PredicateResult.False()
+        });
+        pipeline.AddCircuitBreaker(new HttpCircuitBreakerStrategyOptions
+        {
+            FailureRatio     = 0.5,
+            SamplingDuration = TimeSpan.FromSeconds(30),
+            BreakDuration    = TimeSpan.FromSeconds(15)
+        });
+        pipeline.AddTimeout(TimeSpan.FromSeconds(10));
+    });
+
+// ── Calling external API ──────────────────────────────
+public class GeoLocationService
+{
+    private readonly IHttpClientFactory _factory;
+    public GeoLocationService(IHttpClientFactory factory) => _factory = factory;
+
+    public async Task<string?> GetCountryAsync(string ip, CancellationToken ct)
+    {
+        using var client = _factory.CreateClient();
+        var result = await client.GetFromJsonAsync<GeoResult>(
+            $"https://ipapi.co/{ip}/json/", ct);
+        return result?.CountryName;
+    }
+}
+```
+
+---
+
+<a id="p9-signalr"></a>
+### Topic 3: SignalR — Real-time Communication
+
+**সহজ ভাষায়:** SignalR → server থেকে client-এ push। Chat, notifications, live dashboard।
+
+```csharp
+// ── Hub definition ────────────────────────────────────
+public class NotificationHub : Hub
+{
+    // Client → Server call
+    public async Task JoinGroup(string groupName) =>
+        await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
+
+    public async Task LeaveGroup(string groupName) =>
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupName);
+
+    // Connection lifecycle
+    public override async Task OnConnectedAsync()
+    {
+        var userId = Context.User?.FindFirstValue("sub");
+        if (userId is not null)
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"user-{userId}");
+        await base.OnConnectedAsync();
+    }
+}
+
+// Register:
+builder.Services.AddSignalR();
+app.MapHub<NotificationHub>("/hubs/notifications");
+
+// ── Server → Client push ──────────────────────────────
+public class OrderService
+{
+    private readonly IHubContext<NotificationHub> _hub;
+    public OrderService(IHubContext<NotificationHub> hub) => _hub = hub;
+
+    public async Task UpdateOrderStatusAsync(int orderId, string status, int customerId)
+    {
+        // update DB...
+
+        // Push to specific user
+        await _hub.Clients
+            .Group($"user-{customerId}")
+            .SendAsync("OrderStatusUpdated", new { orderId, status });
+
+        // Push to all connected clients
+        await _hub.Clients.All.SendAsync("OrderUpdated", new { orderId, status });
+    }
+}
+
+// ── React client ──────────────────────────────────────
+/*
+import * as signalR from '@microsoft/signalr';
+
+const connection = new signalR.HubConnectionBuilder()
+  .withUrl('/hubs/notifications', {
+    accessTokenFactory: () => localStorage.getItem('token') ?? ''
+  })
+  .withAutomaticReconnect()
+  .build();
+
+connection.on('OrderStatusUpdated', ({ orderId, status }) => {
+  console.log(`Order ${orderId} is now ${status}`);
+  // update UI
+});
+
+await connection.start();
+*/
+```
+
+---
+
+<a id="p9-blazor"></a>
+### Topic 4: Blazor
+
+**সহজ ভাষায়:** Blazor → C# দিয়ে frontend। JavaScript না লিখেও interactive UI।
+
+```
+Blazor Hosting Models:
+───────────────────────────────────────────────────────
+Blazor Server    → Components run on server। SignalR দিয়ে UI update।
+                  Small download। Network latency।
+                  
+Blazor WebAssembly (WASM) → .NET runs in browser।
+                  Larger initial download। Offline capable।
+                  
+Blazor United (.NET 8+) → Server + WASM hybrid। Best of both।
+───────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Blazor component ──────────────────────────────────
+@page "/orders"
+@inject IOrderService OrderService
+@inject NavigationManager Nav
+
+<h1>Orders</h1>
+
+@if (_loading)
+{
+    <p>Loading...</p>
+}
+else if (_orders is null || !_orders.Any())
+{
+    <p>No orders found.</p>
+}
+else
+{
+    <table class="table">
+        <thead><tr><th>ID</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+        @foreach (var order in _orders)
+        {
+            <tr>
+                <td>@order.Id</td>
+                <td>@order.TotalAmount.ToString("C")</td>
+                <td><span class="badge">@order.Status</span></td>
+                <td>
+                    <button @onclick="() => ViewDetail(order.Id)">Details</button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<OrderDto>? _orders;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _orders = await OrderService.GetAllAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ViewDetail(int id) =>
+        Nav.NavigateTo($"/orders/{id}");
+}
+
+// ── Data binding ──────────────────────────────────────
+// Two-way: @bind="property"
+// One-way: @property
+// Event: @onclick, @oninput, @onchange
+```
+
+---
+
+<a id="p9-grpc"></a>
+### Topic 5: gRPC
+
+**সহজ ভাষায়:** gRPC → Protocol Buffers দিয়ে binary communication। REST-এর চেয়ে ~7× faster। Microservices-এ internal communication-এর জন্য ideal।
+
+```protobuf
+// orders.proto
+syntax = "proto3";
+option csharp_namespace = "MyApp.Grpc";
+
+service OrderService {
+  rpc GetOrder (GetOrderRequest) returns (OrderResponse);
+  rpc CreateOrder (CreateOrderRequest) returns (OrderResponse);
+  rpc StreamOrders (StreamRequest) returns (stream OrderResponse);
+}
+
+message GetOrderRequest { int32 id = 1; }
+
+message CreateOrderRequest {
+  int32 customer_id = 1;
+  repeated OrderItem items = 2;
+}
+
+message OrderItem {
+  int32 product_id = 1;
+  int32 quantity   = 2;
+}
+
+message OrderResponse {
+  int32  id           = 1;
+  double total_amount = 2;
+  string status       = 3;
+}
+
+message StreamRequest { int32 customer_id = 1; }
+```
+
+```csharp
+// dotnet add package Grpc.AspNetCore
+
+// ── Server implementation ─────────────────────────────
+public class OrderGrpcService : OrderService.OrderServiceBase
+{
+    private readonly IOrderRepository _repo;
+    public OrderGrpcService(IOrderRepository repo) => _repo = repo;
+
+    public override async Task<OrderResponse> GetOrder(
+        GetOrderRequest request,
+        ServerCallContext context)
+    {
+        var order = await _repo.GetByIdAsync(request.Id, context.CancellationToken)
+            ?? throw new RpcException(new Status(StatusCode.NotFound, "Order not found"));
+
+        return new OrderResponse
+        {
+            Id          = order.Id,
+            TotalAmount = (double)order.TotalAmount,
+            Status      = order.Status
+        };
+    }
+
+    public override async Task StreamOrders(
+        StreamRequest request,
+        IServerStreamWriter<OrderResponse> responseStream,
+        ServerCallContext context)
+    {
+        var orders = await _repo.GetByCustomerAsync(request.CustomerId);
+        foreach (var order in orders)
+        {
+            context.CancellationToken.ThrowIfCancellationRequested();
+            await responseStream.WriteAsync(new OrderResponse
+            {
+                Id          = order.Id,
+                TotalAmount = (double)order.TotalAmount,
+                Status      = order.Status
+            });
+            await Task.Delay(100, context.CancellationToken); // simulate streaming
+        }
+    }
+}
+
+// Register:
+builder.Services.AddGrpc();
+app.MapGrpcService<OrderGrpcService>();
+
+// ── Client ────────────────────────────────────────────
+builder.Services.AddGrpcClient<OrderService.OrderServiceClient>(options =>
+    options.Address = new Uri("https://order-service:5001"));
+
+// Usage:
+var client = serviceProvider.GetRequiredService<OrderService.OrderServiceClient>();
+var response = await client.GetOrderAsync(new GetOrderRequest { Id = 42 });
+```
+
+---
+
+<a id="p9-background"></a>
+### Topic 6: Background Services ও IHostedService
+
+```csharp
+// ── IHostedService — custom lifecycle ─────────────────
+public class DatabaseCleanupService : IHostedService, IDisposable
+{
+    private Timer? _timer;
+    private readonly ILogger<DatabaseCleanupService> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
+
+    public DatabaseCleanupService(
+        ILogger<DatabaseCleanupService> logger,
+        IServiceScopeFactory scopeFactory)
+    {
+        _logger = logger;
+        _scopeFactory = scopeFactory;
+    }
+
+    public Task StartAsync(CancellationToken ct)
+    {
+        _logger.LogInformation("Database cleanup service starting");
+        _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromHours(24));
+        return Task.CompletedTask;
+    }
+
+    private async void DoWork(object? state)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var deleted = await db.Orders
+            .Where(o => o.Status == "Cancelled" && o.OrderDate < DateTime.UtcNow.AddDays(-90))
+            .ExecuteDeleteAsync();
+        _logger.LogInformation("Deleted {Count} old cancelled orders", deleted);
+    }
+
+    public Task StopAsync(CancellationToken ct)
+    {
+        _timer?.Change(Timeout.Infinite, 0);
+        return Task.CompletedTask;
+    }
+
+    public void Dispose() => _timer?.Dispose();
+}
+
+// ── BackgroundService — long-running ─────────────────
+public class OrderProcessingWorker : BackgroundService
+{
+    private readonly ILogger<OrderProcessingWorker> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IMessageQueue _queue;
+
+    public OrderProcessingWorker(
+        ILogger<OrderProcessingWorker> logger,
+        IServiceScopeFactory scopeFactory,
+        IMessageQueue queue)
+    {
+        _logger = logger;
+        _scopeFactory = scopeFactory;
+        _queue = queue;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("Order processor started");
+
+        await foreach (var message in _queue.ReadAllAsync(stoppingToken))
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var service = scope.ServiceProvider.GetRequiredService<IOrderService>();
+                await service.ProcessAsync(message, stoppingToken);
+                await _queue.AcknowledgeAsync(message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process order message {MessageId}", message.Id);
+                await _queue.NackAsync(message);
+            }
+        }
+    }
+}
+
+// Register:
+builder.Services.AddHostedService<DatabaseCleanupService>();
+builder.Services.AddHostedService<OrderProcessingWorker>();
+
+// ── Quartz.NET — cron scheduling ──────────────────────
+// dotnet add package Quartz.AspNetCore
+
+builder.Services.AddQuartz(q =>
+{
+    var jobKey = new JobKey("DailyReport");
+    q.AddJob<DailyReportJob>(opts => opts.WithIdentity(jobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        .WithIdentity("DailyReport-trigger")
+        .WithCronSchedule("0 0 6 * * ?")); // 6 AM every day
+});
+builder.Services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
+
+public class DailyReportJob : IJob
+{
+    private readonly IReportService _reports;
+    public DailyReportJob(IReportService reports) => _reports = reports;
+    public async Task Execute(IJobExecutionContext context) =>
+        await _reports.GenerateDailyReportAsync(context.CancellationToken);
+}
+```
+
+---
+
+<a id="p9-caching"></a>
+### Topic 7: Caching Strategies
+
+```csharp
+// ── Memory Cache (single server) ─────────────────────
+builder.Services.AddMemoryCache();
+
+public class ProductService
+{
+    private readonly AppDbContext _db;
+    private readonly IMemoryCache _cache;
+
+    public async Task<List<Category>> GetCategoriesAsync()
+    {
+        const string key = "categories:all";
+
+        return await _cache.GetOrCreateAsync(key, async entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+            entry.SlidingExpiration               = TimeSpan.FromMinutes(10);
+            entry.Priority = CacheItemPriority.Normal;
+            return await _db.Categories.AsNoTracking().ToListAsync();
+        }) ?? new List<Category>();
+    }
+
+    public void InvalidateCategoriesCache() => _cache.Remove("categories:all");
+}
+
+// ── Distributed Cache (multi-server / Redis) ─────────
+// dotnet add package Microsoft.Extensions.Caching.StackExchangeRedis
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:Connection"];
+    options.InstanceName  = "MyApp:";
+});
+
+public class DistributedCacheService
+{
+    private readonly IDistributedCache _cache;
+    private static readonly JsonSerializerOptions JsonOpts = new()
+        { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
+    {
+        var json = await _cache.GetStringAsync(key, ct);
+        return json is null ? default : JsonSerializer.Deserialize<T>(json, JsonOpts);
+    }
+
+    public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null,
+        CancellationToken ct = default)
+    {
+        var json = JsonSerializer.Serialize(value, JsonOpts);
+        await _cache.SetStringAsync(key, json,
+            new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = expiry ?? TimeSpan.FromMinutes(10)
+            }, ct);
+    }
+
+    public Task RemoveAsync(string key, CancellationToken ct = default) =>
+        _cache.RemoveAsync(key, ct);
+}
+
+// ── Response Caching (HTTP layer) ────────────────────
+builder.Services.AddResponseCaching();
+app.UseResponseCaching();
+
+[HttpGet("categories")]
+[ResponseCache(Duration = 300, VaryByQueryKeys = new[] { "page" })]
+public async Task<IActionResult> GetCategories([FromQuery] int page = 1) => Ok();
+
+// ── Output Caching (.NET 7+) ──────────────────────────
+builder.Services.AddOutputCache(options =>
+{
+    options.AddBasePolicy(b => b.Expire(TimeSpan.FromMinutes(5)));
+    options.AddPolicy("products", b => b
+        .Expire(TimeSpan.FromMinutes(10))
+        .VaryByQuery("category", "page", "pageSize")
+        .Tag("products-cache"));
+});
+app.UseOutputCache();
+
+[HttpGet]
+[OutputCache(PolicyName = "products")]
+public async Task<IActionResult> GetProducts([FromQuery] string? category) => Ok();
+
+// Invalidate:
+await _outputCacheStore.EvictByTagAsync("products-cache", HttpContext.RequestAborted);
+
+// ── Cache-aside pattern ───────────────────────────────
+public async Task<Order?> GetOrderAsync(int id)
+{
+    var key = $"order:{id}";
+
+    // 1. Cache hit?
+    var cached = await _cache.GetAsync<Order>(key);
+    if (cached is not null) return cached;
+
+    // 2. DB miss — load from DB
+    var order = await _db.Orders.FindAsync(id);
+    if (order is null) return null;
+
+    // 3. Store in cache
+    await _cache.SetAsync(key, order, expiry: TimeSpan.FromMinutes(15));
+    return order;
+}
+```
+
+---
+
+<a id="p9-distributed"></a>
+### Topic 8: Distributed Systems Basics
+
+```csharp
+// ── Message Queue (Azure Service Bus / RabbitMQ) ──────
+// Decouple services. OrderService → queue → EmailService
+
+// Publisher:
+public class OrderService
+{
+    private readonly ServiceBusClient _bus;
+
+    public async Task CreateAsync(CreateOrderDto dto)
+    {
+        // Save to DB...
+        var order = await _db.SaveAsync(dto);
+
+        // Publish event (fire and forget)
+        var sender = _bus.CreateSender("order-events");
+        await sender.SendMessageAsync(new ServiceBusMessage(
+            JsonSerializer.Serialize(new OrderCreatedEvent(order.Id, order.CustomerId)))
+        {
+            ContentType   = "application/json",
+            Subject       = "OrderCreated",
+            CorrelationId = HttpContext.TraceIdentifier
+        });
+    }
+}
+
+// Subscriber (separate service):
+public class OrderEmailWorker : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        var processor = _bus.CreateProcessor("order-events");
+        processor.ProcessMessageAsync += async args =>
+        {
+            var @event = JsonSerializer.Deserialize<OrderCreatedEvent>(args.Message.Body);
+            await _emailService.SendOrderConfirmationAsync(@event!.CustomerId);
+            await args.CompleteMessageAsync(args.Message, ct);
+        };
+        processor.ProcessErrorAsync += args =>
+        {
+            _logger.LogError(args.Exception, "Message processing error");
+            return Task.CompletedTask;
+        };
+        await processor.StartProcessingAsync(ct);
+        await Task.Delay(Timeout.Infinite, ct);
+    }
+}
+
+// ── Idempotency — safe retry ──────────────────────────
+[HttpPost("orders")]
+public async Task<IActionResult> Create(
+    [FromBody] CreateOrderDto dto,
+    [FromHeader(Name = "Idempotency-Key")] string? idempotencyKey)
+{
+    if (idempotencyKey is not null)
+    {
+        // Check if already processed
+        var existing = await _cache.GetAsync<OrderDto>($"idempotency:{idempotencyKey}");
+        if (existing is not null) return Ok(existing); // return same response
+    }
+
+    var order = await _service.CreateAsync(dto);
+
+    if (idempotencyKey is not null)
+        await _cache.SetAsync($"idempotency:{idempotencyKey}", order,
+            expiry: TimeSpan.FromDays(1));
+
+    return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
+}
+
+// ── Outbox pattern — reliable event publishing ────────
+// Problem: DB save + message publish — what if publish fails?
+// Solution: Save event to DB in same transaction, background worker publishes
+
+public class OutboxMessage
+{
+    public Guid   Id          { get; set; } = Guid.NewGuid();
+    public string EventType   { get; set; } = "";
+    public string Payload     { get; set; } = "";
+    public DateTime CreatedAt  { get; set; }
+    public bool   IsProcessed { get; set; }
+}
+
+// In OrderService — same transaction:
+await using var tx = await _db.Database.BeginTransactionAsync();
+_db.Orders.Add(order);
+_db.OutboxMessages.Add(new OutboxMessage
+{
+    EventType = "OrderCreated",
+    Payload   = JsonSerializer.Serialize(new OrderCreatedEvent(order.Id)),
+    CreatedAt = DateTime.UtcNow
+});
+await _db.SaveChangesAsync(); // atomic!
+await tx.CommitAsync();
+
+// OutboxWorker publishes and marks processed
+```
+
+---
+
+## PART 9 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| SPA Integration | Separate projects or UseReactDevelopmentServer |
+| CORS | React:3000 → API:5000 cross-origin |
+| IHttpClientFactory | Pooled connections — no socket exhaustion |
+| Typed HttpClient | `AddHttpClient<T>` — DI-friendly |
+| Polly | Retry, circuit breaker, timeout |
+| SignalR | Server → Client push — WebSocket/SSE/Long Polling |
+| Hub | `Hub` class — server-side SignalR |
+| `IHubContext<T>` | Push from non-Hub class (services) |
+| Blazor Server | Components on server + SignalR |
+| Blazor WASM | .NET in browser via WebAssembly |
+| gRPC | Binary Protocol Buffers — fast, typed |
+| .proto | gRPC schema definition |
+| IHostedService | Startup/shutdown lifecycle |
+| BackgroundService | Long-running loop + cancellation |
+| Quartz.NET | Cron scheduling |
+| IMemoryCache | Single-server in-memory cache |
+| IDistributedCache | Redis — multi-server cache |
+| Response Caching | HTTP-level caching |
+| Output Cache | .NET 7+ server-side output caching |
+| Cache-aside | Check cache → DB miss → store |
+| Message Queue | Async decoupling — Service Bus, RabbitMQ |
+| Idempotency Key | Safe retry — same response for duplicate requests |
+| Outbox Pattern | Reliable event publishing — same transaction |
+
+---
+
+## PART 9 Interview Q&A
+
+```
+প্রশ্ন: new HttpClient() কেন ব্যবহার করবেন না?
+উত্তর: Socket exhaustion। প্রতি call-এ নতুন TCP connection।
+DNS change reflect করে না।
+IHttpClientFactory → connection pooling, lifetime management।
+Always inject IHttpClientFactory বা typed client।
+
+প্রশ্ন: SignalR কোন protocol ব্যবহার করে?
+উত্তর: Priority order:
+1. WebSocket (best — full-duplex)
+2. Server-Sent Events (SSE) — server → client only
+3. Long Polling — fallback
+Client capability অনুযায়ী auto-negotiate।
+
+প্রশ্ন: IHostedService আর BackgroundService পার্থক্য?
+উত্তর:
+IHostedService → StartAsync/StopAsync। Full lifecycle control।
+BackgroundService → IHostedService implement করে। ExecuteAsync loop।
+                    Simple background work-এ prefer।
+
+প্রশ্ন: Memory Cache আর Distributed Cache কখন?
+উত্তর:
+Memory Cache → Single server, in-process। Session state, temp data।
+Distributed Cache (Redis) → Multiple servers, shared state।
+                            Auth tokens, sessions, rate limiting।
+Production with load balancer → Distributed Cache।
+
+প্রশ্ন: Outbox Pattern কেন দরকার?
+উত্তর: DB save + message publish — atomicity নেই।
+DB save সফল কিন্তু publish fail → inconsistency।
+Outbox: same DB transaction-এ event store।
+Background worker publish করে, failure-এ retry।
+At-least-once delivery guarantee।
+
+প্রশ্ন: gRPC কখন, REST API কখন?
+উত্তর:
+REST → Public API, browser clients, HTTP/JSON standard।
+gRPC → Internal microservice communication, performance critical।
+       Streaming, bidirectional। .NET-to-.NET।
+       Browser support limited (grpc-web proxy দরকার)।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 10 — Testing ও Debugging (Unit Testing, Integration Testing, xUnit, Moq, TestContainers, Logging, Debugging Tips এবং আরও...)
