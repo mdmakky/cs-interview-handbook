@@ -5402,4 +5402,1501 @@ Complex schemas: Joi flexible।
 
 ---
 
-> **📌 পরবর্তী:** PART 7 — Error Handling ও Logging *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 7 — Error Handling ও Logging
+
+---
+
+<a id="part7"></a>
+## PART 7: Error Handling ও Logging
+
+> Production-ready error handling, custom error classes, centralized error middleware, Winston logging, Morgan HTTP logger এবং unhandled rejection management।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Error Types in Node.js](#p7-error-types) |
+| 2 | [Custom AppError Class](#p7-custom-error) |
+| 3 | [Async Error Handling](#p7-async-errors) |
+| 4 | [Centralized Error Middleware](#p7-error-middleware) |
+| 5 | [Operational vs Programmer Errors](#p7-op-vs-prog) |
+| 6 | [Unhandled Rejections ও Uncaught Exceptions](#p7-unhandled) |
+| 7 | [Winston Logger](#p7-winston) |
+| 8 | [Morgan HTTP Logger](#p7-morgan) |
+| 9 | [Structured Logging ও Log Levels](#p7-structured) |
+| 10 | [PART 7 Interview Q&A](#p7-qa) |
+
+---
+
+<a id="p7-error-types"></a>
+**Topic 1: Error Types in Node.js**
+
+```
+Node.js-এ 4 ধরনের error:
+
+1. Standard JS Errors
+   TypeError      — wrong type: null.property
+   ReferenceError — undefined variable
+   SyntaxError    — invalid syntax (parse time)
+   RangeError     — out of range: new Array(-1)
+
+2. System Errors (libuv)
+   ENOENT  — file not found
+   EACCES  — permission denied
+   EADDRINUSE — port already in use
+   ECONNREFUSED — connection refused
+
+3. Operational Errors
+   DB connection lost, API timeout, invalid user input
+   → Expected, handle gracefully
+
+4. Programmer Errors
+   null.foo, wrong argument type, logic bugs
+   → Unexpected, should be fixed in code
+```
+
+```javascript
+// Error class hierarchy
+Error
+├── TypeError
+├── ReferenceError
+├── SyntaxError
+├── RangeError
+└── AppError (custom — আমরা তৈরি করব)
+
+// System error চেনার উপায়
+fs.readFile('/nonexistent', (err) => {
+    if (err) {
+        console.log(err.code);    // 'ENOENT'
+        console.log(err.message); // "ENOENT: no such file or directory, open '/nonexistent'"
+        console.log(err.syscall); // 'open'
+        console.log(err.path);    // '/nonexistent'
+    }
+});
+```
+
+---
+
+<a id="p7-custom-error"></a>
+**Topic 2: Custom AppError Class**
+
+```javascript
+// src/utils/AppError.js
+
+class AppError extends Error {
+    constructor(message, statusCode, code = null) {
+        super(message);
+
+        this.statusCode = statusCode;
+        this.code = code;                          // Machine-readable code: 'NOT_FOUND'
+        this.status = String(statusCode).startsWith('4') ? 'fail' : 'error';
+        this.isOperational = true;                 // Known, expected error
+
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+
+// ────────────────────────────────────────────
+// Common error factory functions
+// ────────────────────────────────────────────
+const notFound = (resource = 'Resource') =>
+    new AppError(`${resource} not found`, 404, 'NOT_FOUND');
+
+const badRequest = (message) =>
+    new AppError(message, 400, 'BAD_REQUEST');
+
+const unauthorized = (message = 'Authentication required') =>
+    new AppError(message, 401, 'UNAUTHORIZED');
+
+const forbidden = (message = 'Insufficient permissions') =>
+    new AppError(message, 403, 'FORBIDDEN');
+
+const conflict = (message) =>
+    new AppError(message, 409, 'CONFLICT');
+
+const tooManyRequests = (message = 'Too many requests') =>
+    new AppError(message, 429, 'RATE_LIMIT_EXCEEDED');
+
+module.exports = { AppError, notFound, badRequest, unauthorized, forbidden, conflict };
+
+// ────────────────────────────────────────────
+// Usage
+// ────────────────────────────────────────────
+const user = await User.findById(id);
+if (!user) throw notFound('User');
+
+if (!hasPermission) throw forbidden();
+
+if (existingUser) throw conflict('Email already registered');
+```
+
+---
+
+<a id="p7-async-errors"></a>
+**Topic 3: Async Error Handling**
+
+```javascript
+// ────────────────────────────────────────────
+// Problem: async errors Express-এ catch হয় না
+// ────────────────────────────────────────────
+// ❌ এটা Express-এর error handler-এ যাবে না
+app.get('/user/:id', async (req, res) => {
+    const user = await User.findById(req.params.id); // throws → unhandled!
+    res.json(user);
+});
+
+// ────────────────────────────────────────────
+// Solution 1: try-catch with next
+// ────────────────────────────────────────────
+app.get('/user/:id', async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.id);
+        res.json(user);
+    } catch (err) {
+        next(err);  // Error middleware-এ পাঠাও
+    }
+});
+
+// ────────────────────────────────────────────
+// Solution 2: catchAsync wrapper (DRY)
+// ────────────────────────────────────────────
+// src/utils/catchAsync.js
+const catchAsync = (fn) => (req, res, next) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+module.exports = catchAsync;
+
+// Usage — much cleaner!
+const catchAsync = require('../utils/catchAsync');
+
+exports.getUser = catchAsync(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (!user) throw notFound('User');
+    res.json({ success: true, data: user });
+});
+
+exports.createUser = catchAsync(async (req, res) => {
+    const user = await User.create(req.body);
+    res.status(201).json({ success: true, data: user });
+});
+
+// ────────────────────────────────────────────
+// Solution 3: Express 5 (automatic async handling)
+// ────────────────────────────────────────────
+// Express 5-এ async errors automatically catch হয়
+// npm install express@5
+// catchAsync wrapper আর দরকার নেই
+```
+
+---
+
+<a id="p7-error-middleware"></a>
+**Topic 4: Centralized Error Middleware**
+
+```javascript
+// src/middleware/errorHandler.js
+const { AppError } = require('../utils/AppError');
+const logger = require('../utils/logger');
+const config = require('../config/env');
+
+// ────────────────────────────────────────────
+// Mongoose errors → AppError convert
+// ────────────────────────────────────────────
+function handleCastError(err) {
+    return new AppError(`Invalid ${err.path}: ${err.value}`, 400, 'INVALID_ID');
+}
+
+function handleDuplicateKey(err) {
+    const field = Object.keys(err.keyValue)[0];
+    return new AppError(`${field} already exists`, 409, 'DUPLICATE_KEY');
+}
+
+function handleValidationError(err) {
+    const messages = Object.values(err.errors).map(e => e.message);
+    return new AppError(`Validation failed: ${messages.join('. ')}`, 400, 'VALIDATION_ERROR');
+}
+
+// JWT errors
+function handleJWTError() {
+    return new AppError('Invalid token', 401, 'INVALID_TOKEN');
+}
+
+function handleJWTExpired() {
+    return new AppError('Token expired', 401, 'TOKEN_EXPIRED');
+}
+
+// ────────────────────────────────────────────
+// Development error response — full details
+// ────────────────────────────────────────────
+function sendDevelopmentError(err, res) {
+    res.status(err.statusCode).json({
+        success: false,
+        error: {
+            message: err.message,
+            code: err.code,
+            stack: err.stack
+        }
+    });
+}
+
+// ────────────────────────────────────────────
+// Production error response — minimal info
+// ────────────────────────────────────────────
+function sendProductionError(err, res) {
+    if (err.isOperational) {
+        // Known error — client-এ বলা safe
+        res.status(err.statusCode).json({
+            success: false,
+            error: {
+                message: err.message,
+                code: err.code
+            }
+        });
+    } else {
+        // Unknown/programmer error — details leak করবেন না
+        logger.error('UNHANDLED ERROR', err);
+        res.status(500).json({
+            success: false,
+            error: {
+                message: 'Something went wrong. Please try again later.',
+                code: 'INTERNAL_ERROR'
+            }
+        });
+    }
+}
+
+// ────────────────────────────────────────────
+// Global error handling middleware
+// Express: 4 arguments = error middleware
+// ────────────────────────────────────────────
+module.exports = function globalErrorHandler(err, req, res, next) {
+    err.statusCode = err.statusCode || 500;
+    err.status = err.status || 'error';
+
+    // Log all errors
+    if (err.statusCode >= 500) {
+        logger.error({
+            message: err.message,
+            stack: err.stack,
+            url: req.url,
+            method: req.method,
+            userId: req.user?.id
+        });
+    } else {
+        logger.warn({ message: err.message, code: err.code, url: req.url });
+    }
+
+    // Mongoose/JWT errors → AppError
+    let error = err;
+    if (err.name === 'CastError') error = handleCastError(err);
+    if (err.code === 11000) error = handleDuplicateKey(err);
+    if (err.name === 'ValidationError') error = handleValidationError(err);
+    if (err.name === 'JsonWebTokenError') error = handleJWTError();
+    if (err.name === 'TokenExpiredError') error = handleJWTExpired();
+
+    if (config.isDev) {
+        sendDevelopmentError(error, res);
+    } else {
+        sendProductionError(error, res);
+    }
+};
+
+// ────────────────────────────────────────────
+// 404 handler (route not found)
+// ────────────────────────────────────────────
+module.exports.notFoundHandler = (req, res, next) => {
+    next(new AppError(`Route ${req.method} ${req.url} not found`, 404, 'ROUTE_NOT_FOUND'));
+};
+
+// app.js-এ:
+app.use(require('./middleware/errorHandler').notFoundHandler);  // সব routes-এর পরে
+app.use(require('./middleware/errorHandler'));                   // শেষে
+```
+
+---
+
+<a id="p7-op-vs-prog"></a>
+**Topic 5: Operational vs Programmer Errors**
+
+```
+Operational Errors — Runtime-এ expected:
+✅ File not found
+✅ DB connection failed
+✅ Invalid user input
+✅ Network timeout
+✅ 3rd party API error
+→ Handle gracefully, return meaningful error response
+
+Programmer Errors — Bugs in code:
+❌ undefined.property (TypeError)
+❌ Wrong function arguments
+❌ Logic errors
+❌ Off-by-one errors
+→ Fix the bug, don't "handle" it
+→ Production-এ crash + restart → process manager (PM2) restart করুক
+
+কীভাবে distinguish করবেন?
+- AppError (isOperational: true) → operational
+- Native JS errors (TypeError, ReferenceError) → programmer error
+- Third-party library errors → check docs, wrap in AppError if operational
+```
+
+```javascript
+// Programmer error example — fix the code, don't catch
+function getUser(users, id) {
+    // ❌ Bug: users could be undefined
+    return users.find(u => u.id === id);
+    // TypeError: Cannot read properties of undefined (reading 'find')
+}
+
+// ✅ Fix: validate inputs
+function getUser(users, id) {
+    if (!Array.isArray(users)) throw new TypeError('users must be an array');
+    return users.find(u => u.id === id);
+}
+```
+
+---
+
+<a id="p7-unhandled"></a>
+**Topic 6: Unhandled Rejections ও Uncaught Exceptions**
+
+```javascript
+// src/index.js (entry point)
+
+const server = app.listen(config.port, () => {
+    logger.info(`Server running on port ${config.port}`);
+});
+
+// ────────────────────────────────────────────
+// Unhandled Promise Rejections
+// async code-এ catch না করলে এখানে আসে
+// ────────────────────────────────────────────
+process.on('unhandledRejection', (err) => {
+    logger.error('UNHANDLED REJECTION! Shutting down...', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack
+    });
+
+    // Graceful shutdown: চলমান requests finish হতে দাও
+    server.close(() => {
+        process.exit(1);  // PM2/Docker restart করবে
+    });
+
+    // Timeout: 10s-এ force exit
+    setTimeout(() => process.exit(1), 10000).unref();
+});
+
+// ────────────────────────────────────────────
+// Uncaught Exceptions
+// Synchronous code-এ uncaught error
+// ────────────────────────────────────────────
+process.on('uncaughtException', (err) => {
+    logger.error('UNCAUGHT EXCEPTION! Shutting down...', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack
+    });
+    // Immediate exit — state corrupted হতে পারে
+    process.exit(1);
+});
+
+// ────────────────────────────────────────────
+// SIGTERM — Graceful shutdown (Docker/Kubernetes)
+// ────────────────────────────────────────────
+process.on('SIGTERM', () => {
+    logger.info('SIGTERM received. Graceful shutdown...');
+    server.close(() => {
+        logger.info('HTTP server closed');
+        // DB connections close করুন
+        mongoose.connection.close(false, () => {
+            logger.info('MongoDB disconnected');
+            process.exit(0);
+        });
+    });
+});
+
+// ────────────────────────────────────────────
+// SIGINT — Ctrl+C (development)
+// ────────────────────────────────────────────
+process.on('SIGINT', () => {
+    logger.info('SIGINT received. Shutting down...');
+    server.close(() => process.exit(0));
+});
+```
+
+---
+
+<a id="p7-winston"></a>
+**Topic 7: Winston Logger**
+
+```bash
+npm install winston winston-daily-rotate-file
+```
+
+```javascript
+// src/utils/logger.js
+const winston = require('winston');
+const DailyRotateFile = require('winston-daily-rotate-file');
+const path = require('path');
+const config = require('../config/env');
+
+// ────────────────────────────────────────────
+// Custom format
+// ────────────────────────────────────────────
+const { combine, timestamp, printf, colorize, json, errors } = winston.format;
+
+// Development: human-readable
+const devFormat = combine(
+    colorize({ all: true }),
+    timestamp({ format: 'HH:mm:ss' }),
+    errors({ stack: true }),
+    printf(({ level, message, timestamp, stack, ...meta }) => {
+        let log = `${timestamp} [${level}]: ${message}`;
+        if (Object.keys(meta).length) log += ` ${JSON.stringify(meta)}`;
+        if (stack) log += `\n${stack}`;
+        return log;
+    })
+);
+
+// Production: JSON (easily parseable by log aggregators)
+const prodFormat = combine(
+    timestamp(),
+    errors({ stack: true }),
+    json()
+);
+
+// ────────────────────────────────────────────
+// Transports — where logs go
+// ────────────────────────────────────────────
+const transports = [
+    // Console (always)
+    new winston.transports.Console({
+        format: config.isDev ? devFormat : prodFormat
+    })
+];
+
+if (!config.isDev) {
+    // Combined logs (info+)
+    transports.push(new DailyRotateFile({
+        filename: path.join('logs', 'combined-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        maxSize: '20m',
+        maxFiles: '14d',
+        format: prodFormat
+    }));
+
+    // Error logs only
+    transports.push(new DailyRotateFile({
+        filename: path.join('logs', 'error-%DATE%.log'),
+        datePattern: 'YYYY-MM-DD',
+        level: 'error',
+        maxSize: '20m',
+        maxFiles: '30d',
+        format: prodFormat
+    }));
+}
+
+// ────────────────────────────────────────────
+// Logger instance
+// ────────────────────────────────────────────
+const logger = winston.createLogger({
+    level: config.isDev ? 'debug' : 'info',
+    transports
+});
+
+module.exports = logger;
+
+// ────────────────────────────────────────────
+// Usage
+// ────────────────────────────────────────────
+logger.error('DB connection failed', { host: 'localhost', port: 5432 });
+logger.warn('Rate limit approaching', { userId: '123', requests: 95 });
+logger.info('Server started', { port: 3000, env: 'production' });
+logger.http('Incoming request', { method: 'GET', url: '/api/users' });
+logger.debug('Query executed', { sql: 'SELECT * FROM users', duration: '15ms' });
+```
+
+---
+
+<a id="p7-morgan"></a>
+**Topic 8: Morgan HTTP Logger**
+
+```bash
+npm install morgan
+```
+
+```javascript
+const morgan = require('morgan');
+
+// ────────────────────────────────────────────
+// Development — colorful, detailed
+// ────────────────────────────────────────────
+app.use(morgan('dev'));
+// GET /api/users 200 45.123 ms - 1234
+
+// ────────────────────────────────────────────
+// Production — JSON with Winston
+// ────────────────────────────────────────────
+const morganStream = {
+    write: (message) => logger.http(message.trim())
+};
+
+// Custom format — JSON
+morgan.token('userId', (req) => req.user?.id || 'anonymous');
+morgan.token('body', (req) => {
+    // Sensitive fields mask করুন
+    const body = { ...req.body };
+    if (body.password) body.password = '[REDACTED]';
+    if (body.token) body.token = '[REDACTED]';
+    return JSON.stringify(body);
+});
+
+app.use(morgan(
+    ':method :url :status :response-time ms - :res[content-length] :userId',
+    { stream: morganStream }
+));
+
+// ────────────────────────────────────────────
+// Health check এবং static files skip করুন
+// ────────────────────────────────────────────
+app.use(morgan('combined', {
+    stream: morganStream,
+    skip: (req) => req.url === '/health' || req.url.startsWith('/api-docs')
+}));
+```
+
+---
+
+<a id="p7-structured"></a>
+**Topic 9: Structured Logging ও Log Levels**
+
+```
+Log Levels (Winston default — RFC 5424):
+error   (0) — System errors, crashes, unhandled exceptions
+warn    (1) — Recoverable issues, deprecated usage, rate limits
+info    (2) — Server start, user login, important events
+http    (3) — HTTP requests (morgan)
+verbose (4) — Detailed flow info
+debug   (5) — Debug info, variable values (dev only)
+silly   (6) — Extreme detail
+
+Production: info+ (error, warn, info)
+Development: debug+ (all levels)
+```
+
+```javascript
+// ────────────────────────────────────────────
+// Structured logging — always add context
+// ────────────────────────────────────────────
+
+// ❌ Bad — unstructured, hard to search
+logger.error('User login failed for alice@example.com from 192.168.1.1');
+
+// ✅ Good — structured, searchable, filterable
+logger.warn('Login failed', {
+    event: 'AUTH_FAILURE',
+    email: 'alice@example.com',
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
+    timestamp: new Date().toISOString()
+});
+
+// ────────────────────────────────────────────
+// Request correlation ID
+// ────────────────────────────────────────────
+const { v4: uuidv4 } = require('uuid');
+
+app.use((req, res, next) => {
+    req.requestId = req.headers['x-request-id'] || uuidv4();
+    res.setHeader('X-Request-Id', req.requestId);
+    next();
+});
+
+// সব logs-এ requestId add করুন
+logger.info('User created', {
+    requestId: req.requestId,
+    userId: user._id,
+    email: user.email
+});
+
+// ────────────────────────────────────────────
+// Sensitive data — কখনো log করবেন না
+// ────────────────────────────────────────────
+// ❌ Never log:
+logger.info('User logged in', { password: req.body.password });
+logger.info('Payment processed', { cardNumber: '4111111111111111' });
+logger.info('Token generated', { accessToken: token });
+
+// ✅ Log:
+logger.info('User logged in', { userId: user._id, ip: req.ip });
+logger.info('Payment processed', { orderId: order._id, amount: order.total });
+logger.info('Token generated', { userId: user._id, tokenType: 'access' });
+```
+
+---
+
+<a id="p7-qa"></a>
+**Topic 10: PART 7 Interview Q&A**
+
+```
+প্রশ্ন: Operational error vs Programmer error পার্থক্য?
+উত্তর:
+Operational: Expected runtime errors — file not found, DB timeout, invalid input।
+Handle gracefully → meaningful response return।
+
+Programmer: Code bugs — TypeError, ReferenceError, logic errors।
+Fix the code — "handle" করলে bug hidden হয়।
+
+Production-এ programmer error → process crash → PM2 restart।
+State corrupted হতে পারে বলে restart safe।
+
+প্রশ্ন: catchAsync কেন ব্যবহার করি?
+উত্তর: Express 4 async function-এর uncaught error নিজে handle করে না।
+try-catch + next(err) প্রতিটি handler-এ লিখতে হবে — repetitive।
+catchAsync wrapper fn-কে wrap করে, rejection catch করে next()-এ পাঠায়।
+DRY principle + clean controller code।
+
+প্রশ্ন: Express error middleware-এ 4 arguments কেন?
+উত্তর: Express 4-argument function-কে error middleware হিসেবে চেনে।
+(err, req, res, next) — err হলো error object।
+3-argument হলে regular middleware — error catch করবে না।
+
+প্রশ্ন: Unhandled rejection-এ process exit করি কেন?
+উত্তর: Unhandled rejection মানে application unknown state-এ আছে।
+Memory leak, inconsistent data, corrupted state সম্ভব।
+Clean exit + process restart (PM2/Docker) safe state থেকে শুরু করে।
+Node.js 15+ এ unhandled rejection-এ automatically crash হয়।
+
+প্রশ্ন: Log-এ কী data রাখবেন না?
+উত্তর:
+- Passwords, tokens, secret keys
+- Credit card numbers, CVV
+- Social security numbers
+- Personal health information (PHI)
+- Full request body (mask sensitive fields)
+GDPR/compliance violation হতে পারে।
+Morgan-এ token redaction: body() custom token দিয়ে mask করুন।
+
+প্রশ্ন: Winston ও Morgan-এর পার্থক্য?
+উত্তর:
+Morgan: HTTP request logger — method, URL, status, response time।
+Express-specific middleware। মূলত HTTP traffic log করে।
+
+Winston: General-purpose logger — যেকোনো log (error, info, debug)।
+Transport: console, file, external services।
+Morgan → Winston: stream দিয়ে Morgan-এর output Winston-এ পাঠানো যায়।
+```
+
+---
+
+**PART 7 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| AppError | Custom error: statusCode + code + isOperational |
+| isOperational | true = known error, false = bug |
+| catchAsync | async handler wrapper — next(err) auto |
+| Error middleware | 4 args: (err, req, res, next) |
+| CastError | Invalid MongoDB ObjectId |
+| Duplicate key (11000) | MongoDB unique constraint |
+| ValidationError | Mongoose schema validation |
+| unhandledRejection | Uncaught Promise rejection |
+| uncaughtException | Synchronous uncaught error |
+| SIGTERM | Graceful shutdown (Docker/K8s) |
+| Winston | General logger — levels, transports |
+| DailyRotateFile | Log rotation — date-based files |
+| Morgan | HTTP request logger |
+| Structured logging | JSON key-value — searchable |
+| Request ID | Correlate logs across services |
+| Never log | Password, token, card number, PII |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part8"></a>
+## PART 8: Testing in Node.js
+
+> Jest unit tests, Supertest integration tests, test-driven development, mocking, coverage reports এবং CI-ready test setup।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Testing কেন? Test Pyramid](#p8-why-test) |
+| 2 | [Jest Setup ও Configuration](#p8-jest-setup) |
+| 3 | [Unit Testing — Functions](#p8-unit) |
+| 4 | [Mocking — jest.mock ও jest.fn](#p8-mocking) |
+| 5 | [Integration Testing — Supertest](#p8-supertest) |
+| 6 | [Database Testing — In-memory MongoDB](#p8-db-testing) |
+| 7 | [Test Utilities ও Factories](#p8-utilities) |
+| 8 | [Code Coverage](#p8-coverage) |
+| 9 | [Testing Best Practices](#p8-best-practices) |
+| 10 | [PART 8 Interview Q&A](#p8-qa) |
+
+---
+
+<a id="p8-why-test"></a>
+**Topic 1: Testing কেন? Test Pyramid**
+
+```
+Testing কেন?
+1. Bugs early catch করা → production-এ cost কম
+2. Refactoring নিরাপদ → regression detect
+3. Living documentation → code কী করে বোঝায়
+4. Confidence → deploy করতে ভয় নেই
+5. Design improvement → testable code = better design
+
+Test Pyramid:
+          /\
+         /  \
+        / E2E \          ← কম (slow, expensive, brittle)
+       /--------\
+      /Integration\      ← মাঝারি (HTTP layer test)
+     /------------\
+    /  Unit Tests  \     ← বেশি (fast, isolated, cheap)
+   /______________  \
+
+Unit:        ~70% — functions, services, utilities
+Integration: ~20% — API endpoints, DB queries
+E2E:         ~10% — full user flows (Cypress/Playwright)
+```
+
+**Jest কেন?**
+```
+- Zero configuration
+- Built-in mocking, coverage, assertions
+- Snapshot testing
+- Watch mode
+- Parallel test execution
+- Node.js ও Browser দুটোতে
+```
+
+---
+
+<a id="p8-jest-setup"></a>
+**Topic 2: Jest Setup ও Configuration**
+
+```bash
+npm install --save-dev jest supertest @types/jest
+```
+
+```json
+// package.json
+{
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --forceExit"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.js", "**/*.test.js", "**/*.spec.js"],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/index.js",
+      "!src/config/**"
+    ],
+    "coverageThresholds": {
+      "global": {
+        "branches": 70,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "setupFilesAfterFramework": ["./src/tests/setup.js"],
+    "testTimeout": 10000
+  }
+}
+```
+
+```javascript
+// src/tests/setup.js
+const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+
+let mongoServer;
+
+// সব tests-এর আগে
+beforeAll(async () => {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+});
+
+// সব tests-এর পরে
+afterAll(async () => {
+    await mongoose.disconnect();
+    await mongoServer.stop();
+});
+
+// প্রতিটি test-এর পরে DB clean করো
+afterEach(async () => {
+    const collections = mongoose.connection.collections;
+    for (const key in collections) {
+        await collections[key].deleteMany({});
+    }
+});
+```
+
+---
+
+<a id="p8-unit"></a>
+**Topic 3: Unit Testing — Functions**
+
+```javascript
+// src/utils/queryBuilder.js থেকে (PART 6)
+// function buildQuery(reqQuery) { ... }
+
+// src/utils/__tests__/queryBuilder.test.js
+const { buildQuery } = require('../queryBuilder');
+
+describe('buildQuery', () => {
+
+    // ────────────────────────────────────────────
+    // Happy path
+    // ────────────────────────────────────────────
+    it('should return default pagination values', () => {
+        const result = buildQuery({});
+        expect(result.page).toBe(1);
+        expect(result.limit).toBe(10);
+        expect(result.skip).toBe(0);
+        expect(result.sort).toBe('-createdAt');
+    });
+
+    it('should calculate skip correctly', () => {
+        const result = buildQuery({ page: '3', limit: '20' });
+        expect(result.skip).toBe(40);  // (3-1) * 20
+        expect(result.page).toBe(3);
+        expect(result.limit).toBe(20);
+    });
+
+    it('should apply search filter', () => {
+        const result = buildQuery({ search: 'alice' });
+        expect(result.filter.$or).toBeDefined();
+        expect(result.filter.$or[0].name.$regex).toBe('alice');
+    });
+
+    it('should convert comparison operators', () => {
+        const result = buildQuery({ age: { gte: '18', lte: '30' } });
+        expect(result.filter.age.$gte).toBe('18');
+        expect(result.filter.age.$lte).toBe('30');
+    });
+
+    // ────────────────────────────────────────────
+    // Edge cases
+    // ────────────────────────────────────────────
+    it('should cap limit at 100', () => {
+        const result = buildQuery({ limit: '999' });
+        expect(result.limit).toBe(100);
+    });
+
+    it('should use minimum page 1', () => {
+        const result = buildQuery({ page: '-5' });
+        expect(result.page).toBe(1);
+    });
+
+    it('should select specified fields', () => {
+        const result = buildQuery({ fields: 'name,email,role' });
+        expect(result.select).toBe('name email role');
+    });
+});
+
+// ────────────────────────────────────────────
+// Service unit test
+// ────────────────────────────────────────────
+// src/services/__tests__/authService.test.js
+const { hashPassword, verifyPassword } = require('../authService');
+
+describe('Auth Utilities', () => {
+    const plainPassword = 'TestPass123!';
+
+    it('should hash a password', async () => {
+        const hash = await hashPassword(plainPassword);
+        expect(hash).toBeDefined();
+        expect(hash).not.toBe(plainPassword);
+        expect(hash.startsWith('$2')).toBe(true);  // bcrypt prefix
+    });
+
+    it('should produce different hashes for same password', async () => {
+        const hash1 = await hashPassword(plainPassword);
+        const hash2 = await hashPassword(plainPassword);
+        expect(hash1).not.toBe(hash2);  // different salt each time
+    });
+
+    it('should verify correct password', async () => {
+        const hash = await hashPassword(plainPassword);
+        const isValid = await verifyPassword(plainPassword, hash);
+        expect(isValid).toBe(true);
+    });
+
+    it('should reject wrong password', async () => {
+        const hash = await hashPassword(plainPassword);
+        const isValid = await verifyPassword('WrongPass', hash);
+        expect(isValid).toBe(false);
+    });
+});
+```
+
+---
+
+<a id="p8-mocking"></a>
+**Topic 4: Mocking — jest.mock ও jest.fn**
+
+```javascript
+// ────────────────────────────────────────────
+// Manual mock — jest.fn()
+// ────────────────────────────────────────────
+const mockSave = jest.fn().mockResolvedValue({ _id: '123', name: 'Alice' });
+
+// ────────────────────────────────────────────
+// Module mock — jest.mock()
+// ────────────────────────────────────────────
+// src/services/__tests__/userService.test.js
+jest.mock('../../models/User');           // Mongoose model mock
+jest.mock('../../utils/email');           // Email service mock
+
+const User = require('../../models/User');
+const emailService = require('../../utils/email');
+const userService = require('../userService');
+
+describe('UserService', () => {
+
+    beforeEach(() => {
+        jest.clearAllMocks();  // প্রতিটি test-এর আগে mocks reset
+    });
+
+    describe('createUser', () => {
+        it('should create user successfully', async () => {
+            const mockUser = { _id: '507f1f77bcf86cd799439011', name: 'Alice', email: 'alice@test.com' };
+            User.findOne.mockResolvedValue(null);          // no existing user
+            User.create.mockResolvedValue(mockUser);       // user created
+            emailService.sendWelcome.mockResolvedValue();  // email sent
+
+            const result = await userService.createUser({
+                name: 'Alice',
+                email: 'alice@test.com',
+                password: 'Pass123!'
+            });
+
+            expect(User.findOne).toHaveBeenCalledWith({ email: 'alice@test.com' });
+            expect(User.create).toHaveBeenCalledTimes(1);
+            expect(emailService.sendWelcome).toHaveBeenCalledWith('alice@test.com', 'Alice');
+            expect(result).toEqual(mockUser);
+        });
+
+        it('should throw conflict if email exists', async () => {
+            User.findOne.mockResolvedValue({ email: 'alice@test.com' });
+
+            await expect(
+                userService.createUser({ email: 'alice@test.com', password: 'Pass123!' })
+            ).rejects.toThrow('Email already registered');
+
+            expect(User.create).not.toHaveBeenCalled();
+        });
+    });
+});
+
+// ────────────────────────────────────────────
+// Spy — real function + track calls
+// ────────────────────────────────────────────
+const logger = require('../../utils/logger');
+const loggerSpy = jest.spyOn(logger, 'error').mockImplementation(() => {});
+
+// test code...
+
+expect(loggerSpy).toHaveBeenCalledWith(expect.objectContaining({
+    message: 'User not found'
+}));
+
+loggerSpy.mockRestore();  // original restore
+
+// ────────────────────────────────────────────
+// Timer mocks
+// ────────────────────────────────────────────
+jest.useFakeTimers();
+
+const callback = jest.fn();
+setTimeout(callback, 1000);
+
+jest.advanceTimersByTime(1000);
+expect(callback).toHaveBeenCalled();
+
+jest.useRealTimers();
+```
+
+---
+
+<a id="p8-supertest"></a>
+**Topic 5: Integration Testing — Supertest**
+
+```javascript
+// src/tests/integration/users.test.js
+const request = require('supertest');
+const app = require('../../app');  // Express app (server.listen ছাড়া)
+const User = require('../../models/User');
+
+describe('Users API', () => {
+
+    let authToken;
+    let testUser;
+
+    // Test user তৈরি ও login করো
+    beforeEach(async () => {
+        testUser = await User.create({
+            name: 'Alice',
+            email: 'alice@test.com',
+            password: 'TestPass123!',
+            role: 'user'
+        });
+
+        const loginRes = await request(app)
+            .post('/api/auth/login')
+            .send({ email: 'alice@test.com', password: 'TestPass123!' });
+
+        authToken = loginRes.body.data.accessToken;
+    });
+
+    // ────────────────────────────────────────────
+    // GET /api/users
+    // ────────────────────────────────────────────
+    describe('GET /api/users', () => {
+        it('should return users list for authenticated user', async () => {
+            const res = await request(app)
+                .get('/api/users')
+                .set('Authorization', `Bearer ${authToken}`);
+
+            expect(res.status).toBe(200);
+            expect(res.body.success).toBe(true);
+            expect(Array.isArray(res.body.data)).toBe(true);
+            expect(res.body.pagination).toBeDefined();
+        });
+
+        it('should return 401 for unauthenticated request', async () => {
+            const res = await request(app).get('/api/users');
+            expect(res.status).toBe(401);
+            expect(res.body.success).toBe(false);
+        });
+
+        it('should paginate correctly', async () => {
+            // 5 জন user তৈরি করো
+            await User.insertMany(
+                Array.from({ length: 5 }, (_, i) => ({
+                    name: `User ${i}`, email: `user${i}@test.com`,
+                    password: 'Pass123!'
+                }))
+            );
+
+            const res = await request(app)
+                .get('/api/users?page=1&limit=3')
+                .set('Authorization', `Bearer ${authToken}`);
+
+            expect(res.body.data.length).toBe(3);
+            expect(res.body.pagination.total).toBeGreaterThan(3);
+            expect(res.body.pagination.hasNext).toBe(true);
+        });
+    });
+
+    // ────────────────────────────────────────────
+    // POST /api/users (admin only)
+    // ────────────────────────────────────────────
+    describe('POST /api/users', () => {
+        it('should create user with valid data', async () => {
+            const adminToken = await getAdminToken();  // helper
+
+            const res = await request(app)
+                .post('/api/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({
+                    name: 'Bob',
+                    email: 'bob@test.com',
+                    password: 'BobPass123!'
+                });
+
+            expect(res.status).toBe(201);
+            expect(res.body.data.email).toBe('bob@test.com');
+            expect(res.body.data.password).toBeUndefined();  // sensitive field hidden
+        });
+
+        it('should return 400 for invalid email', async () => {
+            const adminToken = await getAdminToken();
+
+            const res = await request(app)
+                .post('/api/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ name: 'Bob', email: 'not-an-email', password: 'Pass123!' });
+
+            expect(res.status).toBe(400);
+            expect(res.body.error.code).toBe('VALIDATION_ERROR');
+        });
+
+        it('should return 409 for duplicate email', async () => {
+            const adminToken = await getAdminToken();
+
+            const res = await request(app)
+                .post('/api/users')
+                .set('Authorization', `Bearer ${adminToken}`)
+                .send({ name: 'Alice 2', email: 'alice@test.com', password: 'Pass123!' });
+
+            expect(res.status).toBe(409);
+        });
+    });
+});
+```
+
+---
+
+<a id="p8-db-testing"></a>
+**Topic 6: Database Testing — In-memory MongoDB**
+
+```bash
+npm install --save-dev mongodb-memory-server
+```
+
+```javascript
+// src/tests/setup.js — global setup (PART 8 Topic 2-এ দেখেছি)
+
+// ────────────────────────────────────────────
+// Model-level testing
+// ────────────────────────────────────────────
+// src/models/__tests__/User.test.js
+const mongoose = require('mongoose');
+const User = require('../User');
+
+describe('User Model', () => {
+
+    describe('Schema Validation', () => {
+        it('should create valid user', async () => {
+            const user = await User.create({
+                name: 'Alice',
+                email: 'alice@test.com',
+                password: 'hashed_password'
+            });
+
+            expect(user._id).toBeDefined();
+            expect(user.name).toBe('Alice');
+            expect(user.email).toBe('alice@test.com');
+            expect(user.role).toBe('user');  // default
+            expect(user.isActive).toBe(true);  // default
+            expect(user.createdAt).toBeDefined();
+        });
+
+        it('should require email', async () => {
+            await expect(
+                User.create({ name: 'Alice', password: 'pass' })
+            ).rejects.toThrow(/email.*required/i);
+        });
+
+        it('should enforce unique email', async () => {
+            await User.create({ name: 'A', email: 'same@test.com', password: 'pass' });
+            await expect(
+                User.create({ name: 'B', email: 'same@test.com', password: 'pass' })
+            ).rejects.toThrow(/duplicate|unique/i);
+        });
+    });
+
+    describe('Instance Methods', () => {
+        it('should hash password before save', async () => {
+            const user = await User.create({
+                name: 'Alice', email: 'alice2@test.com', password: 'PlainPass123'
+            });
+            expect(user.password).not.toBe('PlainPass123');
+            expect(user.password.startsWith('$2')).toBe(true);
+        });
+
+        it('comparePassword should return true for correct password', async () => {
+            const user = await User.create({
+                name: 'Alice', email: 'alice3@test.com', password: 'PlainPass123'
+            });
+            const isValid = await user.comparePassword('PlainPass123');
+            expect(isValid).toBe(true);
+        });
+
+        it('toSafeObject should not include password', async () => {
+            const user = await User.create({
+                name: 'Alice', email: 'alice4@test.com', password: 'PlainPass123'
+            });
+            const safe = user.toSafeObject();
+            expect(safe.password).toBeUndefined();
+            expect(safe.name).toBe('Alice');
+        });
+    });
+});
+```
+
+---
+
+<a id="p8-utilities"></a>
+**Topic 7: Test Utilities ও Factories**
+
+```javascript
+// src/tests/utils/factories.js
+
+const User = require('../../models/User');
+const { generateAccessToken } = require('../../utils/jwt');
+
+// ────────────────────────────────────────────
+// User factory
+// ────────────────────────────────────────────
+let userCounter = 0;
+
+async function createUser(overrides = {}) {
+    userCounter++;
+    const defaults = {
+        name: `Test User ${userCounter}`,
+        email: `testuser${userCounter}@test.com`,
+        password: 'TestPass123!',
+        role: 'user',
+        isActive: true
+    };
+    return User.create({ ...defaults, ...overrides });
+}
+
+async function createAdmin(overrides = {}) {
+    return createUser({ ...overrides, role: 'admin' });
+}
+
+// ────────────────────────────────────────────
+// Auth token helpers
+// ────────────────────────────────────────────
+async function getAuthToken(overrides = {}) {
+    const user = await createUser(overrides);
+    const token = generateAccessToken(user);
+    return { user, token };
+}
+
+async function getAdminToken() {
+    const admin = await createAdmin();
+    const token = generateAccessToken(admin);
+    return { admin, token };
+}
+
+// Helper: auth header
+function authHeader(token) {
+    return { Authorization: `Bearer ${token}` };
+}
+
+module.exports = { createUser, createAdmin, getAuthToken, getAdminToken, authHeader };
+
+// ────────────────────────────────────────────
+// Usage in tests
+// ────────────────────────────────────────────
+const { getAuthToken, getAdminToken, authHeader } = require('../utils/factories');
+
+it('should update own profile', async () => {
+    const { user, token } = await getAuthToken();
+
+    const res = await request(app)
+        .patch(`/api/users/${user._id}`)
+        .set(authHeader(token))
+        .send({ name: 'New Name' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.name).toBe('New Name');
+});
+```
+
+---
+
+<a id="p8-coverage"></a>
+**Topic 8: Code Coverage**
+
+```bash
+# Coverage report generate করুন
+npm run test:coverage
+
+# Output:
+# ------------------|---------|----------|---------|---------|
+# File              | % Stmts | % Branch | % Funcs | % Lines |
+# ------------------|---------|----------|---------|---------|
+# All files         |   85.23 |    72.45 |   88.12 |   85.01 |
+#  src/             |         |          |         |         |
+#   app.js          |   100   |   100    |   100   |   100   |
+#  src/services/    |         |          |         |         |
+#   authService.js  |   92.30 |    78.57 |   90.00 |   92.30 |
+#   userService.js  |   78.94 |    65.00 |   83.33 |   78.94 |
+# ------------------|---------|----------|---------|---------|
+```
+
+```json
+// jest.config.js — coverage thresholds enforce করুন
+{
+  "coverageThresholds": {
+    "global": {
+      "branches": 70,
+      "functions": 80,
+      "lines": 80
+    },
+    "./src/services/": {
+      "lines": 90
+    }
+  }
+}
+```
+
+```
+Coverage Metrics:
+Statements: প্রতিটি statement execute হয়েছে?
+Branches:   if/else/ternary সব branches hit?
+Functions:  সব functions call হয়েছে?
+Lines:      সব lines execute হয়েছে?
+
+100% coverage = bug-free নয়!
+Coverage দেখায় কোড executed হয়েছে — সঠিক কিনা নয়।
+Meaningful assertions > high coverage।
+```
+
+---
+
+<a id="p8-best-practices"></a>
+**Topic 9: Testing Best Practices**
+
+```javascript
+// ────────────────────────────────────────────
+// 1. AAA Pattern: Arrange, Act, Assert
+// ────────────────────────────────────────────
+it('should return user by id', async () => {
+    // Arrange — test data prepare
+    const user = await createUser({ name: 'Alice' });
+
+    // Act — function/endpoint call
+    const res = await request(app)
+        .get(`/api/users/${user._id}`)
+        .set(authHeader(token));
+
+    // Assert — result verify
+    expect(res.status).toBe(200);
+    expect(res.body.data.name).toBe('Alice');
+});
+
+// ────────────────────────────────────────────
+// 2. Test naming: "should [behavior] when [condition]"
+// ────────────────────────────────────────────
+it('should return 404 when user does not exist', ...)
+it('should hash password before saving to database', ...)
+it('should return 401 when token is expired', ...)
+
+// ────────────────────────────────────────────
+// 3. One assertion per test (ideally)
+// ────────────────────────────────────────────
+// ❌ Too many assertions — hard to know which failed
+it('should create user', async () => {
+    const res = await createUser();
+    expect(res.status).toBe(201);
+    expect(res.body.data.name).toBeDefined();
+    expect(res.body.data.password).toBeUndefined();
+    expect(res.body.data.role).toBe('user');
+    expect(res.body.data.createdAt).toBeDefined();
+});
+
+// ✅ Focused tests
+it('should return 201 on user creation', async () => { ... });
+it('should not expose password in response', async () => { ... });
+
+// ────────────────────────────────────────────
+// 4. Test isolation
+// ────────────────────────────────────────────
+// প্রতিটি test নিজের data তৈরি করুক
+// beforeEach-এ DB clean করুন (setup.js-এ আছে)
+// Shared state avoid করুন
+
+// ────────────────────────────────────────────
+// 5. Test what users care about
+// ────────────────────────────────────────────
+// ❌ Implementation details test করবেন না
+expect(User.findOne).toHaveBeenCalledWith({ _id: id });  // internal detail
+
+// ✅ Behavior test করুন
+expect(res.body.data.name).toBe('Alice');
+expect(res.status).toBe(200);
+
+// ────────────────────────────────────────────
+// 6. Error cases test করুন
+// ────────────────────────────────────────────
+// Happy path + sad path + edge cases
+// "3 tests minimum per endpoint: success, not found, unauthorized"
+```
+
+---
+
+<a id="p8-qa"></a>
+**Topic 10: PART 8 Interview Q&A**
+
+```
+প্রশ্ন: Unit test vs Integration test পার্থক্য?
+উত্তর:
+Unit test: একটি function/module isolated test।
+External dependencies mock করা হয়।
+Fast, specific, many।
+
+Integration test: Multiple components একসাথে।
+Real DB (in-memory), HTTP requests।
+Slower, broader coverage।
+
+প্রশ্ন: Test pyramid কী?
+উত্তর: Testing strategy:
+Base: Unit tests (70%) — fast, cheap, isolated।
+Middle: Integration tests (20%) — API + DB।
+Top: E2E tests (10%) — full browser flow, slow, brittle।
+বেশি unit test, কম E2E — fast feedback।
+
+প্রশ্ন: Mocking কেন করি?
+উত্তর: External dependencies isolate করতে।
+DB call mock → tests faster, no actual DB দরকার।
+Email service mock → test-এ actual email না যাক।
+3rd party API mock → network ছাড়া test।
+Deterministic results: mock return value control করা যায়।
+
+প্রশ্ন: 100% test coverage মানে কি bug নেই?
+উত্তর: না। Coverage মানে lines execute হয়েছে।
+Assertion ভুল হলে coverage আছে কিন্তু bug আছে।
+Missing edge cases cover করে না।
+Integration between components test করে না।
+Meaningful assertions দরকার, শুধু coverage না।
+
+প্রশ্ন: catchAsync কে কি unit test করা সম্ভব?
+উত্তর: হ্যাঁ। Handler function directly call করুন,
+বা mock req/res/next দিয়ে।
+Express app-এ supertest দিয়ে integration test বেশি practical।
+
+প্রশ্ন: MongoMemoryServer কী? কেন ব্যবহার করি?
+উত্তর: In-memory MongoDB — real MongoDB engine, disk নেই।
+Tests real DB-তে dependency নেই।
+CI/CD-এ MongoDB setup ছাড়াই চলে।
+প্রতিটি test suite clean state — isolation guaranteed।
+```
+
+---
+
+**PART 8 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| Test Pyramid | Unit 70% / Integration 20% / E2E 10% |
+| Jest | Zero-config test framework |
+| `describe` | Test grouping |
+| `it` / `test` | Single test case |
+| `beforeAll/afterAll` | Suite setup/teardown |
+| `beforeEach/afterEach` | Per-test setup/teardown |
+| `expect().toBe()` | Strict equality |
+| `expect().toEqual()` | Deep equality |
+| `expect().rejects.toThrow()` | Async error test |
+| `jest.fn()` | Mock function |
+| `jest.mock()` | Module mock |
+| `jest.spyOn()` | Spy on real function |
+| `jest.clearAllMocks()` | Reset mock state |
+| Supertest | HTTP integration testing |
+| `request(app).get()` | Make HTTP test request |
+| MongoMemoryServer | In-memory MongoDB for tests |
+| AAA Pattern | Arrange, Act, Assert |
+| Coverage | Statement / Branch / Function / Line |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 9 — Performance ও Security *(Next request এ লিখব)*
