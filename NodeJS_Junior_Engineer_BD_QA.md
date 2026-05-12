@@ -6899,4 +6899,1645 @@ CI/CD-এ MongoDB setup ছাড়াই চলে।
 
 ---
 
-> **📌 পরবর্তী:** PART 9 — Performance ও Security *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 9 — Performance ও Security
+
+---
+
+<a id="part9"></a>
+## PART 9: Performance ও Security
+
+> Rate limiting, helmet, Redis caching, compression, clustering, SQL/NoSQL injection prevention, XSS, CSRF — production-ready security ও performance।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Security Headers — Helmet](#p9-helmet) |
+| 2 | [Rate Limiting](#p9-rate-limit) |
+| 3 | [Input Sanitization — XSS ও Injection](#p9-sanitize) |
+| 4 | [Redis Caching](#p9-redis) |
+| 5 | [Response Compression](#p9-compression) |
+| 6 | [Clustering ও Worker Threads](#p9-clustering) |
+| 7 | [Database Query Optimization](#p9-db-perf) |
+| 8 | [Memory Leak Prevention](#p9-memory) |
+| 9 | [Security Checklist](#p9-security-checklist) |
+| 10 | [PART 9 Interview Q&A](#p9-qa) |
+
+---
+
+<a id="p9-helmet"></a>
+**Topic 1: Security Headers — Helmet**
+
+```bash
+npm install helmet
+```
+
+```javascript
+const helmet = require('helmet');
+
+// ────────────────────────────────────────────
+// Default helmet — সব headers একসাথে
+// ────────────────────────────────────────────
+app.use(helmet());
+
+// ────────────────────────────────────────────
+// Helmet কী করে?
+// ────────────────────────────────────────────
+// Content-Security-Policy    — XSS prevent: কোন scripts load হবে
+// X-Content-Type-Options     — MIME sniffing prevent: nosniff
+// X-Frame-Options            — Clickjacking prevent: DENY
+// Strict-Transport-Security  — HTTPS force (HSTS)
+// X-XSS-Protection           — Old browsers XSS filter
+// Referrer-Policy            — Referrer info control
+// Permissions-Policy         — Browser features restrict
+
+// ────────────────────────────────────────────
+// Custom configuration
+// ────────────────────────────────────────────
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", 'https://fonts.googleapis.com'],
+            fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            scriptSrc: ["'self'"]
+        }
+    },
+    hsts: {
+        maxAge: 31536000,       // 1 year
+        includeSubDomains: true,
+        preload: true
+    },
+    frameguard: { action: 'deny' }
+}));
+
+// ────────────────────────────────────────────
+// Response headers চেক করুন
+// ────────────────────────────────────────────
+// Before helmet:
+// (no security headers)
+
+// After helmet:
+// X-Content-Type-Options: nosniff
+// X-Frame-Options: DENY
+// Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+// Content-Security-Policy: default-src 'self'; ...
+```
+
+---
+
+<a id="p9-rate-limit"></a>
+**Topic 2: Rate Limiting**
+
+```bash
+npm install express-rate-limit rate-limit-redis
+```
+
+```javascript
+const rateLimit = require('express-rate-limit');
+const RedisStore = require('rate-limit-redis');
+const redisClient = require('./utils/redis');
+
+// ────────────────────────────────────────────
+// Basic rate limiter
+// ────────────────────────────────────────────
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,  // 15 minutes
+    max: 100,                   // 100 requests per window
+    standardHeaders: true,      // RateLimit-* headers return
+    legacyHeaders: false,
+    message: {
+        success: false,
+        error: { message: 'Too many requests. Try again in 15 minutes.', code: 'RATE_LIMIT' }
+    }
+});
+
+app.use('/api/', globalLimiter);
+
+// ────────────────────────────────────────────
+// Specific limiters
+// ────────────────────────────────────────────
+// Auth routes — strict
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,                     // 5 attempts per 15 min
+    skipSuccessfulRequests: true
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
+// Password reset — very strict
+const resetLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,  // 1 hour
+    max: 3                      // 3 attempts per hour
+});
+app.use('/api/auth/forgot-password', resetLimiter);
+
+// Upload — bandwidth protect
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10                     // 10 uploads per minute
+});
+app.use('/api/upload', uploadLimiter);
+
+// ────────────────────────────────────────────
+// Redis store (distributed — multiple servers)
+// ────────────────────────────────────────────
+const distributedLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args)
+    })
+});
+
+// ────────────────────────────────────────────
+// Custom key — IP + user (authenticated)
+// ────────────────────────────────────────────
+const userLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 60,
+    keyGenerator: (req) => {
+        return req.user ? `user:${req.user.id}` : `ip:${req.ip}`;
+    }
+});
+```
+
+---
+
+<a id="p9-sanitize"></a>
+**Topic 3: Input Sanitization — XSS ও Injection**
+
+```bash
+npm install express-mongo-sanitize xss-clean hpp
+```
+
+```javascript
+const mongoSanitize = require('express-mongo-sanitize');
+const xssClean = require('xss-clean');
+const hpp = require('hpp');
+
+// ────────────────────────────────────────────
+// NoSQL Injection prevent
+// ────────────────────────────────────────────
+// Attack: { "email": { "$gt": "" } } → all users access
+app.use(mongoSanitize());
+// $ ও . remove করে request body/query/params থেকে
+
+// Manual check
+function sanitizeMongoQuery(obj) {
+    if (typeof obj === 'object' && obj !== null) {
+        for (const key of Object.keys(obj)) {
+            if (key.startsWith('$') || key.includes('.')) {
+                delete obj[key];
+            } else {
+                sanitizeMongoQuery(obj[key]);
+            }
+        }
+    }
+    return obj;
+}
+
+// ────────────────────────────────────────────
+// XSS prevent
+// ────────────────────────────────────────────
+// Attack: name = "<script>document.cookie</script>"
+app.use(xssClean());
+// HTML entities encode করে: < → &lt;, > → &gt;
+
+// Manual sanitize
+const escapeHtml = (str) => {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+};
+
+// ────────────────────────────────────────────
+// SQL Injection (PostgreSQL/pg-এ)
+// ────────────────────────────────────────────
+// ❌ Vulnerable — string concatenation
+const query = `SELECT * FROM users WHERE email = '${email}'`;
+// Attack: email = "' OR '1'='1" → all users
+
+// ✅ Safe — parameterized queries
+const { rows } = await pool.query(
+    'SELECT * FROM users WHERE email = $1',
+    [email]  // driver handles escaping
+);
+
+// Knex also safe
+const user = await db('users').where({ email }).first();
+
+// ────────────────────────────────────────────
+// HTTP Parameter Pollution (HPP)
+// ────────────────────────────────────────────
+// Attack: GET /api?sort=name&sort=password → array-এ confusion
+app.use(hpp({
+    whitelist: ['tags', 'categories']  // these can be arrays
+}));
+
+// ────────────────────────────────────────────
+// Body size limit
+// ────────────────────────────────────────────
+app.use(express.json({ limit: '10kb' }));     // 10KB max
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+```
+
+---
+
+<a id="p9-redis"></a>
+**Topic 4: Redis Caching**
+
+```bash
+npm install ioredis
+```
+
+```javascript
+// src/utils/redis.js
+const Redis = require('ioredis');
+const config = require('../config/env');
+
+const redis = new Redis({
+    host: config.redisHost,
+    port: config.redisPort,
+    password: config.redisPassword,
+    retryStrategy: (times) => Math.min(times * 50, 2000),
+    maxRetriesPerRequest: 3
+});
+
+redis.on('connect', () => console.log('Redis connected'));
+redis.on('error', (err) => console.error('Redis error:', err));
+
+module.exports = redis;
+
+// ────────────────────────────────────────────
+// Cache middleware — GET requests
+// ────────────────────────────────────────────
+const redis = require('../utils/redis');
+
+function cacheMiddleware(ttl = 300) {  // 5 minutes default
+    return async (req, res, next) => {
+        if (req.method !== 'GET') return next();
+
+        const key = `cache:${req.url}`;
+        const cached = await redis.get(key);
+
+        if (cached) {
+            res.setHeader('X-Cache', 'HIT');
+            return res.json(JSON.parse(cached));
+        }
+
+        // Original json() override করুন
+        const originalJson = res.json.bind(res);
+        res.json = async (data) => {
+            await redis.setex(key, ttl, JSON.stringify(data));
+            res.setHeader('X-Cache', 'MISS');
+            return originalJson(data);
+        };
+
+        next();
+    };
+}
+
+// Route-এ apply
+router.get('/products', cacheMiddleware(600), productController.getAll);
+router.get('/categories', cacheMiddleware(3600), categoryController.getAll);
+
+// ────────────────────────────────────────────
+// Cache invalidation
+// ────────────────────────────────────────────
+async function invalidateCache(pattern) {
+    const keys = await redis.keys(`cache:${pattern}`);
+    if (keys.length > 0) {
+        await redis.del(...keys);
+    }
+}
+
+// Product update হলে cache clear
+exports.updateProduct = catchAsync(async (req, res) => {
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    await invalidateCache('/api/products*');  // product list cache clear
+    res.json({ success: true, data: product });
+});
+
+// ────────────────────────────────────────────
+// Specific data caching
+// ────────────────────────────────────────────
+async function getUserById(id) {
+    const cacheKey = `user:${id}`;
+    
+    // Cache hit?
+    const cached = await redis.get(cacheKey);
+    if (cached) return JSON.parse(cached);
+
+    // DB থেকে fetch
+    const user = await User.findById(id).lean();
+    if (!user) return null;
+
+    // Cache করুন — 1 hour
+    await redis.setex(cacheKey, 3600, JSON.stringify(user));
+    return user;
+}
+
+// Cache invalidation on update
+async function updateUser(id, data) {
+    const user = await User.findByIdAndUpdate(id, data, { new: true });
+    await redis.del(`user:${id}`);  // cache clear
+    return user;
+}
+
+// ────────────────────────────────────────────
+// Redis কখন ব্যবহার করবেন?
+// ────────────────────────────────────────────
+// ✅ Frequently read, rarely changed: categories, configs, product lists
+// ✅ Session store
+// ✅ Rate limiting counters
+// ✅ Job queues (Bull/BullMQ)
+// ✅ Pub/Sub (realtime features)
+// ❌ User-specific data (cache invalidation জটিল)
+// ❌ Frequently updated data
+```
+
+---
+
+<a id="p9-compression"></a>
+**Topic 5: Response Compression**
+
+```bash
+npm install compression
+```
+
+```javascript
+const compression = require('compression');
+
+// ────────────────────────────────────────────
+// Basic compression
+// ────────────────────────────────────────────
+app.use(compression({
+    level: 6,         // 1 (fast) to 9 (best) — 6 is balanced
+    threshold: 1024,  // 1KB-এর কম compress করবেন না
+    filter: (req, res) => {
+        // Already compressed content skip করুন
+        if (req.headers['x-no-compression']) return false;
+        return compression.filter(req, res);
+    }
+}));
+
+// ────────────────────────────────────────────
+// কতটা benefit?
+// ────────────────────────────────────────────
+// JSON response: 100KB → ~15KB (85% reduction)
+// HTML: 200KB → ~30KB
+// Images: আগে থেকে compressed — skip
+
+// Client-এ Accept-Encoding: gzip, deflate, br পাঠায়
+// Server: Content-Encoding: gzip দিয়ে respond করে
+// Browser automatically decompress করে
+```
+
+---
+
+<a id="p9-clustering"></a>
+**Topic 6: Clustering ও Worker Threads**
+
+```javascript
+// ────────────────────────────────────────────
+// Cluster module — multi-core CPU ব্যবহার
+// ────────────────────────────────────────────
+// Node.js single-threaded → single core ব্যবহার
+// Cluster: multiple processes, each on a core
+
+const cluster = require('cluster');
+const os = require('os');
+const numCPUs = os.cpus().length;
+
+if (cluster.isPrimary) {
+    console.log(`Primary ${process.pid} running`);
+    console.log(`Forking ${numCPUs} workers...`);
+
+    // Worker তৈরি করুন
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
+
+    // Worker crash হলে নতুন তৈরি করুন
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`Worker ${worker.process.pid} died. Restarting...`);
+        cluster.fork();
+    });
+
+} else {
+    // প্রতিটি worker নিজের Express server চালায়
+    const app = require('./app');
+    app.listen(process.env.PORT, () => {
+        console.log(`Worker ${process.pid} started`);
+    });
+}
+
+// ────────────────────────────────────────────
+// PM2 cluster (recommended — easier)
+// ────────────────────────────────────────────
+// ecosystem.config.js-এ (PART 10-এ দেখব):
+// instances: 'max'  → সব cores
+
+// ────────────────────────────────────────────
+// Worker Threads — CPU-intensive tasks
+// ────────────────────────────────────────────
+// Image processing, cryptography, data parsing
+// Event loop block করবেন না!
+
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+
+// Main thread
+if (isMainThread) {
+    function runWorker(data) {
+        return new Promise((resolve, reject) => {
+            const worker = new Worker(__filename, { workerData: data });
+            worker.on('message', resolve);
+            worker.on('error', reject);
+            worker.on('exit', (code) => {
+                if (code !== 0) reject(new Error(`Worker exited with code ${code}`));
+            });
+        });
+    }
+
+    // CPU-intensive work offload করুন
+    app.post('/process', async (req, res) => {
+        const result = await runWorker(req.body);
+        res.json({ result });
+    });
+
+} else {
+    // Worker thread — heavy computation
+    const result = heavyComputation(workerData);
+    parentPort.postMessage(result);
+}
+
+function heavyComputation(data) {
+    // CSV parse, image resize, etc.
+    return data;
+}
+```
+
+---
+
+<a id="p9-db-perf"></a>
+**Topic 7: Database Query Optimization**
+
+```javascript
+// ────────────────────────────────────────────
+// MongoDB Indexes
+// ────────────────────────────────────────────
+// Indexes ছাড়া: full collection scan → O(n)
+// Index সহ: B-tree lookup → O(log n)
+
+// Schema-তে index
+const userSchema = new Schema({
+    email: { type: String, unique: true, index: true },
+    createdAt: { type: Date, index: true }
+});
+
+// Compound index — frequently queried together
+userSchema.index({ role: 1, isActive: 1 });
+userSchema.index({ createdAt: -1 });  // sorting-এর জন্য
+userSchema.index({ name: 'text', bio: 'text' });  // text search
+
+// explain() দিয়ে query analyze
+const plan = await User.find({ email: 'alice@test.com' }).explain('executionStats');
+console.log(plan.executionStats.totalDocsExamined);  // 1 = index used
+console.log(plan.executionStats.executionTimeMillis);
+
+// ────────────────────────────────────────────
+// .lean() — Mongoose overhead কমান
+// ────────────────────────────────────────────
+// Normal: Mongoose Document object (methods, getters, setters)
+// lean(): Plain JS object — 3-4x faster for read-only
+
+const users = await User.find().lean();        // ✅ Read-only queries-এ
+const user = await User.findById(id);          // ✅ Update/save দরকার হলে
+
+// ────────────────────────────────────────────
+// Projection — শুধু দরকারি fields
+// ────────────────────────────────────────────
+// ❌ সব fields fetch
+const users = await User.find();
+
+// ✅ শুধু দরকারি fields
+const users = await User.find().select('name email role').lean();
+
+// ────────────────────────────────────────────
+// Aggregation pipeline — DB-তে processing
+// ────────────────────────────────────────────
+// ❌ JS-এ process — সব data fetch করে
+const users = await User.find({ isActive: true });
+const adminCount = users.filter(u => u.role === 'admin').length;
+
+// ✅ DB-তে aggregate — শুধু result আসে
+const stats = await User.aggregate([
+    { $match: { isActive: true } },
+    { $group: { _id: '$role', count: { $sum: 1 } } },
+    { $sort: { count: -1 } }
+]);
+
+// ────────────────────────────────────────────
+// Connection pooling
+// ────────────────────────────────────────────
+await mongoose.connect(config.mongoUri, {
+    maxPoolSize: 10,       // max concurrent connections
+    minPoolSize: 2,        // min connections kept alive
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000
+});
+
+// ────────────────────────────────────────────
+// N+1 Problem — populate vs aggregate
+// ────────────────────────────────────────────
+// ❌ N+1: 1 query posts + N query users
+const posts = await Post.find();
+for (const post of posts) {
+    post.author = await User.findById(post.authorId);  // N queries!
+}
+
+// ✅ populate — 2 queries
+const posts = await Post.find().populate('authorId', 'name email');
+
+// ✅ Aggregate — 1 query
+const posts = await Post.aggregate([
+    { $lookup: {
+        from: 'users',
+        localField: 'authorId',
+        foreignField: '_id',
+        as: 'author'
+    }},
+    { $unwind: '$author' }
+]);
+```
+
+---
+
+<a id="p9-memory"></a>
+**Topic 8: Memory Leak Prevention**
+
+```javascript
+// ────────────────────────────────────────────
+// Common memory leaks
+// ────────────────────────────────────────────
+
+// 1. Event listener leak
+// ❌ প্রতি request-এ নতুন listener
+app.use((req, res, next) => {
+    emitter.on('data', (data) => {
+        res.write(data);  // listener never removed!
+    });
+    next();
+});
+
+// ✅ Cleanup listener
+app.use((req, res, next) => {
+    const handler = (data) => res.write(data);
+    emitter.on('data', handler);
+    res.on('close', () => emitter.off('data', handler));  // cleanup
+    next();
+});
+
+// 2. Unbounded cache (Map/object that grows forever)
+// ❌
+const cache = {};
+app.get('/data/:id', (req, res) => {
+    cache[req.params.id] = expensiveData;  // grows forever!
+});
+
+// ✅ LRU cache with limit
+const LRU = require('lru-cache');
+const cache = new LRU({ max: 500, ttl: 1000 * 60 * 5 });
+
+// 3. Unclosed DB connections/streams
+// Always close:
+const stream = fs.createReadStream(file);
+stream.on('end', () => stream.destroy());
+stream.on('error', () => stream.destroy());
+
+// ────────────────────────────────────────────
+// Memory monitoring
+// ────────────────────────────────────────────
+function logMemoryUsage() {
+    const { heapUsed, heapTotal, external, rss } = process.memoryUsage();
+    logger.info('Memory usage', {
+        heapUsed: `${Math.round(heapUsed / 1024 / 1024)}MB`,
+        heapTotal: `${Math.round(heapTotal / 1024 / 1024)}MB`,
+        rss: `${Math.round(rss / 1024 / 1024)}MB`
+    });
+}
+
+setInterval(logMemoryUsage, 60 * 1000);  // every minute
+
+// Health endpoint-এ
+app.get('/health', (req, res) => {
+    const { heapUsed, heapTotal } = process.memoryUsage();
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        memory: {
+            used: Math.round(heapUsed / 1024 / 1024),
+            total: Math.round(heapTotal / 1024 / 1024)
+        }
+    });
+});
+```
+
+---
+
+<a id="p9-security-checklist"></a>
+**Topic 9: Security Checklist**
+
+```
+Production Security Checklist:
+
+Authentication & Authorization
+✅ JWT: short expiry (15min) + refresh token
+✅ bcrypt salt rounds >= 12
+✅ Rate limiting on auth endpoints (5 attempts/15min)
+✅ Account lockout after failed attempts
+✅ Password strength validation
+✅ RBAC: role ও permission check
+✅ Sensitive routes: requireAuth middleware
+
+Data Security
+✅ helmet() — security headers
+✅ mongoSanitize() — NoSQL injection prevent
+✅ xssClean() — XSS prevent
+✅ Parameterized queries — SQL injection prevent
+✅ Input validation (express-validator)
+✅ Body size limit (10kb)
+✅ hpp() — HTTP parameter pollution
+
+Transport Security
+✅ HTTPS only in production
+✅ HSTS header
+✅ Secure cookies (httpOnly, secure, sameSite)
+✅ CORS: specific origins only
+✅ credentials: true সাবধানে
+
+Secrets Management
+✅ .env file — never commit to git
+✅ .gitignore-এ .env
+✅ Strong random secrets (crypto.randomBytes)
+✅ Different secrets per environment
+✅ Secrets rotation plan
+
+Infrastructure
+✅ Dependencies update: npm audit
+✅ Node.js LTS version
+✅ Error messages: no stack traces in production
+✅ Logging: no sensitive data
+✅ Rate limiting: global + specific
+✅ PM2 / Docker: non-root user
+```
+
+---
+
+<a id="p9-qa"></a>
+**Topic 10: PART 9 Interview Q&A**
+
+```
+প্রশ্ন: Node.js-এ XSS prevent কীভাবে করবেন?
+উত্তর:
+Input side: xss-clean middleware — HTML entities encode।
+Output side: template engine auto-escape (EJS, Pug)।
+React/Vue: JSX/templates automatically escape।
+CSP header (helmet): inline scripts block করে।
+Never: innerHTML = userInput, eval(userInput)।
+
+প্রশ্ন: NoSQL injection কী? MongoDB-তে কীভাবে হয়?
+উত্তর:
+MongoDB operator inject: { "password": { "$gt": "" } }
+যদি direct req.body MongoDB query-তে যায়।
+Express: req.body.password = { $gt: "" } → all passwords match করে।
+Solution: express-mongo-sanitize — $ ও . remove।
+Manual: object keys validate করুন।
+
+প্রশ্ন: Redis কেন cache হিসেবে ব্যবহার করি?
+উত্তর: RAM-based — microsecond read/write (DB: milliseconds)।
+Frequently read, rarely changed data cache করি।
+Categories, configs, product lists।
+Horizontal scaling-এ shared cache — সব servers একই data।
+TTL support — automatic expiry।
+
+প্রশ্ন: Node.js clustering কী?
+উত্তর: Node.js single-threaded — একটি CPU core ব্যবহার।
+Cluster: N worker processes, প্রতিটি একটি core।
+Master process: incoming connections distribute।
+CPU-bound: clustering improve করে।
+I/O-bound (most web apps): less benefit — async already efficient।
+Production: PM2 -i max (all cores)।
+
+প্রশ্ন: N+1 problem কী?
+উত্তর: 1 query দিয়ে N items fetch, তারপর প্রতিটির জন্য আলাদা query।
+1 + N = N+1 total queries।
+10 posts → 1 (posts) + 10 (authors) = 11 queries।
+Solution: Mongoose populate (2 queries) বা aggregate $lookup (1 query)।
+
+প্রশ্ন: .lean() কখন ব্যবহার করবেন?
+উত্তর: Read-only queries-এ — list page, API responses।
+Plain JS object — Mongoose Document overhead নেই।
+3-4x faster, less memory।
+save(), instance methods দরকার হলে lean() না।
+```
+
+---
+
+**PART 9 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| helmet() | Security headers — XSS, clickjacking, HSTS |
+| CSP | Content-Security-Policy — script sources control |
+| rateLimit() | windowMs + max — brute force prevent |
+| mongoSanitize() | NoSQL injection — $ ও . remove |
+| xssClean() | XSS — HTML entities encode |
+| Parameterized query | SQL injection prevent — `$1` placeholder |
+| hpp() | HTTP parameter pollution prevent |
+| Redis cache | RAM-based — fast read/write |
+| cacheMiddleware | GET request cache — TTL সহ |
+| Cache invalidation | Update-এ cache clear |
+| compression() | gzip — response size 80% কমে |
+| cluster | Multi-core — N worker processes |
+| Worker Threads | CPU-intensive tasks — event loop block না |
+| .lean() | Plain JS object — 3-4x faster read |
+| index() | MongoDB query speedup |
+| N+1 | Loop-এ query → populate দিয়ে solve |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part10"></a>
+## PART 10: Deployment ও DevOps
+
+> Docker, PM2, Nginx, GitHub Actions CI/CD, environment config, health checks এবং production deployment checklist।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Environment Configuration](#p10-env) |
+| 2 | [PM2 Process Manager](#p10-pm2) |
+| 3 | [Docker — Dockerfile ও docker-compose](#p10-docker) |
+| 4 | [Nginx Reverse Proxy](#p10-nginx) |
+| 5 | [GitHub Actions CI/CD](#p10-cicd) |
+| 6 | [Health Check Endpoint](#p10-health) |
+| 7 | [Complete Project Structure](#p10-structure) |
+| 8 | [Production Checklist](#p10-checklist) |
+| 9 | [Interview Quick Revision](#p10-revision) |
+| 10 | [PART 10 Interview Q&A](#p10-qa) |
+
+---
+
+<a id="p10-env"></a>
+**Topic 1: Environment Configuration**
+
+```bash
+npm install dotenv envalid
+```
+
+```javascript
+// .env (never commit!)
+NODE_ENV=production
+PORT=3000
+
+MONGO_URI=mongodb+srv://user:pass@cluster.mongodb.net/mydb
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=your_redis_password
+
+JWT_SECRET=super-long-random-secret-min-32-chars
+JWT_REFRESH_SECRET=another-super-long-random-secret
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
+
+BCRYPT_ROUNDS=12
+SESSION_SECRET=session-secret-here
+
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+
+FRONTEND_URL=https://myapp.com
+API_URL=https://api.myapp.com
+CORS_ORIGINS=https://myapp.com,https://www.myapp.com
+
+EMAIL_HOST=smtp.sendgrid.net
+EMAIL_PORT=587
+EMAIL_USER=apikey
+EMAIL_PASS=SG.xxx
+
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_S3_BUCKET=my-bucket
+AWS_REGION=ap-southeast-1
+```
+
+```javascript
+// src/config/env.js — validated config
+const { cleanEnv, str, port, num, bool, url } = require('envalid');
+
+const env = cleanEnv(process.env, {
+    NODE_ENV:              str({ choices: ['development', 'test', 'production'] }),
+    PORT:                  port({ default: 3000 }),
+
+    MONGO_URI:             str(),
+    REDIS_HOST:            str({ default: 'localhost' }),
+    REDIS_PORT:            port({ default: 6379 }),
+
+    JWT_SECRET:            str({ minLength: 32 }),
+    JWT_REFRESH_SECRET:    str({ minLength: 32 }),
+    JWT_EXPIRES_IN:        str({ default: '15m' }),
+    JWT_REFRESH_EXPIRES_IN: str({ default: '7d' }),
+
+    BCRYPT_ROUNDS:         num({ default: 12 }),
+    FRONTEND_URL:          url(),
+    CORS_ORIGINS:          str()
+});
+
+module.exports = {
+    ...env,
+    isDev:  env.NODE_ENV === 'development',
+    isProd: env.NODE_ENV === 'production',
+    isTest: env.NODE_ENV === 'test',
+    corsOrigins: env.CORS_ORIGINS.split(',').map(s => s.trim())
+};
+
+// index.js-এ সবার আগে:
+require('dotenv').config();
+const config = require('./config/env');  // validation এখানে হয়
+```
+
+```
+.gitignore-এ:
+.env
+.env.*
+!.env.example
+
+.env.example (commit করুন — template):
+NODE_ENV=development
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/myapp
+JWT_SECRET=change-this-to-random-32-char-string
+...
+```
+
+---
+
+<a id="p10-pm2"></a>
+**Topic 2: PM2 Process Manager**
+
+```bash
+npm install -g pm2
+```
+
+```javascript
+// ecosystem.config.js
+module.exports = {
+    apps: [
+        {
+            name: 'my-api',
+            script: 'src/index.js',
+
+            // Cluster mode — all CPU cores
+            instances: 'max',
+            exec_mode: 'cluster',
+
+            // Environment variables
+            env: {
+                NODE_ENV: 'development',
+                PORT: 3000
+            },
+            env_production: {
+                NODE_ENV: 'production',
+                PORT: 3000
+            },
+
+            // Auto-restart on crash
+            autorestart: true,
+            watch: false,           // production-এ false (dev-এ true)
+
+            // Memory limit — leak prevent
+            max_memory_restart: '500M',
+
+            // Restart delay
+            restart_delay: 4000,
+            max_restarts: 10,
+
+            // Logs
+            error_file: 'logs/pm2-error.log',
+            out_file: 'logs/pm2-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+
+            // Graceful shutdown
+            kill_timeout: 10000,    // 10s graceful shutdown window
+            wait_ready: true,
+            listen_timeout: 10000
+        }
+    ]
+};
+```
+
+```bash
+# Start
+pm2 start ecosystem.config.js --env production
+
+# Status
+pm2 status
+pm2 list
+
+# Logs
+pm2 logs my-api
+pm2 logs my-api --lines 100
+
+# Restart (zero-downtime)
+pm2 reload my-api
+
+# Stop
+pm2 stop my-api
+
+# Delete
+pm2 delete my-api
+
+# Monitoring dashboard
+pm2 monit
+
+# Auto-start on server reboot
+pm2 startup
+pm2 save
+```
+
+```javascript
+// Graceful shutdown — app.js
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
+
+async function gracefulShutdown() {
+    logger.info('Shutting down gracefully...');
+    server.close(async () => {
+        await mongoose.connection.close();
+        await redis.quit();
+        logger.info('Shutdown complete');
+        process.exit(0);
+    });
+    // PM2-কে ready signal
+    if (process.send) process.send('ready');
+}
+```
+
+---
+
+<a id="p10-docker"></a>
+**Topic 3: Docker — Dockerfile ও docker-compose**
+
+```dockerfile
+# Dockerfile
+# ────────────────────────────────────────────
+# Stage 1: Dependencies
+# ────────────────────────────────────────────
+FROM node:20-alpine AS deps
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# ────────────────────────────────────────────
+# Stage 2: Production image
+# ────────────────────────────────────────────
+FROM node:20-alpine AS production
+
+# Security: non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nodeuser -u 1001
+
+WORKDIR /app
+
+# Dependencies copy করুন
+COPY --from=deps --chown=nodeuser:nodejs /app/node_modules ./node_modules
+COPY --chown=nodeuser:nodejs . .
+
+# Non-root user use করুন
+USER nodeuser
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"
+
+CMD ["node", "src/index.js"]
+```
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  redis_data:
+```
+
+```bash
+# Start all services
+docker-compose up -d
+
+# Logs
+docker-compose logs -f api
+
+# Rebuild
+docker-compose up -d --build api
+
+# Stop
+docker-compose down
+
+# Stop + volumes remove
+docker-compose down -v
+```
+
+---
+
+<a id="p10-nginx"></a>
+**Topic 4: Nginx Reverse Proxy**
+
+```nginx
+# nginx/nginx.conf
+
+upstream api {
+    server api:3000;
+    # Multiple instances:
+    # server api_1:3000;
+    # server api_2:3000;
+    keepalive 32;
+}
+
+server {
+    listen 80;
+    server_name api.myapp.com;
+
+    # HTTP → HTTPS redirect
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name api.myapp.com;
+
+    # SSL certificates (Let's Encrypt)
+    ssl_certificate     /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    # Security headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+
+    # Proxy settings
+    location /api/ {
+        proxy_pass http://api;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 60s;
+        client_max_body_size 10M;
+    }
+
+    # Static files
+    location /uploads/ {
+        alias /var/www/uploads/;
+        expires 1d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Rate limiting (Nginx level)
+    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
+    location / {
+        limit_req zone=api burst=20 nodelay;
+        proxy_pass http://api;
+    }
+}
+```
+
+---
+
+<a id="p10-cicd"></a>
+**Topic 5: GitHub Actions CI/CD**
+
+```yaml
+# .github/workflows/ci.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ────────────────────────────────────────────
+  # Test job
+  # ────────────────────────────────────────────
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test:ci
+        env:
+          NODE_ENV: test
+          MONGO_URI: mongodb://localhost:27017/testdb
+          REDIS_HOST: localhost
+          JWT_SECRET: test-secret-at-least-32-characters-long
+          JWT_REFRESH_SECRET: test-refresh-secret-32-characters-long
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ────────────────────────────────────────────
+  # Build ও Deploy job (main branch only)
+  # ────────────────────────────────────────────
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build ও Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            myusername/my-api:latest
+            myusername/my-api:${{ github.sha }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /app
+            docker-compose pull api
+            docker-compose up -d api
+            docker system prune -f
+```
+
+---
+
+<a id="p10-health"></a>
+**Topic 6: Health Check Endpoint**
+
+```javascript
+// src/routes/health.js
+const router = require('express').Router();
+const mongoose = require('mongoose');
+const redis = require('../utils/redis');
+const config = require('../config/env');
+
+router.get('/health', async (req, res) => {
+    const health = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: Math.floor(process.uptime()),
+        version: process.env.npm_package_version || '1.0.0',
+        environment: config.NODE_ENV,
+        checks: {}
+    };
+
+    // MongoDB check
+    try {
+        if (mongoose.connection.readyState === 1) {
+            await mongoose.connection.db.admin().ping();
+            health.checks.mongodb = { status: 'ok' };
+        } else {
+            health.checks.mongodb = { status: 'disconnected' };
+            health.status = 'degraded';
+        }
+    } catch {
+        health.checks.mongodb = { status: 'error' };
+        health.status = 'degraded';
+    }
+
+    // Redis check
+    try {
+        await redis.ping();
+        health.checks.redis = { status: 'ok' };
+    } catch {
+        health.checks.redis = { status: 'error' };
+        health.status = 'degraded';
+    }
+
+    // Memory check
+    const { heapUsed, heapTotal } = process.memoryUsage();
+    const memUsagePct = (heapUsed / heapTotal) * 100;
+    health.checks.memory = {
+        status: memUsagePct < 90 ? 'ok' : 'warning',
+        used: `${Math.round(heapUsed / 1024 / 1024)}MB`,
+        total: `${Math.round(heapTotal / 1024 / 1024)}MB`,
+        percent: `${Math.round(memUsagePct)}%`
+    };
+
+    const statusCode = health.status === 'ok' ? 200 : 503;
+    res.status(statusCode).json(health);
+});
+
+// Liveness probe (Kubernetes — process alive?)
+router.get('/health/live', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
+// Readiness probe (Kubernetes — ready to serve traffic?)
+router.get('/health/ready', async (req, res) => {
+    const isReady = mongoose.connection.readyState === 1;
+    res.status(isReady ? 200 : 503).json({
+        status: isReady ? 'ready' : 'not ready'
+    });
+});
+
+module.exports = router;
+```
+
+---
+
+<a id="p10-structure"></a>
+**Topic 7: Complete Project Structure**
+
+```
+my-node-api/
+├── src/
+│   ├── index.js              ← Entry point (listen + process events)
+│   ├── app.js                ← Express app (middleware + routes)
+│   ├── config/
+│   │   └── env.js            ← Validated environment config
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── userController.js
+│   │   └── postController.js
+│   ├── services/
+│   │   ├── authService.js    ← Business logic
+│   │   └── userService.js
+│   ├── models/
+│   │   ├── User.js
+│   │   └── Post.js
+│   ├── routes/
+│   │   ├── index.js          ← Route aggregator
+│   │   ├── auth.js
+│   │   ├── users.js
+│   │   └── health.js
+│   ├── middleware/
+│   │   ├── auth.js           ← requireAuth, requireRole
+│   │   ├── errorHandler.js   ← Global error handler
+│   │   ├── validate.js       ← express-validator result check
+│   │   ├── upload.js         ← Multer config
+│   │   └── cache.js          ← Redis cache middleware
+│   ├── utils/
+│   │   ├── AppError.js       ← Custom error class
+│   │   ├── catchAsync.js     ← Async wrapper
+│   │   ├── logger.js         ← Winston
+│   │   ├── redis.js          ← Redis client
+│   │   ├── jwt.js            ← Token utils
+│   │   ├── email.js          ← Email service
+│   │   └── response.js       ← sendSuccess, sendError
+│   └── tests/
+│       ├── setup.js          ← Jest global setup
+│       ├── integration/
+│       │   ├── auth.test.js
+│       │   └── users.test.js
+│       └── utils/
+│           └── factories.js  ← Test data factories
+├── logs/                     ← Winston log files
+├── uploads/                  ← File uploads
+├── nginx/
+│   └── nginx.conf
+├── .github/
+│   └── workflows/
+│       └── ci.yml
+├── .env                      ← Never commit
+├── .env.example              ← Template — commit করুন
+├── .gitignore
+├── Dockerfile
+├── docker-compose.yml
+├── ecosystem.config.js       ← PM2 config
+├── package.json
+└── README.md
+```
+
+---
+
+<a id="p10-checklist"></a>
+**Topic 8: Production Checklist**
+
+```
+Pre-deployment Checklist:
+
+Code Quality
+✅ All tests pass (npm test)
+✅ No console.log in production code (logger use)
+✅ No hardcoded secrets
+✅ npm audit — no critical vulnerabilities
+✅ Code reviewed (PR)
+
+Security
+✅ helmet() middleware
+✅ Rate limiting (global + auth routes)
+✅ Input validation (all POST/PUT/PATCH)
+✅ mongoSanitize() + xssClean()
+✅ HTTPS only
+✅ Secure cookies
+✅ CORS: specific origins
+
+Performance
+✅ compression() middleware
+✅ MongoDB indexes
+✅ .lean() for read queries
+✅ Redis cache (hot data)
+✅ PM2 cluster mode (max instances)
+
+Operations
+✅ Health check endpoint (/health)
+✅ Structured logging (Winston)
+✅ Error tracking (Sentry optional)
+✅ Graceful shutdown (SIGTERM handler)
+✅ PM2 startup (auto-restart on reboot)
+✅ Log rotation (DailyRotateFile)
+
+Environment
+✅ NODE_ENV=production
+✅ All required env vars set
+✅ .env not committed
+✅ Different secrets per environment
+✅ Backup strategy for DB
+```
+
+---
+
+<a id="p10-revision"></a>
+**Topic 9: Interview Quick Revision**
+
+```
+Node.js Handbook — সম্পূর্ণ Summary
+
+PART 1 — Fundamentals
+V8 engine, libuv, Event Loop (6 phases), single-threaded,
+CommonJS vs ESM, npm, first HTTP server
+
+PART 2 — Core Modules & Async
+fs, path, os, EventEmitter, Streams, Callbacks → Promises → async/await,
+Error-first callback, Promise.all/race/allSettled
+
+PART 3 — Express.js
+app.use, Router, middleware chain, req/res/next,
+helmet/cors/morgan, global error handler, project structure
+
+PART 4 — Database Integration
+Mongoose (Schema/Model/CRUD), MongoDB aggregation,
+pg raw queries, Knex query builder, transactions, connection pool
+
+PART 5 — Authentication & Authorization
+bcrypt hash/compare, JWT sign/verify, access+refresh tokens,
+HttpOnly cookie, OAuth2, RBAC, timing attack prevention
+
+PART 6 — REST API Design
+RESTful URLs, HTTP status codes, response format,
+express-validator, pagination+filtering, Multer upload,
+versioning, Swagger, CORS
+
+PART 7 — Error Handling & Logging
+AppError class, catchAsync wrapper, centralized error middleware,
+Mongoose/JWT error handling, unhandledRejection, SIGTERM,
+Winston + DailyRotateFile, Morgan, structured logging
+
+PART 8 — Testing
+Jest setup, unit tests, mocking (jest.fn/mock/spyOn),
+Supertest integration tests, MongoMemoryServer, factories, coverage
+
+PART 9 — Performance & Security
+helmet, rate limiting, mongoSanitize, xssClean, Redis caching,
+compression, clustering, Worker Threads, N+1 problem, indexes
+
+PART 10 — Deployment & DevOps
+dotenv + envalid config, PM2 cluster, Docker multi-stage build,
+docker-compose, Nginx reverse proxy, GitHub Actions CI/CD,
+health checks, graceful shutdown, production checklist
+```
+
+---
+
+<a id="p10-qa"></a>
+**Topic 10: PART 10 Interview Q&A**
+
+```
+প্রশ্ন: Docker multi-stage build কেন ব্যবহার করি?
+উত্তর: Image size কমানো।
+Stage 1 (deps): devDependencies সহ — শুধু production deps install।
+Stage 2 (production): শুধু node_modules + source copy।
+devDependencies, build tools image-এ নেই।
+Result: 100MB+ → 50MB image।
+Security: কম dependencies = কম attack surface।
+
+প্রশ্ন: PM2 cluster mode vs Node.js cluster module?
+উত্তর: দুটোই same concept — multiple worker processes।
+Node.js cluster: manual code লিখতে হয়।
+PM2 cluster: ecosystem.config.js-এ instances: 'max' — zero code।
+PM2 extra: log management, monitoring, auto-restart, startup scripts।
+Production-এ PM2 preferred।
+
+প্রশ্ন: Nginx reverse proxy কেন?
+উত্তর:
+SSL termination — HTTPS Nginx handle করে, Node HTTP চলে।
+Load balancing — multiple Node instances।
+Static files — Nginx fast, Node-এর load কমে।
+Rate limiting — Nginx level (before app)।
+Gzip compression।
+Security — Node-এর port direct expose হয় না।
+
+প্রশ্ন: .env file কি Docker image-এ রাখবেন?
+উত্তর: না। Security risk।
+Docker: env_file: .env (docker-compose) বা --env-file।
+Production: Secret management service — AWS Secrets Manager,
+HashiCorp Vault, Kubernetes Secrets।
+GitHub Actions: Repository secrets → environment variables।
+
+প্রশ্ন: Graceful shutdown কী? কেন দরকার?
+উত্তর: Sudden exit → in-flight requests incomplete।
+Graceful: SIGTERM receive → নতুন connections বন্ধ → চলমান requests finish →
+DB disconnect → exit।
+Docker/K8s deployment: pod stop → SIGTERM → 30s grace period → SIGKILL।
+PM2 reload: zero-downtime restart — graceful shutdown + new workers।
+
+প্রশ্ন: CI/CD pipeline-এ কী steps থাকে?
+উত্তর:
+1. Code push (git push)
+2. Lint (code quality)
+3. Tests (unit + integration)
+4. Coverage check (threshold)
+5. Docker image build
+6. Image push to registry
+7. Deploy to server (SSH / kubectl)
+8. Health check verify
+Fail হলে deploy বন্ধ — code safe।
+```
+
+---
+
+**PART 10 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| dotenv | .env file load |
+| envalid | Env vars validate — startup-এ crash |
+| PM2 | Process manager — cluster, restart, logs |
+| `instances: 'max'` | All CPU cores |
+| `pm2 reload` | Zero-downtime restart |
+| Dockerfile | Multi-stage — small, secure image |
+| `FROM node:20-alpine` | Minimal base image |
+| Non-root user | Security — never run as root |
+| docker-compose | Multi-service orchestration |
+| `depends_on` | Service startup order |
+| Nginx | SSL, load balancing, static files |
+| `proxy_pass` | Requests forward to Node |
+| GitHub Actions | CI/CD workflow |
+| `needs: test` | Sequential jobs |
+| `/health` | DB + Redis + memory check |
+| Liveness probe | Process alive? |
+| Readiness probe | Ready to serve traffic? |
+| SIGTERM | Graceful shutdown signal |
+| `server.close()` | Stop accepting new connections |
+
+---
+
+**Node.js Junior Engineer Handbook — সম্পূর্ণ!**
+
+| PART | বিষয় | Topics |
+|------|-------|--------|
+| 1 | Fundamentals | V8, Event Loop, CommonJS/ESM, npm |
+| 2 | Core Modules & Async | fs, streams, Promises, async/await |
+| 3 | Express.js | Middleware, routing, error handling |
+| 4 | Database Integration | Mongoose, PostgreSQL, Knex, Prisma |
+| 5 | Authentication | JWT, bcrypt, refresh tokens, OAuth2, RBAC |
+| 6 | REST API Design | Validation, pagination, upload, Swagger |
+| 7 | Error Handling & Logging | AppError, catchAsync, Winston, Morgan |
+| 8 | Testing | Jest, Supertest, mocking, coverage |
+| 9 | Performance & Security | helmet, rate limiting, Redis, clustering |
+| 10 | Deployment & DevOps | PM2, Docker, Nginx, CI/CD, checklist |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
