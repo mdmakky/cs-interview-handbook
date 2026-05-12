@@ -1,0 +1,72 @@
+site_name: CS Interview Handbook
+site_url: https://mdmakky.github.io/cs-interview-handbook/
+site_description: বাংলাদেশের Software Engineer-দের জন্য সম্পূর্ণ Interview Preparation Guide
+site_author: Makky
+repo_url: https://github.com/mdmakky/cs-interview-handbook
+repo_name: mdmakky/cs-interview-handbook
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - toc.integrate
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - admonition
+  - pymdownx.details
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: README.md
+  - Backend:
+      - Node.js: NodeJS_Junior_Engineer_BD_QA.md
+      - Python: Python_Junior_Engineer_BD_QA.md
+      - FastAPI: FastAPI_Junior_Engineer_BD_QA.md
+  - Frontend:
+      - React: React_Junior_Engineer_BD_QA.md
+      - JavaScript: JavaScript_Junior_Engineer_BD_QA.md
+  - Fundamentals:
+      - OOP: OOP_Junior_Engineer_BD_QA.md
+      - DSA: DSA_Junior_Engineer_BD_QA.md
+      - System Design: SystemDesign_Junior_Engineer_BD_QA.md
+      - Database: Database_Junior_Engineer_BD_QA.md
+  - Tools:
+      - Git: Git_Junior_Engineer_BD_QA.md

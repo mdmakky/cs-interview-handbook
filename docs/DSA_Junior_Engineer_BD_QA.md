@@ -1,0 +1,7809 @@
+<a id="top"></a>
+
+<div align="center">
+
+# 📊 DSA Interview Preparation Handbook
+## বাংলাদেশের Junior Software Engineer ইন্টারভিউয়ের জন্য সম্পূর্ণ DSA গাইড
+
+**লেখক:** Senior Software Engineer, Competitive Programmer & DSA Instructor  
+**লক্ষ্য:** বাংলাদেশের শীর্ষ সফটওয়্যার কোম্পানিতে Junior SWE পদে চাকরি পাওয়া  
+**ভাষা:** বাংলা (Technical terms ইংরেজিতে)
+
+</div>
+
+---
+
+<a id="toc"></a>
+
+## 📋 সূচিপত্র (Table of Contents)
+
+| # | PART | বিষয়বস্তু |
+|---|------|-----------|
+| 📘 | [**PART 1** — DSA Fundamentals](#part1) | Data Structure, Algorithm, Time/Space Complexity, Big O, Recursion, Memory |
+| 📗 | [**PART 2** — Arrays & Strings](#part2) | Array, Prefix Sum, Sliding Window, Two Pointer, Kadane, Binary Search, Matrix |
+| 📙 | [**PART 3** — Linked List](#part3) | Singly/Doubly/Circular LL, Insert/Delete, Reverse, Cycle Detection, Floyd, Merge |
+| 📕 | [**PART 4** — Stack & Queue](#part4) | Stack, Queue, Circular Queue, Deque, Priority Queue, Monotonic Stack, Expression Eval |
+| 📓 | [**PART 5** — Trees & Binary Trees](#part5) | Tree, Binary Tree, BST, Traversal, BFS/DFS, AVL, Segment Tree, Tries |
+| 📔 | [**PART 6** — Graphs](#part6) | Graph Representation, BFS, DFS, Dijkstra, Bellman-Ford, Floyd, Topological Sort, Union-Find |
+| 📒 | [**PART 7** — Sorting & Searching](#part7) | Bubble, Selection, Insertion, Merge, Quick, Heap Sort, Counting, Radix, Binary Search Variants |
+| 📃 | [**PART 8** — Dynamic Programming & Greedy](#part8) | Memoization, Tabulation, LCS, LIS, Knapsack, Coin Change, Greedy, Interval Scheduling |
+| 📄 | [**PART 9** — Advanced DSA](#part9) | Hash Map, Bit Manipulation, Backtracking, Divide & Conquer, String Algorithms (KMP) |
+| 🗒️ | [**PART 10** — Coding Interview Q&A](#part10) | Top 50 DSA Q&A, Patterns Cheat Sheet, Complexity Quick Reference |
+| 🗓️ | [**PART 11** — Problem Solving Strategy](#part11) | UMPIRE Method, Pattern Recognition, 14 Core Patterns, Interview Checklist |
+| 🗃️ | [**PART 12** — Bangladeshi Interview Prep](#part12) | BD Tech Companies, HR Q&A, Salary Negotiation, Study Plan, Final Tips |
+
+---
+
+<details>
+<summary><strong>📘 PART 1 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [১.১ Data Structure কী?](#১১-data-structure-কী)
+- [১.২ Algorithm কী?](#১২-algorithm-কী)
+- [১.৩ DSA কেন গুরুত্বপূর্ণ?](#১৩-dsa-কেন-গুরুত্বপূর্ণ)
+- [১.৪ Time Complexity](#১৪-time-complexity)
+- [১.৫ Space Complexity](#১৫-space-complexity)
+- [১.৬ Big O Notation](#১৬-big-o-notation)
+- [১.৭ Big Omega ও Big Theta](#১৭-big-omega-ও-big-theta)
+- [১.৮ Best, Average, Worst Case](#১৮-best-average-worst-case)
+- [১.৯ Recursion](#১৯-recursion)
+- [১.১০ Iteration](#১১০-iteration)
+- [১.১১ Memory Concepts](#১১১-memory-concepts)
+- [১.১২ Stack vs Heap Memory](#১১২-stack-vs-heap-memory)
+- [১.১৩ PART 1 — Interview Q&A](#১১৩-part-1--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📗 PART 2 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [২.১ Array Basics](#২১-array-basics)
+- [২.২ Static vs Dynamic Array](#২২-static-vs-dynamic-array)
+- [২.৩ String Operations](#২৩-string-operations)
+- [২.৪ Prefix Sum](#২৪-prefix-sum)
+- [২.৫ Sliding Window](#২৫-sliding-window)
+- [২.৬ Two Pointer](#২৬-two-pointer)
+- [২.৭ Kadane's Algorithm](#২৭-kadanes-algorithm)
+- [২.৮ Binary Search](#২৮-binary-search)
+- [২.৯ Matrix Operations](#২৯-matrix-operations)
+- [২.১০ PART 2 — Interview Q&A](#২১০-part-2--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📓 PART 5 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৫.১ Tree কী?](#৫১-tree-কী)
+- [৫.২ Binary Tree](#৫২-binary-tree)
+- [৫.৩ Binary Search Tree (BST)](#৫৩-binary-search-tree-bst)
+- [৫.৪ Tree Traversal](#৫৪-tree-traversal)
+- [৫.৫ BFS — Level-Order Traversal](#৫৫-bfs--level-order-traversal)
+- [৫.৬ Height, Depth ও Diameter](#৫৬-height-depth-ও-diameter)
+- [৫.৭ Balanced Tree ও AVL](#৫৭-balanced-tree-ও-avl)
+- [৫.৮ Segment Tree](#৫৮-segment-tree)
+- [৫.৯ Trie](#৫৯-trie)
+- [৫.১০ PART 5 — Interview Q&A](#৫১০-part-5--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📔 PART 6 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৬.১ Graph কী?](#৬১-graph-কী)
+- [৬.২ Graph Representation](#৬২-graph-representation)
+- [৬.৩ BFS](#৬৩-bfs)
+- [৬.৪ DFS](#৬৪-dfs)
+- [৬.৫ Cycle Detection](#৬৫-cycle-detection)
+- [৬.৬ Topological Sort](#৬৬-topological-sort)
+- [৬.৭ Shortest Path — Dijkstra](#৬৭-shortest-path--dijkstra)
+- [৬.৮ Bellman-Ford ও Floyd-Warshall](#৬৮-bellman-ford-ও-floyd-warshall)
+- [৬.৯ Union-Find (Disjoint Set)](#৬৯-union-find-disjoint-set)
+- [৬.১০ PART 6 — Interview Q&A](#৬১০-part-6--interview-qa)
+
+</details>
+
+---
+
+<details>
+<summary><strong>📒 PART 7 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৭.১ Sorting Overview](#৭১-sorting-overview)
+- [৭.২ Bubble Sort](#৭২-bubble-sort)
+- [৭.৩ Selection Sort](#৭৩-selection-sort)
+- [৭.৪ Insertion Sort](#৭৪-insertion-sort)
+- [৭.৫ Merge Sort](#৭৫-merge-sort)
+- [৭.৬ Quick Sort](#৭৬-quick-sort)
+- [৭.৭ Heap Sort](#৭৭-heap-sort)
+- [৭.৮ Counting Sort ও Radix Sort](#৭৮-counting-sort-ও-radix-sort)
+- [৭.৯ Binary Search Variants](#৭৯-binary-search-variants)
+- [৭.১০ PART 7 — Interview Q&A](#৭১০-part-7--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📃 PART 8 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৮.১ Dynamic Programming কী?](#৮১-dynamic-programming-কী)
+- [৮.২ Memoization (Top-Down)](#৮২-memoization-top-down)
+- [৮.৩ Tabulation (Bottom-Up)](#৮৩-tabulation-bottom-up)
+- [৮.৪ Fibonacci ও Classic DP](#৮৪-fibonacci-ও-classic-dp)
+- [৮.৫ Longest Common Subsequence (LCS)](#৮৫-longest-common-subsequence-lcs)
+- [৮.৬ Longest Increasing Subsequence (LIS)](#৮৬-longest-increasing-subsequence-lis)
+- [৮.৭ 0/1 Knapsack](#৮৭-01-knapsack)
+- [৮.৮ Coin Change](#৮৮-coin-change)
+- [৮.৯ Greedy Algorithm](#৮৯-greedy-algorithm)
+- [৮.১০ PART 8 — Interview Q&A](#৮১০-part-8--interview-qa)
+
+</details>
+
+---
+
+<details>
+<summary><strong>📄 PART 9 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৯.১ Hash Map ও Hash Table](#৯১-hash-map-ও-hash-table)
+- [৯.২ Hash Map Patterns](#৯২-hash-map-patterns)
+- [৯.৩ Bit Manipulation](#৯৩-bit-manipulation)
+- [৯.৪ Bit Manipulation Problems](#৯৪-bit-manipulation-problems)
+- [৯.৫ Backtracking](#৯৫-backtracking)
+- [৯.৬ Divide & Conquer](#৯৬-divide--conquer)
+- [৯.৭ String Algorithms — KMP](#৯৭-string-algorithms--kmp)
+- [৯.৮ Rolling Hash ও Rabin-Karp](#৯৮-rolling-hash-ও-rabin-karp)
+- [৯.৯ PART 9 — Interview Q&A](#৯৯-part-9--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>🗒️ PART 10 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [১০.১ Array & String Top Q&A](#১০১-array--string-top-qa)
+- [১০.২ Linked List Top Q&A](#১০২-linked-list-top-qa)
+- [১০.৩ Stack & Queue Top Q&A](#১০৩-stack--queue-top-qa)
+- [১০.৪ Tree & Graph Top Q&A](#১০৪-tree--graph-top-qa)
+- [১০.৫ Sorting & DP Top Q&A](#১০৫-sorting--dp-top-qa)
+- [১০.৬ Complexity Cheat Sheet](#১০৬-complexity-cheat-sheet)
+
+</details>
+
+<details>
+<summary><strong>🗓️ PART 11 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [১১.১ UMPIRE Method](#১১১-umpire-method)
+- [১১.২ 14 Core Problem Patterns](#১১২-14-core-problem-patterns)
+- [১১.৩ Pattern Recognition Guide](#১১৩-pattern-recognition-guide)
+- [১১.৪ Interview Do's & Don'ts](#১১৪-interview-dos--donts)
+- [১১.৫ Time Management](#১১৫-time-management)
+- [১১.৬ Mock Interview Checklist](#১১৬-mock-interview-checklist)
+
+</details>
+
+<details>
+<summary><strong>🗃️ PART 12 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [১২.১ বাংলাদেশের Top Tech Companies](#১২১-বাংলাদেশের-top-tech-companies)
+- [১২.২ Company-wise Interview Pattern](#১২২-company-wise-interview-pattern)
+- [১২.৩ HR Interview Q&A (বাংলায়)](#১২৩-hr-interview-qa-বাংলায়)
+- [১২.৪ Salary Negotiation](#১২৪-salary-negotiation)
+- [১২.৫ 90-Day Study Plan](#১২৫-90-day-study-plan)
+- [১২.৬ Final Tips & Resources](#১২৬-final-tips--resources)
+
+</details>
+
+---
+
+<a id="part1"></a>
+
+# PART 1: DSA Fundamentals (মূল ধারণাসমূহ)
+
+> **📍 এই PART এর Sections:** [১.১ Data Structure কী?](#১১-data-structure-কী) · [১.২ Algorithm কী?](#১২-algorithm-কী) · [১.৩ কেন গুরুত্বপূর্ণ?](#১৩-dsa-কেন-গুরুত্বপূর্ণ) · [১.৪ Time Complexity](#১৪-time-complexity)
+
+> **পড়ার নির্দেশনা:** এই PART টি DSA এর একদম গোড়ার ধারণাগুলো নিয়ে। Interview তে এগুলো সরাসরি জিজ্ঞেস করা হয়। প্রতিটি topic এর definition, analogy, এবং interview-style উত্তর মুখস্থ না করে বুঝে পড়ুন।
+
+---
+
+## ১.১ Data Structure কী?
+
+### সংজ্ঞা (Definition)
+
+**Data Structure** হলো data organize, store এবং manage করার একটি নির্দিষ্ট পদ্ধতি যেন সেই data কে efficiently access ও modify করা যায়।
+
+সহজ ভাষায়: **"Data কে সাজিয়ে রাখার নিয়ম।"**
+
+### বাস্তব জীবনের উদাহরণ (Real-life Analogy)
+
+```
+📚 বইয়ের তাক (Array):
+   → বই গুলো একটার পর একটা সাজানো থাকে
+   → Index দিয়ে যেকোনো বই সরাসরি পাওয়া যায়
+
+📋 Queue (লাইন):
+   → ব্যাংকে লাইনে যে আগে আসে সে আগে সেবা পায়
+   → FIFO (First In First Out)
+
+📚 Stack (বই এর স্তুপ):
+   → উপর থেকে বই রাখা হয়, উপর থেকেই তোলা হয়
+   → LIFO (Last In First Out)
+
+🗂️ Dictionary (Hash Map):
+   → নাম দিলে তার নম্বর বের হয় — key-value pair
+```
+
+### Data Structure এর প্রকারভেদ
+
+```
+Data Structures
+├── Linear (একমাত্রিক)
+│   ├── Array
+│   ├── Linked List
+│   ├── Stack
+│   └── Queue
+└── Non-Linear (বহুমাত্রিক)
+    ├── Tree
+    │   ├── Binary Tree
+    │   ├── BST
+    │   ├── Heap
+    │   └── Trie
+    └── Graph
+```
+
+### Interview-style উত্তর
+
+**প্রশ্ন: "Data Structure কী?"**
+
+> "Data Structure হলো data কে একটি নির্দিষ্ট pattern এ organize করার পদ্ধতি যাতে নির্দিষ্ট operation গুলো efficiently করা যায়। যেমন — Array তে random access O(1) এ হয়, কিন্তু Linked List এ O(n) লাগে। Problem এর nature অনুযায়ী সঠিক Data Structure বেছে নেওয়াই ভালো programmer এর কাজ।"
+
+### সাধারণ ভুল (Common Mistakes)
+
+```
+❌ "Data Structure মানে শুধু Array আর Linked List"
+✅ Tree, Graph, Hash Table, Heap সবই Data Structure
+
+❌ "সব সমস্যায় Array ব্যবহার করব"
+✅ Problem দেখে কোন DS সবচেয়ে উপযুক্ত তা বুঝতে হবে
+
+❌ "Data Structure শুধু theory"
+✅ প্রতিটি real application এ specific DS ব্যবহার হয়
+```
+
+### Follow-up Interview Questions
+
+1. Linear ও Non-linear data structure এর পার্থক্য কী?
+2. কোন data structure কখন ব্যবহার করবেন?
+3. Abstract Data Type (ADT) কী?
+
+---
+
+## ১.২ Algorithm কী?
+
+### সংজ্ঞা
+
+**Algorithm** হলো একটি নির্দিষ্ট সমস্যা সমাধানের জন্য step-by-step নির্দেশনার সমষ্টি। প্রতিটি step সুনির্দিষ্ট, limited, এবং terminate হয়।
+
+একটি ভালো Algorithm এর ৫টি বৈশিষ্ট্য:
+
+| বৈশিষ্ট্য | ব্যাখ্যা |
+|----------|---------|
+| **Input** | ০ বা তার বেশি input নিতে পারে |
+| **Output** | কমপক্ষে ১টি output দিতে হবে |
+| **Definiteness** | প্রতিটি step স্পষ্ট ও অস্পষ্টতামুক্ত |
+| **Finiteness** | নির্দিষ্ট সংখ্যক step এ শেষ হতে হবে |
+| **Effectiveness** | প্রতিটি step বাস্তবে কার্যকর হওয়া সম্ভব |
+
+### বাস্তব উদাহরণ
+
+```
+রান্নার Recipe = Algorithm:
+  Step 1: চুলায় তেল দিন
+  Step 2: পেঁয়াজ কুঁচি দিয়ে ভাজুন
+  Step 3: মসলা দিন
+  Step 4: মাংস দিন
+  Step 5: পানি দিয়ে ঢাকুন
+  → সুনির্দিষ্ট steps, নির্দিষ্ট output (রান্না)
+```
+
+### Algorithm vs Program
+
+| Algorithm | Program |
+|-----------|---------|
+| Language independent | Specific language এ লেখা |
+| Design level | Implementation level |
+| Pseudocode বা flowchart | Actual code |
+| Finite steps | Infinite loop থাকতে পারে (OS) |
+
+### Interview-style উত্তর
+
+**প্রশ্ন: "Algorithm কী? একটি উদাহরণ দিন।"**
+
+> "Algorithm হলো একটি সমস্যার step-by-step সমাধান পদ্ধতি যা finite সংখ্যক step এ শেষ হয়। উদাহরণ: দুটি সংখ্যার মধ্যে বড়টি বের করা — Step 1: a এবং b নিন, Step 2: যদি a > b হয় তাহলে a return করুন, Step 3: নাহলে b return করুন। এটি একটি simple algorithm।"
+
+---
+
+## ১.৩ DSA কেন গুরুত্বপূর্ণ?
+
+### ক্যারিয়ারে গুরুত্ব
+
+```
+Top Companies Interview Process:
+  Google, Facebook, Amazon → DSA problem solving = primary filter
+  Brain Station 23, Kaz Software → DSA + Framework
+  Pathao, Shohoz, Chaldal → DSA basics + System Design
+
+কেন জানতে হবে?
+  ✅ Efficient code লেখা যায় (fast + less memory)
+  ✅ Complex problems ছোট ছোট ভাগে ভেঙে সমাধান করা যায়
+  ✅ Interview এ confidence আসে
+  ✅ Senior engineer হওয়ার ভিত্তি
+```
+
+### Real Project Impact
+
+| ছাড়া DSA | সাথে DSA |
+|----------|---------|
+| N² loops সব জায়গায় | Optimal O(n log n) |
+| Memory overflow | Efficient memory use |
+| Slow API response | Fast query processing |
+| Scale করা যায় না | Millions of users handle করা যায় |
+
+---
+
+## ১.৪ Time Complexity
+
+### সংজ্ঞা
+
+**Time Complexity** হলো input size (n) বাড়ার সাথে সাথে algorithm এর execution time কীভাবে বাড়ে তার পরিমাপ। এটি actual time নয় — operations এর সংখ্যার বৃদ্ধির হার।
+
+> **মনে রাখুন:** Time complexity মাপা হয় **operations এর সংখ্যায়**, seconds এ নয়।
+
+### উদাহরণ দিয়ে বোঝা
+
+```python
+# উদাহরণ ১: O(1) — Constant
+def get_first(arr):
+    return arr[0]   # সবসময় ১টি operation
+
+# উদাহরণ ২: O(n) — Linear
+def find_element(arr, target):
+    for item in arr:    # n টি element হলে n বার চলে
+        if item == target:
+            return True
+    return False
+
+# উদাহরণ ৩: O(n²) — Quadratic
+def bubble_sort(arr):
+    n = len(arr)
+    for i in range(n):         # n বার
+        for j in range(n-1):   # n বার → মোট n × n = n² operations
+            if arr[j] > arr[j+1]:
+                arr[j], arr[j+1] = arr[j+1], arr[j]
+
+# উদাহরণ ৪: O(log n) — Logarithmic
+def binary_search(arr, target):
+    lo, hi = 0, len(arr) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2   # প্রতি step এ অর্ধেক বাদ
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+    return -1
+```
+
+### কীভাবে Count করবেন
+
+```
+Rule 1: Constant operations → O(1)
+  x = 5          → O(1)
+  return arr[0]  → O(1)
+
+Rule 2: Single loop 0 to n → O(n)
+  for i in range(n): ...
+
+Rule 3: Nested loop → O(n²)
+  for i in range(n):
+    for j in range(n): ...
+
+Rule 4: Halving each step → O(log n)
+  while n > 1: n = n // 2
+
+Rule 5: Loop + halving → O(n log n)
+  Merge Sort, Heap Sort
+
+Rule 6: Constants বাদ দিন
+  O(3n + 5) → O(n)
+  O(2n² + 10n) → O(n²)
+
+Rule 7: যে term সবচেয়ে দ্রুত বাড়ে সেটি রাখুন
+  O(n² + n + log n) → O(n²)
+```
+
+---
+
+## ১.৫ Space Complexity
+
+### সংজ্ঞা
+
+**Space Complexity** হলো input size (n) বাড়ার সাথে সাথে algorithm কতটুকু extra memory ব্যবহার করে তার পরিমাপ।
+
+```
+Total Space = Auxiliary Space + Input Space
+
+Auxiliary Space = Algorithm এর নিজের জন্য extra memory
+  (Input বাদ দিয়ে)
+```
+
+### উদাহরণ
+
+```python
+# O(1) Space — In-place
+def reverse_array(arr):
+    left, right = 0, len(arr) - 1
+    while left < right:
+        arr[left], arr[right] = arr[right], arr[left]
+        left += 1
+        right -= 1
+    # Extra variable মাত্র ২টি (left, right) → O(1)
+
+# O(n) Space — Extra array
+def reverse_copy(arr):
+    n = len(arr)
+    result = [0] * n    # n size এর নতুন array → O(n)
+    for i in range(n):
+        result[i] = arr[n-1-i]
+    return result
+
+# O(n) Space — Recursion stack
+def factorial(n):
+    if n <= 1:
+        return 1
+    return n * factorial(n-1)
+    # n টি recursive call → call stack এ n frame → O(n) space
+```
+
+### Time vs Space Trade-off
+
+```
+সাধারণত:
+  → বেশি memory ব্যবহার করলে time কমে
+  → কম memory ব্যবহার করলে time বাড়তে পারে
+
+Example: Memoization
+  → Extra O(n) space রেখে O(2ⁿ) → O(n) time এ আনা হয়
+```
+
+---
+
+## ১.৬ Big O Notation
+
+### সংজ্ঞা
+
+**Big O Notation** হলো algorithm এর **worst case** time/space complexity express করার mathematical notation।
+
+> O(f(n)) মানে: n বড় হলে algorithm এর running time f(n) এর সমানুপাতিক বা কম।
+
+### Common Complexities (ছোট থেকে বড়)
+
+| Notation | নাম | উদাহরণ | n=100 তে operations |
+|----------|-----|---------|---------------------|
+| O(1) | Constant | Array index access | 1 |
+| O(log n) | Logarithmic | Binary Search | ~7 |
+| O(n) | Linear | Linear Search | 100 |
+| O(n log n) | Linearithmic | Merge Sort | ~664 |
+| O(n²) | Quadratic | Bubble Sort | 10,000 |
+| O(n³) | Cubic | Matrix multiplication (naive) | 1,000,000 |
+| O(2ⁿ) | Exponential | Recursive Fibonacci | 2¹⁰⁰ (অকল্পনীয়!) |
+| O(n!) | Factorial | Traveling Salesman (brute) | 100! (∞) |
+
+### Growth Rate Visualization
+
+```
+O(1)      ████ (flat)
+O(log n)  ████▌ (very slow growth)
+O(n)      ████████████ (linear)
+O(n log n)████████████████ (slightly above linear)
+O(n²)     ████████████████████████████████ (steep)
+O(2ⁿ)     ∞∞∞∞∞∞∞∞∞∞ (explosive)
+```
+
+### Rules মনে রাখার সহজ উপায়
+
+```
+🔑 Drop Constants:
+   O(5n) → O(n)
+   O(100) → O(1)
+
+🔑 Drop Lower Order Terms:
+   O(n² + n) → O(n²)
+   O(n + log n) → O(n)
+
+🔑 Different inputs, different variables:
+   for a in arr_a:      → O(a)
+     for b in arr_b:    → O(b)
+   → O(a × b), না O(n²)
+
+🔑 Nested loop দিয়ে multiply:
+   for i in range(n):
+     for j in range(n):  → O(n²)
+
+🔑 Sequential loop দিয়ে add:
+   for i in range(n): ...   → O(n)
+   for j in range(n): ...   → O(n)
+   Total → O(n + n) = O(2n) = O(n)
+```
+
+### Real Code Examples
+
+```python
+def analyze_complexities(n, arr):
+    # O(1) — constant
+    x = arr[0]
+
+    # O(n) — single loop
+    total = 0
+    for i in range(n):
+        total += arr[i]
+
+    # O(log n) — binary search
+    lo, hi = 0, n - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        lo = mid + 1  # simplified
+
+    # O(n²) — nested loop
+    for i in range(n):
+        for j in range(n):
+            pass
+
+    # O(n log n) — sorting
+    arr.sort()  # TimSort
+
+    # এই function এর overall: O(n log n) (dominant term)
+```
+
+---
+
+## ১.৭ Big Omega ও Big Theta
+
+### Big Omega — Ω(f(n))
+
+**Best case** lower bound। Algorithm কমপক্ষে এতটুকু সময় নেবে।
+
+```
+Ω(f(n)): সবচেয়ে কম সময়ে যা লাগে
+
+Example: Linear Search এ target প্রথম element হলে
+→ Ω(1) — শুধু একবার check করতে হয়
+```
+
+### Big Theta — Θ(f(n))
+
+Algorithm exactly f(n) অনুযায়ী চলে — upper bound ও lower bound একই।
+
+```
+Θ(f(n)): Average case যখন worst ও best case একই
+
+Example: Single loop সবসময় n বার চলে
+→ Θ(n) — সবসময়ই n operations
+```
+
+### তিনটির তুলনা
+
+| Notation | মানে | কখন ব্যবহার |
+|----------|------|------------|
+| O(f(n)) | Upper bound (worst case) | সাধারণত এটাই বলা হয় |
+| Ω(f(n)) | Lower bound (best case) | Algorithm analysis এ |
+| Θ(f(n)) | Tight bound (exact) | যখন worst = best |
+
+### Interview এ কী বলবেন
+
+> "Interview তে সাধারণত Big O (worst case) বলা হয়। কারণ real system এ আমরা worst case এর জন্য prepare করি। তবে average case analysis এ Θ notation ব্যবহার হয়।"
+
+---
+
+## ১.৮ Best, Average, Worst Case
+
+### তিনটি Case কী?
+
+```
+Worst Case:  সবচেয়ে বেশি সময় লাগার situation
+Average Case: গড়ে কতটুকু সময় লাগে
+Best Case:   সবচেয়ে কম সময় লাগার situation
+```
+
+### Linear Search দিয়ে উদাহরণ
+
+```python
+def linear_search(arr, target):
+    for i in range(len(arr)):
+        if arr[i] == target:
+            return i
+    return -1
+
+# arr = [3, 1, 7, 9, 2, 5], target = ?
+
+# Best Case: target = 3 (প্রথম element)
+#   → ১ বার check → O(1)
+
+# Average Case: target যেকোনো জায়গায় থাকে
+#   → গড়ে n/2 বার check → O(n/2) = O(n)
+
+# Worst Case: target নেই অথবা শেষ element
+#   → n বার check → O(n)
+```
+
+### Quick Sort এর Cases
+
+| Case | কখন হয় | Complexity |
+|------|---------|-----------|
+| Best | Pivot সবসময় মাঝখানে | O(n log n) |
+| Average | Random data | O(n log n) |
+| Worst | Already sorted / All same | O(n²) |
+
+### Interview Tip
+
+```
+প্রশ্ন: "Algorithm টির complexity কত?"
+সঠিক উত্তর: "Worst case O(...), Best case O(...), Average case O(...)"
+
+কখনো শুধু "O(n)" বলে থামবেন না — case specify করুন।
+```
+
+---
+
+## ১.৯ Recursion
+
+### সংজ্ঞা
+
+**Recursion** হলো এমন একটি technique যেখানে একটি function নিজেকে নিজে call করে, যতক্ষণ না একটি base case এ পৌঁছায়।
+
+### Recursion এর অবশ্যই দরকার
+
+```
+১. Base Case:  যখন recursion থামে (সবচেয়ে জরুরি!)
+২. Recursive Case: নিজেকে call করে smaller problem এ
+৩. Progress:  প্রতিটি call এ problem ছোট হয়
+```
+
+### Factorial — Step by Step
+
+```python
+def factorial(n):
+    # Base Case
+    if n <= 1:
+        return 1
+    # Recursive Case
+    return n * factorial(n - 1)
+
+# factorial(4) এর execution trace:
+# factorial(4)
+#   → 4 * factorial(3)
+#         → 3 * factorial(2)
+#               → 2 * factorial(1)
+#                     → return 1  ← Base Case
+#               → 2 * 1 = 2
+#         → 3 * 2 = 6
+#   → 4 * 6 = 24
+# return 24
+```
+
+### Call Stack Visualization
+
+```
+factorial(4) কল করলে Stack:
+┌─────────────────────────┐
+│ factorial(1) → returns 1│  ← TOP (সবশেষে resolve)
+├─────────────────────────┤
+│ factorial(2) → 2 × 1    │
+├─────────────────────────┤
+│ factorial(3) → 3 × 2    │
+├─────────────────────────┤
+│ factorial(4) → 4 × 6    │  ← BOTTOM (সবার আগে call)
+└─────────────────────────┘
+```
+
+### Fibonacci — Recursion এর সমস্যা
+
+```python
+# ❌ Naive Recursion — O(2ⁿ) time!
+def fib_naive(n):
+    if n <= 1:
+        return n
+    return fib_naive(n-1) + fib_naive(n-2)
+
+# fib(5) এর call tree:
+#           fib(5)
+#          /       \
+#       fib(4)    fib(3)
+#       /    \    /    \
+#    fib(3) fib(2) fib(2) fib(1)
+#    ...
+# একই calculation বারবার হচ্ছে! (Overlapping Subproblems)
+
+# ✅ Memoization দিয়ে — O(n) time
+def fib_memo(n, memo={}):
+    if n in memo:
+        return memo[n]
+    if n <= 1:
+        return n
+    memo[n] = fib_memo(n-1, memo) + fib_memo(n-2, memo)
+    return memo[n]
+```
+
+### Recursion vs Iteration
+
+| বিষয় | Recursion | Iteration |
+|------|-----------|-----------|
+| কোড | সহজ, readable | কিছুটা verbose |
+| Memory | O(n) stack space | O(1) |
+| Speed | Overhead আছে | দ্রুত |
+| Stack Overflow | হতে পারে | না |
+| কখন | Tree, Graph, Divide & Conquer | Simple loops |
+
+### Tail Recursion
+
+```python
+# Regular recursion (NOT tail recursive)
+def factorial(n):
+    if n <= 1: return 1
+    return n * factorial(n-1)  # return এর পর আরও কাজ আছে
+
+# Tail Recursive — return এর পরে কোনো কাজ নেই
+def factorial_tail(n, acc=1):
+    if n <= 1: return acc
+    return factorial_tail(n-1, n * acc)  # শেষ operation = recursive call
+# Compiler optimize করতে পারে → O(1) space
+```
+
+### সাধারণ ভুল
+
+```
+❌ Base Case না দেওয়া → Infinite recursion → Stack Overflow
+❌ Progress না থাকা → Same input এ নিজেকে call → Infinite loop
+❌ সব সমস্যায় recursion → Simple loop এ সমাধান হলে iteration better
+```
+
+---
+
+## ১.১০ Iteration
+
+### সংজ্ঞা
+
+**Iteration** হলো একটি block of code বারবার execute করা যতক্ষণ একটি condition সত্য থাকে — loop ব্যবহার করে।
+
+### Types of Loops
+
+```python
+# For loop — নির্দিষ্ট সংখ্যকবার
+for i in range(5):
+    print(i)      # 0, 1, 2, 3, 4
+
+# While loop — condition ভিত্তিক
+n = 10
+while n > 0:
+    print(n)
+    n -= 1        # 10, 9, 8, ..., 1
+
+# Do-while equivalent (Python তে নেই, simulate করতে হয়)
+while True:
+    action()
+    if condition:
+        break
+```
+
+### Recursion কে Iteration এ রূপান্তর
+
+```python
+# Recursive fibonacci → Iterative
+def fib_iterative(n):
+    if n <= 1:
+        return n
+    prev, curr = 0, 1
+    for _ in range(2, n+1):
+        prev, curr = curr, prev + curr
+    return curr
+# O(n) time, O(1) space — recursion এর চেয়ে efficient!
+```
+
+---
+
+## ১.১১ Memory Concepts
+
+### Computer Memory Layout
+
+```
+┌─────────────────────────────────┐
+│          Text/Code Segment      │  Program instructions
+├─────────────────────────────────┤
+│          Data Segment           │  Global & Static variables
+├─────────────────────────────────┤
+│          Heap                   │  Dynamic allocation (malloc, new)
+│          ↓ grows downward       │
+│                                 │
+│          ↑ grows upward         │
+│          Stack                  │  Function calls, local variables
+└─────────────────────────────────┘
+```
+
+### Memory এর প্রকারভেদ
+
+| Memory | কোথায় | কী থাকে | Lifetime |
+|--------|--------|---------|---------|
+| **Register** | CPU | Temp calculations | নানোসেকেন্ড |
+| **Cache** | CPU কাছে | Recently used data | মাইক্রোসেকেন্ড |
+| **RAM (Stack)** | Main memory | Local vars, function calls | Function শেষ পর্যন্ত |
+| **RAM (Heap)** | Main memory | Dynamic objects | Manually free করা পর্যন্ত |
+| **Disk** | Storage | Files, DB | Permanent |
+
+### Pointer Basics (C/C++ context)
+
+```c
+int x = 10;       // x নামে variable, value 10
+int *p = &x;      // p হলো pointer, x এর address store করে
+
+printf("%d", x);  // 10 — value
+printf("%p", p);  // 0x7ffd... — address
+printf("%d", *p); // 10 — dereferencing (address থেকে value)
+
+*p = 20;          // p এর মাধ্যমে x এর value পরিবর্তন
+printf("%d", x);  // 20
+```
+
+---
+
+## ১.১২ Stack vs Heap Memory
+
+### Stack Memory
+
+```
+বৈশিষ্ট্য:
+  ✅ Fast access (LIFO structure)
+  ✅ Automatically managed (function শেষে auto-free)
+  ✅ Thread safe (প্রতিটি thread এর আলাদা stack)
+  ❌ Limited size (~1-8 MB typical)
+  ❌ Stack Overflow হতে পারে (deep recursion)
+
+কী থাকে:
+  → Local variables
+  → Function parameters
+  → Return addresses
+  → Recursion frames
+```
+
+### Heap Memory
+
+```
+বৈশিষ্ট্য:
+  ✅ Large size (RAM এর সমান)
+  ✅ Runtime এ size নির্ধারণ করা যায়
+  ❌ Slower (allocation/deallocation overhead)
+  ❌ Manually manage করতে হয় (C/C++ এ)
+  ❌ Memory leak হতে পারে
+  ❌ Fragmentation
+
+কী থাকে:
+  → new/malloc দিয়ে তৈরি objects
+  → Dynamic arrays
+  → Linked list nodes
+```
+
+### উদাহরণ
+
+```python
+# Python এ memory management automatic
+
+# Stack এ যায়: local variables
+def my_function():
+    x = 10          # Stack
+    y = [1, 2, 3]   # y হলো Stack এ, কিন্তু list object Heap এ
+    return x
+
+# Heap এ যায়: objects, lists, dicts
+my_list = [1, 2, 3, 4, 5]    # List object Heap এ
+my_dict = {"key": "value"}    # Dict object Heap এ
+```
+
+```cpp
+// C++ এ স্পষ্টভাবে দেখা যায়
+void example() {
+    int x = 10;         // Stack — function শেষে auto-free
+    int* p = new int(5); // Heap — manually delete করতে হবে!
+    delete p;           // Heap free করা
+}
+// x automatically freed, p manually freed
+```
+
+### Stack Overflow কখন হয়?
+
+```python
+# অসীম recursion → Stack Overflow
+def infinite():
+    return infinite()  # Base case নেই!
+
+infinite()
+# RecursionError: maximum recursion depth exceeded
+# Python এর default recursion limit: 1000
+```
+
+---
+
+## ১.১৩ PART 1 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: O(log n) মানে কী? কীভাবে চিনবেন?**
+
+> **উত্তর:** O(log n) মানে প্রতিটি step এ problem এর size অর্ধেক (বা কোনো constant ভাগে) কমে যায়। চেনার উপায়: যদি দেখেন input প্রতিটি iteration এ half হচ্ছে — সেটি O(log n)। Binary Search এর উদাহরণ: n=1000 হলে log₂(1000) ≈ 10 বার — মাত্র ১০টি step এ উত্তর পাওয়া যায়।
+
+**Q2: Recursion ব্যবহার করা কখন উচিত আর কখন উচিত নয়?**
+
+> **উত্তর:** উচিত — Tree traversal, Graph DFS, Divide & Conquer (Merge Sort, Quick Sort), Backtracking। উচিত নয় — Simple iteration দিয়ে হলে (Fibonacci sum), deep recursion যেখানে stack overflow হতে পারে, performance critical code। Rule: যদি problem naturally recursive structure এ থাকে (Tree, Graph) তাহলে recursion, নাহলে iteration prefer করুন।
+
+**Q3: Time Complexity O(n log n) কোন algorithms এ দেখা যায়?**
+
+> **উত্তর:** Merge Sort, Heap Sort, Quick Sort (average case), এবং বেশিরভাগ efficient sorting algorithms এ। এছাড়া Segment Tree construction O(n log n), Binary Indexed Tree operations O(n log n)।
+
+**Q4: Space Complexity O(1) মানে কী? উদাহরণ দিন।**
+
+> **উত্তর:** O(1) space মানে algorithm extra memory ব্যবহার করে না — শুধু constant কিছু variables। Input size যাই হোক, extra memory same থাকে। উদাহরণ: Two-pointer approach, in-place swap, binary search (iterative version)।
+
+**Q5: Worst case এবং Average case এর পার্থক্য practical example দিয়ে বলুন।**
+
+> **উত্তর:** Quick Sort এর Worst case O(n²) — যখন array already sorted এবং pivot সবসময় largest/smallest হয়। Average case O(n log n) — random data তে। তাই real applications এ Quick Sort random pivot বা median-of-three strategy ব্যবহার করে worst case avoid করে।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| O(1) এর উদাহরণ | Array index access, HashMap get |
+| O(n²) এর উদাহরণ | Bubble Sort, Nested loop |
+| Stack memory কে manage করে? | OS automatically |
+| Recursion এর memory complexity | O(n) — call stack |
+| Big O কোন case measure করে? | Worst case (upper bound) |
+| Stack Overflow কেন হয়? | Infinite/deep recursion |
+| Θ(n) মানে কী? | Exactly n operations (tight bound) |
+| log₂(1024) = ? | 10 |
+| O(n!) কোন algorithm? | Brute force permutation |
+| Tail recursion সুবিধা কী? | Stack frame reuse (O(1) space) |
+
+---
+
+> **⚠️ PART 1 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part2"></a>
+
+# PART 2: Arrays & Strings (অ্যারে ও স্ট্রিং)
+
+> **📍 এই PART এর Sections:** [২.১ Array Basics](#২১-array-basics) · [২.২ Static vs Dynamic](#২২-static-vs-dynamic-array) · [২.৩ String Operations](#২৩-string-operations) · [২.৪ Prefix Sum](#২৪-prefix-sum)
+
+> **পড়ার নির্দেশনা:** Array এবং String হলো সবচেয়ে fundamental data structures। Interview তে প্রায় সব coding problem এর ভিত্তি এখানেই। Sliding Window, Two Pointer, Prefix Sum — এই patterns শিখলে ৪০-৫০% interview problems সমাধান করা যায়।
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.১ Array Basics
+
+### সংজ্ঞা
+
+**Array** হলো একই ধরনের (homogeneous) data elements এর একটি contiguous (পাশাপাশি) collection যেখানে প্রতিটি element কে index দিয়ে access করা যায়।
+
+```
+Index:  [0]  [1]  [2]  [3]  [4]
+Array:  [10] [20] [30] [40] [50]
+         ↑                   ↑
+      প্রথম element        শেষ element (index = n-1)
+```
+
+### মূল বৈশিষ্ট্য
+
+| বৈশিষ্ট্য | মান | কারণ |
+|----------|-----|------|
+| **Access** | O(1) | Base address + offset গণনা |
+| **Search** | O(n) unsorted, O(log n) sorted | Linear/Binary scan |
+| **Insert (end)** | O(1) amortized | Array তে জায়গা থাকলে |
+| **Insert (middle)** | O(n) | Shift করতে হয় |
+| **Delete (middle)** | O(n) | Shift করতে হয় |
+| **Delete (end)** | O(1) | শুধু size কমে |
+
+### Random Access কেন O(1)?
+
+```
+Array address = Base Address + (Index × Element Size)
+
+Example: int arr[] — Base = 1000, int = 4 bytes
+  arr[0] → 1000 + (0 × 4) = 1000
+  arr[3] → 1000 + (3 × 4) = 1012
+  arr[9] → 1000 + (9 × 4) = 1036
+  → যেকোনো index এ direct calculation → O(1)
+```
+
+### Array Operations — Code
+
+```python
+# Array তৈরি
+arr = [10, 20, 30, 40, 50]
+
+# Access — O(1)
+print(arr[2])       # 30
+print(arr[-1])      # 50 (Python: negative indexing)
+
+# Traverse — O(n)
+for i in range(len(arr)):
+    print(arr[i])
+
+# Insert at end — O(1) amortized
+arr.append(60)       # [10, 20, 30, 40, 50, 60]
+
+# Insert at position — O(n)
+arr.insert(2, 25)    # [10, 20, 25, 30, 40, 50, 60]
+# index 2 এর পর সব element shift হয়
+
+# Delete — O(n)
+arr.remove(25)       # value দিয়ে remove (first occurrence)
+arr.pop(2)           # index দিয়ে remove
+arr.pop()            # শেষ element remove — O(1)
+
+# Search — O(n) unsorted
+print(30 in arr)     # True/False
+print(arr.index(30)) # index return
+
+# Slice — O(k), k = slice size
+sub = arr[1:4]       # [20, 30, 40]
+
+# Length
+n = len(arr)         # O(1)
+```
+
+### Array তৈরির সহজ উপায়
+
+```python
+# Zeros
+zeros = [0] * 5         # [0, 0, 0, 0, 0]
+
+# Range
+nums = list(range(1, 6)) # [1, 2, 3, 4, 5]
+
+# 2D Array (Matrix)
+matrix = [[0] * 3 for _ in range(3)]
+# [[0, 0, 0],
+#  [0, 0, 0],
+#  [0, 0, 0]]
+
+# ⚠️ এই ভুল করবেন না:
+wrong = [[0] * 3] * 3  # 3টি row একই reference share করে!
+wrong[0][0] = 1
+print(wrong)  # [[1, 0, 0], [1, 0, 0], [1, 0, 0]] — সব row change!
+```
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.২ Static vs Dynamic Array
+
+### Static Array
+
+```
+Size fixed at declaration — পরে পরিবর্তন করা যায় না।
+
+int arr[5] = {1, 2, 3, 4, 5};  // C এ
+// ৫টির বেশি element রাখা যাবে না
+
+Advantages:
+  ✅ Memory efficient — exact size allocate
+  ✅ Cache friendly — contiguous memory
+  ✅ Faster — no reallocation overhead
+
+Disadvantages:
+  ❌ Size আগে থেকে জানতে হয়
+  ❌ Overflow হতে পারে
+  ❌ Underflow — memory waste
+```
+
+### Dynamic Array
+
+```
+Runtime এ size বাড়ানো যায়।
+
+Python: list, Java: ArrayList, C++: vector
+
+Mechanism:
+  1. Initial capacity = 1 (বা কিছু small number)
+  2. Full হলে: নতুন array তৈরি (2× size)
+  3. সব element copy করো নতুন array তে
+  4. পুরনো array delete
+
+Visualization:
+  [10] → full!
+  [10, _, _, _] → doubled (capacity 4)
+  add 20: [10, 20, _, _]
+  add 30: [10, 20, 30, _]
+  add 40: [10, 20, 30, 40] → full!
+  [10, 20, 30, 40, _, _, _, _] → doubled (capacity 8)
+```
+
+### Amortized O(1) — কেন?
+
+```
+Suppose n elements insert করব:
+
+n insertions এর মধ্যে কতবার copy হয়?
+  capacity 1→2: 1 element copy
+  capacity 2→4: 2 elements copy
+  capacity 4→8: 4 elements copy
+  ...
+  Total copies = 1 + 2 + 4 + ... + n = 2n
+
+Total work = n insertions + 2n copies = 3n = O(n)
+Per insertion = O(n)/n = O(1) amortized
+```
+
+| বিষয় | Static Array | Dynamic Array |
+|------|-------------|---------------|
+| Size | Fixed | Flexible |
+| Memory | Exact | Extra (unused capacity) |
+| Insert (end) | O(1) | O(1) amortized |
+| Insert (middle) | O(n) | O(n) |
+| Languages | C arrays | Python list, C++ vector |
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.৩ String Operations
+
+### String কী?
+
+**String** হলো character এর sequence (array of characters)।
+
+```python
+s = "Hello, Bangladesh!"
+
+# Basic Operations
+print(len(s))          # 18 — O(n) Python, O(1) C++
+print(s[0])            # 'H' — O(1)
+print(s[7:17])         # 'Bangladesh' — O(k)
+print(s.upper())       # 'HELLO, BANGLADESH!'
+print(s.lower())       # 'hello, bangladesh!'
+print(s.strip())       # leading/trailing whitespace সরায়
+print(s.split(', '))   # ['Hello', 'Bangladesh!']
+print(s.replace('Bangladesh', 'BD'))
+print(s.count('l'))    # 3 — 'l' কতবার আছে
+print(s.find('Bang'))  # 7 — index
+print(s.startswith('Hello'))  # True
+print(s.endswith('!'))        # True
+```
+
+### String Immutability
+
+```python
+# Python এ string immutable — পরিবর্তন করা যায় না
+s = "hello"
+# s[0] = 'H'  ← TypeError!
+
+# পরিবর্তন করতে হলে নতুন string তৈরি করতে হয়
+s = 'H' + s[1:]    # 'Hello'
+
+# String Concatenation সমস্যা:
+result = ""
+for i in range(n):
+    result += str(i)   # ❌ O(n²) — প্রতিবার নতুন string তৈরি!
+
+# সঠিক পদ্ধতি:
+parts = []
+for i in range(n):
+    parts.append(str(i))
+result = ''.join(parts)  # ✅ O(n)
+```
+
+### String Hashing
+
+```python
+# Anagram check — O(n)
+from collections import Counter
+
+def is_anagram(s, t):
+    return Counter(s) == Counter(t)
+
+# অথবা:
+def is_anagram_v2(s, t):
+    if len(s) != len(t):
+        return False
+    freq = [0] * 26
+    for c in s:
+        freq[ord(c) - ord('a')] += 1
+    for c in t:
+        freq[ord(c) - ord('a')] -= 1
+    return all(f == 0 for f in freq)
+```
+
+### Palindrome Check
+
+```python
+def is_palindrome(s):
+    # Two Pointer approach — O(n) time, O(1) space
+    left, right = 0, len(s) - 1
+    while left < right:
+        if s[left] != s[right]:
+            return False
+        left += 1
+        right -= 1
+    return True
+
+# One-liner (সহজ কিন্তু O(n) space):
+def is_palindrome_v2(s):
+    return s == s[::-1]
+```
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.৪ Prefix Sum
+
+### ধারণা
+
+**Prefix Sum** হলো array এর প্রতিটি index পর্যন্ত সব elements এর যোগফল। এটি precompute করে রাখলে পরে যেকোনো range এর sum O(1) এ বের করা যায়।
+
+```
+Array:       [3, 1, 4, 1, 5, 9, 2, 6]
+Index:        0  1  2  3  4  5  6  7
+
+Prefix Sum:  [3, 4, 8, 9, 14, 23, 25, 31]
+  prefix[0] = 3
+  prefix[1] = 3 + 1 = 4
+  prefix[2] = 3 + 1 + 4 = 8
+  ...
+  prefix[i] = prefix[i-1] + arr[i]
+```
+
+### Range Sum Query
+
+```
+Range [l, r] এর sum = prefix[r] - prefix[l-1]
+
+Example: sum from index 2 to 5
+  = prefix[5] - prefix[1]
+  = 23 - 4
+  = 19
+
+Verify: 4 + 1 + 5 + 9 = 19 ✓
+```
+
+### Implementation
+
+```python
+def build_prefix(arr):
+    n = len(arr)
+    prefix = [0] * n
+    prefix[0] = arr[0]
+    for i in range(1, n):
+        prefix[i] = prefix[i-1] + arr[i]
+    return prefix
+
+def range_sum(prefix, l, r):
+    if l == 0:
+        return prefix[r]
+    return prefix[r] - prefix[l-1]
+
+# Usage
+arr = [3, 1, 4, 1, 5, 9, 2, 6]
+prefix = build_prefix(arr)
+print(range_sum(prefix, 2, 5))  # 19 — O(1)!
+
+# Without prefix: O(n) per query
+# With prefix: O(n) build, O(1) per query
+# Q queries হলে: O(n + Q) vs O(nQ) — massive difference!
+```
+
+### 2D Prefix Sum (Matrix)
+
+```python
+def build_2d_prefix(matrix):
+    rows, cols = len(matrix), len(matrix[0])
+    prefix = [[0] * (cols + 1) for _ in range(rows + 1)]
+
+    for r in range(1, rows + 1):
+        for c in range(1, cols + 1):
+            prefix[r][c] = (matrix[r-1][c-1]
+                          + prefix[r-1][c]
+                          + prefix[r][c-1]
+                          - prefix[r-1][c-1])
+    return prefix
+
+def query_2d(prefix, r1, c1, r2, c2):
+    # (r1,c1) থেকে (r2,c2) পর্যন্ত rectangle এর sum
+    return (prefix[r2+1][c2+1]
+           - prefix[r1][c2+1]
+           - prefix[r2+1][c1]
+           + prefix[r1][c1])
+```
+
+### Prefix Sum দিয়ে Subarray Count
+
+```python
+# Subarray যাদের sum = k → O(n) solution
+def count_subarrays_with_sum_k(arr, k):
+    count = 0
+    prefix_sum = 0
+    freq = {0: 1}  # empty subarray
+
+    for num in arr:
+        prefix_sum += num
+        # prefix_sum - k আগে দেখা গেলে, সেই point থেকে এখন পর্যন্ত sum = k
+        if prefix_sum - k in freq:
+            count += freq[prefix_sum - k]
+        freq[prefix_sum] = freq.get(prefix_sum, 0) + 1
+
+    return count
+
+# Example: arr = [1, 2, 3], k = 3
+# Subarrays: [3], [1,2] → count = 2
+```
+
+---
+
+## ২.৫ Sliding Window
+
+### ধারণা
+
+**Sliding Window** হলো একটি technique যেখানে একটি fixed বা variable size এর "window" array বরাবর slide করে। Brute force O(n²) কে O(n) এ আনে।
+
+```
+Array: [2, 3, 1, 5, 4, 2, 3]
+Window size k = 3
+
+Step 1: [2, 3, 1] 5  4  2  3   → sum = 6
+Step 2:  2 [3, 1, 5] 4  2  3   → sum = 9 (window সরল)
+Step 3:  2  3 [1, 5, 4] 2  3   → sum = 10
+Step 4:  2  3  1 [5, 4, 2] 3   → sum = 11
+Step 5:  2  3  1  5 [4, 2, 3]  → sum = 9
+
+Maximum sum = 11
+```
+
+### Fixed Window — Maximum Sum Subarray of Size K
+
+```python
+def max_sum_subarray(arr, k):
+    n = len(arr)
+    if n < k:
+        return -1
+
+    # প্রথম window এর sum
+    window_sum = sum(arr[:k])
+    max_sum = window_sum
+
+    # Window slide করো
+    for i in range(k, n):
+        # নতুন element যোগ করো, পুরনো element বাদ দাও
+        window_sum += arr[i] - arr[i - k]
+        max_sum = max(max_sum, window_sum)
+
+    return max_sum
+
+# Dry Run: arr = [2, 3, 1, 5, 4, 2, 3], k = 3
+# Initial: window_sum = 2+3+1 = 6, max = 6
+# i=3: sum = 6 + 5 - 2 = 9,  max = 9
+# i=4: sum = 9 + 4 - 3 = 10, max = 10
+# i=5: sum = 10+ 2 - 1 = 11, max = 11
+# i=6: sum = 11+ 3 - 5 = 9,  max = 11
+# Result: 11 ✓
+```
+
+### Variable Window — Longest Substring Without Repeating
+
+```python
+def length_of_longest_substring(s):
+    char_index = {}    # char → last seen index
+    max_len = 0
+    left = 0           # window এর বাম সীমা
+
+    for right in range(len(s)):
+        char = s[right]
+
+        # char আগে দেখা গেছে এবং window এর ভেতরে আছে
+        if char in char_index and char_index[char] >= left:
+            left = char_index[char] + 1  # window সংকুচিত করো
+
+        char_index[char] = right  # position update
+        max_len = max(max_len, right - left + 1)
+
+    return max_len
+
+# Dry Run: s = "abcabcbb"
+# r=0 'a': left=0, window="a",    len=1
+# r=1 'b': left=0, window="ab",   len=2
+# r=2 'c': left=0, window="abc",  len=3
+# r=3 'a': 'a' at 0, left=1, window="bca", len=3
+# r=4 'b': 'b' at 1, left=2, window="cab", len=3
+# r=5 'c': 'c' at 2, left=3, window="abc", len=3
+# r=6 'b': 'b' at 4, left=5, window="cb",  len=2
+# r=7 'b': 'b' at 6, left=7, window="b",   len=1
+# Result: 3 ✓
+```
+
+### Minimum Window Substring
+
+```python
+def min_window(s, t):
+    from collections import Counter
+
+    need = Counter(t)
+    missing = len(t)
+    best = (float('inf'), 0, 0)
+    left = 0
+
+    for right, char in enumerate(s):
+        if need[char] > 0:
+            missing -= 1
+        need[char] -= 1
+
+        if missing == 0:  # সব character পাওয়া গেছে
+            # বাম থেকে অপ্রয়োজনীয় characters সরাও
+            while need[s[left]] < 0:
+                need[s[left]] += 1
+                left += 1
+            if right - left + 1 < best[0]:
+                best = (right - left + 1, left, right)
+            need[s[left]] += 1
+            missing += 1
+            left += 1
+
+    return s[best[1]:best[2]+1] if best[0] != float('inf') else ""
+```
+
+### Sliding Window Pattern চেনার উপায়
+
+```
+এই keywords দেখলে Sliding Window ভাবুন:
+  → "contiguous subarray/substring"
+  → "maximum/minimum of fixed size k"
+  → "longest/shortest substring with condition"
+  → "all subarrays of size k"
+```
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.৬ Two Pointer
+
+### ধারণা
+
+**Two Pointer** technique তে দুটি pointer ব্যবহার করে array তে iterate করা হয়। একটি শুরু থেকে (left), একটি শেষ থেকে (right)। O(n²) কে O(n) এ আনে।
+
+### Two Sum — Sorted Array
+
+```python
+def two_sum_sorted(arr, target):
+    """
+    Sorted array তে দুটি number খোঁজো যাদের sum = target
+    """
+    left, right = 0, len(arr) - 1
+
+    while left < right:
+        current_sum = arr[left] + arr[right]
+
+        if current_sum == target:
+            return [left, right]
+        elif current_sum < target:
+            left += 1   # sum বাড়াতে left এগিয়ে আসে
+        else:
+            right -= 1  # sum কমাতে right পিছিয়ে যায়
+
+    return []
+
+# Dry Run: arr = [1, 3, 5, 7, 9, 11], target = 12
+# left=0(1), right=5(11): sum=12 → Found! [0,5] ✓
+
+# Dry Run: target = 10
+# left=0(1), right=5(11): sum=12 > 10, right--
+# left=0(1), right=4(9):  sum=10 → Found! [0,4] ✓
+```
+
+### Remove Duplicates from Sorted Array
+
+```python
+def remove_duplicates(arr):
+    """In-place, O(1) extra space"""
+    if not arr:
+        return 0
+
+    slow = 0  # unique elements এর pointer
+
+    for fast in range(1, len(arr)):
+        if arr[fast] != arr[slow]:  # নতুন unique element
+            slow += 1
+            arr[slow] = arr[fast]
+
+    return slow + 1  # unique count
+
+# Dry Run: [1, 1, 2, 2, 3, 4, 4]
+# slow=0(1), fast=1: arr[1]=1 == arr[0]=1, skip
+# slow=0(1), fast=2: arr[2]=2 != arr[0]=1 → slow=1, arr[1]=2
+# slow=1(2), fast=3: arr[3]=2 == arr[1]=2, skip
+# slow=1(2), fast=4: arr[4]=3 != arr[1]=2 → slow=2, arr[2]=3
+# ...
+# Result: [1, 2, 3, 4, ...], return 4
+```
+
+### Container With Most Water
+
+```python
+def max_area(height):
+    """
+    Array এর প্রতিটি element একটি vertical line এর height।
+    সর্বোচ্চ water ধরার container খুঁজুন।
+    """
+    left, right = 0, len(height) - 1
+    max_water = 0
+
+    while left < right:
+        # water = min height × width
+        water = min(height[left], height[right]) * (right - left)
+        max_water = max(max_water, water)
+
+        # ছোট height টার pointer সরাও (বড় করার চেষ্টা)
+        if height[left] < height[right]:
+            left += 1
+        else:
+            right -= 1
+
+    return max_water
+```
+
+### 3Sum Problem
+
+```python
+def three_sum(nums):
+    """তিনটি number খোঁজো যাদের sum = 0"""
+    nums.sort()
+    result = []
+    n = len(nums)
+
+    for i in range(n - 2):
+        # Duplicate skip
+        if i > 0 and nums[i] == nums[i-1]:
+            continue
+
+        left, right = i + 1, n - 1
+
+        while left < right:
+            total = nums[i] + nums[left] + nums[right]
+
+            if total == 0:
+                result.append([nums[i], nums[left], nums[right]])
+                while left < right and nums[left] == nums[left+1]:
+                    left += 1
+                while left < right and nums[right] == nums[right-1]:
+                    right -= 1
+                left += 1
+                right -= 1
+            elif total < 0:
+                left += 1
+            else:
+                right -= 1
+
+    return result
+```
+
+### Two Pointer Pattern চেনার উপায়
+
+```
+এই keywords দেখলে Two Pointer ভাবুন:
+  → "Sorted array তে pair/triplet"
+  → "In-place modification"
+  → "Palindrome check"
+  → "Merge two sorted arrays"
+  → "Remove duplicates"
+  → "Squeeze from both ends"
+```
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.৭ Kadane's Algorithm
+
+### সমস্যা: Maximum Subarray Sum
+
+Array তে এমন contiguous subarray খুঁজুন যার sum সবচেয়ে বেশি।
+
+```
+Input:  [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+Output: 6
+Explanation: [4, -1, 2, 1] = 6
+```
+
+### Brute Force — O(n³)
+
+```python
+def max_subarray_brute(arr):
+    n = len(arr)
+    max_sum = float('-inf')
+    for i in range(n):
+        for j in range(i, n):
+            current = sum(arr[i:j+1])  # O(n) per pair
+            max_sum = max(max_sum, current)
+    return max_sum
+# O(n³) — সব subarray try করা
+```
+
+### Kadane's Algorithm — O(n)
+
+```python
+def max_subarray_kadane(arr):
+    max_sum = arr[0]      # global maximum
+    current_sum = arr[0]  # current window এর sum
+
+    for i in range(1, len(arr)):
+        # নতুন element যোগ করা উচিত নাকি নতুন subarray শুরু?
+        current_sum = max(arr[i], current_sum + arr[i])
+        max_sum = max(max_sum, current_sum)
+
+    return max_sum
+```
+
+### Dry Run — Step by Step
+
+```
+arr = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+
+i=0: current=-2, max=-2
+i=1: current=max(1, -2+1)=max(1,-1)=1,  max=1
+i=2: current=max(-3,1-3)=max(-3,-2)=-2, max=1
+i=3: current=max(4,-2+4)=max(4,2)=4,    max=4
+i=4: current=max(-1,4-1)=max(-1,3)=3,   max=4
+i=5: current=max(2,3+2)=max(2,5)=5,     max=5
+i=6: current=max(1,5+1)=max(1,6)=6,     max=6
+i=7: current=max(-5,6-5)=max(-5,1)=1,   max=6
+i=8: current=max(4,1+4)=max(4,5)=5,     max=6
+
+Answer: 6 ✓ (subarray = [4,-1,2,1])
+```
+
+### Intuition
+
+```
+মূল idea:
+  যদি current_sum negative হয়ে যায়, তাহলে এটি বাদ দিয়ে
+  নতুন subarray শুরু করা লাভজনক।
+
+  কারণ: negative sum যোগ করলে future sum কমে।
+```
+
+### Subarray Start & End Position সহ
+
+```python
+def max_subarray_with_indices(arr):
+    max_sum = arr[0]
+    current_sum = arr[0]
+    start = end = temp_start = 0
+
+    for i in range(1, len(arr)):
+        if arr[i] > current_sum + arr[i]:
+            current_sum = arr[i]
+            temp_start = i          # নতুন subarray শুরু
+        else:
+            current_sum += arr[i]
+
+        if current_sum > max_sum:
+            max_sum = current_sum
+            start = temp_start
+            end = i
+
+    return max_sum, arr[start:end+1]
+
+# Output: (6, [4, -1, 2, 1])
+```
+
+### Variants
+
+```python
+# Maximum circular subarray sum
+def max_circular_subarray(arr):
+    # Case 1: Maximum subarray (না circular) — Kadane's
+    max_normal = max_subarray_kadane(arr)
+
+    # Case 2: Circular subarray
+    # Total sum - minimum subarray sum
+    total = sum(arr)
+    # Array invert করে minimum খুঁজি = maximum of negated
+    negated = [-x for x in arr]
+    min_subarray = -max_subarray_kadane(negated)
+    max_circular = total - min_subarray
+
+    # সব negative হলে circular sum invalid
+    return max(max_normal, max_circular) if max_circular != 0 else max_normal
+```
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.৮ Binary Search
+
+### সংজ্ঞা
+
+**Binary Search** হলো sorted array তে target খোঁজার O(log n) algorithm। প্রতিটি step এ search space অর্ধেক হয়।
+
+### Condition
+
+```
+Binary Search শুধু কাজ করে যখন:
+  ✅ Array sorted (ascending বা descending)
+  ✅ Random access possible (array, না linked list)
+```
+
+### Standard Implementation
+
+```python
+# Iterative — O(log n) time, O(1) space (preferred)
+def binary_search(arr, target):
+    lo, hi = 0, len(arr) - 1
+
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2  # Overflow prevent (না (lo+hi)//2)
+
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            lo = mid + 1   # target ডান দিকে
+        else:
+            hi = mid - 1   # target বাম দিকে
+
+    return -1  # না পাওয়া গেলে
+
+# Recursive — O(log n) time, O(log n) space
+def binary_search_recursive(arr, target, lo, hi):
+    if lo > hi:
+        return -1
+    mid = lo + (hi - lo) // 2
+    if arr[mid] == target:
+        return mid
+    elif arr[mid] < target:
+        return binary_search_recursive(arr, target, mid+1, hi)
+    else:
+        return binary_search_recursive(arr, target, lo, mid-1)
+```
+
+### Dry Run
+
+```
+arr = [1, 3, 5, 7, 9, 11, 13], target = 7
+
+lo=0, hi=6, mid=3 → arr[3]=7 == target → return 3 ✓
+
+arr = [1, 3, 5, 7, 9, 11, 13], target = 6
+
+lo=0, hi=6, mid=3 → arr[3]=7 > 6  → hi=2
+lo=0, hi=2, mid=1 → arr[1]=3 < 6  → lo=2
+lo=2, hi=2, mid=2 → arr[2]=5 < 6  → lo=3
+lo=3 > hi=2 → return -1 ✓
+```
+
+### First & Last Occurrence
+
+```python
+def first_occurrence(arr, target):
+    lo, hi = 0, len(arr) - 1
+    result = -1
+
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2
+        if arr[mid] == target:
+            result = mid
+            hi = mid - 1   # বামে আরো আছে কিনা দেখো
+        elif arr[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+
+    return result
+
+def last_occurrence(arr, target):
+    lo, hi = 0, len(arr) - 1
+    result = -1
+
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2
+        if arr[mid] == target:
+            result = mid
+            lo = mid + 1   # ডানে আরো আছে কিনা দেখো
+        elif arr[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+
+    return result
+```
+
+### Binary Search on Answer
+
+```python
+# সমস্যা: n টি chocolates, k জন students এ ভাগ কর।
+# max(minimum chocolates per student) maximize কর।
+# Constraints: প্রতিটি student consecutive chocolates পাবে।
+
+def is_feasible(arr, k, mid):
+    """mid minimum হলে k students এ ভাগ করা যায়?"""
+    students = 1
+    current = 0
+    for chocolates in arr:
+        if chocolates > mid:
+            return False     # single package এ বেশি
+        if current + chocolates > mid:
+            students += 1
+            current = chocolates
+        else:
+            current += chocolates
+    return students <= k
+
+def allocate_chocolates(arr, k):
+    lo, hi = max(arr), sum(arr)
+    result = hi
+
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2
+        if is_feasible(arr, k, mid):
+            result = mid
+            hi = mid - 1   # smaller value সম্ভব?
+        else:
+            lo = mid + 1
+
+    return result
+```
+
+### Binary Search Template
+
+```python
+# Template: "condition সত্য হওয়ার প্রথম/শেষ position খোঁজো"
+
+def binary_search_template(lo, hi):
+    result = -1
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2
+        if condition(mid):      # আপনার condition এখানে
+            result = mid
+            hi = mid - 1       # বামে search (first occurrence)
+            # অথবা lo = mid+1  # ডানে search (last occurrence)
+        else:
+            lo = mid + 1       # অথবা hi = mid-1
+    return result
+```
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.৯ Matrix Operations
+
+### Matrix Basics
+
+```python
+# 3×4 matrix
+matrix = [
+    [1,  2,  3,  4],
+    [5,  6,  7,  8],
+    [9, 10, 11, 12]
+]
+
+rows = len(matrix)       # 3
+cols = len(matrix[0])    # 4
+
+# Element access — O(1)
+print(matrix[1][2])      # 7 (row 1, col 2)
+
+# Row traverse
+for col in range(cols):
+    print(matrix[0][col])   # First row: 1 2 3 4
+
+# Column traverse
+for row in range(rows):
+    print(matrix[row][1])   # Second column: 2 6 10
+```
+
+### Matrix Traversal Patterns
+
+```python
+# ── Spiral Order Traversal ─────────────────────────
+def spiral_order(matrix):
+    result = []
+    if not matrix:
+        return result
+
+    top, bottom = 0, len(matrix) - 1
+    left, right = 0, len(matrix[0]) - 1
+
+    while top <= bottom and left <= right:
+        # Left to Right (top row)
+        for col in range(left, right + 1):
+            result.append(matrix[top][col])
+        top += 1
+
+        # Top to Bottom (right column)
+        for row in range(top, bottom + 1):
+            result.append(matrix[row][right])
+        right -= 1
+
+        # Right to Left (bottom row)
+        if top <= bottom:
+            for col in range(right, left - 1, -1):
+                result.append(matrix[bottom][col])
+            bottom -= 1
+
+        # Bottom to Top (left column)
+        if left <= right:
+            for row in range(bottom, top - 1, -1):
+                result.append(matrix[row][left])
+            left += 1
+
+    return result
+
+# ── Diagonal Traversal ──────────────────────────────
+def diagonal_traverse(matrix):
+    rows, cols = len(matrix), len(matrix[0])
+    result = []
+    going_up = True
+
+    r, c = 0, 0
+    for _ in range(rows * cols):
+        result.append(matrix[r][c])
+        if going_up:
+            if c == cols - 1:
+                r += 1; going_up = False
+            elif r == 0:
+                c += 1; going_up = False
+            else:
+                r -= 1; c += 1
+        else:
+            if r == rows - 1:
+                c += 1; going_up = True
+            elif c == 0:
+                r += 1; going_up = True
+            else:
+                r += 1; c -= 1
+
+    return result
+```
+
+### Matrix Rotation (90° Clockwise)
+
+```python
+def rotate_90_clockwise(matrix):
+    """
+    In-place rotation — O(n²) time, O(1) space
+    Step 1: Transpose (rows → columns)
+    Step 2: Reverse each row
+    """
+    n = len(matrix)
+
+    # Step 1: Transpose
+    for i in range(n):
+        for j in range(i + 1, n):
+            matrix[i][j], matrix[j][i] = matrix[j][i], matrix[i][j]
+
+    # Step 2: Reverse each row
+    for i in range(n):
+        matrix[i].reverse()
+
+# Example:
+# Original:     After Transpose:  After Row Reverse:
+# 1 2 3         1 4 7             7 4 1
+# 4 5 6    →    2 5 8      →      8 5 2
+# 7 8 9         3 6 9             9 6 3
+```
+
+### Set Matrix Zeroes
+
+```python
+def set_zeroes(matrix):
+    """
+    কোনো cell 0 হলে সেই পুরো row ও column 0 করো।
+    O(mn) time, O(1) extra space (in-place)
+    """
+    rows, cols = len(matrix), len(matrix[0])
+    first_row_zero = any(matrix[0][c] == 0 for c in range(cols))
+    first_col_zero = any(matrix[r][0] == 0 for r in range(rows))
+
+    # প্রথম row ও col কে marker হিসেবে ব্যবহার
+    for r in range(1, rows):
+        for c in range(1, cols):
+            if matrix[r][c] == 0:
+                matrix[r][0] = 0   # row marker
+                matrix[0][c] = 0   # col marker
+
+    # Markers দেখে zero করো
+    for r in range(1, rows):
+        for c in range(1, cols):
+            if matrix[r][0] == 0 or matrix[0][c] == 0:
+                matrix[r][c] = 0
+
+    if first_row_zero:
+        for c in range(cols):
+            matrix[0][c] = 0
+
+    if first_col_zero:
+        for r in range(rows):
+            matrix[r][0] = 0
+```
+
+### BFS on Matrix (Shortest Path)
+
+```python
+from collections import deque
+
+def shortest_path(grid, start, end):
+    """
+    Grid এ shortest path — BFS (unweighted)
+    0 = open, 1 = blocked
+    """
+    rows, cols = len(grid), len(grid[0])
+    directions = [(0,1), (0,-1), (1,0), (-1,0)]
+    queue = deque([(start[0], start[1], 0)])  # (row, col, distance)
+    visited = {start}
+
+    while queue:
+        r, c, dist = queue.popleft()
+
+        if (r, c) == tuple(end):
+            return dist
+
+        for dr, dc in directions:
+            nr, nc = r + dr, c + dc
+            if (0 <= nr < rows and 0 <= nc < cols
+                    and grid[nr][nc] == 0
+                    and (nr, nc) not in visited):
+                visited.add((nr, nc))
+                queue.append((nr, nc, dist + 1))
+
+    return -1  # path নেই
+```
+
+---
+
+<div align="right"><a href="#part2">⬆ PART 2 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ২.১০ PART 2 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Sliding Window এবং Two Pointer এর মধ্যে পার্থক্য কী?**
+
+> **উত্তর:** Sliding Window এ একটি "window" (range) maintain করা হয় যেটি এক দিকে এগোয় — window এর size fixed বা variable হতে পারে। Two Pointer এ দুটি pointer সাধারণত দুই দিক থেকে মাঝে আসে (বা একই দিকে slow/fast)। Overlap আছে — variable sliding window আসলে two pointer এরই একটি form। তবে Two Pointer বেশি general — merge, partition, palindrome check এও কাজ করে।
+
+**Q2: Binary Search এ mid = (lo + hi) / 2 না লিখে lo + (hi - lo) / 2 কেন লিখব?**
+
+> **উত্তর:** Integer overflow এর জন্য। যদি lo এবং hi উভয় INT_MAX এর কাছাকাছি হয়, তাহলে lo + hi overflow করতে পারে (C/Java/C++ এ)। lo + (hi - lo) / 2 সবসময় safe। Python এ arbitrary precision integer আছে তাই সমস্যা নেই, কিন্তু habit হিসেবে এটি লেখাই ভালো।
+
+**Q3: Kadane's Algorithm কীভাবে কাজ করে? Explain করুন।**
+
+> **উত্তর:** Kadane's Algorithm দুটি variable রাখে — current_sum (এখন পর্যন্ত subarray sum) এবং max_sum। প্রতিটি element এ সিদ্ধান্ত নিতে হয়: এই element কে current subarray তে যোগ করব নাকি নতুন subarray শুরু করব? `current_sum = max(arr[i], current_sum + arr[i])` — যদি current_sum negative হয়, নতুন subarray শুরু করা লাভজনক। এটি Dynamic Programming এর একটি form — local optimal থেকে global optimal।
+
+**Q4: Prefix Sum কোন ধরনের problem এ কাজ করে না?**
+
+> **উত্তর:** Prefix Sum কাজ করে না যখন: (১) array frequently update হয় (সব prefix rebuild করতে হবে — এখানে Segment Tree বা BIT better), (২) 2D তে complex query (সরল নয়), (৩) multiplication বা অন্য operations যেখানে sum এর মতো simple নয়।
+
+**Q5: Dynamic Array এর amortized O(1) insertion কীভাবে বুঝবেন?**
+
+> **উত্তর:** n insertions করলে কতটি copy operation হয়? Capacity doubling এ: 1 + 2 + 4 + ... + n = 2n total copies। Total work = n insertions + 2n copies = 3n = O(n)। Per insertion average = O(n)/n = O(1)। Amortized মানে — মাঝে মাঝে একটি insertion O(n) লাগে (copy time), কিন্তু n insertions এর গড় O(1)।
+
+**Q6: Sorted Array তে duplicate সহ binary search কীভাবে করবেন?**
+
+> **উত্তর:** Standard binary search target পেলেই return করে — duplicate এ যেকোনো একটি পাবে। First occurrence এর জন্য: target পেলে result = mid রাখো এবং hi = mid - 1 করে বাম দিকে continue করো। Last occurrence এর জন্য: target পেলে result = mid রাখো এবং lo = mid + 1 করে ডান দিকে continue করো।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| Array এ random access এর complexity | O(1) |
+| Unsorted array এ search | O(n) linear search |
+| Sliding Window এর use case | Contiguous subarray/substring |
+| Two Pointer এর condition | সাধারণত sorted array |
+| Kadane's এর complexity | O(n) time, O(1) space |
+| Binary Search এর condition | Sorted array |
+| Binary Search এর complexity | O(log n) |
+| Prefix Sum build করতে | O(n) |
+| Prefix Sum query | O(1) |
+| Matrix 90° rotation in-place | Transpose + Reverse rows |
+| Dynamic array কখন resize হয়? | Full হলে 2× করে |
+| String concatenation ভুল পদ্ধতি | += loop এ (O(n²)) |
+| String concatenation সঠিক | join() — O(n) |
+| Sliding Window maximum window | Variable — left/right দুই pointer |
+
+### সেকশন ৩: Coding Practice Problems
+
+```
+Easy:
+  □ Two Sum (unsorted — HashMap, sorted — Two Pointer)
+  □ Maximum subarray (Kadane's)
+  □ Binary search (standard)
+  □ Reverse string in-place
+  □ Check palindrome
+  □ Remove duplicates from sorted array
+
+Medium:
+  □ Longest substring without repeating characters
+  □ Container with most water
+  □ 3Sum
+  □ Minimum window substring
+  □ Rotate matrix 90°
+  □ Set matrix zeroes
+  □ Subarray sum equals K
+  □ Search in rotated sorted array
+
+Hard:
+  □ Minimum window substring (optimization)
+  □ Sliding window maximum (Monotonic deque)
+  □ Trapping rain water
+  □ Median of two sorted arrays
+```
+
+---
+
+> **⚠️ PART 2 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+
+<details>
+<summary><strong>📙 PART 3 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৩.১ Linked List কী?](#৩১-linked-list-কী)
+- [৩.২ Singly Linked List](#৩২-singly-linked-list)
+- [৩.৩ Doubly Linked List](#৩৩-doubly-linked-list)
+- [৩.৪ Circular Linked List](#৩৪-circular-linked-list)
+- [৩.৫ Insert ও Delete Operations](#৩৫-insert-ও-delete-operations)
+- [৩.৬ Reverse Linked List](#৩৬-reverse-linked-list)
+- [৩.৭ Cycle Detection — Floyd's Algorithm](#৩৭-cycle-detection--floyds-algorithm)
+- [৩.৮ Merge Linked Lists](#৩৮-merge-linked-lists)
+- [৩.৯ PART 3 — Interview Q&A](#৩৯-part-3--interview-qa)
+
+</details>
+
+<details>
+<summary><strong>📕 PART 4 — বিস্তারিত সূচি দেখুন</strong></summary>
+<br>
+
+- [৪.১ Stack](#৪১-stack)
+- [৪.২ Queue](#৪২-queue)
+- [৪.৩ Circular Queue](#৪৩-circular-queue)
+- [৪.৪ Deque (Double-Ended Queue)](#৪৪-deque-double-ended-queue)
+- [৪.৫ Priority Queue ও Heap](#৪৫-priority-queue-ও-heap)
+- [৪.৬ Monotonic Stack](#৪৬-monotonic-stack)
+- [৪.৭ Expression Evaluation](#৪৭-expression-evaluation)
+- [৪.৮ Infix to Postfix](#৪৮-infix-to-postfix)
+- [৪.৯ PART 4 — Interview Q&A](#৪৯-part-4--interview-qa)
+
+</details>
+
+
+
+<a id="part3"></a>
+
+# PART 3: Linked List (লিংকড লিস্ট)
+
+> **📍 এই PART এর Sections:** [৩.১ Linked List কী?](#৩১-linked-list-কী) · [৩.২ Singly Linked List](#৩২-singly-linked-list) · [৩.৩ Doubly Linked List](#৩৩-doubly-linked-list) · [৩.৪ Circular Linked List](#৩৪-circular-linked-list)
+
+> **পড়ার নির্দেশনা:** Linked List হলো pointer/reference ভিত্তিক data structure। Interview তে Reverse, Cycle Detection, Merge — এই তিনটি প্রায় সবসময় জিজ্ঞেস করা হয়। Pointer visualization দিয়ে পড়ুন।
+
+---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৩.১ Linked List কী?
+
+### সংজ্ঞা
+
+**Linked List** হলো linear data structure যেখানে elements (node) memory তে contiguous নয় — প্রতিটি node তার data এবং পরবর্তী node এর **reference (pointer)** ধারণ করে।
+
+```
+Array (Contiguous):
+  [10][20][30][40][50]
+   ↑   ↑   ↑   ↑   ↑
+  1000 1004 1008 1012 1016  ← memory addresses পাশাপাশি
+
+Linked List (Non-contiguous):
+  [10|→] ── [20|→] ── [30|→] ── [40|→] ── [50|None]
+  1000        3048       2016       5102       4560
+              ↑           ↑           ↑
+           যেকোনো       যেকোনো     যেকোনো
+           address       address    address
+```
+
+### Array vs Linked List
+
+| বিষয় | Array | Linked List |
+|------|-------|-------------|
+| **Memory** | Contiguous | Scattered |
+| **Access** | O(1) random | O(n) sequential |
+| **Insert (front)** | O(n) shift | O(1) |
+| **Insert (middle)** | O(n) | O(n) traverse + O(1) insert |
+| **Insert (end)** | O(1) amortized | O(n) বা O(1) with tail |
+| **Delete** | O(n) | O(n) traverse + O(1) delete |
+| **Search** | O(n) / O(log n) sorted | O(n) |
+| **Extra memory** | No | O(n) for pointers |
+| **Cache friendly** | ✅ Yes | ❌ No |
+
+### Node Structure
+
+```python
+class Node:
+    def __init__(self, data):
+        self.data = data    # data field
+        self.next = None    # pointer to next node
+
+# Node তৈরি
+n1 = Node(10)
+n2 = Node(20)
+n3 = Node(30)
+
+# Link করা
+n1.next = n2
+n2.next = n3
+# n3.next = None (already)
+
+# Structure:
+# n1(10) → n2(20) → n3(30) → None
+```
+
+---
+
+## ৩.২ Singly Linked List
+
+### সম্পূর্ণ Implementation
+
+```python
+class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+class SinglyLinkedList:
+    def __init__(self):
+        self.head = None
+        self.size = 0
+
+    # ── Traversal — O(n) ────────────────────────────
+    def display(self):
+        current = self.head
+        nodes = []
+        while current:
+            nodes.append(str(current.data))
+            current = current.next
+        print(" → ".join(nodes) + " → None")
+
+    def __len__(self):
+        return self.size
+
+    # ── Insert at Beginning — O(1) ──────────────────
+    def insert_at_head(self, data):
+        new_node = Node(data)
+        new_node.next = self.head  # নতুন node head কে point করে
+        self.head = new_node       # head সরে যায়
+        self.size += 1
+
+    # Visualization:
+    # Before: head → [20] → [30] → None
+    # After:  head → [10] → [20] → [30] → None
+
+    # ── Insert at End — O(n) ────────────────────────
+    def insert_at_tail(self, data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            self.size += 1
+            return
+
+        current = self.head
+        while current.next:     # শেষ node খুঁজি
+            current = current.next
+        current.next = new_node # শেষে যোগ
+        self.size += 1
+
+    # ── Insert at Position — O(n) ───────────────────
+    def insert_at_position(self, pos, data):
+        if pos < 0 or pos > self.size:
+            raise IndexError("Invalid position")
+
+        if pos == 0:
+            self.insert_at_head(data)
+            return
+
+        new_node = Node(data)
+        current = self.head
+        for _ in range(pos - 1):  # pos-1 এ পৌঁছাও
+            current = current.next
+
+        new_node.next = current.next
+        current.next = new_node
+        self.size += 1
+
+    # ── Delete by Value — O(n) ──────────────────────
+    def delete_by_value(self, data):
+        if not self.head:
+            return False
+
+        # Head delete
+        if self.head.data == data:
+            self.head = self.head.next
+            self.size -= 1
+            return True
+
+        current = self.head
+        while current.next:
+            if current.next.data == data:
+                current.next = current.next.next  # skip করো
+                self.size -= 1
+                return True
+            current = current.next
+        return False
+
+    # Visualization (delete 20):
+    # Before: [10] → [20] → [30] → None
+    #          ↑
+    #        current
+    # current.next (20) এর data == 20 → current.next = current.next.next
+    # After:  [10] → [30] → None
+
+    # ── Search — O(n) ───────────────────────────────
+    def search(self, data):
+        current = self.head
+        pos = 0
+        while current:
+            if current.data == data:
+                return pos
+            current = current.next
+            pos += 1
+        return -1
+
+    # ── Get by Index — O(n) ─────────────────────────
+    def get(self, index):
+        if index < 0 or index >= self.size:
+            raise IndexError("Index out of range")
+        current = self.head
+        for _ in range(index):
+            current = current.next
+        return current.data
+
+# Usage
+ll = SinglyLinkedList()
+ll.insert_at_tail(10)
+ll.insert_at_tail(20)
+ll.insert_at_tail(30)
+ll.insert_at_head(5)
+ll.display()   # 5 → 10 → 20 → 30 → None
+
+ll.delete_by_value(20)
+ll.display()   # 5 → 10 → 30 → None
+print(ll.search(30))  # 2
+```
+
+### Middle Element খোঁজা — Slow/Fast Pointer
+
+```python
+def find_middle(head):
+    """
+    Fast pointer 2 step এগোয়, Slow 1 step।
+    Fast শেষে পৌঁছালে Slow মাঝে থাকে।
+    """
+    slow = head
+    fast = head
+
+    while fast and fast.next:
+        slow = slow.next       # 1 step
+        fast = fast.next.next  # 2 step
+
+    return slow
+
+# Dry Run: 1 → 2 → 3 → 4 → 5 → None
+# Initial: slow=1, fast=1
+# Step 1:  slow=2, fast=3
+# Step 2:  slow=3, fast=5
+# fast.next = None → stop
+# Middle = 3 ✓ (odd: exact middle; even: second of two middles)
+```
+
+---
+
+## ৩.৩ Doubly Linked List
+
+### সংজ্ঞা ও Structure
+
+প্রতিটি node এ **দুটি pointer** — পরবর্তী node (next) এবং পূর্ববর্তী node (prev)।
+
+```
+None ← [10] ↔ [20] ↔ [30] ↔ [40] → None
+        ↑                           ↑
+       head                        tail
+
+Node structure:
+  ┌──────┬──────┬──────┐
+  │ prev │ data │ next │
+  └──────┴──────┴──────┘
+```
+
+```python
+class DNode:
+    def __init__(self, data):
+        self.data = data
+        self.prev = None
+        self.next = None
+
+class DoublyLinkedList:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+        self.size = 0
+
+    def insert_at_head(self, data):
+        new_node = DNode(data)
+        if not self.head:
+            self.head = self.tail = new_node
+        else:
+            new_node.next = self.head
+            self.head.prev = new_node
+            self.head = new_node
+        self.size += 1
+
+    def insert_at_tail(self, data):
+        new_node = DNode(data)
+        if not self.tail:
+            self.head = self.tail = new_node
+        else:
+            new_node.prev = self.tail
+            self.tail.next = new_node
+            self.tail = new_node
+        self.size += 1
+
+    def delete_node(self, node):
+        """O(1) — node reference জানলে directly delete"""
+        if node.prev:
+            node.prev.next = node.next
+        else:
+            self.head = node.next  # head ছিল
+
+        if node.next:
+            node.next.prev = node.prev
+        else:
+            self.tail = node.prev  # tail ছিল
+
+        self.size -= 1
+
+    def display_forward(self):
+        curr, parts = self.head, []
+        while curr:
+            parts.append(str(curr.data))
+            curr = curr.next
+        print("None ↔ " + " ↔ ".join(parts) + " ↔ None")
+
+    def display_backward(self):
+        curr, parts = self.tail, []
+        while curr:
+            parts.append(str(curr.data))
+            curr = curr.prev
+        print("None ↔ " + " ↔ ".join(parts) + " ↔ None")
+```
+
+### Singly vs Doubly
+
+| বিষয় | Singly | Doubly |
+|------|--------|--------|
+| Pointers per node | 1 (next) | 2 (prev + next) |
+| Memory | কম | বেশি |
+| Backward traversal | ❌ | ✅ |
+| Delete (given node) | O(n) — previous খুঁজতে হয় | O(1) |
+| Insert before node | O(n) | O(1) |
+| Use case | Stack, simple list | LRU Cache, Browser history |
+
+---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৩.৪ Circular Linked List
+
+### সংজ্ঞা
+
+শেষ node এর next pointer প্রথম node (head) কে point করে — কোনো None নেই।
+
+```
+Singly Circular:
+  head → [10] → [20] → [30] → [40] ─┐
+           ↑________________________________┘
+
+Doubly Circular:
+  ┌─────────────────────────────┐
+  └→ [10] ↔ [20] ↔ [30] ↔ [40] ←┘
+```
+
+```python
+class CircularLinkedList:
+    def __init__(self):
+        self.head = None
+
+    def insert_at_end(self, data):
+        new_node = Node(data)
+        if not self.head:
+            self.head = new_node
+            new_node.next = self.head  # নিজেকে point
+            return
+
+        # শেষ node খুঁজি (যার next = head)
+        current = self.head
+        while current.next != self.head:
+            current = current.next
+        current.next = new_node
+        new_node.next = self.head
+
+    def display(self):
+        if not self.head:
+            return
+        current = self.head
+        parts = []
+        while True:
+            parts.append(str(current.data))
+            current = current.next
+            if current == self.head:
+                break
+        print(" → ".join(parts) + " → (head)")
+
+    def detect_length(self):
+        if not self.head:
+            return 0
+        count = 1
+        current = self.head.next
+        while current != self.head:
+            count += 1
+            current = current.next
+        return count
+```
+
+### Circular LL এর Use Case
+
+```
+✅ Round-robin scheduling (CPU scheduling)
+✅ Circular buffer / Ring buffer
+✅ Multiplayer game — turn management
+✅ Media player — playlist loop
+```
+
+---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৩.৫ Insert ও Delete Operations
+
+### Insert Positions এর Pointer Visualization
+
+```
+Insert 25 between 20 and 30:
+
+Before:
+  [10] → [20] → [30] → [40] → None
+          ↑
+        current (pos-1 তে)
+
+Step 1: new_node = Node(25)
+Step 2: new_node.next = current.next  → new_node → [30]
+Step 3: current.next = new_node       → [20] → [25]
+
+After:
+  [10] → [20] → [25] → [30] → [40] → None
+```
+
+```
+Delete node 30 (জানা আছে previous node 20):
+
+Before:
+  [10] → [20] → [30] → [40] → None
+          ↑       ↑
+        prev    to_delete
+
+Step: prev.next = to_delete.next  → [20] → [40]
+
+After:
+  [10] → [20] → [40] → None
+  [30] is now unreferenced → garbage collected
+```
+
+### "Delete Given Node" — Tricky Interview Pattern
+
+```python
+def delete_given_node(node):
+    """
+    Head এ access নেই, শুধু delete করার node আছে।
+    Last node হবে না এই guarantee আছে।
+    """
+    # পরের node এর data copy করো
+    node.data = node.next.data
+    # পরের node skip করো
+    node.next = node.next.next
+
+# Visualization: delete node containing 20
+# Before: [10] → [20] → [30] → [40] → None
+#                  ↑ node
+# Step 1: node.data = 30  → [10] → [30] → [30] → [40] → None
+# Step 2: node.next = [40] → [10] → [30] → [40] → None ✓
+```
+
+---
+
+## ৩.৬ Reverse Linked List
+
+### Iterative Approach — O(n) time, O(1) space
+
+```python
+def reverse_iterative(head):
+    prev = None
+    current = head
+
+    while current:
+        next_node = current.next  # ধরে রাখো
+        current.next = prev       # উল্টে দাও
+        prev = current            # এগিয়ে যাও
+        current = next_node
+
+    return prev  # নতুন head
+
+# Dry Run: 1 → 2 → 3 → 4 → None
+
+# Initial: prev=None, current=1
+#
+# Step 1: next=2, 1.next=None, prev=1, current=2
+#   None ← [1]   [2] → [3] → [4] → None
+#
+# Step 2: next=3, 2.next=1,   prev=2, current=3
+#   None ← [1] ← [2]   [3] → [4] → None
+#
+# Step 3: next=4, 3.next=2,   prev=3, current=4
+#   None ← [1] ← [2] ← [3]   [4] → None
+#
+# Step 4: next=None, 4.next=3, prev=4, current=None
+#   None ← [1] ← [2] ← [3] ← [4]
+#
+# return prev = 4 (নতুন head)
+# Final: 4 → 3 → 2 → 1 → None ✓
+```
+
+### Recursive Approach — O(n) time, O(n) space (call stack)
+
+```python
+def reverse_recursive(head):
+    # Base case
+    if not head or not head.next:
+        return head
+
+    # বাকি list reverse করো
+    new_head = reverse_recursive(head.next)
+
+    # head.next কে (এখন শেষে) head কে point করাও
+    head.next.next = head
+    head.next = None
+
+    return new_head
+
+# Trace: reverse(1 → 2 → 3 → None)
+# reverse(1):
+#   new_head = reverse(2 → 3 → None)
+#     new_head = reverse(3 → None)
+#       return 3 (base case)
+#     3.next = 2, 2.next = None → 3 → 2 → None
+#     return 3
+#   3.next = 2, 2.next = 1, 1.next = None → 3 → 2 → 1 → None
+#   return 3
+```
+
+### Reverse in Groups of K
+
+```python
+def reverse_k_group(head, k):
+    """প্রতি k টি node কে reverse করো"""
+    # k টি node আছে কিনা check
+    count = 0
+    current = head
+    while current and count < k:
+        current = current.next
+        count += 1
+
+    if count < k:
+        return head  # k এর কম বাকি, unchanged
+
+    # প্রথম k টি reverse করো
+    prev, curr = None, head
+    for _ in range(k):
+        nxt = curr.next
+        curr.next = prev
+        prev = curr
+        curr = nxt
+
+    # head এখন শেষে — বাকি অংশকে connect করো
+    head.next = reverse_k_group(curr, k)
+    return prev
+```
+
+---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৩.৭ Cycle Detection — Floyd's Algorithm
+
+### সমস্যা
+
+Linked List এ cycle আছে কিনা detect করতে হবে। Cycle মানে — কোনো node এর next তার আগের কোনো node কে point করে।
+
+```
+Cycle সহ:
+  1 → 2 → 3 → 4 → 5
+              ↑       ↓
+              8 ← 7 ← 6
+```
+
+### Floyd's Tortoise and Hare
+
+```python
+def has_cycle(head):
+    """O(n) time, O(1) space"""
+    slow = head
+    fast = head
+
+    while fast and fast.next:
+        slow = slow.next        # 1 step (tortoise)
+        fast = fast.next.next   # 2 step (hare)
+
+        if slow == fast:        # মিলে গেলে cycle আছে
+            return True
+
+    return False  # fast None এ পৌঁছালে cycle নেই
+
+# Intuition:
+# Cycle না থাকলে fast ahead চলে শেষে None এ যাবে।
+# Cycle থাকলে fast loop এর ভেতরে ঘুরবে,
+# slow ও cycle এ ঢুকবে, ধীরে ধীরে fast তাকে ধরবে।
+# (যেমন circular track এ দ্রুত runner slower কে lap করে)
+```
+
+### Cycle এর Starting Point খোঁজা
+
+```python
+def detect_cycle_start(head):
+    """
+    Floyd's extended: cycle শুরু কোথায়?
+    """
+    slow = fast = head
+
+    # Phase 1: Meeting point খোঁজো
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            break
+    else:
+        return None  # cycle নেই
+
+    # Phase 2: Head থেকে ও meeting point থেকে
+    # same speed এ চলো — cycle start এ মিলবে
+    slow = head
+    while slow != fast:
+        slow = slow.next
+        fast = fast.next
+
+    return slow  # cycle এর শুরু
+
+# Mathematical Proof:
+# distance(head → cycle_start) = distance(meeting_point → cycle_start)
+# তাই দুই pointer একসাথে চললে cycle start এ মিলবে।
+```
+
+### Cycle Length বের করা
+
+```python
+def cycle_length(head):
+    slow = fast = head
+
+    while fast and fast.next:
+        slow = slow.next
+        fast = fast.next.next
+        if slow == fast:
+            # Meeting point থেকে আবার ঘুরে length বের করো
+            length = 1
+            current = slow.next
+            while current != slow:
+                length += 1
+                current = current.next
+            return length
+
+    return 0  # cycle নেই
+```
+
+---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৩.৮ Merge Linked Lists
+
+### Merge Two Sorted Linked Lists
+
+```python
+def merge_sorted(l1, l2):
+    """O(m+n) time, O(1) space (iterative)"""
+    # Dummy head — edge cases সহজ করে
+    dummy = Node(0)
+    current = dummy
+
+    while l1 and l2:
+        if l1.data <= l2.data:
+            current.next = l1
+            l1 = l1.next
+        else:
+            current.next = l2
+            l2 = l2.next
+        current = current.next
+
+    # বাকি অংশ attach করো
+    current.next = l1 if l1 else l2
+
+    return dummy.next
+
+# Dry Run:
+# l1: 1 → 3 → 5
+# l2: 2 → 4 → 6
+
+# dummy → 1(l1<l2) → 2(l2<l1) → 3 → 4 → 5 → 6 → None ✓
+```
+
+### Merge K Sorted Linked Lists — Heap দিয়ে
+
+```python
+import heapq
+
+def merge_k_sorted(lists):
+    """O(N log k) — N = total nodes, k = list count"""
+    dummy = Node(0)
+    current = dummy
+    heap = []
+
+    # Initial: প্রতিটি list এর head heap এ
+    for i, node in enumerate(lists):
+        if node:
+            heapq.heappush(heap, (node.data, i, node))
+
+    while heap:
+        val, i, node = heapq.heappop(heap)
+        current.next = node
+        current = current.next
+        if node.next:
+            heapq.heappush(heap, (node.next.data, i, node.next))
+
+    return dummy.next
+```
+
+### Add Two Numbers (Linked List হিসেবে)
+
+```python
+def add_two_numbers(l1, l2):
+    """
+    দুটি number reversed linked list হিসেবে দেওয়া।
+    তাদের sum ও reversed linked list এ return করো।
+    Input: 2→4→3 (342) + 5→6→4 (465) = 807 → 7→0→8
+    """
+    dummy = Node(0)
+    current = dummy
+    carry = 0
+
+    while l1 or l2 or carry:
+        val1 = l1.data if l1 else 0
+        val2 = l2.data if l2 else 0
+
+        total = val1 + val2 + carry
+        carry = total // 10
+        digit = total % 10
+
+        current.next = Node(digit)
+        current = current.next
+
+        if l1: l1 = l1.next
+        if l2: l2 = l2.next
+
+    return dummy.next
+```
+
+---
+
+<div align="right"><a href="#part3">⬆ PART 3 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৩.৯ PART 3 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Linked List এবং Array এর মধ্যে কোনটি কখন ব্যবহার করবেন?**
+
+> **উত্তর:** Array: random access দরকার হলে (O(1)), size আগে থেকে জানা থাকলে, cache performance গুরুত্বপূর্ণ হলে। Linked List: frequent insert/delete at beginning দরকার হলে (O(1)), size dynamic এবং unpredictable হলে, memory fragmentation এর সমস্যা থাকলে। Real example: Browser history (doubly LL — forward/back), Undo/Redo (stack-based LL)।
+
+**Q2: Floyd's Cycle Detection Algorithm কীভাবে কাজ করে?**
+
+> **উত্তর:** দুটি pointer — slow (১ step) ও fast (২ step) একসাথে চলে। Cycle না থাকলে fast None এ পৌঁছাবে। Cycle থাকলে fast slow কে eventually overtake করবে এবং একই node এ মিলবে। কারণ: relative speed এর পার্থক্য ১ — তাই cycle এর ভেতরে fast প্রতিটি iteration এ slow থেকে ১ step এগিয়ে যায়, তাই eventually মিলবে। O(n) time, O(1) space।
+
+**Q3: Dummy head node কখন ব্যবহার করবেন?**
+
+> **উত্তর:** Linked List এর head পরিবর্তন হওয়ার সম্ভাবনা থাকলে dummy head ব্যবহার করলে edge cases সহজ হয়। যেমন: merge sorted lists, delete at head, remove nth from end। Dummy node এর data irrelevant — এটি একটি stable entry point। Return করতে হয় dummy.next।
+
+**Q4: Reverse Linked List Recursively এর space complexity কত এবং কেন?**
+
+> **উত্তর:** O(n) — কারণ n টি recursive call stack এ জমা হয়। Iterative reverse এ O(1) space কারণ শুধু ৩টি pointer (prev, current, next) লাগে। Interview তে বলুন: "Space critical হলে iterative prefer করব।"
+
+**Q5: "Delete given node without head" — কীভাবে করবেন?**
+
+> **উত্তর:** পরের node এর data কে current node এ copy করো, তারপর পরের node কে skip করো। `node.data = node.next.data; node.next = node.next.next`। Limitation: Last node এ কাজ করে না (কারণ next নেই)।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| LL এ random access | O(n) |
+| Head তে insert | O(1) |
+| Tail এ insert (without tail pointer) | O(n) |
+| Middle element খোঁজা | Slow/Fast pointer |
+| Cycle detect করতে | Floyd's algorithm |
+| Reverse LL iterative space | O(1) |
+| Reverse LL recursive space | O(n) call stack |
+| Merge 2 sorted LL | O(m+n), dummy head |
+| Doubly LL এ node delete (given node) | O(1) |
+| Circular LL traversal থামানো | current == head |
+| LRU Cache তে কোন LL? | Doubly LL + HashMap |
+| k-group reverse | Recursive + count |
+
+---
+
+> **⚠️ PART 3 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part4"></a>
+
+# PART 4: Stack & Queue (স্ট্যাক ও কিউ)
+
+> **📍 এই PART এর Sections:** [৪.১ Stack](#৪১-stack) · [৪.২ Queue](#৪২-queue) · [৪.৩ Circular Queue](#৪৩-circular-queue) · [৪.৪ Deque](#৪৪-deque-double-ended-queue)
+
+> **পড়ার নির্দেশনা:** Stack ও Queue হলো দুটি fundamental abstract data types। Interview তে Monotonic Stack ও Expression Evaluation প্রায়ই জিজ্ঞেস করা হয়। Real-life analogies দিয়ে concepts বুঝুন।
+
+---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৪.১ Stack
+
+### সংজ্ঞা
+
+**Stack** হলো LIFO (Last In, First Out) data structure। সবশেষে যা ঢুকেছে সেটি সবার আগে বের হয়।
+
+```
+Real-life Analogy — বই এর স্তুপ:
+  Push(C): [A][B][C]  ← TOP
+  Push(D): [A][B][C][D]  ← TOP
+  Pop():   [A][B][C]  ← C বের হলো না, D বের হলো!
+  Peek():  C দেখা যাচ্ছে কিন্তু তোলা হচ্ছে না
+
+Operations:
+  push(x)  → TOP এ element যোগ   — O(1)
+  pop()    → TOP থেকে remove     — O(1)
+  peek()   → TOP element দেখা    — O(1)
+  isEmpty  → খালি কিনা           — O(1)
+  size()   → element সংখ্যা      — O(1)
+```
+
+### Implementation — Array দিয়ে
+
+```python
+class ArrayStack:
+    def __init__(self, capacity=1000):
+        self._data = [None] * capacity
+        self._top = -1
+        self._capacity = capacity
+
+    def push(self, x):
+        if self._top == self._capacity - 1:
+            raise OverflowError("Stack is full")
+        self._top += 1
+        self._data[self._top] = x
+
+    def pop(self):
+        if self.is_empty():
+            raise IndexError("Stack is empty")
+        val = self._data[self._top]
+        self._data[self._top] = None
+        self._top -= 1
+        return val
+
+    def peek(self):
+        if self.is_empty():
+            raise IndexError("Stack is empty")
+        return self._data[self._top]
+
+    def is_empty(self):
+        return self._top == -1
+
+    def size(self):
+        return self._top + 1
+```
+
+### Implementation — Python List দিয়ে (সহজ)
+
+```python
+class Stack:
+    def __init__(self):
+        self._stack = []
+
+    def push(self, x):
+        self._stack.append(x)      # O(1) amortized
+
+    def pop(self):
+        if self.is_empty():
+            raise IndexError("Stack underflow")
+        return self._stack.pop()   # O(1)
+
+    def peek(self):
+        return self._stack[-1] if self._stack else None
+
+    def is_empty(self):
+        return len(self._stack) == 0
+
+    def size(self):
+        return len(self._stack)
+
+# Python built-in: list as stack
+stack = []
+stack.append(10)   # push
+stack.append(20)
+stack.append(30)
+print(stack[-1])   # peek → 30
+stack.pop()        # pop → 30
+```
+
+### Valid Parentheses — Classic Stack Problem
+
+```python
+def is_valid_parentheses(s):
+    """
+    '(', '{', '[' — opening
+    ')', '}', ']' — closing
+    সব pair সঠিকভাবে বন্ধ আছে কিনা?
+    """
+    stack = []
+    mapping = {')': '(', '}': '{', ']': '['}
+
+    for char in s:
+        if char in '({[':
+            stack.append(char)
+        elif char in ')}]':
+            if not stack or stack[-1] != mapping[char]:
+                return False
+            stack.pop()
+
+    return len(stack) == 0
+
+# Dry Run: s = "({[]})"
+# '(' → push: ['(']
+# '{' → push: ['(', '{']
+# '[' → push: ['(', '{', '[']
+# ']' → mapping[']']='[', top='[' ✓ pop: ['(', '{']
+# '}' → mapping['}']='{', top='{' ✓ pop: ['(']
+# ')' → mapping[')']=\'(\', top='(' ✓ pop: []
+# stack empty → True ✓
+```
+
+### Stack এর Real-World Use Cases
+
+```
+✅ Function call management (Call Stack)
+✅ Undo/Redo operations (text editors)
+✅ Browser back/forward navigation
+✅ Expression evaluation (infix/postfix)
+✅ DFS (Depth First Search)
+✅ Balanced parentheses check
+✅ Syntax parsing (compilers)
+✅ Backtracking algorithms
+```
+
+### Min Stack — O(1) minimum
+
+```python
+class MinStack:
+    """সব operation O(1) — minimum সবসময় track রাখে"""
+    def __init__(self):
+        self.stack = []     # (value, current_min) tuple
+    
+    def push(self, val):
+        current_min = min(val, self.stack[-1][1]) if self.stack else val
+        self.stack.append((val, current_min))
+    
+    def pop(self):
+        return self.stack.pop()[0]
+    
+    def top(self):
+        return self.stack[-1][0]
+    
+    def get_min(self):
+        return self.stack[-1][1]
+
+# Usage:
+ms = MinStack()
+ms.push(5)   # stack: [(5,5)]
+ms.push(3)   # stack: [(5,5),(3,3)]
+ms.push(7)   # stack: [(5,5),(3,3),(7,3)]
+ms.get_min() # 3 ✓
+ms.pop()     # 7 removed
+ms.get_min() # 3 ✓
+ms.pop()     # 3 removed
+ms.get_min() # 5 ✓
+```
+
+---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৪.২ Queue
+
+### সংজ্ঞা
+
+**Queue** হলো FIFO (First In, First Out) data structure। প্রথমে যা ঢুকেছে সেটি প্রথমে বের হয়।
+
+```
+Real-life Analogy — ব্যাংকের লাইন:
+  Enqueue(A): [A]         ← REAR
+  Enqueue(B): [A][B]      ← REAR
+  Enqueue(C): [A][B][C]   ← REAR
+  Dequeue():  [B][C]      ← A বের হলো (FRONT থেকে)
+
+  FRONT ──────────────── REAR
+  [B]   →   [C]   →   (next will be here)
+  dequeue                 enqueue
+```
+
+### Implementation — collections.deque দিয়ে (Optimal)
+
+```python
+from collections import deque
+
+class Queue:
+    def __init__(self):
+        self._queue = deque()
+
+    def enqueue(self, x):
+        self._queue.append(x)       # O(1) — rear এ
+
+    def dequeue(self):
+        if self.is_empty():
+            raise IndexError("Queue is empty")
+        return self._queue.popleft()  # O(1) — front থেকে
+
+    def front(self):
+        return self._queue[0] if self._queue else None
+
+    def rear(self):
+        return self._queue[-1] if self._queue else None
+
+    def is_empty(self):
+        return len(self._queue) == 0
+
+    def size(self):
+        return len(self._queue)
+
+# ⚠️ List দিয়ে Queue বানালে popleft() O(n) — এড়িয়ে চলুন
+# deque তে append ও popleft উভয়ই O(1)
+```
+
+### Queue এর Real-World Use Cases
+
+```
+✅ BFS (Breadth First Search)
+✅ CPU Process Scheduling
+✅ Printer Queue
+✅ Message Queue (RabbitMQ, Kafka)
+✅ Web Server Request Handling
+✅ Level-order Tree Traversal
+✅ Cache Replacement (FIFO policy)
+```
+
+### BFS with Queue
+
+```python
+from collections import deque
+
+def bfs(graph, start):
+    """Graph BFS — O(V + E)"""
+    visited = set([start])
+    queue = deque([start])
+    order = []
+
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+    return order
+```
+
+---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৪.৩ Circular Queue
+
+### সমস্যা
+
+Regular array-based queue তে dequeue করার পরে front এর আগের জায়গা waste হয়।
+
+```
+Regular Queue সমস্যা:
+  Initial:  [_][_][_][_][_]  front=0, rear=-1
+  Enqueue A: [A][_][_][_][_]  front=0, rear=0
+  Enqueue B: [A][B][_][_][_]  front=0, rear=1
+  Dequeue:   [_][B][_][_][_]  front=1, rear=1
+  Dequeue:   [_][_][_][_][_]  front=2, rear=1
+  Enqueue C: [_][_][C][_][_]  front=2, rear=2
+  ...
+  Enqueue তে rear শেষে যাবে, কিন্তু front এর আগে জায়গা খালি!
+```
+
+### Circular Queue — Modular Arithmetic
+
+```python
+class CircularQueue:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.queue = [None] * capacity
+        self.front = 0
+        self.rear = -1
+        self.size = 0
+
+    def enqueue(self, x):
+        if self.is_full():
+            raise OverflowError("Circular Queue is full")
+        self.rear = (self.rear + 1) % self.capacity  # circular!
+        self.queue[self.rear] = x
+        self.size += 1
+
+    def dequeue(self):
+        if self.is_empty():
+            raise IndexError("Circular Queue is empty")
+        val = self.queue[self.front]
+        self.queue[self.front] = None
+        self.front = (self.front + 1) % self.capacity  # circular!
+        self.size -= 1
+        return val
+
+    def is_empty(self):
+        return self.size == 0
+
+    def is_full(self):
+        return self.size == self.capacity
+
+    def peek_front(self):
+        return self.queue[self.front] if not self.is_empty() else None
+
+# Visualization: capacity=5, wraparound
+# [D][E][_][A][B][C] → front=3(A), rear=1(E)
+#  0  1  2  3  4
+# Enqueue F: rear = (1+1)%5 = 2 → [D][E][F][A][B][C]
+```
+
+---
+
+## ৪.৪ Deque (Double-Ended Queue)
+
+### সংজ্ঞা
+
+**Deque** (Double-Ended Queue) — দুই দিক থেকেই insert ও delete করা যায়।
+
+```
+         addFirst  addLast
+            ↓         ↓
+  FRONT → [A][B][C][D] ← REAR
+            ↑         ↑
+        removeFirst  removeLast
+```
+
+```python
+from collections import deque
+
+dq = deque()
+
+# Add
+dq.append(10)        # right end: [10]
+dq.append(20)        # right: [10, 20]
+dq.appendleft(5)     # left: [5, 10, 20]
+dq.appendleft(1)     # left: [1, 5, 10, 20]
+
+# Remove
+dq.pop()             # right: [1, 5, 10] (20 removed)
+dq.popleft()         # left:  [5, 10]    (1 removed)
+
+# Peek
+print(dq[0])         # 5 (front)
+print(dq[-1])        # 10 (rear)
+
+# All O(1)!
+```
+
+### Sliding Window Maximum — Deque দিয়ে O(n)
+
+```python
+def sliding_window_max(arr, k):
+    """
+    প্রতিটি k-size window এর maximum খোঁজো।
+    Brute: O(nk), Deque: O(n)
+    """
+    from collections import deque
+    dq = deque()  # indices store করে, decreasing order এ values
+    result = []
+
+    for i in range(len(arr)):
+        # Window এর বাইরে চলে গেছে এমন index বাদ দাও
+        while dq and dq[0] < i - k + 1:
+            dq.popleft()
+
+        # Smaller element বাদ দাও (তারা কখনো maximum হবে না)
+        while dq and arr[dq[-1]] < arr[i]:
+            dq.pop()
+
+        dq.append(i)
+
+        # Window complete হলে result যোগ করো
+        if i >= k - 1:
+            result.append(arr[dq[0]])
+
+    return result
+
+# Dry Run: arr=[3,1,2,5,4,2,3], k=3
+# i=0: dq=[0], no result
+# i=1: arr[1]=1 < arr[0]=3, dq=[0,1], no result
+# i=2: arr[2]=2 > arr[1]=1 → pop 1, dq=[0,2], result=[arr[0]]=3
+# i=3: arr[3]=5>arr[2]=2→pop, 5>arr[0]=3→pop, dq=[3], result=[3,5]
+# i=4: arr[4]=4<5, dq=[3,4], result=[3,5,5]
+# i=5: arr[5]=2<4, dq=[3,4,5], dq[0]=3 < 5-3+1=3? No, result=[3,5,5,5]
+# i=6: arr[6]=3>arr[5]=2→pop5, 3<arr[4]=4, dq=[3,4,6]
+#       dq[0]=3 < 6-3+1=4 → popleft, dq=[4,6], result=[3,5,5,5,4]
+# Final: [3, 5, 5, 5, 4]
+```
+
+---
+
+## ৪.৫ Priority Queue ও Heap
+
+### সংজ্ঞা
+
+**Priority Queue** হলো এমন queue যেখানে highest priority element সবার আগে dequeue হয়। সাধারণত **Binary Heap** দিয়ে implement করা হয়।
+
+```
+Min-Heap: সবচেয়ে ছোট element সবার আগে বের হয়
+Max-Heap: সবচেয়ে বড় element সবার আগে বের হয়
+
+Binary Heap properties:
+  1. Complete Binary Tree (বামদিক থেকে fill হয়)
+  2. Min-Heap: parent ≤ children সবসময়
+
+Min-Heap উদাহরণ:
+          1
+        /          3     5
+      / \   /      7   8  9  10
+```
+
+### Python heapq (Min-Heap)
+
+```python
+import heapq
+
+# Min-Heap
+heap = []
+heapq.heappush(heap, 5)
+heapq.heappush(heap, 1)
+heapq.heappush(heap, 3)
+heapq.heappush(heap, 2)
+
+print(heap[0])              # 1 — minimum, O(1) peek
+print(heapq.heappop(heap))  # 1 — O(log n)
+print(heapq.heappop(heap))  # 2
+
+# Heapify existing list — O(n)
+arr = [5, 3, 8, 1, 9, 2]
+heapq.heapify(arr)
+print(arr[0])  # 1 — minimum
+
+# Max-Heap: negate করুন
+max_heap = []
+heapq.heappush(max_heap, -5)
+heapq.heappush(max_heap, -1)
+heapq.heappush(max_heap, -3)
+print(-heapq.heappop(max_heap))  # 5 (maximum)
+
+# K largest elements
+nums = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3]
+k = 3
+print(heapq.nlargest(k, nums))   # [9, 6, 5]
+print(heapq.nsmallest(k, nums))  # [1, 1, 2]
+```
+
+### Heap Sort — O(n log n)
+
+```python
+def heap_sort(arr):
+    n = len(arr)
+
+    # Max-Heap তৈরি করো (bottom-up heapify)
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(arr, n, i)
+
+    # Root (max) সরিয়ে শেষে রাখো
+    for i in range(n - 1, 0, -1):
+        arr[0], arr[i] = arr[i], arr[0]  # root ↔ শেষ
+        heapify(arr, i, 0)               # remaining heap restore
+
+def heapify(arr, n, i):
+    largest = i
+    left = 2 * i + 1
+    right = 2 * i + 2
+
+    if left < n and arr[left] > arr[largest]:
+        largest = left
+    if right < n and arr[right] > arr[largest]:
+        largest = right
+
+    if largest != i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        heapify(arr, n, largest)
+```
+
+### K-th Largest Element
+
+```python
+def find_kth_largest(nums, k):
+    """Min-Heap of size k — O(n log k)"""
+    heap = []
+    for num in nums:
+        heapq.heappush(heap, num)
+        if len(heap) > k:
+            heapq.heappop(heap)   # ছোটটা বাদ
+    return heap[0]   # k-th largest = heap এর minimum
+
+# Intuition: k টি largest রাখি heap এ।
+# নতুন element বড় হলে → ছোটটা বের করি, নতুনটা রাখি।
+# শেষে heap তে k largest → minimum = k-th largest।
+```
+
+---
+
+## ৪.৬ Monotonic Stack
+
+### সংজ্ঞা
+
+**Monotonic Stack** হলো এমন stack যেখানে elements সবসময় increasing বা decreasing order এ থাকে।
+
+```
+Monotonic Increasing Stack:
+  [1, 3, 5, 7] — bottom থেকে top পর্যন্ত বাড়তে থাকে
+  নতুন element যোগ করার সময় ছোট elements পপ করা হয়
+
+Monotonic Decreasing Stack:
+  [7, 5, 3, 1] — top থেকে bottom পর্যন্ত বাড়তে থাকে
+```
+
+### Next Greater Element
+
+```python
+def next_greater_element(arr):
+    """
+    প্রতিটি element এর ডানে প্রথম বড় element কোনটি?
+    O(n) — প্রতিটি element একবার push, একবার pop।
+    """
+    n = len(arr)
+    result = [-1] * n
+    stack = []  # indices (monotonic decreasing values)
+
+    for i in range(n):
+        # Stack এর top যদি arr[i] এর চেয়ে ছোট হয়
+        while stack and arr[stack[-1]] < arr[i]:
+            idx = stack.pop()
+            result[idx] = arr[i]  # arr[i] হলো next greater
+        stack.append(i)
+
+    return result
+
+# Dry Run: arr = [4, 5, 2, 10, 8]
+#
+# i=0: stack=[], push 0,   stack=[0]
+# i=1: arr[0]=4 < arr[1]=5 → result[0]=5, pop; push 1, stack=[1]
+# i=2: arr[1]=5 > arr[2]=2 → push 2, stack=[1,2]
+# i=3: arr[2]=2 < 10 → result[2]=10, pop
+#       arr[1]=5 < 10 → result[1]=10, pop
+#       push 3, stack=[3]
+# i=4: arr[3]=10 > arr[4]=8 → push 4, stack=[3,4]
+# End: stack=[3,4] → result[3]=-1, result[4]=-1
+#
+# result = [5, 10, 10, -1, -1] ✓
+```
+
+### Previous Smaller Element
+
+```python
+def previous_smaller(arr):
+    """প্রতিটি element এর বামে প্রথম ছোট element"""
+    n = len(arr)
+    result = [-1] * n
+    stack = []  # monotonic increasing
+
+    for i in range(n):
+        while stack and stack[-1] >= arr[i]:
+            stack.pop()
+        result[i] = stack[-1] if stack else -1
+        stack.append(arr[i])
+
+    return result
+```
+
+### Largest Rectangle in Histogram
+
+```python
+def largest_rectangle(heights):
+    """
+    Histogram এ সবচেয়ে বড় rectangle এর area।
+    Monotonic Stack দিয়ে O(n)।
+    """
+    stack = []  # indices, increasing heights
+    max_area = 0
+    n = len(heights)
+
+    for i in range(n + 1):
+        h = heights[i] if i < n else 0  # sentinel 0
+
+        while stack and heights[stack[-1]] > h:
+            height = heights[stack.pop()]
+            width = i if not stack else i - stack[-1] - 1
+            max_area = max(max_area, height * width)
+
+        stack.append(i)
+
+    return max_area
+
+# heights = [2, 1, 5, 6, 2, 3]
+# Maximum rectangle = 10 (heights 5,6 × width 2)
+```
+
+### Monotonic Stack Pattern চেনার উপায়
+
+```
+এই keywords দেখলে Monotonic Stack ভাবুন:
+  → "Next Greater/Smaller Element"
+  → "Previous Greater/Smaller Element"
+  → "Largest Rectangle in Histogram"
+  → "Trapping Rain Water"
+  → "Daily Temperatures"
+  → "Stock Span Problem"
+```
+
+### Daily Temperatures
+
+```python
+def daily_temperatures(temperatures):
+    """কতদিন পরে temperature বাড়বে?"""
+    n = len(temperatures)
+    result = [0] * n
+    stack = []  # indices
+
+    for i in range(n):
+        while stack and temperatures[stack[-1]] < temperatures[i]:
+            idx = stack.pop()
+            result[idx] = i - idx   # দিনের পার্থক্য
+        stack.append(i)
+
+    return result
+
+# temperatures = [73,74,75,71,69,72,76,73]
+# result =       [1, 1, 4, 2, 1, 1, 0, 0]
+```
+
+---
+
+## ৪.৭ Expression Evaluation
+
+### Expression এর প্রকারভেদ
+
+```
+Infix:   A + B   (operator মাঝে — মানুষ পড়ে)
+Prefix:  + A B   (operator আগে — Polish notation)
+Postfix: A B +   (operator পরে — Reverse Polish / machine friendly)
+
+কেন Postfix ভালো?
+  → কোনো parentheses দরকার নেই
+  → Priority সমস্যা নেই
+  → Stack দিয়ে সহজে evaluate করা যায়
+```
+
+### Postfix Evaluation
+
+```python
+def evaluate_postfix(expression):
+    """
+    Postfix expression evaluate করো।
+    Input: "3 4 + 2 * 7 /"
+    Output: (3+4)*2/7 = 2
+    """
+    stack = []
+    tokens = expression.split()
+
+    for token in tokens:
+        if token.lstrip('-').isdigit():   # number
+            stack.append(int(token))
+        else:                             # operator
+            b = stack.pop()   # দ্বিতীয় operand
+            a = stack.pop()   # প্রথম operand
+            if token == '+':
+                stack.append(a + b)
+            elif token == '-':
+                stack.append(a - b)
+            elif token == '*':
+                stack.append(a * b)
+            elif token == '/':
+                stack.append(int(a / b))  # truncate toward zero
+
+    return stack[0]
+
+# Dry Run: "3 4 + 2 *"
+# token=3: stack=[3]
+# token=4: stack=[3,4]
+# token=+: b=4, a=3, push 7; stack=[7]
+# token=2: stack=[7,2]
+# token=*: b=2, a=7, push 14; stack=[14]
+# return 14 ✓ (3+4)*2 = 14
+```
+
+---
+
+## ৪.৮ Infix to Postfix
+
+### Shunting-Yard Algorithm
+
+```python
+def infix_to_postfix(expression):
+    """
+    Dijkstra's Shunting-Yard Algorithm
+    Rules:
+      1. Operand → directly output
+      2. '(' → push to stack
+      3. ')' → pop until '('
+      4. Operator → pop higher/equal priority operators, then push
+    """
+    precedence = {'+': 1, '-': 1, '*': 2, '/': 2, '^': 3}
+    right_assoc = {'^'}  # right-associative operators
+
+    output = []
+    stack = []
+
+    for token in expression.split():
+        if token.lstrip('-').replace('.','').isdigit():
+            output.append(token)               # Operand
+
+        elif token == '(':
+            stack.append(token)
+
+        elif token == ')':
+            while stack and stack[-1] != '(':
+                output.append(stack.pop())
+            stack.pop()  # '(' remove
+
+        else:  # Operator
+            while (stack and stack[-1] != '('
+                   and stack[-1] in precedence
+                   and (precedence[stack[-1]] > precedence[token]
+                        or (precedence[stack[-1]] == precedence[token]
+                            and token not in right_assoc))):
+                output.append(stack.pop())
+            stack.append(token)
+
+    while stack:
+        output.append(stack.pop())
+
+    return ' '.join(output)
+
+# infix_to_postfix("3 + 4 * 2")       → "3 4 2 * +"
+# infix_to_postfix("( 3 + 4 ) * 2")   → "3 4 + 2 *"
+# infix_to_postfix("A + B * C - D")   → "A B C * + D -"
+```
+
+### Dry Run — "A + B * C"
+
+```
+Operator precedence: * > +
+
+Token  Action              Output       Stack
+A      → output            [A]          []
++      push                [A]          [+]
+B      → output            [A,B]        [+]
+*      * > + → push        [A,B]        [+,*]
+C      → output            [A,B,C]      [+,*]
+end    pop all             [A,B,C,*,+]  []
+
+Postfix: A B C * +
+Verify: A + B*C = A + (B*C) ✓
+```
+
+### Evaluate Infix Directly (Two Stacks)
+
+```python
+def evaluate_infix(expression):
+    """Values stack + Operators stack"""
+    precedence = {'+': 1, '-': 1, '*': 2, '/': 2}
+    values = []
+    ops = []
+
+    def apply_op():
+        op = ops.pop()
+        b, a = values.pop(), values.pop()
+        if op == '+': values.append(a + b)
+        elif op == '-': values.append(a - b)
+        elif op == '*': values.append(a * b)
+        elif op == '/': values.append(int(a / b))
+
+    for token in expression.split():
+        if token.lstrip('-').isdigit():
+            values.append(int(token))
+        elif token == '(':
+            ops.append(token)
+        elif token == ')':
+            while ops[-1] != '(':
+                apply_op()
+            ops.pop()
+        else:
+            while (ops and ops[-1] in precedence
+                   and precedence[ops[-1]] >= precedence[token]):
+                apply_op()
+            ops.append(token)
+
+    while ops:
+        apply_op()
+
+    return values[0]
+```
+
+---
+
+<div align="right"><a href="#part4">⬆ PART 4 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৪.৯ PART 4 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Stack এবং Queue এর মধ্যে মূল পার্থক্য কী? কোনটি কোথায় ব্যবহার হয়?**
+
+> **উত্তর:** Stack = LIFO। সবশেষে ঢুকেছে সেটি সবার আগে বের হয়। Use case: DFS, Function call, Undo/Redo, Expression eval। Queue = FIFO। সবার আগে ঢুকেছে সেটি সবার আগে বের হয়। Use case: BFS, Process scheduling, Print queue, Message broker। Interview tip: "DFS → Stack, BFS → Queue" এই rule মনে রাখুন।
+
+**Q2: Circular Queue কেন দরকার? Regular Queue এ সমস্যা কী?**
+
+> **উত্তর:** Array-based regular Queue তে dequeue করলে front এর আগের indices waste হয়। rear index array এর শেষে পৌঁছালে নতুন element রাখা যায় না — even though শুরুতে জায়গা আছে। Circular Queue তে modular arithmetic (`(rear + 1) % capacity`) ব্যবহার করে এই waste এড়ানো হয়। Ring Buffer, Audio streaming, Network packet buffering এ ব্যবহার হয়।
+
+**Q3: Monotonic Stack কী? কোন ধরনের problem এ কাজ করে?**
+
+> **উত্তর:** Monotonic Stack এ elements সবসময় monotonic (increasing বা decreasing) order এ থাকে। নতুন element push করার সময় monotonicity ভাঙলে উপযুক্ত elements pop করা হয়। কাজ করে: Next/Previous Greater/Smaller Element, Largest Rectangle in Histogram, Trapping Rain Water, Daily Temperatures। Brute O(n²) কে O(n) এ আনে — প্রতিটি element একবার push ও একবার pop।
+
+**Q4: Priority Queue সাধারণত কীভাবে implement করা হয়?**
+
+> **উত্তর:** Binary Heap দিয়ে। Min-Heap: parent সবসময় children এর চেয়ে ছোট বা সমান। Operations: insert O(log n), extract-min O(log n), peek-min O(1)। Python এ `heapq` module হলো min-heap। Max-heap এর জন্য values negate করুন। Use case: Dijkstra's algorithm, Task scheduling, K-th largest/smallest।
+
+**Q5: Postfix evaluation এ কেন parentheses লাগে না?**
+
+> **উত্তর:** Postfix (Reverse Polish Notation) এ operator এর position নিজেই operands এর বন্ধন নির্ধারণ করে। Stack ব্যবহার করে left-to-right scan করলে প্রতিটি operator তার ঠিক আগের দুটি operand এর উপর apply হয়। কোনো ambiguity নেই — priority বা associativity আলাদাভাবে বলতে হয় না।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| Stack এর order | LIFO |
+| Queue এর order | FIFO |
+| Stack এর push/pop | O(1) |
+| Queue enqueue/dequeue | O(1) (deque) |
+| Min Stack এর getMin | O(1) |
+| Heap peek | O(1) |
+| Heap push/pop | O(log n) |
+| Heapify n elements | O(n) |
+| Monotonic Stack problem | Next Greater Element |
+| Valid parentheses | Stack দিয়ে |
+| Sliding Window Max | Deque, O(n) |
+| Postfix eval | Single stack |
+| Infix to Postfix | Shunting-yard, operator stack |
+| DFS কোন DS | Stack |
+| BFS কোন DS | Queue |
+| K-th largest | Min-Heap size k |
+
+---
+
+> **⚠️ PART 4 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+
+
+<a id="part5"></a>
+
+# PART 5: Trees & Binary Trees (ট্রি ও বাইনারি ট্রি)
+
+> **📍 এই PART এর Sections:** [৫.১ Tree কী?](#৫১-tree-কী) · [৫.২ Binary Tree](#৫২-binary-tree) · [৫.৩ BST](#৫৩-binary-search-tree-bst) · [৫.৪ Tree Traversal](#৫৪-tree-traversal)
+
+> **পড়ার নির্দেশনা:** Tree হলো DSA এর সবচেয়ে গুরুত্বপূর্ণ non-linear structure। Traversal, BST, Height, Diameter — এগুলো interview তে বারবার আসে। Recursion দিয়ে ভাবতে শিখুন।
+
+---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৫.১ Tree কী?
+
+### সংজ্ঞা
+
+**Tree** হলো connected, acyclic (cycle-free) undirected graph। Hierarchical data represent করে।
+
+```
+Tree Terminology:
+                    A          ← Root (কোনো parent নেই)
+                  /                   B       C      ← Internal Nodes
+               / \                     D   E       F    ← Leaves (কোনো child নেই)
+
+  Root:    A (top-most node)
+  Parent:  B হলো D ও E এর parent
+  Child:   D ও E হলো B এর children
+  Leaf:    D, E, F (children নেই)
+  Sibling: D ও E (same parent)
+  Depth:   Root থেকে node পর্যন্ত edge সংখ্যা
+           A→depth 0, B→depth 1, D→depth 2
+  Height:  Node থেকে deepest leaf পর্যন্ত edge সংখ্যা
+           A→height 2, B→height 1, D→height 0
+  Level:   depth + 1
+```
+
+### Tree এর Properties
+
+```
+n টি node থাকলে (n-1) টি edge
+Binary Tree: প্রতিটি node এ সর্বোচ্চ 2 টি child
+Full BT:     প্রতিটি node এ 0 বা 2 টি child
+Complete BT: শেষ level বাদে সব level পূর্ণ; শেষ level বামদিক থেকে পূর্ণ
+Perfect BT:  সব internal nodes এ 2 child; সব leaves same depth এ
+```
+
+---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৫.২ Binary Tree
+
+### Node Structure
+
+```python
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# Tree তৈরি করা:
+#        1
+#       / #      2   3
+#     / #    4   5
+root = TreeNode(1)
+root.left = TreeNode(2)
+root.right = TreeNode(3)
+root.left.left = TreeNode(4)
+root.left.right = TreeNode(5)
+```
+
+### Mirror / Invert Binary Tree
+
+```python
+def invert_tree(root):
+    """Left ও Right subtree swap করো — O(n)"""
+    if not root:
+        return None
+    root.left, root.right = invert_tree(root.right), invert_tree(root.left)
+    return root
+
+# Original:          Inverted:
+#      1                  1
+#     / \                / #    2   3              3   2
+#   / \                    / #  4   5                  5   4
+```
+
+---
+
+## ৫.৩ Binary Search Tree (BST)
+
+### সংজ্ঞা
+
+**BST Property:** প্রতিটি node এর জন্য:
+- বাম subtree এর সব values < node value
+- ডান subtree এর সব values > node value
+
+```
+BST উদাহরণ:
+        8
+       /       3   10
+     / \        1   6    14
+       / \   /
+      4   7 13
+
+Search 6: root(8)→left→3→right→6 ✓  (3 steps)
+```
+
+### BST Insert, Search, Delete
+
+```python
+class BST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, val):
+        self.root = self._insert(self.root, val)
+
+    def _insert(self, node, val):
+        if not node:
+            return TreeNode(val)
+        if val < node.val:
+            node.left = self._insert(node.left, val)
+        elif val > node.val:
+            node.right = self._insert(node.right, val)
+        return node
+
+    def search(self, val):
+        return self._search(self.root, val)
+
+    def _search(self, node, val):
+        if not node or node.val == val:
+            return node
+        if val < node.val:
+            return self._search(node.left, val)
+        return self._search(node.right, val)
+
+    def delete(self, val):
+        self.root = self._delete(self.root, val)
+
+    def _delete(self, node, val):
+        if not node:
+            return None
+        if val < node.val:
+            node.left = self._delete(node.left, val)
+        elif val > node.val:
+            node.right = self._delete(node.right, val)
+        else:
+            # Case 1: No child
+            if not node.left and not node.right:
+                return None
+            # Case 2: One child
+            if not node.left:
+                return node.right
+            if not node.right:
+                return node.left
+            # Case 3: Two children — inorder successor দিয়ে replace
+            successor = self._find_min(node.right)
+            node.val = successor.val
+            node.right = self._delete(node.right, successor.val)
+        return node
+
+    def _find_min(self, node):
+        while node.left:
+            node = node.left
+        return node
+
+# BST Complexity:
+# Balanced BST: Search/Insert/Delete — O(log n)
+# Unbalanced (worst): O(n) — sorted array insert করলে skewed হয়
+```
+
+### BST Validation
+
+```python
+def is_valid_bst(root, min_val=float('-inf'), max_val=float('inf')):
+    """
+    প্রতিটি node এর value valid range এ আছে কিনা check করো।
+    O(n) time, O(h) space (h = height)
+    """
+    if not root:
+        return True
+    if root.val <= min_val or root.val >= max_val:
+        return False
+    return (is_valid_bst(root.left, min_val, root.val) and
+            is_valid_bst(root.right, root.val, max_val))
+
+# Intuition: Left subtree → max bound = root.val
+#            Right subtree → min bound = root.val
+```
+
+---
+
+## ৫.৪ Tree Traversal
+
+### চার ধরনের Traversal
+
+```python
+def inorder(root, result=[]):
+    """Left → Root → Right | BST এ sorted order দেয়"""
+    if root:
+        inorder(root.left, result)
+        result.append(root.val)
+        inorder(root.right, result)
+    return result
+
+def preorder(root, result=[]):
+    """Root → Left → Right | Tree copy, serialize"""
+    if root:
+        result.append(root.val)
+        preorder(root.left, result)
+        preorder(root.right, result)
+    return result
+
+def postorder(root, result=[]):
+    """Left → Right → Root | Tree delete, evaluate expression"""
+    if root:
+        postorder(root.left, result)
+        postorder(root.right, result)
+        result.append(root.val)
+    return result
+```
+
+### Traversal Dry Run
+
+```
+Tree:        1
+            /            2   3
+          /          4   5
+
+Inorder:   [4, 2, 5, 1, 3]   (L-Root-R)
+Preorder:  [1, 2, 4, 5, 3]   (Root-L-R)
+Postorder: [4, 5, 2, 3, 1]   (L-R-Root)
+```
+
+### Iterative Inorder (Stack দিয়ে)
+
+```python
+def inorder_iterative(root):
+    """Recursive এর stack-overflow এড়াতে iterative"""
+    result = []
+    stack = []
+    curr = root
+
+    while curr or stack:
+        # যতদূর পারো বামে যাও
+        while curr:
+            stack.append(curr)
+            curr = curr.left
+        # Pop ও process
+        curr = stack.pop()
+        result.append(curr.val)
+        # ডানে যাও
+        curr = curr.right
+
+    return result
+```
+
+---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৫.৫ BFS — Level-Order Traversal
+
+```python
+from collections import deque
+
+def level_order(root):
+    """
+    Level by level traversal — O(n)
+    Interview classic: প্রতিটি level আলাদা list এ
+    """
+    if not root:
+        return []
+
+    result = []
+    queue = deque([root])
+
+    while queue:
+        level_size = len(queue)
+        level = []
+
+        for _ in range(level_size):
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+
+        result.append(level)
+
+    return result
+
+# Tree:        1
+#             / #            2   3
+#           / #          4   5
+#
+# Output: [[1], [2, 3], [4, 5]]
+
+def right_side_view(root):
+    """প্রতিটি level এর rightmost element — BFS"""
+    if not root:
+        return []
+    result = []
+    queue = deque([root])
+    while queue:
+        level_size = len(queue)
+        for i in range(level_size):
+            node = queue.popleft()
+            if i == level_size - 1:
+                result.append(node.val)
+            if node.left:
+                queue.append(node.left)
+            if node.right:
+                queue.append(node.right)
+    return result
+```
+
+---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৫.৬ Height, Depth ও Diameter
+
+### Height of Binary Tree
+
+```python
+def height(root):
+    """
+    Root থেকে deepest leaf পর্যন্ত edge সংখ্যা।
+    Empty tree: -1 (edge counting) বা 0 (node counting)
+    O(n) — সব node visit করতে হয়
+    """
+    if not root:
+        return -1
+    return 1 + max(height(root.left), height(root.right))
+
+# Dry Run:
+#      1 (height=2)
+#     / #    2   3 (height=1)  (height=0)
+#   / #  4   5 (height=0)   (height=0)
+#
+# height(4)=0, height(5)=0
+# height(2)=1+max(0,0)=1
+# height(3)=0
+# height(1)=1+max(1,0)=2
+```
+
+### Balanced Tree Check
+
+```python
+def is_balanced(root):
+    """
+    |height(left) - height(right)| <= 1 সব subtree তে।
+    O(n) — bottom-up -1 return করে shortcircuit।
+    """
+    def check(node):
+        if not node:
+            return 0
+        left_h = check(node.left)
+        if left_h == -1:
+            return -1
+        right_h = check(node.right)
+        if right_h == -1:
+            return -1
+        if abs(left_h - right_h) > 1:
+            return -1
+        return 1 + max(left_h, right_h)
+
+    return check(root) != -1
+```
+
+### Diameter of Binary Tree
+
+```python
+def diameter_of_binary_tree(root):
+    """
+    Tree এর দুটি node এর মধ্যে সবচেয়ে দীর্ঘ path (edges)।
+    Diameter = max(left_height + right_height) যেকোনো node এ।
+    O(n)
+    """
+    max_diameter = [0]
+
+    def height(node):
+        if not node:
+            return 0
+        left_h = height(node.left)
+        right_h = height(node.right)
+        max_diameter[0] = max(max_diameter[0], left_h + right_h)
+        return 1 + max(left_h, right_h)
+
+    height(root)
+    return max_diameter[0]
+
+# Tree:      1
+#           / #          2   3
+#         / #        4   5
+# Diameter = 3 (path: 4→2→1→3 or 5→2→1→3)
+```
+
+### Lowest Common Ancestor (LCA)
+
+```python
+def lca(root, p, q):
+    """
+    p ও q এর সর্বনিম্ন common ancestor।
+    O(n) — single pass।
+    """
+    if not root or root == p or root == q:
+        return root
+
+    left = lca(root.left, p, q)
+    right = lca(root.right, p, q)
+
+    if left and right:
+        return root  # p এক দিকে, q অন্য দিকে
+    return left or right  # দুটোই এক দিকে
+```
+
+---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৫.৭ Balanced Tree ও AVL
+
+### কেন Balanced দরকার?
+
+```
+Unbalanced BST (worst case — sorted insert):
+  Insert: 1, 2, 3, 4, 5
+       1
+                 2
+                     3
+                         4
+                             5
+  Search O(n) — linked list এর মতো!
+
+Balanced BST: O(log n) guaranteed।
+```
+
+### AVL Tree কী?
+
+```
+AVL Tree = Self-balancing BST।
+Balance Factor = height(left) - height(right) ∈ {-1, 0, 1}
+
+Rotation দিয়ে balance রাখা হয়:
+  LL Rotation: Right rotate
+  RR Rotation: Left rotate
+  LR Rotation: Left rotate তারপর Right rotate
+  RL Rotation: Right rotate তারপর Left rotate
+
+Python তে সাধারণত:
+  - Interview তে concept জানলেই চলে
+  - sortedcontainers.SortedList ব্যবহার করুন
+  - Java তে TreeMap/TreeSet (Red-Black Tree backed)
+```
+
+---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৫.৮ Segment Tree
+
+### কী ও কেন?
+
+```
+Segment Tree → Range queries efficiently (sum, min, max)।
+Array এর যেকোনো range এর sum/min/max O(log n) তে।
+Point update O(log n)।
+
+ছাড়া range sum: O(n) per query।
+Segment Tree: O(log n) per query, O(n log n) build।
+
+Use case: Competitive programming, DB range aggregation।
+```
+
+### Implementation
+
+```python
+class SegmentTree:
+    def __init__(self, arr):
+        self.n = len(arr)
+        self.tree = [0] * (4 * self.n)
+        self.build(arr, 0, 0, self.n - 1)
+
+    def build(self, arr, node, start, end):
+        if start == end:
+            self.tree[node] = arr[start]
+        else:
+            mid = (start + end) // 2
+            self.build(arr, 2*node+1, start, mid)
+            self.build(arr, 2*node+2, mid+1, end)
+            self.tree[node] = self.tree[2*node+1] + self.tree[2*node+2]
+
+    def query(self, node, start, end, l, r):
+        """Range sum [l, r]"""
+        if r < start or end < l:
+            return 0
+        if l <= start and end <= r:
+            return self.tree[node]
+        mid = (start + end) // 2
+        left_sum = self.query(2*node+1, start, mid, l, r)
+        right_sum = self.query(2*node+2, mid+1, end, l, r)
+        return left_sum + right_sum
+
+    def update(self, node, start, end, idx, val):
+        """Point update"""
+        if start == end:
+            self.tree[node] = val
+        else:
+            mid = (start + end) // 2
+            if idx <= mid:
+                self.update(2*node+1, start, mid, idx, val)
+            else:
+                self.update(2*node+2, mid+1, end, idx, val)
+            self.tree[node] = self.tree[2*node+1] + self.tree[2*node+2]
+
+    def range_sum(self, l, r):
+        return self.query(0, 0, self.n-1, l, r)
+
+    def point_update(self, idx, val):
+        self.update(0, 0, self.n-1, idx, val)
+
+# arr = [1, 3, 5, 7, 9, 11]
+# st = SegmentTree(arr)
+# st.range_sum(1, 3)  → 15 (3+5+7)
+# st.point_update(1, 10)
+# st.range_sum(1, 3)  → 22 (10+5+7)
+```
+
+---
+
+## ৫.৯ Trie
+
+### সংজ্ঞা
+
+**Trie** (Prefix Tree) হলো string storage এর জন্য tree। প্রতিটি node একটি character represent করে।
+
+```
+Insert: "cat", "car", "card", "care", "bat"
+
+         root
+        /           c      b
+       |      |
+       a      a
+      / \     |
+     t   r    t
+         |
+         d  e
+        (words end marked)
+```
+
+```python
+class TrieNode:
+    def __init__(self):
+        self.children = {}
+        self.is_end = False
+
+class Trie:
+    def __init__(self):
+        self.root = TrieNode()
+
+    def insert(self, word):
+        """O(m) — m = word length"""
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char] = TrieNode()
+            node = node.children[char]
+        node.is_end = True
+
+    def search(self, word):
+        """O(m) — exact match"""
+        node = self.root
+        for char in word:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+        return node.is_end
+
+    def starts_with(self, prefix):
+        """O(m) — prefix exists কিনা"""
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return False
+            node = node.children[char]
+        return True
+
+    def autocomplete(self, prefix):
+        """Prefix দিয়ে শুরু হওয়া সব words"""
+        node = self.root
+        for char in prefix:
+            if char not in node.children:
+                return []
+            node = node.children[char]
+        results = []
+        self._dfs(node, prefix, results)
+        return results
+
+    def _dfs(self, node, current, results):
+        if node.is_end:
+            results.append(current)
+        for char, child in node.children.items():
+            self._dfs(child, current + char, results)
+
+# trie = Trie()
+# trie.insert("apple")
+# trie.insert("app")
+# trie.search("app")         → True
+# trie.starts_with("ap")    → True
+# trie.autocomplete("ap")   → ["app", "apple"]
+```
+
+### Trie Use Cases
+
+```
+✅ Autocomplete / Search suggestions
+✅ Spell checker
+✅ IP routing (Longest Prefix Match)
+✅ Word search in board (DFS + Trie)
+✅ Dictionary implementation
+✅ Prefix matching
+```
+
+---
+
+<div align="right"><a href="#part5">⬆ PART 5 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৫.১০ PART 5 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Inorder, Preorder, Postorder traversal এর মধ্যে পার্থক্য কী? কোনটি কোথায় ব্যবহার হয়?**
+
+> **উত্তর:** Inorder (L→Root→R): BST তে sorted order দেয়। কোনো BST এর sorted sequence দরকার হলে। Preorder (Root→L→R): Tree copy বা serialize করতে। Expression tree evaluate এ prefix notation। Postorder (L→R→Root): Tree delete করতে (আগে children তারপর parent)। Expression tree এ postfix। Mnemonic: In=Between, Pre=Before, Post=After (root এর position)।
+
+**Q2: BST এর worst case কখন O(n) হয়? কীভাবে এড়ানো যায়?**
+
+> **উত্তর:** Sorted বা reverse-sorted array insert করলে BST একটি skewed linked list হয়ে যায়। তখন height = n-1, সব operation O(n)। এড়ানোর উপায়: Self-balancing BST (AVL Tree, Red-Black Tree) ব্যবহার করুন। Python এ `sortedcontainers.SortedList`, Java তে `TreeMap`/`TreeSet`।
+
+**Q3: Binary Tree এর diameter কীভাবে বের করবেন?**
+
+> **উত্তর:** Diameter হলো tree তে যেকোনো দুটি node এর মধ্যে সবচেয়ে দীর্ঘ path। প্রতিটি node এ left_height + right_height হিসাব করে maximum নিন। Single DFS pass এ O(n) তে সম্ভব — height function চলার সময় global max update করুন।
+
+**Q4: Trie কেন HashMap এর চেয়ে prefix search এ ভালো?**
+
+> **উত্তর:** HashMap তে prefix search করতে সব keys iterate করতে হয় — O(n×m)। Trie তে prefix এর depth পর্যন্ত O(m) তে পৌঁছানো যায়, তারপর DFS তে সব matches। Autocomplete, spell check এ Trie অপরিহার্য। Space: Trie O(n×m) worst case, কিন্তু common prefix share করে।
+
+**Q5: Segment Tree কখন ব্যবহার করবেন?**
+
+> **উত্তর:** যখন Array তে range query (sum/min/max) ও point/range update উভয়ই দরকার। Prefix Sum শুধু static array তে O(1) query কিন্তু O(n) update। Segment Tree dynamic array তে O(log n) query ও O(log n) update। Competitive programming, DB aggregate query optimization এ ব্যবহার।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| BST inorder traversal | Sorted ascending |
+| BST Search average | O(log n) |
+| BST Search worst | O(n) (skewed) |
+| Tree Height | O(n) |
+| Level Order traversal | BFS + Queue |
+| LCA algorithm | O(n) single DFS |
+| AVL balance factor | {-1, 0, 1} |
+| Segment Tree build | O(n) |
+| Segment Tree query | O(log n) |
+| Trie insert | O(m) |
+| Trie search | O(m) |
+| Trie use case | Prefix search, autocomplete |
+| Complete BT | Last level left-filled |
+| Perfect BT | All levels full |
+| Full BT | 0 or 2 children each |
+| Diameter formula | max(left_h + right_h) |
+
+---
+
+> **⚠️ PART 5 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part6"></a>
+
+# PART 6: Graphs (গ্রাফ)
+
+> **📍 এই PART এর Sections:** [৬.১ Graph কী?](#৬১-graph-কী) · [৬.২ Graph Representation](#৬২-graph-representation) · [৬.৩ BFS](#৬৩-bfs) · [৬.৪ DFS](#৬৪-dfs)
+
+> **পড়ার নির্দেশনা:** Graph হলো DSA এর সবচেয়ে versatile structure। BFS/DFS দিয়ে শুরু করুন, তারপর Shortest Path ও Topological Sort। Interview তে Cycle Detection ও Dijkstra প্রায়ই আসে।
+
+---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৬.১ Graph কী?
+
+### সংজ্ঞা
+
+**Graph** G = (V, E) — Vertices (nodes) ও Edges (connections) এর সমষ্টি।
+
+```
+Graph এর প্রকারভেদ:
+
+Undirected:        Directed:
+  A — B              A → B
+  |   |              ↑   ↓
+  C — D              C ← D
+
+Weighted:          Unweighted:
+  A —5— B            A — B
+  |3    |2           |   |
+  C —7— D            C — D
+
+Cyclic:            Acyclic (DAG):
+  A → B              A → B
+  ↑   ↓              ↓   ↓
+  D ← C              C → D
+
+Connected:         Disconnected:
+  A—B—C              A—B    C—D
+    |
+    D
+
+Special terms:
+  Degree:      undirected graph এ একটি node এর edges সংখ্যা
+  In-degree:   directed এ আসা edges
+  Out-degree:  directed এ যাওয়া edges
+  Path:        node sequence যেখানে consecutive nodes adjacent
+  Cycle:       start ও end same node
+  DAG:         Directed Acyclic Graph
+```
+
+---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৬.২ Graph Representation
+
+### Adjacency List (সবচেয়ে বেশি ব্যবহৃত)
+
+```python
+# Undirected Graph
+graph = {
+    'A': ['B', 'C'],
+    'B': ['A', 'D'],
+    'C': ['A', 'D'],
+    'D': ['B', 'C']
+}
+
+# Directed Graph
+directed = {
+    0: [1, 2],
+    1: [3],
+    2: [3],
+    3: []
+}
+
+# Weighted Graph
+weighted = {
+    0: [(1, 5), (2, 3)],   # (neighbor, weight)
+    1: [(3, 2)],
+    2: [(3, 7)],
+    3: []
+}
+
+# Space: O(V + E) — sparse graph এ efficient
+```
+
+### Adjacency Matrix
+
+```python
+# n=4 nodes, 0-indexed
+n = 4
+matrix = [[0]*n for _ in range(n)]
+
+# Edge 0→1 add
+matrix[0][1] = 1
+# Weighted
+matrix[0][1] = 5
+
+# Space: O(V²) — dense graph এ ভালো
+# Check edge: O(1)
+# Find neighbors: O(V)
+```
+
+### Edge List
+
+```python
+edges = [(0, 1, 5), (0, 2, 3), (1, 3, 2), (2, 3, 7)]
+# (from, to, weight)
+# Kruskal's algorithm এ ব্যবহার হয়
+```
+
+```
+কোনটি কোথায়:
+  Adjacency List  → Sparse graph (E << V²), BFS/DFS
+  Adjacency Matrix → Dense graph, constant-time edge check
+  Edge List        → Kruskal's MST
+```
+
+---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৬.৩ BFS
+
+### Breadth-First Search
+
+```python
+from collections import deque
+
+def bfs(graph, start):
+    """
+    Level by level explore — shortest path (unweighted) এ optimal।
+    O(V + E) time, O(V) space
+    """
+    visited = {start}
+    queue = deque([start])
+    order = []
+
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+
+    return order
+
+# Shortest Path with BFS
+def bfs_shortest_path(graph, start, end):
+    """Unweighted graph এ shortest path — O(V+E)"""
+    if start == end:
+        return [start]
+
+    visited = {start}
+    queue = deque([(start, [start])])  # (node, path)
+
+    while queue:
+        node, path = queue.popleft()
+
+        for neighbor in graph[node]:
+            if neighbor == end:
+                return path + [neighbor]
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append((neighbor, path + [neighbor]))
+
+    return []  # no path
+
+# BFS: Shortest path (unweighted), Level-order, Connected components
+```
+
+---
+
+## ৬.৪ DFS
+
+### Depth-First Search
+
+```python
+def dfs_recursive(graph, node, visited=None):
+    """
+    যতদূর পারো গভীরে যাও, তারপর backtrack।
+    O(V + E) time, O(V) space (recursion stack)
+    """
+    if visited is None:
+        visited = set()
+    visited.add(node)
+    result = [node]
+
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            result.extend(dfs_recursive(graph, neighbor, visited))
+
+    return result
+
+def dfs_iterative(graph, start):
+    """Stack দিয়ে iterative DFS"""
+    visited = set()
+    stack = [start]
+    result = []
+
+    while stack:
+        node = stack.pop()
+        if node not in visited:
+            visited.add(node)
+            result.append(node)
+            for neighbor in reversed(graph[node]):
+                if neighbor not in visited:
+                    stack.append(neighbor)
+
+    return result
+
+# DFS: Cycle detection, Topological sort, Connected components, Maze solving
+```
+
+### Number of Islands (Classic DFS Grid Problem)
+
+```python
+def num_islands(grid):
+    """
+    '1' = land, '0' = water।
+    Connected land groups এর সংখ্যা।
+    O(m × n)
+    """
+    if not grid:
+        return 0
+
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+
+    def dfs(r, c):
+        if r < 0 or r >= rows or c < 0 or c >= cols or grid[r][c] == '0':
+            return
+        grid[r][c] = '0'   # visited mark
+        dfs(r+1, c)
+        dfs(r-1, c)
+        dfs(r, c+1)
+        dfs(r, c-1)
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == '1':
+                count += 1
+                dfs(r, c)
+
+    return count
+
+# grid = [
+#   ['1','1','0','0','0'],
+#   ['1','1','0','0','0'],
+#   ['0','0','1','0','0'],
+#   ['0','0','0','1','1']
+# ]
+# num_islands(grid) → 3
+```
+
+---
+
+## ৬.৫ Cycle Detection
+
+### Undirected Graph — DFS
+
+```python
+def has_cycle_undirected(graph, n):
+    """
+    Undirected graph এ cycle আছে কিনা।
+    DFS তে parent track করি।
+    O(V + E)
+    """
+    visited = set()
+
+    def dfs(node, parent):
+        visited.add(node)
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                if dfs(neighbor, node):
+                    return True
+            elif neighbor != parent:
+                return True  # cycle!
+        return False
+
+    for node in range(n):
+        if node not in visited:
+            if dfs(node, -1):
+                return True
+    return False
+```
+
+### Directed Graph — DFS + Rec Stack
+
+```python
+def has_cycle_directed(graph, n):
+    """
+    Directed graph এ cycle আছে কিনা।
+    rec_stack: current DFS path এ আছে এমন nodes।
+    O(V + E)
+    """
+    visited = set()
+    rec_stack = set()
+
+    def dfs(node):
+        visited.add(node)
+        rec_stack.add(node)
+
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                if dfs(neighbor):
+                    return True
+            elif neighbor in rec_stack:
+                return True  # back edge = cycle
+
+        rec_stack.remove(node)
+        return False
+
+    for node in range(n):
+        if node not in visited:
+            if dfs(node):
+                return True
+    return False
+```
+
+---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৬.৬ Topological Sort
+
+### সংজ্ঞা
+
+**Topological Sort**: DAG (Directed Acyclic Graph) এর nodes এমনভাবে order করা যাতে প্রতিটি edge u→v তে u, v এর আগে আসে।
+
+```
+Use cases:
+  → Task scheduling (dependency order)
+  → Build system (Makefile, npm)
+  → Course prerequisites
+  → Compilation order
+```
+
+### Kahn's Algorithm (BFS-based)
+
+```python
+from collections import deque
+
+def topological_sort_kahn(n, edges):
+    """
+    In-degree 0 nodes দিয়ে শুরু।
+    O(V + E)
+    """
+    graph = {i: [] for i in range(n)}
+    in_degree = [0] * n
+
+    for u, v in edges:
+        graph[u].append(v)
+        in_degree[v] += 1
+
+    queue = deque([i for i in range(n) if in_degree[i] == 0])
+    order = []
+
+    while queue:
+        node = queue.popleft()
+        order.append(node)
+
+        for neighbor in graph[node]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    if len(order) == n:
+        return order
+    return []  # cycle exists!
+
+# n=4, edges = [(0,1),(0,2),(1,3),(2,3)]
+# in_degree: [0,1,1,2]
+# Queue: [0]
+# Process 0: queue=[1,2], order=[0]
+# Process 1: in_degree[3]=1, order=[0,1]
+# Process 2: in_degree[3]=0, queue=[3], order=[0,1,2]
+# Process 3: order=[0,1,2,3]
+```
+
+### DFS-based Topological Sort
+
+```python
+def topological_sort_dfs(graph, n):
+    """Postorder DFS → reverse = topological order"""
+    visited = set()
+    stack = []
+
+    def dfs(node):
+        visited.add(node)
+        for neighbor in graph.get(node, []):
+            if neighbor not in visited:
+                dfs(neighbor)
+        stack.append(node)  # postorder
+
+    for node in range(n):
+        if node not in visited:
+            dfs(node)
+
+    return stack[::-1]  # reverse
+```
+
+---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৬.৭ Shortest Path — Dijkstra
+
+### সংজ্ঞা
+
+**Dijkstra's Algorithm**: Weighted graph এ single source থেকে সব nodes এর shortest path।
+**Constraint**: সব edge weight অবশ্যই non-negative।
+
+```python
+import heapq
+
+def dijkstra(graph, start, n):
+    """
+    Min-heap (priority queue) দিয়ে greedy approach।
+    O((V + E) log V)
+    graph: {node: [(neighbor, weight), ...]}
+    """
+    dist = [float('inf')] * n
+    dist[start] = 0
+    heap = [(0, start)]   # (distance, node)
+
+    while heap:
+        d, u = heapq.heappop(heap)
+
+        if d > dist[u]:
+            continue  # outdated entry
+
+        for v, weight in graph[u]:
+            new_dist = dist[u] + weight
+            if new_dist < dist[v]:
+                dist[v] = new_dist
+                heapq.heappush(heap, (new_dist, v))
+
+    return dist
+
+# Example:
+# graph = {
+#   0: [(1, 4), (2, 1)],
+#   1: [(3, 1)],
+#   2: [(1, 2), (3, 5)],
+#   3: []
+# }
+# dijkstra(graph, 0, 4) → [0, 3, 1, 4]
+# (0→2=1, 2→1=2→1 total=3, 1→3=3+1=4)
+
+# Dry Run:
+# heap=[(0,0)], dist=[0,∞,∞,∞]
+# pop (0,0): neighbors (1,4),(2,1)
+#   dist[1]=4, push (4,1); dist[2]=1, push (1,2)
+# heap=[(1,2),(4,1)]
+# pop (1,2): neighbors (1,2),(3,5)
+#   dist[1]=1+2=3 < 4 → update, push (3,1)
+#   dist[3]=1+5=6, push (6,3)
+# heap=[(3,1),(4,1),(6,3)]
+# pop (3,1): neighbors (3,1)
+#   dist[3]=3+1=4 < 6 → update, push (4,3)
+# Final: [0,3,1,4]
+```
+
+---
+
+## ৬.৮ Bellman-Ford ও Floyd-Warshall
+
+### Bellman-Ford — Negative Edges Handle করে
+
+```python
+def bellman_ford(n, edges, start):
+    """
+    Single source shortest path — negative edges সহ।
+    O(V × E) — V-1 বার relax করে।
+    Negative cycle detect করতে পারে।
+    """
+    dist = [float('inf')] * n
+    dist[start] = 0
+
+    for _ in range(n - 1):  # V-1 iterations
+        for u, v, w in edges:
+            if dist[u] != float('inf') and dist[u] + w < dist[v]:
+                dist[v] = dist[u] + w
+
+    # Negative cycle check
+    for u, v, w in edges:
+        if dist[u] != float('inf') and dist[u] + w < dist[v]:
+            return None  # negative cycle exists!
+
+    return dist
+
+# edges: [(u, v, weight), ...]
+# Dijkstra এর চেয়ে ধীর কিন্তু negative weight handle করে
+```
+
+### Floyd-Warshall — All Pairs Shortest Path
+
+```python
+def floyd_warshall(n, graph):
+    """
+    সব node pair এর মধ্যে shortest path।
+    O(V³) time, O(V²) space।
+    graph: n×n matrix, infinity for no edge.
+    """
+    dist = [row[:] for row in graph]  # copy
+
+    # k = intermediate node
+    for k in range(n):
+        for i in range(n):
+            for j in range(n):
+                if dist[i][k] + dist[k][j] < dist[i][j]:
+                    dist[i][j] = dist[i][k] + dist[k][j]
+
+    return dist
+
+# Use: dense graph, all-pairs shortest path, small n (≤ 500)
+```
+
+```
+Algorithm        Edge Weight    Time         Use Case
+Dijkstra         Non-negative   O((V+E)logV) Single source, large graph
+Bellman-Ford     Any (neg OK)   O(VE)        Negative edges, neg cycle detect
+Floyd-Warshall   Any            O(V³)        All pairs, dense/small graph
+BFS              Unweighted     O(V+E)       Unweighted shortest path
+```
+
+---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৬.৯ Union-Find (Disjoint Set)
+
+### সংজ্ঞা
+
+**Union-Find** (Disjoint Set Union — DSU) efficiently manages connected components। দুটি key operation:
+- `find(x)`: x কোন component এ আছে?
+- `union(x, y)`: x ও y এর components merge করো।
+
+```python
+class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))  # নিজেই নিজের parent
+        self.rank = [0] * n           # union by rank
+        self.count = n                # component সংখ্যা
+
+    def find(self, x):
+        """Path compression — O(α(n)) amortized ≈ O(1)"""
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])  # flatten
+        return self.parent[x]
+
+    def union(self, x, y):
+        """Union by rank"""
+        px, py = self.find(x), self.find(y)
+        if px == py:
+            return False  # already connected
+
+        if self.rank[px] < self.rank[py]:
+            px, py = py, px
+        self.parent[py] = px
+        if self.rank[px] == self.rank[py]:
+            self.rank[px] += 1
+        self.count -= 1
+        return True
+
+    def connected(self, x, y):
+        return self.find(x) == self.find(y)
+
+# Example:
+uf = UnionFind(5)  # nodes: 0,1,2,3,4
+uf.union(0, 1)     # {0,1}, {2}, {3}, {4}
+uf.union(2, 3)     # {0,1}, {2,3}, {4}
+uf.union(1, 2)     # {0,1,2,3}, {4}
+print(uf.connected(0, 3))  # True
+print(uf.count)            # 2
+```
+
+### Kruskal's Minimum Spanning Tree (MST)
+
+```python
+def kruskal_mst(n, edges):
+    """
+    Minimum Spanning Tree — সব nodes connect করার minimum cost।
+    Greedy: lightest edge যোগ করো যদি cycle না হয়।
+    O(E log E) — sorting dominant।
+    """
+    edges.sort(key=lambda x: x[2])  # weight অনুযায়ী sort
+    uf = UnionFind(n)
+    mst_cost = 0
+    mst_edges = []
+
+    for u, v, w in edges:
+        if uf.union(u, v):           # cycle নেই
+            mst_cost += w
+            mst_edges.append((u, v, w))
+            if len(mst_edges) == n - 1:
+                break  # n-1 edges = spanning tree complete
+
+    return mst_cost, mst_edges
+
+# edges = [(0,1,4),(0,2,3),(1,2,1),(1,3,2),(2,3,4)]
+# Sorted: (1,2,1),(1,3,2),(0,2,3),(0,1,4),(2,3,4)
+# union(1,2): cost=1
+# union(1,3): cost=3
+# union(0,2): cost=6
+# MST edges: 3, cost=6
+```
+
+### Union-Find Use Cases
+
+```
+✅ Cycle detection in undirected graph
+✅ Minimum Spanning Tree (Kruskal's)
+✅ Number of connected components
+✅ Network connectivity
+✅ Friend circles / Social network components
+✅ Percolation problems
+```
+
+---
+
+<div align="right"><a href="#part6">⬆ PART 6 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৬.১০ PART 6 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: BFS ও DFS এর মধ্যে পার্থক্য কী? কোন problem এ কোনটি ব্যবহার করবেন?**
+
+> **উত্তর:** BFS (Queue): Level by level explore। Shortest path (unweighted), minimum steps, nearest neighbor। DFS (Stack/Recursion): যতদূর পারো গভীরে যাও। Cycle detection, Topological sort, Connected components, Maze solving, Backtracking। Rule: "Shortest/minimum" → BFS। "Exists/all paths/cycles" → DFS।
+
+**Q2: Dijkstra কেন negative edge weight handle করতে পারে না?**
+
+> **উত্তর:** Dijkstra greedy — একবার node process করলে তার distance final ধরে নেয়। Negative edge থাকলে পরে আরো ছোট path পাওয়া সম্ভব কিন্তু Dijkstra সেটা দেখে না। Solution: Negative edges এ Bellman-Ford ব্যবহার করুন — এটি V-1 বার সব edges relax করে।
+
+**Q3: Topological Sort শুধু DAG এ কাজ করে কেন?**
+
+> **উত্তর:** Cycle থাকলে topological order অসম্ভব। A→B→C→A cycle এ A কে B এর আগে রাখতে হবে (A→B এর জন্য), কিন্তু A কে C এর পরে রাখতে হবে (C→A এর জন্য) — contradiction! Kahn's algorithm এ cycle থাকলে output তে n nodes আসে না — এটি cycle detection ও করে।
+
+**Q4: Union-Find এর Path Compression কী? কেন দরকার?**
+
+> **উত্তর:** Path Compression: find() করার সময় root পর্যন্ত যাওয়ার পথে প্রতিটি node এর parent সরাসরি root করে দেওয়া। এতে পরের find() O(1) হয়। Union by Rank এর সাথে মিলিয়ে amortized O(α(n)) — practically O(1)। ছাড়া: deep tree হলে find() O(n) হতে পারে।
+
+**Q5: কোথায় Adjacency List ও কোথায় Adjacency Matrix ব্যবহার করবেন?**
+
+> **উত্তর:** Adjacency List: Sparse graph (edges কম, E << V²)। Space O(V+E)। BFS/DFS efficient। Adjacency Matrix: Dense graph (edges অনেক)। Space O(V²)। Edge existence check O(1)। Floyd-Warshall এ সুবিধাজনক। Real life: Social network (sparse) → List। Road network small city (dense) → Matrix।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| BFS data structure | Queue |
+| DFS data structure | Stack / Recursion |
+| BFS/DFS complexity | O(V + E) |
+| Dijkstra complexity | O((V+E) log V) |
+| Bellman-Ford complexity | O(V × E) |
+| Floyd-Warshall complexity | O(V³) |
+| Negative cycle detect | Bellman-Ford |
+| Topological sort → | DAG only |
+| Kahn's algorithm | BFS-based Topo sort |
+| MST algorithm (greedy edge) | Kruskal's |
+| MST algorithm (greedy node) | Prim's |
+| Union-Find find complexity | O(α(n)) ≈ O(1) |
+| Cycle (undirected) | DFS + parent track |
+| Cycle (directed) | DFS + rec_stack |
+| Number of Islands | DFS/BFS on grid |
+| DAG | Directed Acyclic Graph |
+
+---
+
+> **⚠️ PART 6 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+
+
+<a id="part7"></a>
+
+# PART 7: Sorting & Searching (সর্টিং ও সার্চিং)
+
+> **📍 এই PART এর Sections:** [৭.১ Sorting Overview](#৭১-sorting-overview) · [৭.২ Bubble Sort](#৭২-bubble-sort) · [৭.৩ Selection Sort](#৭৩-selection-sort) · [৭.৪ Insertion Sort](#৭৪-insertion-sort)
+
+> **পড়ার নির্দেশনা:** Sorting হলো DSA interview এর bread and butter। প্রতিটি algorithm এর time/space complexity, stable কিনা, এবং কখন কোনটি ব্যবহার করবেন — এগুলো মুখস্থ রাখুন। Binary Search এর variants interview তে বারবার আসে।
+
+---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৭.১ Sorting Overview
+
+### Complexity Comparison Table
+
+```
+Algorithm       Best       Average    Worst      Space   Stable?
+Bubble Sort     O(n)       O(n²)      O(n²)      O(1)    Yes
+Selection Sort  O(n²)      O(n²)      O(n²)      O(1)    No
+Insertion Sort  O(n)       O(n²)      O(n²)      O(1)    Yes
+Merge Sort      O(n log n) O(n log n) O(n log n) O(n)    Yes
+Quick Sort      O(n log n) O(n log n) O(n²)      O(log n) No
+Heap Sort       O(n log n) O(n log n) O(n log n) O(1)    No
+Counting Sort   O(n+k)     O(n+k)     O(n+k)     O(k)    Yes
+Radix Sort      O(nk)      O(nk)      O(nk)      O(n+k)  Yes
+
+Stable = equal elements এর relative order preserve করে।
+Python এর built-in sort: Timsort — O(n log n), stable।
+```
+
+### কোন Algorithm কখন?
+
+```
+Small array (n < 20):         Insertion Sort (cache-friendly)
+General purpose:              Merge Sort বা Quick Sort
+Memory constraint:            Heap Sort (O(1) space)
+Nearly sorted:                Insertion Sort (O(n) best case)
+Integer range limited:        Counting Sort বা Radix Sort
+Linked List sort:             Merge Sort (no random access needed)
+Stability required:           Merge Sort, Insertion Sort, Timsort
+```
+
+---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৭.২ Bubble Sort
+
+```python
+def bubble_sort(arr):
+    """
+    Adjacent elements compare ও swap করো।
+    প্রতিটি pass এ largest element শেষে যায়।
+    Optimized: swap না হলে early exit।
+    """
+    n = len(arr)
+    for i in range(n):
+        swapped = False
+        for j in range(0, n - i - 1):
+            if arr[j] > arr[j + 1]:
+                arr[j], arr[j + 1] = arr[j + 1], arr[j]
+                swapped = True
+        if not swapped:
+            break   # already sorted — O(n) best case
+
+# Dry Run: [5, 3, 1, 4]
+# Pass 1: 3<5→swap [3,5,1,4], 1<5→swap [3,1,5,4], 4<5→swap [3,1,4,5]
+# Pass 2: 1<3→swap [1,3,4,5], no swap after → swapped=True still
+# Pass 3: no swap → break
+# Result: [1, 3, 4, 5]
+```
+
+---
+
+## ৭.৩ Selection Sort
+
+```python
+def selection_sort(arr):
+    """
+    প্রতিটি pass এ minimum element খুঁজে correct position এ রাখো।
+    O(n²) সবসময় — early exit নেই।
+    """
+    n = len(arr)
+    for i in range(n):
+        min_idx = i
+        for j in range(i + 1, n):
+            if arr[j] < arr[min_idx]:
+                min_idx = j
+        arr[i], arr[min_idx] = arr[min_idx], arr[i]
+
+# Dry Run: [64, 25, 12, 22]
+# i=0: min=12 (idx=2), swap→[12, 25, 64, 22]
+# i=1: min=22 (idx=3), swap→[12, 22, 64, 25]
+# i=2: min=25 (idx=3), swap→[12, 22, 25, 64]
+# i=3: min=64 (idx=3), no change
+# Result: [12, 22, 25, 64]
+```
+
+---
+
+## ৭.৪ Insertion Sort
+
+```python
+def insertion_sort(arr):
+    """
+    Left part sorted রাখো। প্রতিটি element কে correct position এ insert করো।
+    Nearly sorted array তে O(n)।
+    Small array ও online sorting এ ideal।
+    """
+    for i in range(1, len(arr)):
+        key = arr[i]
+        j = i - 1
+        while j >= 0 and arr[j] > key:
+            arr[j + 1] = arr[j]   # shift right
+            j -= 1
+        arr[j + 1] = key
+
+# Dry Run: [4, 3, 1, 2]
+# i=1: key=3, shift 4→[4,4,1,2], insert 3→[3,4,1,2]
+# i=2: key=1, shift 4,3→[3,4,4,2],[3,3,4,2], insert 1→[1,3,4,2]
+# i=3: key=2, shift 4,3→[1,3,4,4],[1,3,3,4], insert 2→[1,2,3,4]
+```
+
+---
+
+## ৭.৫ Merge Sort
+
+```python
+def merge_sort(arr):
+    """
+    Divide & Conquer — half করো, sort করো, merge করো।
+    O(n log n) guaranteed। Stable। Extra O(n) space।
+    Linked List sort এ optimal।
+    """
+    if len(arr) <= 1:
+        return arr
+
+    mid = len(arr) // 2
+    left = merge_sort(arr[:mid])
+    right = merge_sort(arr[mid:])
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result
+
+# Dry Run: [38, 27, 43, 3]
+# Split: [38,27] | [43,3]
+# Split: [38]|[27]  [43]|[3]
+# Merge: [27,38]    [3,43]
+# Merge: [3,27,38,43]
+
+# Inversion Count (Merge Sort application):
+def merge_count(arr):
+    """Inversions = (i<j but arr[i]>arr[j]) pairs সংখ্যা"""
+    if len(arr) <= 1:
+        return arr, 0
+    mid = len(arr) // 2
+    left, lc = merge_count(arr[:mid])
+    right, rc = merge_count(arr[mid:])
+    merged, sc = merge_count_helper(left, right)
+    return merged, lc + rc + sc
+
+def merge_count_helper(left, right):
+    result, count, i, j = [], 0, 0, 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i]); i += 1
+        else:
+            count += len(left) - i   # left এর remaining সব inversion
+            result.append(right[j]); j += 1
+    result.extend(left[i:]); result.extend(right[j:])
+    return result, count
+```
+
+---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৭.৬ Quick Sort
+
+```python
+def quick_sort(arr, low=0, high=None):
+    """
+    Pivot নিয়ে partition করো। Pivot left এ smaller, right এ larger।
+    Average O(n log n)। Worst O(n²) sorted array তে।
+    In-place, O(log n) stack space।
+    """
+    if high is None:
+        high = len(arr) - 1
+    if low < high:
+        pi = partition(arr, low, high)
+        quick_sort(arr, low, pi - 1)
+        quick_sort(arr, pi + 1, high)
+
+def partition(arr, low, high):
+    """Lomuto partition scheme — pivot = last element"""
+    pivot = arr[high]
+    i = low - 1   # smaller elements এর boundary
+
+    for j in range(low, high):
+        if arr[j] <= pivot:
+            i += 1
+            arr[i], arr[j] = arr[j], arr[i]
+
+    arr[i + 1], arr[high] = arr[high], arr[i + 1]
+    return i + 1
+
+# Dry Run: [3, 6, 8, 10, 1, 2, 1], pivot=1 (last)
+# i=-1
+# j=0: arr[0]=3 > 1, skip
+# j=1: arr[1]=6 > 1, skip
+# ...
+# j=5: arr[5]=2 > 1, skip
+# j=6: j=high, exit loop
+# swap arr[0] with pivot=arr[6]: [1, 6, 8, 10, 1, 2, 3]
+# pi=0
+
+# Worst case prevention:
+def partition_random(arr, low, high):
+    import random
+    rand_idx = random.randint(low, high)
+    arr[rand_idx], arr[high] = arr[high], arr[rand_idx]
+    return partition(arr, low, high)
+```
+
+---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৭.৭ Heap Sort
+
+```python
+def heap_sort(arr):
+    """
+    Max-Heap তৈরি করো, তারপর root বারবার extract করো।
+    O(n log n) guaranteed। In-place O(1) space।
+    Not stable। Cache performance খারাপ।
+    """
+    n = len(arr)
+
+    # Build max heap — O(n)
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(arr, n, i)
+
+    # Extract elements one by one
+    for i in range(n - 1, 0, -1):
+        arr[0], arr[i] = arr[i], arr[0]   # root (max) → end
+        heapify(arr, i, 0)                 # restore heap
+
+def heapify(arr, n, i):
+    largest = i
+    left, right = 2*i + 1, 2*i + 2
+
+    if left < n and arr[left] > arr[largest]:
+        largest = left
+    if right < n and arr[right] > arr[largest]:
+        largest = right
+
+    if largest != i:
+        arr[i], arr[largest] = arr[largest], arr[i]
+        heapify(arr, n, largest)
+```
+
+---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৭.৮ Counting Sort ও Radix Sort
+
+### Counting Sort
+
+```python
+def counting_sort(arr, max_val=None):
+    """
+    Integer array, bounded range।
+    O(n + k) — k = range of values।
+    Stable। Non-comparison sort।
+    """
+    if not arr:
+        return arr
+    if max_val is None:
+        max_val = max(arr)
+
+    count = [0] * (max_val + 1)
+    for num in arr:
+        count[num] += 1
+
+    # Prefix sum for positions (stable)
+    for i in range(1, len(count)):
+        count[i] += count[i - 1]
+
+    output = [0] * len(arr)
+    for num in reversed(arr):   # reverse for stability
+        output[count[num] - 1] = num
+        count[num] -= 1
+
+    return output
+
+# arr = [4, 2, 2, 8, 3, 3, 1]
+# count = [0,1,2,2,1,0,0,0,1]  (index=value, val=freq)
+# prefix = [0,1,3,5,6,6,6,6,7]
+# Output built right-to-left for stability
+```
+
+### Radix Sort
+
+```python
+def radix_sort(arr):
+    """
+    Digit by digit sort (LSD — Least Significant Digit first)।
+    O(nk) — k = number of digits।
+    Non-comparison। Integers এর জন্য।
+    """
+    if not arr:
+        return arr
+    max_num = max(arr)
+    exp = 1
+
+    while max_num // exp > 0:
+        counting_sort_by_digit(arr, exp)
+        exp *= 10
+
+def counting_sort_by_digit(arr, exp):
+    n = len(arr)
+    output = [0] * n
+    count = [0] * 10
+
+    for num in arr:
+        digit = (num // exp) % 10
+        count[digit] += 1
+
+    for i in range(1, 10):
+        count[i] += count[i - 1]
+
+    for num in reversed(arr):
+        digit = (num // exp) % 10
+        output[count[digit] - 1] = num
+        count[digit] -= 1
+
+    for i in range(n):
+        arr[i] = output[i]
+```
+
+---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৭.৯ Binary Search Variants
+
+### Standard Binary Search
+
+```python
+def binary_search(arr, target):
+    """Sorted array তে O(log n)"""
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = left + (right - left) // 2   # overflow-safe
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid - 1
+    return -1
+```
+
+### Lower Bound — First Occurrence
+
+```python
+def lower_bound(arr, target):
+    """target এর প্রথম occurrence এর index। নেই হলে insertion point।"""
+    left, right = 0, len(arr)
+    while left < right:
+        mid = (left + right) // 2
+        if arr[mid] < target:
+            left = mid + 1
+        else:
+            right = mid
+    return left   # first index where arr[i] >= target
+```
+
+### Upper Bound — Last Occurrence + 1
+
+```python
+def upper_bound(arr, target):
+    """target এর পরের position। Count = upper - lower।"""
+    left, right = 0, len(arr)
+    while left < right:
+        mid = (left + right) // 2
+        if arr[mid] <= target:
+            left = mid + 1
+        else:
+            right = mid
+    return left   # first index where arr[i] > target
+
+# Count occurrences of target:
+# count = upper_bound(arr, target) - lower_bound(arr, target)
+```
+
+### Binary Search on Answer
+
+```python
+def min_eating_speed(piles, h):
+    """
+    Koko Eating Bananas — Binary Search on Answer।
+    কত কম speed এ h ঘণ্টায় সব banana শেষ করা যাবে?
+    Search space: [1, max(piles)]
+    """
+    import math
+
+    def can_finish(speed):
+        return sum(math.ceil(p / speed) for p in piles) <= h
+
+    left, right = 1, max(piles)
+    while left < right:
+        mid = (left + right) // 2
+        if can_finish(mid):
+            right = mid       # speed কমানোর চেষ্টা
+        else:
+            left = mid + 1    # speed বাড়াতে হবে
+    return left
+
+def find_peak_element(nums):
+    """
+    nums[i] > nums[i-1] ও nums[i+1] এমন peak index।
+    O(log n) — Binary Search।
+    """
+    left, right = 0, len(nums) - 1
+    while left < right:
+        mid = (left + right) // 2
+        if nums[mid] > nums[mid + 1]:
+            right = mid     # peak বামে বা mid
+        else:
+            left = mid + 1  # peak ডানে
+    return left
+
+def search_rotated(nums, target):
+    """
+    Rotated Sorted Array তে search — O(log n)।
+    [4,5,6,7,0,1,2] তে 0 খোঁজা।
+    """
+    left, right = 0, len(nums) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[left] <= nums[mid]:       # বাম half sorted
+            if nums[left] <= target < nums[mid]:
+                right = mid - 1
+            else:
+                left = mid + 1
+        else:                              # ডান half sorted
+            if nums[mid] < target <= nums[right]:
+                left = mid + 1
+            else:
+                right = mid - 1
+    return -1
+```
+
+---
+
+<div align="right"><a href="#part7">⬆ PART 7 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৭.১০ PART 7 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Merge Sort ও Quick Sort এর মধ্যে কোনটি ভালো? কেন?**
+
+> **উত্তর:** নির্ভর করে use case এ। Merge Sort: O(n log n) guaranteed, stable, Linked List এ optimal, কিন্তু O(n) extra space। Quick Sort: Average O(n log n), in-place O(log n) space, cache-friendly, কিন্তু worst O(n²) (sorted input এ)। Random pivot বা median-of-three দিয়ে worst case এড়ানো যায়। General arrays এ Quick Sort সাধারণত faster (cache)। Stability দরকার হলে Merge Sort।
+
+**Q2: Counting Sort কেন O(n) কিন্তু comparison-based sort এর minimum O(n log n)?**
+
+> **উত্তর:** Comparison-based sort এর lower bound হলো Ω(n log n) — decision tree argument। n! টি permutation এর মধ্যে একটি বেছে নিতে কমপক্ষে log₂(n!) ≈ n log n comparisons। Counting Sort comparison করে না — directly value কে index হিসেবে ব্যবহার করে। তাই O(n+k)। Constraint: integer, bounded range।
+
+**Q3: Binary Search এ mid = (left+right)/2 কেন unsafe?**
+
+> **উত্তর:** left ও right উভয়ই large integer হলে left+right overflow হতে পারে (C/Java তে)। Safe formula: `mid = left + (right - left) // 2`। Python এ integer overflow নেই, কিন্তু এটি best practice হিসেবে সব language এ follow করুন।
+
+**Q4: কোন sorting algorithm stable এবং কেন stability গুরুত্বপূর্ণ?**
+
+> **উত্তর:** Stable: Bubble, Insertion, Merge Sort, Counting, Radix, Timsort। Unstable: Selection, Quick, Heap Sort। Stability গুরুত্বপূর্ণ: যখন multiple criteria তে sort করতে হয়। যেমন: প্রথমে name অনুযায়ী sort, তারপর age অনুযায়ী — stable sort করলে same age এ name order preserved থাকে। Database ORDER BY তে stability often assumed।
+
+**Q5: Binary Search on Answer কখন apply হয়?**
+
+> **উত্তর:** যখন answer একটি monotonic range এ থাকে — কোনো threshold এর নিচে feasible, উপরে infeasible (বা vice versa)। Pattern: "minimum/maximum value যাতে condition সত্য হয়"। উদাহরণ: Koko Eating Bananas, Capacity to Ship, Split Array Largest Sum। Check: candidate answer দিয়ে feasibility O(n) তে check করা গেলে total O(n log n)।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| Fastest comparison sort | O(n log n) — lower bound |
+| Python sort algorithm | Timsort |
+| Stable sort examples | Merge, Insertion, Bubble, Counting |
+| Unstable sort examples | Quick, Heap, Selection |
+| In-place, O(n log n) | Heap Sort |
+| Best for linked list | Merge Sort |
+| Best nearly sorted | Insertion Sort |
+| Worst Quick Sort | O(n²) sorted input |
+| Counting Sort constraint | Integer, bounded range |
+| Radix Sort complexity | O(nk) |
+| Binary Search complexity | O(log n) |
+| Lower bound returns | First index ≥ target |
+| Upper bound returns | First index > target |
+| Rotated array search | Modified Binary Search |
+| Binary Search on Answer | Monotonic feasibility |
+| Inversion count | Merge Sort modification |
+
+---
+
+> **⚠️ PART 7 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part8"></a>
+
+# PART 8: Dynamic Programming & Greedy (ডায়নামিক প্রোগ্রামিং ও গ্রিডি)
+
+> **📍 এই PART এর Sections:** [৮.১ DP কী?](#৮১-dynamic-programming-কী) · [৮.২ Memoization](#৮২-memoization-top-down) · [৮.৩ Tabulation](#৮৩-tabulation-bottom-up) · [৮.৪ Fibonacci ও Classic DP](#৮৪-fibonacci-ও-classic-dp)
+
+> **পড়ার নির্দেশনা:** DP হলো interview এর সবচেয়ে কঠিন topic। Pattern চেনা শিখুন — "optimal substructure" ও "overlapping subproblems" থাকলে DP। Greedy তে locally optimal choice globally optimal হয় কিনা সেটা prove করতে হয়।
+
+---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৮.১ Dynamic Programming কী?
+
+### সংজ্ঞা
+
+**Dynamic Programming** হলো complex problem কে overlapping subproblems এ ভেঙে solve করার technique। প্রতিটি subproblem একবার solve করে store করা হয়।
+
+```
+DP এর দুটি শর্ত:
+  1. Optimal Substructure:
+     Problem এর optimal solution এ subproblems এর optimal solution থাকে।
+     উদাহরণ: Shortest Path — A→C shortest হলে A→B→C তে A→B shortest।
+
+  2. Overlapping Subproblems:
+     Same subproblem বারবার solve করতে হয়।
+     Fibonacci: fib(5) = fib(4) + fib(3)
+               fib(4) = fib(3) + fib(2)  ← fib(3) দুবার!
+
+DP vs Divide & Conquer:
+  D&C: Subproblems overlap করে না (Merge Sort)
+  DP:  Subproblems overlap করে (Fibonacci, LCS)
+```
+
+---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৮.২ Memoization (Top-Down)
+
+### Fibonacci — Naive vs Memoized
+
+```python
+# Naive Recursion — O(2^n)
+def fib_naive(n):
+    if n <= 1:
+        return n
+    return fib_naive(n-1) + fib_naive(n-2)
+
+# Memoization — O(n) time, O(n) space
+def fib_memo(n, memo={}):
+    if n in memo:
+        return memo[n]
+    if n <= 1:
+        return n
+    memo[n] = fib_memo(n-1, memo) + fib_memo(n-2, memo)
+    return memo[n]
+
+# Python functools
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def fib(n):
+    if n <= 1:
+        return n
+    return fib(n-1) + fib(n-2)
+
+# Call tree for fib(5) — memoized:
+# fib(5) → fib(4) → fib(3) → fib(2) → fib(1)=1
+#                             fib(1)=1 (cached)
+#                   fib(2) (cached)
+#          fib(3) (cached)
+# Total unique calls: 6 (vs 15 naive)
+```
+
+---
+
+## ৮.৩ Tabulation (Bottom-Up)
+
+### Fibonacci — Tabulation
+
+```python
+def fib_tab(n):
+    """Bottom-up DP — O(n) time, O(n) space"""
+    if n <= 1:
+        return n
+    dp = [0] * (n + 1)
+    dp[1] = 1
+    for i in range(2, n + 1):
+        dp[i] = dp[i-1] + dp[i-2]
+    return dp[n]
+
+def fib_optimized(n):
+    """Space-optimized — O(1) space"""
+    if n <= 1:
+        return n
+    prev2, prev1 = 0, 1
+    for _ in range(2, n + 1):
+        prev2, prev1 = prev1, prev1 + prev2
+    return prev1
+```
+
+```
+Memoization vs Tabulation:
+
+Memoization (Top-Down):
+  ✅ Natural — recursive ভাবে ভাবা যায়
+  ✅ শুধু needed subproblems compute করে
+  ❌ Recursion stack overhead
+  ❌ Stack overflow বড় input এ
+
+Tabulation (Bottom-Up):
+  ✅ No recursion overhead
+  ✅ Space optimization সহজ
+  ❌ সব subproblems compute করতে হয়
+  ❌ Iterative order ভাবা কঠিন
+
+Interview: উভয়টি জানুন। Space optimize করতে বললে tabulation।
+```
+
+---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৮.৪ Fibonacci ও Classic DP
+
+### Climbing Stairs
+
+```python
+def climb_stairs(n):
+    """
+    n সিঁড়ি উঠতে হবে। প্রতিবার 1 বা 2 step নেওয়া যায়।
+    কত উপায়ে উঠা যাবে?
+    DP[i] = DP[i-1] + DP[i-2] (Fibonacci!)
+    O(n) time, O(1) space
+    """
+    if n <= 2:
+        return n
+    prev2, prev1 = 1, 2
+    for _ in range(3, n + 1):
+        prev2, prev1 = prev1, prev1 + prev2
+    return prev1
+
+# n=5: dp = [1,2,3,5,8] → 8 ways
+```
+
+### House Robber
+
+```python
+def house_robber(nums):
+    """
+    Adjacent house rob করা যাবে না।
+    Maximum amount rob করো।
+    dp[i] = max(dp[i-1], dp[i-2] + nums[i])
+    O(n) time, O(1) space
+    """
+    if not nums:
+        return 0
+    if len(nums) == 1:
+        return nums[0]
+
+    prev2, prev1 = 0, 0
+    for num in nums:
+        prev2, prev1 = prev1, max(prev1, prev2 + num)
+    return prev1
+
+# nums = [2, 7, 9, 3, 1]
+# prev2=0, prev1=0
+# num=2: prev1=max(0,0+2)=2
+# num=7: prev1=max(2,0+7)=7, prev2=2
+# num=9: prev1=max(7,2+9)=11, prev2=7
+# num=3: prev1=max(11,7+3)=11, prev2=11
+# num=1: prev1=max(11,11+1)=12, prev2=11
+# return 12 ✓ (rob 2+9+1 or 7+3+? No: 2+9+1=12)
+```
+
+---
+
+## ৮.৫ Longest Common Subsequence (LCS)
+
+### সংজ্ঞা
+
+**LCS**: দুটি string এ common subsequence এর সর্বোচ্চ length।
+
+```
+Subsequence: order রেখে কিছু characters skip করা।
+"ACE" is subsequence of "ABCDE" ✓
+"AEC" is NOT (order ভাঙে) ✗
+
+LCS("ABCBDAB", "BDCAB") = 4 ("BCAB" বা "BDAB")
+```
+
+```python
+def lcs(s1, s2):
+    """
+    dp[i][j] = s1[:i] ও s2[:j] এর LCS length।
+    dp[i][j] = dp[i-1][j-1] + 1         if s1[i-1] == s2[j-1]
+             = max(dp[i-1][j], dp[i][j-1]) otherwise
+    O(mn) time ও space।
+    """
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if s1[i-1] == s2[j-1]:
+                dp[i][j] = dp[i-1][j-1] + 1
+            else:
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+
+    return dp[m][n]
+
+# s1="ABCD", s2="ACDF"
+# dp table (row=s1, col=s2):
+#     ""  A  C  D  F
+# ""   0  0  0  0  0
+# A    0  1  1  1  1
+# B    0  1  1  1  1
+# C    0  1  2  2  2
+# D    0  1  2  3  3
+# LCS = 3 ("ACD")
+```
+
+---
+
+## ৮.৬ Longest Increasing Subsequence (LIS)
+
+```python
+def lis_dp(nums):
+    """
+    O(n²) DP approach।
+    dp[i] = nums[i] দিয়ে শেষ হওয়া LIS এর length।
+    """
+    n = len(nums)
+    dp = [1] * n   # প্রতিটি element নিজেই LIS=1
+
+    for i in range(1, n):
+        for j in range(i):
+            if nums[j] < nums[i]:
+                dp[i] = max(dp[i], dp[j] + 1)
+
+    return max(dp)
+
+# nums = [10, 9, 2, 5, 3, 7, 101, 18]
+# dp   = [1,  1, 1, 2, 2, 3, 4,   4]
+# LIS = 4 ([2,3,7,101] বা [2,5,7,101])
+
+def lis_binary_search(nums):
+    """
+    O(n log n) — Binary Search + patience sorting।
+    tails[i] = length-(i+1) LIS এর সবচেয়ে ছোট tail।
+    """
+    tails = []
+    for num in nums:
+        left, right = 0, len(tails)
+        while left < right:
+            mid = (left + right) // 2
+            if tails[mid] < num:
+                left = mid + 1
+            else:
+                right = mid
+        if left == len(tails):
+            tails.append(num)
+        else:
+            tails[left] = num
+    return len(tails)
+```
+
+---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৮.৭ 0/1 Knapsack
+
+### সংজ্ঞা
+
+**0/1 Knapsack**: n টি item (weight, value)। Knapsack এর capacity W। Maximum value কত নেওয়া যাবে? প্রতিটি item হয় নেবো (1) নয়তো নেবো না (0)।
+
+```python
+def knapsack(weights, values, W):
+    """
+    dp[i][w] = প্রথম i টি item থেকে capacity w তে max value।
+    dp[i][w] = max(dp[i-1][w],              ← item i নেওয়া হলো না
+                   dp[i-1][w-weights[i-1]] + values[i-1])  ← নেওয়া হলো
+    O(nW) time ও space।
+    """
+    n = len(weights)
+    dp = [[0] * (W + 1) for _ in range(n + 1)]
+
+    for i in range(1, n + 1):
+        for w in range(W + 1):
+            dp[i][w] = dp[i-1][w]   # item না নিলে
+            if weights[i-1] <= w:
+                dp[i][w] = max(dp[i][w],
+                               dp[i-1][w - weights[i-1]] + values[i-1])
+
+    return dp[n][W]
+
+# weights=[2,3,4,5], values=[3,4,5,6], W=8
+# dp[4][8] = 10 (item 1+3: weight=2+4=6, value=3+5=8? or 2+3=4,3+4=7?)
+# Best: items 2,3 → weight=3+4=7≤8, value=4+5=9. Or items 1,2,4→2+3+5=10>8.
+# items 1,4→2+5=7≤8, value=3+6=9. items 2,3→value=9. items 1,2,3→weight=9>8
+# Answer: 9
+
+def knapsack_optimized(weights, values, W):
+    """Space O(W) — 1D array"""
+    dp = [0] * (W + 1)
+    for i in range(len(weights)):
+        for w in range(W, weights[i] - 1, -1):   # reverse! avoid reuse
+            dp[w] = max(dp[w], dp[w - weights[i]] + values[i])
+    return dp[W]
+```
+
+---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৮.৮ Coin Change
+
+### Minimum Coins (Unbounded Knapsack variant)
+
+```python
+def coin_change_min(coins, amount):
+    """
+    Minimum number of coins to make amount।
+    dp[i] = amount i তে minimum coins।
+    dp[i] = min(dp[i - coin] + 1) for all coins।
+    O(amount × len(coins))
+    """
+    dp = [float('inf')] * (amount + 1)
+    dp[0] = 0
+
+    for i in range(1, amount + 1):
+        for coin in coins:
+            if coin <= i:
+                dp[i] = min(dp[i], dp[i - coin] + 1)
+
+    return dp[amount] if dp[amount] != float('inf') else -1
+
+# coins=[1,5,6,9], amount=11
+# dp[0]=0, dp[1]=1(1), dp[5]=1(5), dp[6]=1(6)
+# dp[9]=1(9), dp[10]=2(9+1), dp[11]=2(5+6) ✓
+```
+
+### Number of Ways (Combination)
+
+```python
+def coin_change_ways(coins, amount):
+    """
+    কত উপায়ে amount তৈরি করা যাবে?
+    dp[i] += dp[i - coin] for each coin।
+    O(amount × len(coins))
+    """
+    dp = [0] * (amount + 1)
+    dp[0] = 1   # empty combination
+
+    for coin in coins:
+        for i in range(coin, amount + 1):
+            dp[i] += dp[i - coin]
+
+    return dp[amount]
+
+# coins=[1,2,5], amount=5
+# coin=1: dp=[1,1,1,1,1,1]
+# coin=2: dp=[1,1,2,2,3,3]
+# coin=5: dp=[1,1,2,2,3,4]
+# 4 ways: (1+1+1+1+1), (1+1+1+2), (1+2+2), (5)
+```
+
+---
+
+## ৮.৯ Greedy Algorithm
+
+### সংজ্ঞা
+
+**Greedy**: প্রতিটি step এ locally optimal choice নাও। Globally optimal এ পৌঁছানো যাবে কিনা — এটা prove করতে হয়।
+
+```
+Greedy কাজ করে যখন:
+  → Greedy choice property: local optimal → global optimal
+  → Optimal substructure আছে
+
+Greedy কাজ করে না:
+  → 0/1 Knapsack (DP লাগে)
+  → Shortest path (negative edges)
+  → Travelling Salesman
+```
+
+### Activity Selection / Interval Scheduling
+
+```python
+def activity_selection(intervals):
+    """
+    Maximum non-overlapping intervals।
+    Greedy: সবার আগে শেষ হয় এমন interval নাও।
+    O(n log n) sorting + O(n) selection।
+    """
+    intervals.sort(key=lambda x: x[1])   # end time অনুযায়ী sort
+    count = 0
+    last_end = float('-inf')
+
+    for start, end in intervals:
+        if start >= last_end:       # overlap নেই
+            count += 1
+            last_end = end
+
+    return count
+
+# intervals = [(1,4),(3,5),(0,6),(5,7),(3,8),(5,9),(6,10),(8,11),(8,12),(2,13),(12,14)]
+# Sorted by end: (1,4),(3,5),(0,6),(5,7),(3,8),(5,9),(6,10),(8,11),(8,12),(2,13),(12,14)
+# Take (1,4): last_end=4, count=1
+# (3,5): 3<4 overlap, skip
+# (0,6): 0<4 overlap, skip
+# (5,7): 5>=4 ✓, last_end=7, count=2
+# (3,8): 3<7 skip; (5,9): 5<7 skip; (6,10): 6<7 skip
+# (8,11): 8>=7 ✓, last_end=11, count=3
+# (8,12): 8<11 skip; (2,13): 2<11 skip
+# (12,14): 12>=11 ✓, last_end=14, count=4
+# Answer: 4
+```
+
+### Jump Game
+
+```python
+def can_jump(nums):
+    """
+    প্রতিটি position থেকে nums[i] step পর্যন্ত jump করা যায়।
+    শেষে পৌঁছানো সম্ভব কিনা?
+    Greedy: max reachable position track করো।
+    O(n)
+    """
+    max_reach = 0
+    for i, jump in enumerate(nums):
+        if i > max_reach:
+            return False
+        max_reach = max(max_reach, i + jump)
+    return True
+
+def jump_game_ii(nums):
+    """Minimum jumps to reach end — Greedy O(n)"""
+    jumps = 0
+    current_end = 0
+    farthest = 0
+
+    for i in range(len(nums) - 1):
+        farthest = max(farthest, i + nums[i])
+        if i == current_end:
+            jumps += 1
+            current_end = farthest
+
+    return jumps
+```
+
+### Fractional Knapsack (Greedy কাজ করে)
+
+```python
+def fractional_knapsack(weights, values, W):
+    """
+    Item ভাঙা যায়। Value/Weight ratio অনুযায়ী নাও।
+    O(n log n)
+    """
+    items = sorted(zip(weights, values),
+                   key=lambda x: x[1]/x[0], reverse=True)
+
+    total_value = 0
+    remaining = W
+
+    for weight, value in items:
+        if remaining >= weight:
+            total_value += value
+            remaining -= weight
+        else:
+            total_value += value * (remaining / weight)
+            break
+
+    return total_value
+```
+
+### Gas Station
+
+```python
+def can_complete_circuit(gas, cost):
+    """
+    Circular route — কোন station থেকে শুরু করলে complete করা যাবে?
+    O(n) greedy।
+    """
+    total_surplus = 0
+    current_surplus = 0
+    start = 0
+
+    for i in range(len(gas)):
+        diff = gas[i] - cost[i]
+        total_surplus += diff
+        current_surplus += diff
+
+        if current_surplus < 0:
+            start = i + 1
+            current_surplus = 0
+
+    return start if total_surplus >= 0 else -1
+```
+
+---
+
+<div align="right"><a href="#part8">⬆ PART 8 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৮.১০ PART 8 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: DP ও Recursion এর মধ্যে পার্থক্য কী? DP কখন apply করবেন?**
+
+> **উত্তর:** সাধারণ Recursion বারবার same subproblem solve করে — exponential time। DP overlapping subproblems memoize/tabulate করে — polynomial time। Apply করুন: (1) Optimal Substructure — subproblem এর optimal solution থেকে problem এর optimal solution। (2) Overlapping Subproblems — same calculation বারবার। Keywords: "maximum/minimum", "number of ways", "is it possible"।
+
+**Q2: 0/1 Knapsack ও Fractional Knapsack এ greedy কেন কাজ করে না?**
+
+> **উত্তর:** 0/1 Knapsack এ item ভাঙা যায় না। Ratio অনুযায়ী greedy নিলে — পরে ছোট weight এর item এ বেশি value পাওয়া যেতে পারে। Counterexample: capacity=10, items=(6,value=6),(5,5),(5,5)। Greedy: take (6,6)→remaining=4, nothing fits, total=6। DP: take (5,5)+(5,5)=10=capacity, total=10। Fractional তে ভাঙা যায় বলে greedy optimal।
+
+**Q3: Memoization এ default mutable argument ব্যবহারের বিপদ কী?**
+
+> **উত্তর:** Python এ `def f(n, memo={})` এর `memo` সব function calls এ share হয় — function definition হওয়ার সময় একবার তৈরি হয়। সুবিধা: automatic caching। বিপদ: different test cases এ stale data। Safe approach: `memo=None` তারপর `if memo is None: memo = {}`। অথবা `@lru_cache(maxsize=None)` ব্যবহার করুন।
+
+**Q4: Greedy কাজ করছে কিনা কীভাবে বুঝবেন?**
+
+> **উত্তর:** (1) Exchange argument: যদি greedy choice এর বদলে অন্য choice নিলে result খারাপ বা equal হয় → greedy সঠিক। (2) Counterexample খোঁজো: ছোট input এ brute force দিয়ে check করো। (3) Classic greedy problems চিনুন: Activity Selection, Huffman Coding, Dijkstra, MST (Kruskal/Prim), Fractional Knapsack।
+
+**Q5: LCS ও Edit Distance এর মধ্যে সম্পর্ক কী?**
+
+> **উত্তর:** উভয়ই string DP। LCS: দুটি string এর common structure measure করে। Edit Distance (Levenshtein): একটি string কে অন্যটিতে রূপান্তর করতে minimum operations (insert, delete, replace)। সম্পর্ক: যদি LCS = L হয় এবং string lengths m, n হয় তাহলে insert/delete দিয়ে edit distance = (m-L) + (n-L)। Replace এর ক্ষেত্রে আলাদা DP।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| DP এর দুটি শর্ত | Optimal substructure + Overlapping subproblems |
+| Memoization | Top-down recursion + cache |
+| Tabulation | Bottom-up iterative DP |
+| Fibonacci DP | O(n) time, O(1) space |
+| LCS complexity | O(mn) |
+| LIS O(n²) approach | DP |
+| LIS O(n log n) | Binary Search + tails array |
+| 0/1 Knapsack | O(nW) |
+| Coin Change (min) | O(amount × coins) |
+| Greedy — interval | Sort by end time |
+| Jump Game | Greedy, O(n) |
+| Fractional Knapsack | Greedy, ratio sort |
+| House Robber DP | dp[i] = max(dp[i-1], dp[i-2]+nums[i]) |
+| Climb Stairs | Fibonacci variant |
+| DP vs Greedy | DP: explore all; Greedy: local optimal |
+| lru_cache | Python memoization decorator |
+
+---
+
+> **⚠️ PART 8 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+
+
+<a id="part9"></a>
+
+# PART 9: Advanced DSA (উন্নত ডেটা স্ট্রাকচার ও অ্যালগরিদম)
+
+> **📍 এই PART এর Sections:** [৯.১ Hash Map](#৯১-hash-map-ও-hash-table) · [৯.২ Hash Patterns](#৯২-hash-map-patterns) · [৯.৩ Bit Manipulation](#৯৩-bit-manipulation) · [৯.৪ Bit Problems](#৯৪-bit-manipulation-problems)
+
+> **পড়ার নির্দেশনা:** এই PART এ Hash Map patterns, Bit Manipulation, Backtracking ও String Algorithms আছে। Hash Map ও Bit tricks interview তে প্রায়ই আসে। Backtracking সব permutation/combination/subset problem এ কাজ করে।
+
+---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৯.১ Hash Map ও Hash Table
+
+### সংজ্ঞা
+
+**Hash Map** (Dictionary) হলো key-value pair store এর data structure। Hash function key কে index এ convert করে।
+
+```
+Hash Function: key → index
+  hash("name") → 3
+  hash("age")  → 7
+
+Collision: দুটি key একই index এ গেলে
+  Chaining:   Linked List দিয়ে
+  Open Addressing: পরের খালি slot এ
+
+Operations:
+  insert(k, v)  → O(1) amortized
+  search(k)     → O(1) amortized
+  delete(k)     → O(1) amortized
+  Worst case:   O(n) — সব collision এ
+```
+
+### Python Dictionary Patterns
+
+```python
+# Basic usage
+freq = {}
+for char in "abracadabra":
+    freq[char] = freq.get(char, 0) + 1
+# {'a':5, 'b':2, 'r':2, 'c':1, 'd':1}
+
+# defaultdict
+from collections import defaultdict
+freq = defaultdict(int)
+for char in "hello":
+    freq[char] += 1
+
+# Counter
+from collections import Counter
+cnt = Counter("banana")
+print(cnt.most_common(2))   # [('a',3),('n',2)]
+
+# OrderedDict (Python 3.7+ dict maintains order)
+from collections import OrderedDict
+lru = OrderedDict()
+```
+
+---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৯.২ Hash Map Patterns
+
+### Two Sum
+
+```python
+def two_sum(nums, target):
+    """
+    nums এ দুটি index খোঁজো যাদের sum = target।
+    Hash Map দিয়ে O(n) — complement check।
+    """
+    seen = {}   # {value: index}
+    for i, num in enumerate(nums):
+        complement = target - num
+        if complement in seen:
+            return [seen[complement], i]
+        seen[num] = i
+    return []
+
+# nums=[2,7,11,15], target=9
+# i=0: complement=7, not in seen; seen={2:0}
+# i=1: complement=2, 2 in seen! return [0,1] ✓
+```
+
+### Subarray Sum Equals K (Prefix Sum + Hash Map)
+
+```python
+def subarray_sum(nums, k):
+    """
+    Sum = k এমন subarray এর সংখ্যা।
+    Prefix Sum + Hash Map = O(n)।
+    """
+    count = 0
+    prefix_sum = 0
+    sum_count = {0: 1}   # empty subarray
+
+    for num in nums:
+        prefix_sum += num
+        count += sum_count.get(prefix_sum - k, 0)
+        sum_count[prefix_sum] = sum_count.get(prefix_sum, 0) + 1
+
+    return count
+
+# nums=[1,1,1], k=2
+# prefix=0: sum_count={0:1}
+# num=1: prefix=1, count+=sum_count.get(-1,0)=0; sum_count={0:1,1:1}
+# num=1: prefix=2, count+=sum_count.get(0,0)=1; sum_count={0:1,1:1,2:1}
+# num=1: prefix=3, count+=sum_count.get(1,0)=1; count=2
+# return 2 ✓ ([1,1] twice: index 0-1, 1-2)
+```
+
+### LRU Cache
+
+```python
+from collections import OrderedDict
+
+class LRUCache:
+    """
+    Least Recently Used Cache।
+    O(1) get ও put — OrderedDict (doubly linked list + hash map)।
+    """
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.cache = OrderedDict()
+
+    def get(self, key):
+        if key not in self.cache:
+            return -1
+        self.cache.move_to_end(key)   # recently used
+        return self.cache[key]
+
+    def put(self, key, value):
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        self.cache[key] = value
+        if len(self.cache) > self.capacity:
+            self.cache.popitem(last=False)  # remove LRU (front)
+```
+
+### Group Anagrams
+
+```python
+def group_anagrams(strs):
+    """Sorted string কে key হিসেবে ব্যবহার করো — O(n × m log m)"""
+    groups = defaultdict(list)
+    for s in strs:
+        key = tuple(sorted(s))
+        groups[key].append(s)
+    return list(groups.values())
+
+# ["eat","tea","tan","ate","nat","bat"]
+# "eat"→('a','e','t'): ["eat","tea","ate"]
+# "tan"→('a','n','t'): ["tan","nat"]
+# "bat"→('a','b','t'): ["bat"]
+```
+
+---
+
+## ৯.৩ Bit Manipulation
+
+### Binary Basics
+
+```
+Decimal 13 = Binary 1101
+  1×2³ + 1×2² + 0×2¹ + 1×2⁰ = 8+4+0+1 = 13
+
+Bitwise Operators:
+  &  (AND):    1101 & 1010 = 1000  (8)
+  |  (OR):     1101 | 1010 = 1111  (15)
+  ^  (XOR):    1101 ^ 1010 = 0111  (7)
+  ~  (NOT):    ~1101 = 0010  (complement)
+  << (Left):   0001 << 2 = 0100   (×4)
+  >> (Right):  1100 >> 2 = 0011   (÷4)
+
+Key Properties:
+  a ^ a = 0         (XOR নিজের সাথে = 0)
+  a ^ 0 = a         (XOR 0 = নিজেই)
+  a & (a-1) = 0     (a power of 2 হলে)
+  a & 1 = last bit  (odd হলে 1, even হলে 0)
+```
+
+### Essential Bit Tricks
+
+```python
+# Check if n is power of 2
+def is_power_of_two(n):
+    return n > 0 and (n & (n - 1)) == 0
+# 8 = 1000, 7 = 0111, 8&7 = 0 ✓
+# 6 = 0110, 5 = 0101, 6&5 = 4 ≠ 0 ✗
+
+# Count set bits (Brian Kernighan's)
+def count_bits(n):
+    count = 0
+    while n:
+        n &= (n - 1)   # rightmost set bit clear করো
+        count += 1
+    return count
+# 13 = 1101: 1101→1100→1000→0000, count=3
+
+# Get i-th bit
+def get_bit(n, i):
+    return (n >> i) & 1
+
+# Set i-th bit
+def set_bit(n, i):
+    return n | (1 << i)
+
+# Clear i-th bit
+def clear_bit(n, i):
+    return n & ~(1 << i)
+
+# Toggle i-th bit
+def toggle_bit(n, i):
+    return n ^ (1 << i)
+
+# Swap two numbers without temp
+a, b = 5, 3
+a ^= b; b ^= a; a ^= b   # a=3, b=5
+```
+
+---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৯.৪ Bit Manipulation Problems
+
+### Single Number (XOR trick)
+
+```python
+def single_number(nums):
+    """
+    সব number দুবার আছে, একটি একবার। সেটি খোঁজো।
+    XOR: a^a=0, a^0=a → সব pairs cancel → একা টা থাকে।
+    O(n) time, O(1) space।
+    """
+    result = 0
+    for num in nums:
+        result ^= num
+    return result
+
+# [4,1,2,1,2]: 4^1^2^1^2 = 4^(1^1)^(2^2) = 4^0^0 = 4 ✓
+```
+
+### Missing Number
+
+```python
+def missing_number(nums):
+    """0 থেকে n পর্যন্ত, একটি missing। XOR দিয়ে O(n), O(1)।"""
+    n = len(nums)
+    result = n   # 0..n সব XOR করো, তারপর nums XOR করো
+    for i, num in enumerate(nums):
+        result ^= i ^ num
+    return result
+# Alternatively: return n*(n+1)//2 - sum(nums)
+```
+
+### Counting Bits (DP + Bit)
+
+```python
+def count_bits_all(n):
+    """0 থেকে n পর্যন্ত প্রতিটি number এর set bits count।"""
+    dp = [0] * (n + 1)
+    for i in range(1, n + 1):
+        dp[i] = dp[i >> 1] + (i & 1)
+    # i>>1 = i//2, আগের answer reuse
+    return dp
+# [0,1,1,2,1,2] for n=5
+```
+
+---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৯.৫ Backtracking
+
+### সংজ্ঞা
+
+**Backtracking** হলো exhaustive search with pruning। সব possibilities explore করো, valid না হলে undo করে অন্যটা try করো।
+
+```
+Template:
+  def backtrack(state, choices):
+      if goal reached:
+          add to results
+          return
+      for choice in choices:
+          if valid(choice):
+              make choice     ← state পরিবর্তন
+              backtrack(...)
+              undo choice     ← state ফিরিয়ে দাও (backtrack!)
+```
+
+### Permutations
+
+```python
+def permutations(nums):
+    """সব permutation generate করো — O(n × n!)"""
+    result = []
+
+    def backtrack(current, remaining):
+        if not remaining:
+            result.append(current[:])
+            return
+        for i in range(len(remaining)):
+            current.append(remaining[i])
+            backtrack(current, remaining[:i] + remaining[i+1:])
+            current.pop()   # undo
+
+    backtrack([], nums)
+    return result
+
+# [1,2,3] → [[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]
+```
+
+### Subsets
+
+```python
+def subsets(nums):
+    """সব subsets (power set) — O(2^n)"""
+    result = []
+
+    def backtrack(start, current):
+        result.append(current[:])   # প্রতিটি state একটি subset
+        for i in range(start, len(nums)):
+            current.append(nums[i])
+            backtrack(i + 1, current)
+            current.pop()
+
+    backtrack(0, [])
+    return result
+
+# [1,2,3] → [[],[1],[1,2],[1,2,3],[1,3],[2],[2,3],[3]]
+```
+
+### N-Queens
+
+```python
+def solve_n_queens(n):
+    """n×n board এ n queens রাখো যাতে কেউ attack করতে না পারে।"""
+    result = []
+    cols = set()
+    diag1 = set()   # row - col
+    diag2 = set()   # row + col
+
+    def backtrack(row, board):
+        if row == n:
+            result.append([''.join(r) for r in board])
+            return
+        for col in range(n):
+            if col in cols or (row-col) in diag1 or (row+col) in diag2:
+                continue
+            cols.add(col); diag1.add(row-col); diag2.add(row+col)
+            board[row][col] = 'Q'
+            backtrack(row + 1, board)
+            cols.remove(col); diag1.remove(row-col); diag2.remove(row+col)
+            board[row][col] = '.'
+
+    board = [['.']*n for _ in range(n)]
+    backtrack(0, board)
+    return result
+```
+
+---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৯.৬ Divide & Conquer
+
+### সংজ্ঞা
+
+**Divide & Conquer**: Problem কে subproblems এ ভাগ করো, recursively solve করো, combine করো।
+
+```
+Steps:
+  1. Divide: Problem → smaller subproblems
+  2. Conquer: Recursively solve each
+  3. Combine: Results merge করো
+
+Examples: Merge Sort, Quick Sort, Binary Search,
+          Maximum Subarray, Closest Pair of Points
+```
+
+### Maximum Subarray — Divide & Conquer
+
+```python
+def max_subarray_dc(arr, low=0, high=None):
+    """
+    Divide & Conquer — O(n log n)।
+    Kadane's O(n) এর চেয়ে ধীর কিন্তু concept বোঝার জন্য।
+    """
+    if high is None:
+        high = len(arr) - 1
+    if low == high:
+        return arr[low]
+
+    mid = (low + high) // 2
+    left_max = max_subarray_dc(arr, low, mid)
+    right_max = max_subarray_dc(arr, mid + 1, high)
+    cross_max = max_crossing(arr, low, mid, high)
+
+    return max(left_max, right_max, cross_max)
+
+def max_crossing(arr, low, mid, high):
+    left_sum = float('-inf')
+    total = 0
+    for i in range(mid, low - 1, -1):
+        total += arr[i]
+        left_sum = max(left_sum, total)
+
+    right_sum = float('-inf')
+    total = 0
+    for i in range(mid + 1, high + 1):
+        total += arr[i]
+        right_sum = max(right_sum, total)
+
+    return left_sum + right_sum
+```
+
+---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৯.৭ String Algorithms — KMP
+
+### KMP (Knuth-Morris-Pratt)
+
+**সমস্যা**: text এ pattern কোথায় আছে?
+- Naive: O(n×m) — প্রতিটি position এ match করো
+- KMP: O(n+m) — mismatch এ কতটুকু skip করা যায় precompute
+
+```python
+def kmp_search(text, pattern):
+    """
+    Failure function (LPS array) দিয়ে O(n+m) pattern matching।
+    LPS = Longest Proper Prefix which is also Suffix।
+    """
+    if not pattern:
+        return 0
+
+    lps = compute_lps(pattern)
+    result = []
+    j = 0   # pattern index
+
+    for i in range(len(text)):
+        while j > 0 and text[i] != pattern[j]:
+            j = lps[j - 1]   # fallback
+        if text[i] == pattern[j]:
+            j += 1
+        if j == len(pattern):
+            result.append(i - j + 1)
+            j = lps[j - 1]
+
+    return result
+
+def compute_lps(pattern):
+    """LPS (Failure Function) array compute করো।"""
+    m = len(pattern)
+    lps = [0] * m
+    length = 0
+    i = 1
+
+    while i < m:
+        if pattern[i] == pattern[length]:
+            length += 1
+            lps[i] = length
+            i += 1
+        else:
+            if length > 0:
+                length = lps[length - 1]
+            else:
+                lps[i] = 0
+                i += 1
+    return lps
+
+# text="AABAACAADAABAABA", pattern="AABA"
+# lps("AABA") = [0,1,0,1]
+# Matches at: index 0, 9, 12
+```
+
+---
+
+## ৯.৮ Rolling Hash ও Rabin-Karp
+
+```python
+def rabin_karp(text, pattern):
+    """
+    Rolling hash দিয়ে O(n+m) average pattern matching।
+    Hash collision হলে character-by-character verify।
+    """
+    n, m = len(text), len(pattern)
+    if m > n:
+        return []
+
+    BASE = 31
+    MOD = 10**9 + 7
+    results = []
+
+    def poly_hash(s):
+        h = 0
+        for c in s:
+            h = (h * BASE + ord(c)) % MOD
+        return h
+
+    pat_hash = poly_hash(pattern)
+    power = pow(BASE, m - 1, MOD)
+    window_hash = poly_hash(text[:m])
+
+    for i in range(n - m + 1):
+        if window_hash == pat_hash:
+            if text[i:i+m] == pattern:
+                results.append(i)
+        if i < n - m:
+            window_hash = (window_hash - ord(text[i]) * power) % MOD
+            window_hash = (window_hash * BASE + ord(text[i + m])) % MOD
+
+    return results
+```
+
+---
+
+<div align="right"><a href="#part9">⬆ PART 9 উপরে</a> &nbsp;|&nbsp; <a href="#toc">📚 TOC</a></div>
+
+## ৯.৯ PART 9 — Interview Q&A
+
+### সেকশন ১: বিস্তারিত প্রশ্নোত্তর
+
+**Q1: Hash Map এর average O(1) কিন্তু worst O(n) কেন?**
+
+> **উত্তর:** Average: Hash function সমানভাবে distribute করে, প্রতিটি bucket এ O(1) elements → O(1)। Worst: সব keys একই bucket এ গেলে (সব collision) → linked list → O(n)। Good hash function ও load factor < 0.75 রাখলে worst case এড়ানো যায়। Python dict এ load factor > 2/3 হলে resize হয়।
+
+**Q2: XOR দিয়ে duplicate খোঁজার trick কেন কাজ করে?**
+
+> **উত্তর:** XOR এর properties: a^a=0 (self-inverse), a^0=a (identity), commutative ও associative। সব elements XOR করলে pairs cancel হয়ে 0 হয়। যে element একবার আছে সেটা 0 এর সাথে XOR হয়ে নিজেই থাকে। O(n) time, O(1) space — যেখানে hash map O(n) space নেয়।
+
+**Q3: Backtracking ও Dynamic Programming এর পার্থক্য কী?**
+
+> **উত্তর:** উভয়ই recursion ব্যবহার করে কিন্তু approach আলাদা। Backtracking: সব valid solutions explore করে, dead end এ undo করে অন্য path নেয়। Overlapping subproblems নেই। DP: overlapping subproblems আছে, results memoize করে reuse করে। Backtracking O(exponential), DP O(polynomial)। Backtracking: permutation, N-Queens, Sudoku। DP: LCS, Knapsack, Coin Change।
+
+**Q4: KMP এর LPS array কী কাজ করে?**
+
+> **উত্তর:** LPS (Longest Proper Prefix which is also Suffix) — pattern এর প্রতিটি position এ mismatch হলে কতটুকু পিছিয়ে যাবো সেটা বলে। যেমন pattern="AABA" এ lps=[0,1,0,1]। "AABA" তে mismatch হলে শেষে index 3 এর lps=1 মানে index 1 থেকে আবার match শুরু। Naive approach এ প্রতিবার শুরু থেকে, KMP এ আগের match reuse করে → O(n+m)।
+
+**Q5: Subsets problem এ কতটি subset থাকে? কেন 2^n?**
+
+> **উত্তর:** n টি element এ প্রতিটি element independent ভাবে include বা exclude করা যায় → 2 choices × 2 choices × ... (n বার) = 2^n। Backtracking এ প্রতিটি element এ দুটি branch হয় → 2^n leaves। Bitmask দিয়েও করা যায়: 0 থেকে 2^n-1 পর্যন্ত সব numbers এ i-th bit set হলে i-th element include।
+
+### সেকশন ২: Rapid-Fire
+
+| প্রশ্ন | উত্তর |
+|-------|-------|
+| Hash Map average | O(1) |
+| Hash Map worst | O(n) collision |
+| Python dict ordering | Insertion order (3.7+) |
+| XOR self | 0 |
+| XOR identity | a^0=a |
+| Power of 2 check | n & (n-1) == 0 |
+| Count set bits fast | Brian Kernighan: n&(n-1) |
+| Backtracking template | make, recurse, undo |
+| Subsets count | 2^n |
+| Permutations count | n! |
+| KMP complexity | O(n+m) |
+| Naive string search | O(n×m) |
+| Rabin-Karp | Rolling hash, O(n+m) avg |
+| LRU Cache | OrderedDict, O(1) |
+| Two Sum optimal | Hash Map, O(n) |
+| Prefix Sum + Hash Map | Subarray sum = k |
+
+---
+
+> **⚠️ PART 9 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part10"></a>
+
+# PART 10: Coding Interview Q&A (টপ ইন্টারভিউ প্রশ্নোত্তর)
+
+> **📍 এই PART এর Sections:** [১০.১ Array & String Q&A](#১০১-array--string-top-qa) · [১০.২ Linked List Q&A](#১০২-linked-list-top-qa) · [১০.৩ Stack & Queue Q&A](#১০৩-stack--queue-top-qa) · [১০.৪ Tree & Graph Q&A](#১০৪-tree--graph-top-qa)
+
+> **পড়ার নির্দেশনা:** এই PART এ সবচেয়ে বেশি জিজ্ঞেস করা DSA interview questions একসাথে। প্রতিটি topic এর top problems ও complexity quick reference।
+
+---
+
+## ১০.১ Array & String Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Two Sum | Hash Map | O(n) | O(n) |
+| 2 | Best Time to Buy Stock | Single pass, min track | O(n) | O(1) |
+| 3 | Contains Duplicate | Hash Set | O(n) | O(n) |
+| 4 | Product of Array Except Self | Left & Right prefix | O(n) | O(1) |
+| 5 | Maximum Subarray | Kadane's | O(n) | O(1) |
+| 6 | Maximum Product Subarray | Track max & min | O(n) | O(1) |
+| 7 | Find Min in Rotated Sorted Array | Binary Search | O(log n) | O(1) |
+| 8 | Search in Rotated Array | Modified Binary Search | O(log n) | O(1) |
+| 9 | 3Sum | Sort + Two Pointer | O(n²) | O(1) |
+| 10 | Container With Most Water | Two Pointer | O(n) | O(1) |
+| 11 | Valid Palindrome | Two Pointer | O(n) | O(1) |
+| 12 | Longest Substring No Repeat | Sliding Window + Hash Map | O(n) | O(k) |
+| 13 | Longest Repeating Char Replacement | Sliding Window | O(n) | O(1) |
+| 14 | Minimum Window Substring | Sliding Window | O(n) | O(k) |
+| 15 | Group Anagrams | Sort + Hash Map | O(nm log m) | O(nm) |
+
+### Key Code Snippets
+
+```python
+# Best Time to Buy & Sell Stock
+def max_profit(prices):
+    min_price, max_profit = float('inf'), 0
+    for price in prices:
+        min_price = min(min_price, price)
+        max_profit = max(max_profit, price - min_price)
+    return max_profit
+
+# Product Except Self — O(1) extra space
+def product_except_self(nums):
+    n = len(nums)
+    result = [1] * n
+    # Left pass
+    prefix = 1
+    for i in range(n):
+        result[i] = prefix
+        prefix *= nums[i]
+    # Right pass
+    suffix = 1
+    for i in range(n-1, -1, -1):
+        result[i] *= suffix
+        suffix *= nums[i]
+    return result
+
+# 3Sum
+def three_sum(nums):
+    nums.sort()
+    result = []
+    for i in range(len(nums) - 2):
+        if i > 0 and nums[i] == nums[i-1]:
+            continue  # skip duplicates
+        left, right = i+1, len(nums)-1
+        while left < right:
+            s = nums[i] + nums[left] + nums[right]
+            if s == 0:
+                result.append([nums[i], nums[left], nums[right]])
+                while left < right and nums[left] == nums[left+1]: left += 1
+                while left < right and nums[right] == nums[right-1]: right -= 1
+                left += 1; right -= 1
+            elif s < 0: left += 1
+            else: right -= 1
+    return result
+```
+
+---
+
+## ১০.২ Linked List Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Reverse Linked List | Iterative/Recursive | O(n) | O(1) |
+| 2 | Detect Cycle | Floyd's Two Pointer | O(n) | O(1) |
+| 3 | Find Middle | Fast & Slow Pointer | O(n) | O(1) |
+| 4 | Merge Two Sorted Lists | Two Pointer | O(n+m) | O(1) |
+| 5 | Remove N-th From End | Two Pointer gap=n | O(n) | O(1) |
+| 6 | Reorder List | Middle + Reverse + Merge | O(n) | O(1) |
+| 7 | Add Two Numbers | Simulate addition | O(n) | O(n) |
+| 8 | LRU Cache | OrderedDict / DLL+HashMap | O(1) | O(n) |
+
+```python
+# Remove N-th Node From End
+def remove_nth_from_end(head, n):
+    dummy = ListNode(0, head)
+    fast = slow = dummy
+    for _ in range(n + 1):
+        fast = fast.next
+    while fast:
+        fast = fast.next
+        slow = slow.next
+    slow.next = slow.next.next
+    return dummy.next
+```
+
+---
+
+## ১০.৩ Stack & Queue Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Valid Parentheses | Stack | O(n) | O(n) |
+| 2 | Min Stack | Stack of (val, min) | O(1) | O(n) |
+| 3 | Evaluate Reverse Polish | Stack | O(n) | O(n) |
+| 4 | Daily Temperatures | Monotonic Stack | O(n) | O(n) |
+| 5 | Car Fleet | Stack + Sort | O(n log n) | O(n) |
+| 6 | Largest Rectangle Histogram | Monotonic Stack | O(n) | O(n) |
+| 7 | Sliding Window Maximum | Deque | O(n) | O(k) |
+| 8 | Top K Frequent Elements | Heap / Bucket Sort | O(n log k) | O(n) |
+
+```python
+# Top K Frequent Elements
+def top_k_frequent(nums, k):
+    count = Counter(nums)
+    return heapq.nlargest(k, count.keys(), key=count.get)
+```
+
+---
+
+## ১০.৪ Tree & Graph Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Invert Binary Tree | DFS/BFS | O(n) | O(n) |
+| 2 | Max Depth Binary Tree | DFS | O(n) | O(h) |
+| 3 | Same Tree | DFS | O(n) | O(h) |
+| 4 | Subtree of Another Tree | DFS + is_same | O(nm) | O(h) |
+| 5 | LCA of BST | BST property | O(h) | O(1) |
+| 6 | Level Order Traversal | BFS | O(n) | O(n) |
+| 7 | Validate BST | DFS + min/max | O(n) | O(h) |
+| 8 | Kth Smallest in BST | Inorder | O(n) | O(h) |
+| 9 | Number of Islands | DFS/BFS | O(mn) | O(mn) |
+| 10 | Clone Graph | BFS + HashMap | O(V+E) | O(V) |
+| 11 | Course Schedule | Topo Sort / Cycle | O(V+E) | O(V+E) |
+| 12 | Word Ladder | BFS | O(m²×n) | O(m²×n) |
+
+```python
+# Course Schedule (Cycle detection in directed graph)
+def can_finish(num_courses, prerequisites):
+    graph = defaultdict(list)
+    for a, b in prerequisites:
+        graph[b].append(a)
+
+    # 0=unvisited, 1=visiting, 2=done
+    state = [0] * num_courses
+
+    def dfs(node):
+        if state[node] == 1: return False  # cycle
+        if state[node] == 2: return True
+        state[node] = 1
+        for nei in graph[node]:
+            if not dfs(nei): return False
+        state[node] = 2
+        return True
+
+    return all(dfs(i) for i in range(num_courses))
+```
+
+---
+
+## ১০.৫ Sorting & DP Top Q&A
+
+| # | প্রশ্ন | Approach | Time | Space |
+|---|-------|----------|------|-------|
+| 1 | Merge Intervals | Sort + merge | O(n log n) | O(n) |
+| 2 | Insert Interval | Linear scan | O(n) | O(n) |
+| 3 | Non-overlapping Intervals | Greedy, sort by end | O(n log n) | O(1) |
+| 4 | Climbing Stairs | DP (Fibonacci) | O(n) | O(1) |
+| 5 | House Robber | DP | O(n) | O(1) |
+| 6 | House Robber II (circular) | 2× House Robber | O(n) | O(1) |
+| 7 | Longest Palindromic Substring | DP / Expand Around | O(n²) | O(1) |
+| 8 | Coin Change | DP (BFS/tab) | O(n×coins) | O(n) |
+| 9 | Unique Paths | DP | O(mn) | O(n) |
+| 10 | Jump Game | Greedy | O(n) | O(1) |
+| 11 | Word Break | DP + Hash Set | O(n²) | O(n) |
+| 12 | Combination Sum | Backtracking | O(n^(T/M)) | O(T/M) |
+
+```python
+# Merge Intervals
+def merge(intervals):
+    intervals.sort()
+    merged = [intervals[0]]
+    for start, end in intervals[1:]:
+        if start <= merged[-1][1]:
+            merged[-1][1] = max(merged[-1][1], end)
+        else:
+            merged.append([start, end])
+    return merged
+
+# Word Break
+def word_break(s, word_dict):
+    word_set = set(word_dict)
+    dp = [False] * (len(s) + 1)
+    dp[0] = True
+    for i in range(1, len(s) + 1):
+        for j in range(i):
+            if dp[j] and s[j:i] in word_set:
+                dp[i] = True
+                break
+    return dp[len(s)]
+```
+
+---
+
+## ১০.৬ Complexity Cheat Sheet
+
+### Time Complexity Quick Reference
+
+```
+O(1)       → Hash Map lookup, Array access, Stack push/pop
+O(log n)   → Binary Search, BST search, Heap push/pop
+O(n)       → Linear scan, BFS/DFS, Hash Map build
+O(n log n) → Merge Sort, Quick Sort (avg), Heap Sort, Dijkstra
+O(n²)      → Bubble/Selection/Insertion Sort, Naive 2 loops
+O(n³)      → Floyd-Warshall, Naive matrix multiply
+O(2^n)     → Subsets, Backtracking exponential
+O(n!)      → Permutations
+```
+
+### Space Complexity Quick Reference
+
+```
+O(1)       → Two Pointer, In-place sort, Greedy
+O(log n)   → Recursion depth (balanced tree/binary search)
+O(n)       → Hash Map, Stack, Queue, DP array
+O(n²)      → 2D DP table, Adjacency Matrix
+O(V+E)     → Adjacency List (graph)
+```
+
+### Data Structure Selection Guide
+
+```
+Need fast lookup by key?           → Hash Map O(1)
+Need sorted data with fast ops?    → BST O(log n) / SortedList
+Need LIFO?                         → Stack
+Need FIFO?                         → Queue (deque)
+Need priority order?               → Heap (heapq)
+Need prefix query on strings?      → Trie
+Need range sum/min/max + update?   → Segment Tree
+Need connected components?         → Union-Find
+Need shortest path (unweighted)?   → BFS
+Need shortest path (weighted)?     → Dijkstra
+Need all-pairs shortest path?      → Floyd-Warshall
+```
+
+---
+
+> **⚠️ PART 10 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part11"></a>
+
+# PART 11: Problem Solving Strategy (সমস্যা সমাধানের কৌশল)
+
+> **📍 এই PART এর Sections:** [১১.১ UMPIRE Method](#১১১-umpire-method) · [১১.২ 14 Core Patterns](#১১২-14-core-problem-patterns) · [১১.৩ Pattern Recognition](#১১৩-pattern-recognition-guide) · [১১.৪ Interview Dos & Donts](#১১৪-interview-dos--donts)
+
+> **পড়ার নির্দেশনা:** Technical skill এর পাশাপাশি interview এ approach ও communication দেখা হয়। এই PART এ systematic problem solving framework শিখুন যা যেকোনো নতুন problem এ apply করা যাবে।
+
+---
+
+## ১১.১ UMPIRE Method
+
+**UMPIRE** হলো systematic interview approach:
+
+```
+U — Understand the Problem
+M — Match to Known Patterns
+P — Plan the Solution
+I — Implement
+R — Review (Test & Debug)
+E — Evaluate Complexity
+```
+
+### U — Understand (৫ মিনিট)
+
+```
+Interview শুরুতে সরাসরি code লিখবেন না। আগে বুঝুন:
+
+প্রশ্ন করুন:
+  ✅ Input এর range কত? (n এর size)
+  ✅ Negative numbers আসতে পারে?
+  ✅ Duplicates থাকতে পারে?
+  ✅ Empty input handle করতে হবে?
+  ✅ Sorted আছে?
+  ✅ Return কী করতে হবে — index না value?
+
+Example দিয়ে verify করুন:
+  Input: [2, 7, 11, 15], target = 9
+  Output: [0, 1]  (কারণ 2+7=9)
+  ✓ আমার বোঝা সঠিক?
+```
+
+### M — Match (২ মিনিট)
+
+```
+Problem টা কোন pattern এর সাথে মেলে?
+
+Array/String → Sliding Window? Two Pointer? Prefix Sum?
+Sorted Array → Binary Search?
+Tree/Graph   → BFS? DFS? Topological?
+Optimal      → DP? Greedy?
+Multiple ans → Backtracking?
+Frequency    → Hash Map? Counting Sort?
+K smallest   → Heap?
+Connectivity → Union-Find?
+```
+
+### P — Plan (৩ মিনিট)
+
+```
+Brute force দিয়ে শুরু করুন:
+  "Brute force হবে O(n²)। আমি X approach এ O(n) করতে পারি।"
+
+Step by step algorithm বলুন:
+  1. Hash Map তৈরি করবো value → index
+  2. প্রতিটি element এ complement = target - num
+  3. Complement hash map এ থাকলে return
+
+Code লেখার আগে interviewer কে plan বলুন।
+```
+
+### I — Implement (১৫-২০ মিনিট)
+
+```
+Clean code লিখুন:
+  ✅ Meaningful variable names
+  ✅ Edge cases handle করুন
+  ✅ সহজ logic — clever trick নয়
+  ✅ চিন্তা করতে করতে বলুন (think aloud)
+
+Think aloud:
+  "এখানে আমি i থেকে j পর্যন্ত..."
+  "এই condition চেক করছি কারণ..."
+  "Stack এ index রাখছি কারণ value দরকার না"
+```
+
+### R — Review (৫ মিনিট)
+
+```
+নিজেই test করুন:
+  ✅ Happy path test করুন
+  ✅ Edge cases: empty, single element, all same, max/min values
+  ✅ Dry run করুন ছোট input দিয়ে
+  ✅ Off-by-one error check করুন (i < n vs i <= n)
+```
+
+### E — Evaluate (২ মিনিট)
+
+```
+Complexity বলুন:
+  "Time Complexity: O(n) কারণ একবার iterate করি।"
+  "Space Complexity: O(n) কারণ hash map এ সব elements।"
+  "Optimize করা যায় কিনা? এই approach এই optimal।"
+```
+
+---
+
+## ১১.২ 14 Core Problem Patterns
+
+```
+Pattern 1:  Sliding Window
+Pattern 2:  Two Pointers
+Pattern 3:  Fast & Slow Pointers (Floyd's)
+Pattern 4:  Merge Intervals
+Pattern 5:  Cyclic Sort
+Pattern 6:  In-place Reversal of LinkedList
+Pattern 7:  Tree BFS (Level Order)
+Pattern 8:  Tree DFS
+Pattern 9:  Two Heaps
+Pattern 10: Subsets (Backtracking)
+Pattern 11: Modified Binary Search
+Pattern 12: Bitwise XOR
+Pattern 13: Top K Elements (Heap)
+Pattern 14: K-way Merge
+```
+
+---
+
+## ১১.৩ Pattern Recognition Guide
+
+### কীভাবে Pattern চিনবেন?
+
+```
+Input sorted / rotated sorted?
+  → Binary Search (standard বা modified)
+
+"Subarray", "substring", "window" + max/min/k?
+  → Sliding Window
+
+"Pair", "triplet" + sorted?
+  → Two Pointer
+
+Linked List cycle বা middle?
+  → Fast & Slow Pointer
+
+"All combinations/subsets/permutations"?
+  → Backtracking
+
+"Overlapping intervals" বা "meeting rooms"?
+  → Merge Intervals + Sorting
+
+"Top K" বা "K largest/smallest"?
+  → Heap (heapq)
+
+Tree / Graph traversal?
+  → BFS (shortest, level) বা DFS (path, cycle)
+
+"Maximum profit/value" বা "minimum cost"?
+  → Dynamic Programming বা Greedy
+
+Connected components বা union?
+  → Union-Find
+
+String matching?
+  → KMP বা Rabin-Karp বা Trie
+
+Frequency count?
+  → Hash Map বা Counter
+```
+
+### Sliding Window কখন?
+
+```
+✅ Contiguous subarray/substring
+✅ Window size fixed বা variable
+✅ "Longest/Shortest" + condition
+
+Fixed Window:
+  for i in range(k, n):
+      window_sum += arr[i] - arr[i-k]
+
+Variable Window:
+  left = 0
+  for right in range(n):
+      # add arr[right]
+      while condition_violated:
+          # remove arr[left]; left += 1
+      # update answer
+```
+
+### Two Pointer কখন?
+
+```
+✅ Sorted array তে pair/triplet খোঁজা
+✅ Palindrome check
+✅ Partition/rearrange
+
+Template:
+  left, right = 0, n-1
+  while left < right:
+      if condition: left += 1
+      elif: right -= 1
+      else: process, move both
+```
+
+---
+
+## ১১.৪ Interview Do's & Don'ts
+
+### করুন ✅
+
+```
+✅ Clarifying questions করুন শুরুতে
+✅ Brute force বলুন, তারপর optimize করুন
+✅ Think aloud — চুপ থাকবেন না
+✅ Example দিয়ে algorithm verify করুন
+✅ Edge cases নিজে mention করুন
+✅ Complexity বলুন — time ও space উভয়
+✅ Clean, readable code লিখুন
+✅ নিজে test করুন শেষে
+✅ Stuck হলে hint চাওয়া ঠিক আছে
+✅ Interviewer এর feedback শুনুন
+```
+
+### করবেন না ❌
+
+```
+❌ প্রশ্ন না বুঝে সাথে সাথে code লিখবেন না
+❌ চুপ থেকে ভাববেন না — বলতে বলতে ভাবুন
+❌ Optimal solution সরাসরি না পেলে হতাশ হবেন না
+❌ Interviewer কে ignore করবেন না
+❌ Wrong complexity বলবেন না — জানলে বলুন, না জানলে estimate করুন
+❌ সব edge case skip করবেন না
+❌ Variable name: a, b, x, y ব্যবহার করবেন না
+❌ Copy-paste pattern রাখবেন না (off-by-one)
+```
+
+---
+
+## ১১.৫ Time Management
+
+```
+30-minute problem breakdown:
+  0-5 min:   Understand + clarify + example
+  5-8 min:   Pattern match + brute force discuss
+  8-12 min:  Optimal approach plan + algorithm
+  12-25 min: Code implementation
+  25-28 min: Test + dry run + edge cases
+  28-30 min: Complexity analysis
+
+45-minute problem:
+  0-5 min:   Understand
+  5-10 min:  Plan (brute → optimal)
+  10-35 min: Implement
+  35-42 min: Test & debug
+  42-45 min: Complexity + possible improvements
+
+ঘড়ি দেখুন। 20 মিনিটেও শুরু না করলে → সরল approach নিন।
+```
+
+---
+
+## ১১.৬ Mock Interview Checklist
+
+```
+Interview এর আগে:
+  □ নিজেকে পরিচয় দেওয়ার ৩০-সেকেন্ড pitch প্রস্তুত
+  □ LeetCode Easy ও Medium এর 150+ problems সমাধান
+  □ প্রতিটি data structure এর complexity মুখস্থ
+  □ 5-7 টি project এর জন্য STAR format গল্প তৈরি
+  □ Company সম্পর্কে research (product, tech stack, culture)
+
+Interview চলাকালে:
+  □ UMPIRE method follow করুন
+  □ Brute force → optimal path দেখান
+  □ Think aloud রাখুন
+  □ Edge cases mention করুন
+  □ Clean code লিখুন
+  □ Test করুন
+
+Interview শেষে:
+  □ Interviewer কে প্রশ্ন করুন (team, challenges, tech decisions)
+  □ Feedback চাওয়ার চেষ্টা করুন
+  □ ভুল problems গুলো note করুন ও পরে ঠিক করুন
+```
+
+### দৈনিক Practice Routine
+
+```
+Beginner (প্রথম ৩ মাস):
+  দিনে ২-৩ টি LeetCode Easy
+  Array, String, Hash Map সম্পন্ন করুন
+  প্রতিটি solution complexity বলুন
+
+Intermediate (৩-৬ মাস):
+  দিনে ১-২ টি Medium
+  Tree, Graph, DP শুরু করুন
+  Blind 75 list complete করুন
+
+Advanced (৬ মাস+):
+  Hard problems সপ্তাহে ৩-৪ টি
+  Mock interviews (Pramp, Interviewing.io)
+  System Design শুরু করুন
+```
+
+---
+
+> **⚠️ PART 11 সম্পন্ন হয়েছে।**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+<a id="part12"></a>
+
+# PART 12: Bangladeshi Interview Prep (বাংলাদেশি ইন্টারভিউ প্রস্তুতি)
+
+> **📍 এই PART এর Sections:** [১২.১ BD Top Companies](#১২১-বাংলাদেশের-top-tech-companies) · [১২.২ Company Interview Pattern](#১২২-company-wise-interview-pattern) · [১২.৩ HR Q&A](#১২৩-hr-interview-qa-বাংলায়) · [১২.৪ Salary Negotiation](#১২৪-salary-negotiation)
+
+> **পড়ার নির্দেশনা:** বাংলাদেশের tech industry র নিজস্ব culture ও interview pattern আছে। এই PART এ BD specific tips, HR questions, salary negotiation ও final study plan আছে।
+
+---
+
+## ১২.১ বাংলাদেশের Top Tech Companies
+
+### Product-based Companies (DSA focus বেশি)
+
+```
+🏆 Tier 1 — International Standard:
+  • Chaldal (Bangladesh's Amazon)
+  • Shohoz / Paperfly
+  • bKash (FinTech)
+  • BJIT Group
+  • Augmedix (AI Healthcare)
+  • TigerIT Bangladesh
+  • Samsung R&D Bangladesh
+  • Pathao
+
+🥈 Tier 2 — Growing Product Companies:
+  • ShajGoj
+  • Sheba.xyz
+  • Bondstein Technologies
+  • Brain Station 23
+  • Kona Software Lab
+  • Therap Services
+  • Reve Systems
+  • NewsCred (now Welcome)
+```
+
+### Service-based Companies (OOP + Problem Solving)
+
+```
+• Leads Corporation
+• Nascenia
+• Bitstrips (acquired by Snap)
+• CodeSynthesis
+• IntroIT
+• Creative Software
+• WebAble Digital
+• Orion Informatics
+```
+
+---
+
+## ১২.২ Company-wise Interview Pattern
+
+### Chaldal, Pathao, bKash Type (Strong DSA)
+
+```
+Round 1: Online Assessment
+  → LeetCode style 2-3 problems (45-60 min)
+  → Easy to Medium difficulty
+  → Array, String, HashMap, Two Pointer
+
+Round 2: Technical Phone Screen
+  → 1-2 coding problems live
+  → Data Structure theory
+  → Time/Space complexity
+
+Round 3: Onsite / Video Technical
+  → 2-3 Coding problems
+  → System Design (basic for junior)
+  → Project discussion
+
+Round 4: HR + Management
+  → Behavioral questions
+  → Salary discussion
+  → Team fit
+```
+
+### BJIT, Brain Station Type (Mixed)
+
+```
+Round 1: Written Test
+  → MCQ: OOP, DBMS, OS, Networking
+  → 1-2 coding problems (C/Java/Python)
+  → Aptitude questions
+
+Round 2: Technical Interview
+  → OOP concepts গভীরভাবে
+  → SQL queries লাইভ
+  → Project walk-through
+
+Round 3: HR Interview
+  → Bengali/English mix
+  → Joining timeline
+```
+
+### সাধারণ Interview Flow (Most BD Companies)
+
+```
+সপ্তাহ 1: CV screening + HR call
+সপ্তাহ 2: Online test বা written exam
+সপ্তাহ 3: Technical interview (1-2 round)
+সপ্তাহ 4: Final HR + offer
+```
+
+---
+
+## ১২.৩ HR Interview Q&A (বাংলায়)
+
+### নিজের সম্পর্কে
+
+**Q: নিজের সম্পর্কে বলুন।**
+
+> **Template উত্তর:** "আমি [নাম], [বিশ্ববিদ্যালয়] থেকে CSE তে [সাল] এ পাস করেছি। আমার [X] বছরের [technology] এ অভিজ্ঞতা আছে। সম্প্রতি [project] এ কাজ করেছি যেখানে [achievement]। আমি এই role এ apply করছি কারণ [company] এর [specific reason] আমাকে অনুপ্রাণিত করেছে।"
+
+**Q: আপনার strongest skill কী?**
+
+> **Template:** "আমার strongest দিক হলো [skill]। [project] এ এটি apply করে [result] অর্জন করেছি। আমি problem-solving ও quick learning এ comfortable।"
+
+**Q: আপনার weakness কী?**
+
+> **Template:** "আমি কখনো কখনো perfectionism এ বেশি সময় দিই। কিন্তু এখন time-boxing শিখেছি — নির্দিষ্ট সময়ে একটি কাজ শেষ করে পরেরটায় যাই।" (Weakness বলুন কিন্তু improvement ও বলুন।)
+
+### Motivation
+
+**Q: আমাদের company তে কেন join করতে চান?**
+
+> "আপনাদের [specific product/technology/culture] আমাকে আকৃষ্ট করেছে। [Company name] বাংলাদেশে [industry] তে real impact তৈরি করছে। আমি এখানে grow করতে ও contribute করতে চাই।"
+
+**Q: ৫ বছর পরে নিজেকে কোথায় দেখতে চান?**
+
+> "আমি technical leadership এ যেতে চাই। ভালো engineer হওয়ার পাশাপাশি junior team members কে mentor করতে চাই। আপনাদের company তে সেই সুযোগ আছে বলে মনে করি।"
+
+### Conflict & Teamwork
+
+**Q: Team এ conflict হলে কীভাবে handle করেন?**
+
+> "আমি সরাসরি আলোচনায় বিশ্বাসী। প্রথমে সবার perspective বুঝি, তারপর data ও logic দিয়ে common ground খুঁজি। Personal attack নয়, problem focus রাখি।"
+
+**Q: Deadline miss হলে কী করেন?**
+
+> "সরাসরি manager কে inform করি এবং revised estimate দিই। Scope reduce করা যায় কিনা আলোচনা করি। Post-mortem এ root cause বের করি যাতে পরবর্তীতে না হয়।"
+
+---
+
+## ১২.৪ Salary Negotiation
+
+### বাংলাদেশে Junior SWE Salary Range (২০২৬)
+
+```
+Entry Level (0-1 year):
+  • Service companies:  ২৫,০০০ – ৪৫,০০০ টাকা
+  • Product companies:  ৪০,০০০ – ৭০,০০০ টাকা
+  • Top tier (bKash, Chaldal): ৬০,০০০ – ১,০০,০০০ টাকা
+
+1-2 year experience:
+  • Service:  ৪৫,০০০ – ৭০,০০০ টাকা
+  • Product:  ৭০,০০০ – ১,২০,০০০ টাকা
+
+Remote / International salary (USD):
+  • Junior Remote: $800 – $1,500/month
+  • Mid Remote: $1,500 – $3,000/month
+```
+
+### Negotiation Script
+
+```
+HR: "আপনার expected salary কত?"
+
+আপনি: "আমি industry standard এ আগ্রহী। এই role এ সাধারণত কত offer করা হয়?"
+(Counter-question দিয়ে তাদের range জানুন আগে)
+
+যদি তারা জানতে চায়:
+"আমার current research এ এই role এর range [X-Y] টাকা।
+আমার experience ও skills বিবেচনায় [Y এর কাছাকাছি] expect করছি।
+তবে total package (bonus, leave, growth) সহ আলোচনা করতে চাই।"
+
+Offer পেলে:
+"এই offer টা বিবেচনা করার জন্য ধন্যবাদ। 24-48 ঘণ্টা সময় নিতে পারি কি?"
+(কখনো সাথে সাথে accept বা reject করবেন না)
+```
+
+### Negotiation Tips
+
+```
+✅ Market rate research করুন (LinkedIn, Glassdoor, BD job sites)
+✅ Multiple offers থাকলে leverage হিসেবে ব্যবহার করুন
+✅ Base salary ছাড়াও দেখুন: bonus, increment policy, remote option
+✅ Minimum চাওয়া থেকে সামান্য বেশি চান (negotiate করার room)
+✅ "হ্যাঁ" বা "না" এর আগে সময় নিন
+❌ First offer এ সাথে সাথে accept করবেন না
+❌ Desperate দেখাবেন না
+❌ মিথ্যা competing offer বলবেন না
+```
+
+---
+
+## ১২.৫ 90-Day Study Plan
+
+### Month 1 — Foundation (দিন 1-30)
+
+```
+Week 1-2: Array & String (PART 2)
+  □ LeetCode Easy: Two Sum, Valid Anagram, Palindrome, Contains Duplicate
+  □ LeetCode Medium: 3Sum, Sliding Window Maximum, Longest Substring
+
+Week 3: Linked List + Stack (PART 3, 4)
+  □ Reverse LL, Detect Cycle, Merge Sorted LL
+  □ Valid Parentheses, Min Stack, Daily Temperatures
+
+Week 4: Binary Search + Sorting (PART 7)
+  □ Binary Search, Search Rotated, Find Peak
+  □ Merge Sort implement করুন হাতে
+  □ Sorting algorithms complexity মুখস্থ
+
+Daily: ২ টি problems solve। Dry run লিখুন কাগজে।
+```
+
+### Month 2 — Core DSA (দিন 31-60)
+
+```
+Week 5-6: Trees (PART 5)
+  □ Tree Traversals (iterative + recursive)
+  □ Max Depth, Diameter, LCA, Validate BST
+  □ Level Order, Right Side View
+
+Week 7: Graphs (PART 6)
+  □ BFS, DFS implement করুন
+  □ Number of Islands, Course Schedule
+  □ Dijkstra, Union-Find
+
+Week 8: DP (PART 8)
+  □ Fibonacci, Climbing Stairs, House Robber
+  □ LCS, Coin Change, 0/1 Knapsack
+  □ Jump Game (Greedy)
+
+Daily: ১ Medium + ১ Easy। Mock করুন নিজে।
+```
+
+### Month 3 — Advanced + Mock (দিন 61-90)
+
+```
+Week 9: Advanced DSA (PART 9)
+  □ Hash Map patterns: LRU Cache, Group Anagrams
+  □ Backtracking: Subsets, Permutations, N-Queens
+  □ Bit Manipulation: Single Number, Missing Number
+
+Week 10-11: Mock Interviews
+  □ LeetCode Contest সপ্তাহে ১ টি
+  □ Pramp / Interviewing.io mock করুন
+  □ Blind 75 remaining problems
+
+Week 12: Company Preparation
+  □ Target company এর Glassdoor reviews পড়ুন
+  □ Previous interview questions research
+  □ HR questions practice করুন বাংলায়
+
+Final Week: Review + Rest
+  □ Weak areas revisit
+  □ Interview আগের রাতে ভালো ঘুমান
+```
+
+### Resources
+
+```
+Practice Platforms:
+  🔗 LeetCode (leetcode.com) — সবচেয়ে গুরুত্বপূর্ণ
+  🔗 HackerRank — BD companies তে প্রায়ই ব্যবহার
+  🔗 Codeforces — Competitive programming
+  🔗 AlgoExpert — Video explanations
+
+Study Resources:
+  📚 "Cracking the Coding Interview" — Gayle McDowell
+  📚 "Introduction to Algorithms" (CLRS) — Reference
+  📹 Abdul Bari (YouTube) — Algorithm বাংলায় কাছাকাছি
+  📹 NeetCode.io — LeetCode solutions with patterns
+
+BD Community:
+  💬 Facebook: "CSE Jobs Bangladesh"
+  💬 Facebook: "Competitive Programming Bangladesh"
+  💬 Telegram: BD Tech Career groups
+```
+
+---
+
+## ১২.৬ Final Tips & Resources
+
+### Interview এর দিন
+
+```
+আগের রাতে:
+  ✅ সমস্ত algorithm একবার review করুন
+  ✅ ৭-৮ ঘণ্টা ঘুমান
+  ✅ Interview platform (Zoom/Google Meet) test করুন
+
+Interview এর দিন:
+  ✅ ৩০ মিনিট আগে ready হন
+  ✅ Quiet environment নিশ্চিত করুন
+  ✅ পানি কাছে রাখুন
+  ✅ Paper ও pen রাখুন (dry run এর জন্য)
+
+Mental preparation:
+  "আমি জানি না" বলা ঠিক আছে — honestly বলুন
+  Stuck হলে: "এই approach এ O(n²) হচ্ছে, optimize করি" — process দেখান
+  Interviewer আপনার enemy নন — সাথে work করতে চান
+```
+
+### Long-term Career Growth
+
+```
+Junior SWE হওয়ার পরে:
+  Year 1-2: Codebase বুঝুন, quick delivery করুন
+  Year 2-3: System design শিখুন, code review করুন
+  Year 3-5: Tech Lead বা Senior SWE
+  Year 5+:  Staff Engineer, Engineering Manager, বা Startup
+
+বাংলাদেশ থেকে Remote opportunity:
+  → LinkedIn profile optimize করুন (English)
+  → GitHub এ open source contribute করুন
+  → Personal projects deploy করুন
+  → Toptal, Crossover, Remote.com তে apply করুন
+  → English communication practice করুন (daily)
+```
+
+### Final Words
+
+```
+🎯 DSA শেখা marathon — sprint নয়। Consistent থাকুন।
+
+📊 LeetCode Easy 50 → Medium 100 → Hard 25 এই order এ।
+
+🤝 Community তে থাকুন — একা শেখা কঠিন।
+
+💪 Rejection হলে: feedback নিন, শিখুন, আবার apply করুন।
+
+🇧🇩 বাংলাদেশের tech industry দ্রুত বাড়ছে।
+    আপনার সুযোগ আছে — প্রস্তুত থাকুন।
+
+সাফল্য কামনায় — শুভকামনা! 🚀
+```
+
+---
+
+> **✅ DSA Junior Engineer Handbook সম্পূর্ণ হয়েছে! (12/12 PARTS)**
+
+<div align="right"><a href="#top">⬆ শীর্ষে ফিরুন</a> &nbsp;|&nbsp; <a href="#toc">📋 সূচিপত্র</a></div>
+
+---
+
+*হ্যান্ডবুক তৈরিতে: Senior Software Engineer, Competitive Programmer & DSA Instructor*
+*Version: 1.0 | তারিখ: মে ২০২৬*
+*মোট PART: 12 | সম্পূর্ণ — PART 1–12 সম্পন্ন ✅*
