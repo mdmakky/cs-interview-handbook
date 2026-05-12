@@ -6,7 +6,7 @@
 ![Language](https://img.shields.io/badge/Language-বাংলা-green?style=for-the-badge)
 ![Target](https://img.shields.io/badge/Target-Junior%20SWE-blue?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
-![Handbooks](https://img.shields.io/badge/Handbooks-6%20Available-blue?style=for-the-badge)
+![Handbooks](https://img.shields.io/badge/Handbooks-8%20Available-blue?style=for-the-badge)
 ![Contributions](https://img.shields.io/badge/Contributions-Welcome-orange?style=for-the-badge)
 
 </div>
@@ -32,12 +32,13 @@
 | 01 | 🧩 **Object-Oriented Programming (OOP)** | [OOP Guide →](./OOP_Junior_Engineer_BD_QA.md) | ✅ **Available** | Encapsulation, Inheritance, Polymorphism, Design Patterns, SOLID, Mock Interview |
 | 02 | 🗄️ **Database & SQL** | [Database Guide →](./Database_Junior_Engineer_BD_QA.md) | ✅ **Available** | SQL Queries, Normalization, Indexing, Transactions, NoSQL |
 | 03 | ⚡ **JavaScript** | [JavaScript Guide →](./JavaScript_Junior_Engineer_BD_QA.md) | ✅ **Available** | Variables, DOM, Async/Await, ES6+, React, Node.js, Performance |
-| 04 | ⚛️ **React** | [React Guide →](./React_Junior_Engineer_BD_QA.md) | 🔄 **In Progress** (PART 1–2) | Hooks, State Management, Virtual DOM, Performance, Testing |
+| 04 | ⚛️ **React** | [React Guide →](./React_Junior_Engineer_BD_QA.md) | ✅ **Complete** (PART 1–14) | Hooks, State Management, Virtual DOM, Performance, Next.js, Testing, BD Career Guide |
 | 05 | 📊 **Data Structures & Algorithms** | [DSA Guide →](./DSA_Junior_Engineer_BD_QA.md) | ✅ **Available** | Array, Linked List, Stack, Queue, Tree, Graph, Sorting, DP, Backtracking, Bit Manipulation |
 | 06 | 🏗️ **System Design** | [System Design Guide →](./SystemDesign_Junior_Engineer_BD_QA.md) | ✅ **Available** | Scalability, CAP Theorem, Load Balancing, CDN, REST, JWT, Caching, Microservices |
 | 07 | 🐍 **Python** | [Python Guide →](./Python_Junior_Engineer_BD_QA.md) | ✅ **Complete** (PART 1–12) | Fundamentals, Data Structures, OOP, Advanced Python, File Handling, Backend, Automation, DSA, Testing, Projects |
 | 08 | ⚡ **FastAPI** | [FastAPI Guide →](./FastAPI_Junior_Engineer_BD_QA.md) | ✅ **Available** (PART 1–12) | Complete Handbook: Fundamentals, Routing, Database, Auth, Async, Advanced, Testing, DevOps, System Design, Projects, Interview Q&A, Bangladesh Prep |
-| 09 | 🔀 **Git & Version Control** | _Coming Soon_ | 🔜 **Coming Soon** | Branch Strategy, Merge vs Rebase, CI/CD, GitHub Flow |
+| 09 | 🔀 **Git & GitHub** | [Git Guide →](./Git_Junior_Engineer_BD_QA.md) | 🔄 **In Progress** (PART 1–2) | Fundamentals, Branching, Advanced Git, GitHub, CI/CD, Real Projects, Interview Q&A, BD Prep |
+| 10 | 🧩 **OOP (Python/Java)** | [OOP Guide →](./OOP_Junior_Engineer_BD_QA.md) | ✅ **Available** | OOP Concepts, Design Patterns, SOLID, Mock Interview |
 
 ---
 
@@ -114,6 +115,6 @@ Example:
 
 **শুভকামনা তোমার Interview এ! 💪**
 
-_Last Updated: May 11, 2026 | Available Handbooks: OOP ✅ | Database ✅ | DSA ✅ | System Design ✅ | JavaScript ✅_
+_Last Updated: May 12, 2026 | Available Handbooks: OOP ✅ | Database ✅ | DSA ✅ | System Design ✅ | JavaScript ✅ | Python ✅ | FastAPI ✅ | React ✅ | Git 🔄_
 
 </div>
