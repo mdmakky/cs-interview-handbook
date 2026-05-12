@@ -17,7 +17,7 @@
 | [PART 1](#part1) | .NET Fundamentals | ✅ |
 | [PART 2](#part2) | C# Fundamentals | ✅ |
 | [PART 3](#part3) | OOP in C# | ✅ |
-| PART 4 | Advanced C# | ⏳ |
+| [PART 4](#part4) | Advanced C# | ✅ |
 | PART 5 | ASP.NET Core Fundamentals | ⏳ |
 | PART 6 | Web API Development | ⏳ |
 | PART 7 | Database & Entity Framework Core | ⏳ |
@@ -5306,3 +5306,1111 @@ public class ProductServiceTests
 ---
 
 > **📌 পরবর্তী:** PART 4 — Advanced C# (Delegates, Events, Lambda, LINQ, Generics, Async/Await, Threading, TPL, Memory Management, IDisposable, Boxing/Unboxing এবং আরও...)
+
+---
+
+<a id="part4"></a>
+## PART 4: Advanced C#
+
+> Delegates, Events, Lambda, LINQ, Generics, Async/Await, Threading & TPL, Memory Management, IDisposable, Boxing/Unboxing।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Delegates](#p4-delegates) |
+| 2 | [Events](#p4-events) |
+| 3 | [Lambda Expressions](#p4-lambda) |
+| 4 | [LINQ](#p4-linq) |
+| 5 | [Generics](#p4-generics) |
+| 6 | [Async/Await](#p4-async) |
+| 7 | [Threading ও TPL](#p4-threading) |
+| 8 | [Memory Management ও GC](#p4-memory) |
+| 9 | [IDisposable ও using](#p4-idisposable) |
+| 10 | [Boxing ও Unboxing](#p4-boxing) |
+| 11 | [Pattern Matching (C# 7–12)](#p4-patterns) |
+
+---
+
+<a id="p4-delegates"></a>
+### Topic 1: Delegates
+
+**সহজ ভাষায়:**
+
+> **Delegate** হলো method-এর reference — যেমন function pointer, কিন্তু type-safe। একটি variable-এ method store করা যায় এবং পরে call করা যায়।
+
+**Analogy:** Delivery app-এ "on delivery complete, do this action" — আপনি বলছেন কী করতে হবে, app পরে execute করবে।
+
+```csharp
+// ── Delegate type declaration ─────────────────────────
+public delegate int MathOperation(int a, int b);
+public delegate void Notification(string message);
+public delegate bool Validator<T>(T value);
+
+// ── Method references ──────────────────────────────────
+public class Calculator
+{
+    public static int Add(int a, int b) => a + b;
+    public static int Subtract(int a, int b) => a - b;
+    public static int Multiply(int a, int b) => a * b;
+}
+
+// Delegate usage
+MathOperation op = Calculator.Add;
+Console.WriteLine(op(10, 5));  // 15
+
+op = Calculator.Subtract;
+Console.WriteLine(op(10, 5));  // 5
+
+op = Calculator.Multiply;
+Console.WriteLine(op(10, 5));  // 50
+
+// ── Multicast Delegate — multiple methods ─────────────
+Notification notify = msg => Console.WriteLine($"[Email] {msg}");
+notify += msg => Console.WriteLine($"[SMS] {msg}");
+notify += msg => Console.WriteLine($"[Push] {msg}");
+
+notify("Order shipped!");
+// [Email] Order shipped!
+// [SMS] Order shipped!
+// [Push] Order shipped!
+
+// ── Built-in Delegate types (no custom needed) ─────────
+// Action — return type void
+Action<string> log = msg => Console.WriteLine(msg);
+Action<int, int> printSum = (a, b) => Console.WriteLine(a + b);
+Action printHello = () => Console.WriteLine("Hello");
+
+// Func — last type param is return type
+Func<int, int, int> add = (a, b) => a + b;
+Func<string, bool> isEmpty = s => string.IsNullOrEmpty(s);
+Func<int, string> toStr = n => n.ToString();
+
+// Predicate — returns bool
+Predicate<int> isEven = n => n % 2 == 0;
+Predicate<string> isLong = s => s.Length > 10;
+
+Console.WriteLine(add(3, 4));       // 7
+Console.WriteLine(isEven(6));       // true
+Console.WriteLine(isLong("Hello")); // false
+
+// ── Higher-order functions ────────────────────────────
+public static List<T> Filter<T>(List<T> list, Predicate<T> condition)
+{
+    var result = new List<T>();
+    foreach (var item in list)
+        if (condition(item)) result.Add(item);
+    return result;
+}
+
+var numbers = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+var evens = Filter(numbers, n => n % 2 == 0); // [2, 4, 6, 8, 10]
+```
+
+---
+
+<a id="p4-events"></a>
+### Topic 2: Events
+
+**সহজ ভাষায়:**
+
+> **Event** হলো delegate-এর উপর নির্মিত publisher-subscriber pattern। Object বলে "কিছু ঘটেছে", interested parties নিজেরা সাড়া দেয়।
+
+```csharp
+// ── Event declaration ─────────────────────────────────
+public class OrderProcessor
+{
+    // EventHandler<T> — .NET standard event pattern
+    public event EventHandler<OrderEventArgs>? OrderPlaced;
+    public event EventHandler<OrderEventArgs>? OrderShipped;
+    public event EventHandler? OrderCancelled;
+
+    public async Task PlaceOrderAsync(Order order)
+    {
+        // Process order...
+        await Task.Delay(100); // simulate work
+
+        // Raise event — notify all subscribers
+        OnOrderPlaced(new OrderEventArgs(order));
+    }
+
+    // Protected virtual — subclass can override notification logic
+    protected virtual void OnOrderPlaced(OrderEventArgs e) =>
+        OrderPlaced?.Invoke(this, e);  // ?. — safe if no subscribers
+
+    protected virtual void OnOrderShipped(OrderEventArgs e) =>
+        OrderShipped?.Invoke(this, e);
+
+    protected virtual void OnOrderCancelled(EventArgs e) =>
+        OrderCancelled?.Invoke(this, e);
+}
+
+// Event args — event data carry করে
+public class OrderEventArgs : EventArgs
+{
+    public Order Order { get; }
+    public DateTime Timestamp { get; }
+
+    public OrderEventArgs(Order order)
+    {
+        Order = order;
+        Timestamp = DateTime.UtcNow;
+    }
+}
+
+// ── Subscribers ────────────────────────────────────────
+public class EmailNotifier
+{
+    private readonly IEmailService _email;
+    public EmailNotifier(IEmailService email) => _email = email;
+
+    public void Subscribe(OrderProcessor processor)
+    {
+        processor.OrderPlaced += OnOrderPlaced;
+        processor.OrderShipped += OnOrderShipped;
+    }
+
+    public void Unsubscribe(OrderProcessor processor)
+    {
+        processor.OrderPlaced -= OnOrderPlaced;  // always unsubscribe!
+        processor.OrderShipped -= OnOrderShipped;
+    }
+
+    private async void OnOrderPlaced(object? sender, OrderEventArgs e)
+    {
+        await _email.SendAsync(
+            e.Order.CustomerEmail,
+            "Order Confirmed",
+            $"Your order #{e.Order.Id} has been placed!");
+    }
+
+    private async void OnOrderShipped(object? sender, OrderEventArgs e) =>
+        await _email.SendAsync(e.Order.CustomerEmail, "Shipped!", "Your order is on the way.");
+}
+
+// ── Usage ──────────────────────────────────────────────
+var processor = new OrderProcessor();
+var emailNotifier = new EmailNotifier(emailService);
+emailNotifier.Subscribe(processor);
+await processor.PlaceOrderAsync(order);
+// EmailNotifier automatically notified
+```
+
+**🎤 Interview Q&A:**
+
+```
+প্রশ্ন: Delegate আর Event-এর পার্থক্য?
+
+উত্তর:
+Delegate → method reference। যেকেউ invoke করতে পারে।
+Event → delegate wrapper। শুধু declaring class invoke করতে পারে।
+        Subscribers শুধু += / -= করতে পারে।
+
+Event → encapsulation। অন্য class accidentally invoke করতে পারে না।
+
+প্রশ্ন: Memory leak কীভাবে হয় events-এ?
+
+উত্তর: Unsubscribe না করলে! Publisher subscriber-এর reference রাখে,
+GC collect করতে পারে না। সবসময় -= দিয়ে unsubscribe করুন,
+বা IDisposable implement করুন।
+```
+
+---
+
+<a id="p4-lambda"></a>
+### Topic 3: Lambda Expressions
+
+**সহজ ভাষায়:**
+
+> **Lambda** হলো anonymous (নামহীন) function — inline method। `=>` arrow operator দিয়ে লেখা হয়।
+
+```csharp
+// ── Lambda syntax ──────────────────────────────────────
+Func<int, int> square = x => x * x;
+Func<int, int, int> add = (a, b) => a + b;
+Action<string> print = msg => Console.WriteLine(msg);
+Func<int, bool> isEven = n => n % 2 == 0;
+
+// Multi-line lambda
+Func<List<int>, double> average = numbers =>
+{
+    if (numbers.Count == 0) return 0;
+    return numbers.Sum() / (double)numbers.Count;
+};
+
+// ── Closure — outer variable capture ─────────────────
+int multiplier = 3;
+Func<int, int> triple = x => x * multiplier;  // captures multiplier
+Console.WriteLine(triple(5));  // 15
+
+multiplier = 10;
+Console.WriteLine(triple(5));  // 50! closure captures reference, not value!
+
+// ── Lambda with LINQ ──────────────────────────────────
+var orders = new List<Order> { /* ... */ };
+
+var pending = orders.Where(o => o.Status == "Pending");
+var amounts = orders.Select(o => o.Amount);
+var sorted  = orders.OrderByDescending(o => o.Amount);
+decimal total = orders.Sum(o => o.Amount);
+bool hasLarge = orders.Any(o => o.Amount > 10000m);
+
+// ── Expression trees vs Func ──────────────────────────
+// Func<> → compiled delegate — runs in memory
+Func<Order, bool> funcFilter = o => o.Amount > 10000;
+
+// Expression<Func<>> → data structure — EF Core translates to SQL!
+Expression<Func<Order, bool>> exprFilter = o => o.Amount > 10000;
+// EF Core: WHERE Amount > 10000
+
+// ── Static lambdas (C# 9+) ───────────────────────────
+Func<int, int> fastSquare = static x => x * x; // cannot capture outer vars, faster
+```
+
+---
+
+<a id="p4-linq"></a>
+### Topic 4: LINQ
+
+**সহজ ভাষায়:**
+
+> **LINQ** (Language Integrated Query) — C# code-এ সরাসরি query লেখার সুবিধা। Collections, databases, XML — সব জায়গায় একই syntax।
+
+```csharp
+var students = new List<Student>
+{
+    new Student { Id=1, Name="Rahim",  Score=85, Dept="CSE" },
+    new Student { Id=2, Name="Karim",  Score=92, Dept="EEE" },
+    new Student { Id=3, Name="Jamal",  Score=67, Dept="CSE" },
+    new Student { Id=4, Name="Nadia",  Score=78, Dept="CSE" },
+    new Student { Id=5, Name="Sadia",  Score=95, Dept="BBA" },
+    new Student { Id=6, Name="Rashed", Score=55, Dept="EEE" },
+};
+
+// ── Method syntax (Lambda) — সবচেয়ে বেশি ব্যবহৃত ─────
+var cseStudents = students
+    .Where(s => s.Dept == "CSE")
+    .OrderByDescending(s => s.Score)
+    .Select(s => new { s.Name, s.Score })
+    .ToList();
+
+// ── Query syntax (SQL-like) ────────────────────────────
+var query = from s in students
+            where s.Dept == "CSE"
+            orderby s.Score descending
+            select new { s.Name, s.Score };
+
+// ── Filtering ─────────────────────────────────────────
+var passed         = students.Where(s => s.Score >= 60);
+var first          = students.First(s => s.Dept == "BBA");       // throws if not found
+var firstOrNull    = students.FirstOrDefault(s => s.Score > 99); // null if not found
+var single         = students.Single(s => s.Id == 1);            // throws if 0 or >1
+
+// ── Projection ────────────────────────────────────────
+var names     = students.Select(s => s.Name);
+var nameGrade = students.Select(s => new { s.Name, Grade = s.Score >= 80 ? "A" : "B" });
+
+// SelectMany — flatten nested collections
+var allCourses = students.SelectMany(s => s.Courses); // List<List<Course>> → List<Course>
+
+// ── Aggregation ───────────────────────────────────────
+int count      = students.Count();
+int passCount  = students.Count(s => s.Score >= 60);
+double avg     = students.Average(s => s.Score);
+int maxScore   = students.Max(s => s.Score);
+int minScore   = students.Min(s => s.Score);
+int totalScore = students.Sum(s => s.Score);
+
+// ── Grouping ──────────────────────────────────────────
+var byDept = students.GroupBy(s => s.Dept);
+foreach (var group in byDept)
+    Console.WriteLine($"{group.Key}: {group.Count()} students, Avg: {group.Average(s => s.Score):F1}");
+// CSE: 3 students, Avg: 76.7
+// EEE: 2 students, Avg: 73.5
+
+// ── Joining ────────────────────────────────────────────
+var departments = new List<Department>
+{
+    new Department { Code = "CSE", Name = "Computer Science" },
+    new Department { Code = "EEE", Name = "Electrical Engineering" },
+};
+
+var studentDept = students.Join(
+    departments,
+    s => s.Dept,
+    d => d.Code,
+    (s, d) => new { s.Name, DeptName = d.Name, s.Score }
+);
+
+// ── Sorting ────────────────────────────────────────────
+var sorted = students
+    .OrderBy(s => s.Dept)
+    .ThenByDescending(s => s.Score);
+
+// ── Set operations ─────────────────────────────────────
+var depts1 = new[] { "CSE", "EEE" };
+var depts2 = new[] { "EEE", "BBA" };
+var union     = depts1.Union(depts2);      // [CSE, EEE, BBA]
+var intersect = depts1.Intersect(depts2);  // [EEE]
+var except    = depts1.Except(depts2);     // [CSE]
+
+// ── Pagination ────────────────────────────────────────
+int page = 2, pageSize = 10;
+var paged = students.Skip((page - 1) * pageSize).Take(pageSize);
+
+// ── Deferred vs Immediate Execution ───────────────────
+// Deferred — query object তৈরি হয়, execute হয় না
+var query2 = students.Where(s => s.Score > 70); // not executed yet!
+
+// Immediate — এখনই execute হয়
+var list  = query2.ToList();   // executes
+var arr   = query2.ToArray();  // executes
+int cnt   = query2.Count();    // executes
+bool any  = query2.Any();      // executes
+
+// ── Complex aggregation ───────────────────────────────
+var report = students
+    .Where(s => s.Score >= 60)
+    .GroupBy(s => s.Dept)
+    .Select(g => new
+    {
+        Department  = g.Key,
+        StudentCount = g.Count(),
+        AverageScore = Math.Round(g.Average(s => s.Score), 1),
+        TopStudent   = g.OrderByDescending(s => s.Score).First().Name
+    })
+    .OrderByDescending(r => r.AverageScore)
+    .ToList();
+```
+
+**🎤 Interview Trap:**
+
+```
+প্রশ্ন: IEnumerable<T> আর IQueryable<T> পার্থক্য?
+
+উত্তর:
+IEnumerable<T> → In-memory LINQ। সব data load করে তারপর filter।
+                 LINQ to Objects। Lambda → compiled code।
+
+IQueryable<T> → EF Core, Dapper। Database-এ SQL generate করে।
+                Lambda → Expression tree → SQL।
+                WHERE clause database-এই execute হয়।
+
+// ❌ Performance — সব orders load করে memory-তে filter
+IEnumerable<Order> orders = dbContext.Orders; // সব loaded!
+var big = orders.Where(o => o.Amount > 10000); // in-memory
+
+// ✅ Database-এ SQL execute হয়
+IQueryable<Order> orders = dbContext.Orders; // not loaded yet
+var big = orders.Where(o => o.Amount > 10000); // SQL: WHERE Amount > 10000
+var result = big.ToList(); // NOW executes query
+```
+
+---
+
+<a id="p4-generics"></a>
+### Topic 5: Generics
+
+**সহজ ভাষায়:**
+
+> **Generics** — type-safe code যা যেকোনো type-এর সাথে কাজ করে। Boxing overhead নেই, runtime error নেই।
+
+```csharp
+// ── Generic class ─────────────────────────────────────
+public class Repository<T> where T : class, IEntity, new()
+{
+    private readonly List<T> _store = new();
+
+    public void Add(T item)        => _store.Add(item);
+    public T? GetById(int id)      => _store.FirstOrDefault(x => x.Id == id);
+    public IEnumerable<T> GetAll() => _store.AsReadOnly();
+    public int Count               => _store.Count;
+}
+
+// ── Generic method ────────────────────────────────────
+public static void Swap<T>(ref T a, ref T b)
+{
+    T temp = a; a = b; b = temp;
+}
+
+int x = 5, y = 10;
+Swap(ref x, ref y);  // x=10, y=5
+
+// ── Generic constraints ───────────────────────────────
+// where T : class           — reference type
+// where T : struct          — value type
+// where T : new()           — has parameterless constructor
+// where T : BaseClass       — inherits from BaseClass
+// where T : IInterface      — implements interface
+// where T : notnull         — non-nullable (C# 8+)
+// where T : unmanaged       — unmanaged type (int, struct with no refs)
+
+public T CreateInstance<T>() where T : class, new() => new T();
+
+// ── Generic Result type — error handling without exceptions ──
+public class Result<T>
+{
+    public bool IsSuccess  { get; }
+    public T?   Value      { get; }
+    public string? Error   { get; }
+
+    private Result(bool isSuccess, T? value, string? error)
+    {
+        IsSuccess = isSuccess;
+        Value = value;
+        Error = error;
+    }
+
+    public static Result<T> Success(T value)    => new(true, value, null);
+    public static Result<T> Failure(string err) => new(false, default, err);
+
+    public Result<TNew> Map<TNew>(Func<T, TNew> mapper) =>
+        IsSuccess && Value is not null
+            ? Result<TNew>.Success(mapper(Value))
+            : Result<TNew>.Failure(Error!);
+}
+
+// Usage:
+Result<Customer> result = await customerService.GetCustomerAsync(id);
+if (result.IsSuccess)
+    Console.WriteLine(result.Value!.Name);
+else
+    Console.WriteLine($"Error: {result.Error}");
+
+// ── Covariance (out) and Contravariance (in) ──────────
+IEnumerable<string> strings = new List<string>();
+IEnumerable<object> objects = strings; // ✅ covariant — string is-a object
+
+// IList<string> list = new List<string>();
+// IList<object> objList = list; // ❌ invariant — compile error
+```
+
+---
+
+<a id="p4-async"></a>
+### Topic 6: Async/Await
+
+**সহজ ভাষায়:**
+
+> **Async/Await** — non-blocking operations। I/O wait করার সময় thread অন্য কাজ করতে পারে। Server throughput বাড়ে।
+
+**Analogy:** Restaurant order করে চলে গেলেন (non-blocking) — খাবার তৈরি হলে call আসবে। না থেকে দাঁড়িয়ে wait করলেন না।
+
+```csharp
+// ── Basic async method ────────────────────────────────
+public async Task<Customer> GetCustomerAsync(int id)
+{
+    // await — thread return করে, I/O complete হলে resume
+    var customer = await _dbContext.Customers.FindAsync(id);
+    if (customer is null)
+        throw new KeyNotFoundException($"Customer {id} not found");
+    return customer;
+}
+
+// ── async void — avoid! ───────────────────────────────
+// Exception silently swallowed! Use Task instead.
+public async void FireAndForget() // ❌ avoid
+{
+    await Task.Delay(1000);
+    throw new Exception(); // nobody catches this!
+}
+
+// ── Sequential vs Parallel await ─────────────────────
+// Sequential — one after another (slower)
+public async Task<OrderSummary> GetSequentialAsync(int orderId)
+{
+    var order    = await _orderRepo.GetByIdAsync(orderId);
+    var customer = await _customerRepo.GetByIdAsync(order.CustomerId);
+    var items    = await _itemRepo.GetByOrderAsync(orderId);
+    return new OrderSummary(order, customer, items);
+}
+
+// Parallel — all start at once (faster!)
+public async Task<OrderSummary> GetParallelAsync(int orderId)
+{
+    var orderTask = _orderRepo.GetByIdAsync(orderId);
+    var itemsTask = _itemRepo.GetByOrderAsync(orderId);
+    await Task.WhenAll(orderTask, itemsTask);
+    var customer = await _customerRepo.GetByIdAsync(orderTask.Result!.CustomerId);
+    return new OrderSummary(orderTask.Result, customer, itemsTask.Result);
+}
+
+// ── Task combinators ──────────────────────────────────
+// WhenAll — সব complete হওয়ার জন্য wait
+var customers = await Task.WhenAll(ids.Select(id => _repo.GetByIdAsync(id)));
+
+// WhenAny — যেকোনো একটি complete হলে return (race, timeout)
+var firstDone = await Task.WhenAny(task1, task2, task3);
+
+// ── CancellationToken — cooperative cancellation ──────
+public async Task<IEnumerable<Product>> SearchAsync(
+    string query,
+    CancellationToken ct = default)
+{
+    return await _db.Products
+        .Where(p => p.Name.Contains(query))
+        .ToListAsync(ct);  // pass token down!
+}
+
+// ASP.NET Core controller — token auto-provided
+[HttpGet("search")]
+public async Task<ActionResult> Search([FromQuery] string q, CancellationToken ct)
+{
+    var results = await _service.SearchAsync(q, ct);
+    return Ok(results);
+}
+
+// ── ConfigureAwait(false) — library code ─────────────
+public async Task<string> GetDataAsync()
+{
+    // Library code-এ — deadlock prevention, slightly faster
+    var data = await _httpClient.GetStringAsync(url).ConfigureAwait(false);
+    return data;
+}
+
+// ── ValueTask — allocation-free for hot paths ─────────
+public async ValueTask<int> GetCachedCountAsync()
+{
+    if (_cache.TryGetValue("count", out int cached))
+        return cached;  // synchronous — no heap allocation!
+    var count = await _db.Products.CountAsync();
+    _cache["count"] = count;
+    return count;
+}
+
+// ── Async streams (C# 8+) ─────────────────────────────
+public async IAsyncEnumerable<Order> StreamOrdersAsync(
+    [EnumeratorCancellation] CancellationToken ct = default)
+{
+    await foreach (var order in _db.Orders.AsAsyncEnumerable().WithCancellation(ct))
+        yield return order;
+}
+
+// Consume:
+await foreach (var order in StreamOrdersAsync(cancellationToken))
+    Console.WriteLine(order.Id);
+```
+
+**🎤 Interview Q&A:**
+
+```
+প্রশ্ন: async void কেন dangerous?
+
+উত্তর: Exception catch করা যায় না।
+await করা যায় না — completion জানা যায় না।
+Unit test করা কঠিন।
+শুধু event handler-এ use করুন।
+
+প্রশ্ন: Task আর ValueTask পার্থক্য?
+
+উত্তর:
+Task → Heap allocation। আলাদা Task object তৈরি হয়।
+ValueTask → Stack-based। synchronous path-এ allocation নেই।
+           Cache hit scenario-তে performance ভালো।
+           Await শুধু একবার করুন।
+
+প্রশ্ন: Deadlock কীভাবে হয়?
+
+উত্তর:
+.Result বা .Wait() দিয়ে async method block করলে।
+async method synchronization context-এ return করতে চায়,
+কিন্তু context blocked — deadlock!
+
+Solution: সবসময় await। Library-এ ConfigureAwait(false)।
+```
+
+---
+
+<a id="p4-threading"></a>
+### Topic 7: Threading ও TPL
+
+```csharp
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
+
+// ── Thread — low level (avoid in production) ─────────
+var thread = new Thread(() =>
+{
+    Console.WriteLine($"Thread {Thread.CurrentThread.ManagedThreadId} running");
+    Thread.Sleep(1000);
+});
+thread.IsBackground = true; // daemon thread
+thread.Start();
+thread.Join(); // wait for completion
+
+// ── Task Parallel Library (TPL) — modern approach ─────
+
+// Parallel.For — CPU-bound parallel work
+Parallel.For(0, 1000, i => ProcessItem(i));
+
+// Parallel.ForEach with max parallelism
+Parallel.ForEach(orders,
+    new ParallelOptions { MaxDegreeOfParallelism = 4 },
+    order => ProcessOrder(order));
+
+// ── PLINQ — parallel LINQ ─────────────────────────────
+var results = bigList
+    .AsParallel()
+    .WithDegreeOfParallelism(4)
+    .Where(x => IsExpensiveFilter(x))
+    .Select(x => TransformItem(x))
+    .ToList();
+
+// ── Thread synchronization ────────────────────────────
+
+// lock — mutual exclusion
+private readonly object _lockObj = new();
+private int _counter = 0;
+
+public void Increment()
+{
+    lock (_lockObj)
+    {
+        _counter++;  // thread-safe
+    }
+}
+
+// Interlocked — atomic operations (faster than lock for single ops)
+private int _atomicCounter = 0;
+public void AtomicIncrement() => Interlocked.Increment(ref _atomicCounter);
+
+// SemaphoreSlim — limit concurrent access
+private readonly SemaphoreSlim _semaphore = new(3); // max 3 concurrent
+
+public async Task ProcessWithLimitAsync()
+{
+    await _semaphore.WaitAsync();
+    try { await DoWorkAsync(); }
+    finally { _semaphore.Release(); }
+}
+
+// ConcurrentDictionary — thread-safe dictionary
+private readonly ConcurrentDictionary<string, int> _counts = new();
+
+public void AddOrUpdate(string key) =>
+    _counts.AddOrUpdate(key, 1, (k, v) => v + 1); // atomic!
+
+// ── async vs parallel — key difference ───────────────
+// async/await → I/O-bound। Thread wait না করে অন্য কাজ করে।
+// Parallel/PLINQ → CPU-bound। Multiple cores-এ কাজ ভাগ করে।
+
+// I/O bound (DB, HTTP, File) → async/await
+public async Task<string> FetchDataAsync() =>
+    await _httpClient.GetStringAsync(url);
+
+// CPU bound (heavy computation) → Task.Run + Parallel
+public async Task<int[]> ProcessLargeArrayAsync(int[] data) =>
+    await Task.Run(() => data.AsParallel().Select(HeavyCompute).ToArray());
+```
+
+**🎤 Interview Q&A:**
+
+```
+প্রশ্ন: Thread আর Task-এর পার্থক্য?
+
+উত্তর:
+Thread → OS thread। Expensive (1MB stack)। Manual management।
+Task → Abstraction over ThreadPool। Lightweight।
+       async/await, cancellation, continuation support।
+       Modern code-এ সবসময় Task ব্যবহার করুন।
+
+প্রশ্ন: lock কখন ব্যবহার করবেন?
+
+উত্তর: Shared mutable state-এ। Counter, List, Dictionary update।
+Deadlock avoid করতে: সবসময় same order-এ lock করুন।
+Fine-grained lock করুন — পুরো method lock করবেন না।
+lock object → private readonly object।
+```
+
+---
+
+<a id="p4-memory"></a>
+### Topic 8: Memory Management ও GC
+
+**সহজ ভাষায়:**
+
+> .NET-এ **Garbage Collector (GC)** automatically memory manage করে। কিন্তু কীভাবে কাজ করে জানলে better code লেখা যায়।
+
+```
+Memory Layout:
+─────────────────────────────────────────────────────
+Stack                          Heap
+─────────────────────────────────────────────────────
+Value types (int, bool, struct) Reference types (class, array, string)
+Method parameters              GC manages — automatic cleanup
+Local variables                Large Object Heap (LOH): > 85KB
+─────────────────────────────────────────────────────
+Fast allocation/deallocation   GC marks & compacts
+LIFO                           Gen 0 → Gen 1 → Gen 2
+```
+
+```csharp
+// GC Generations:
+// Gen 0 — new objects। সবচেয়ে বেশি collect হয়। Fast।
+// Gen 1 — Gen 0 থেকে survive। Buffer।
+// Gen 2 — Long-lived objects। Singleton, static।
+// LOH   — 85KB+ objects। Rarely compacted।
+
+// Memory info
+long totalMemory = GC.GetTotalMemory(false);
+Console.WriteLine($"Memory used: {totalMemory / 1024 / 1024} MB");
+
+// ── Object pooling — GC pressure কমায় ───────────────
+using System.Buffers;
+
+byte[] buffer = ArrayPool<byte>.Shared.Rent(4096); // borrow
+try
+{
+    int bytesRead = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length));
+}
+finally
+{
+    ArrayPool<byte>.Shared.Return(buffer); // return to pool
+}
+
+// ── Span<T> — zero-copy stack slice ──────────────────
+string text = "Hello, World!";
+
+ReadOnlySpan<char> span = text.AsSpan(7, 6); // "World!" — no allocation!
+Console.WriteLine(span.ToString());
+
+// CSV parse without allocation
+ReadOnlySpan<char> csv = "Dhaka,Chittagong,Sylhet".AsSpan();
+int comma = csv.IndexOf(',');
+ReadOnlySpan<char> first = csv[..comma]; // "Dhaka"
+
+// Memory<T> — async context-এ use করা যায়
+Memory<byte> buf = new byte[1024];
+int read = await stream.ReadAsync(buf);
+
+// ── String interning ──────────────────────────────────
+string a = "hello";
+string b = "hello";
+Console.WriteLine(ReferenceEquals(a, b)); // true — literals are interned
+
+string c = new string('h', 5); // not interned
+Console.WriteLine(ReferenceEquals(a, c)); // false
+```
+
+---
+
+<a id="p4-idisposable"></a>
+### Topic 9: IDisposable ও using
+
+**সহজ ভাষায়:**
+
+> **IDisposable** — deterministic cleanup। GC কখন cleanup করবে জানা যায় না, কিন্তু `using` দিয়ে guaranteed cleanup।
+
+```csharp
+// ── Full IDisposable pattern ──────────────────────────
+public class DatabaseConnection : IDisposable
+{
+    private SqlConnection? _connection;
+    private bool _disposed = false;
+
+    public DatabaseConnection(string connectionString)
+    {
+        _connection = new SqlConnection(connectionString);
+        _connection.Open();
+    }
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this); // Don't run finalizer
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+        if (disposing)
+        {
+            _connection?.Close();
+            _connection?.Dispose();
+            _connection = null;
+        }
+        _disposed = true;
+    }
+
+    ~DatabaseConnection() => Dispose(false); // safety net finalizer
+}
+
+// ── using statement ───────────────────────────────────
+using (var conn = new DatabaseConnection(connectionString))
+{
+    // use conn
+} // Dispose() called automatically, even if exception!
+
+// ── using declaration (C# 8+) — cleaner syntax ────────
+using var conn2 = new DatabaseConnection(connectionString);
+// Dispose called at end of enclosing scope
+
+// ── IAsyncDisposable (C# 8+) ─────────────────────────
+public class AsyncResource : IAsyncDisposable
+{
+    private readonly Stream _stream;
+    public AsyncResource(string path) => _stream = File.OpenRead(path);
+
+    public async ValueTask DisposeAsync()
+    {
+        await _stream.DisposeAsync();
+        GC.SuppressFinalize(this);
+    }
+}
+
+await using var resource = new AsyncResource("data.bin");
+
+// ── Common disposable types — always use using ────────
+using var file        = File.OpenRead("data.txt");
+using var reader      = new StreamReader(file);
+using var transaction = await dbContext.Database.BeginTransactionAsync();
+using var scope       = serviceProvider.CreateScope();
+```
+
+**🎤 Interview Q&A:**
+
+```
+প্রশ্ন: using statement কীভাবে কাজ করে?
+
+উত্তর: Compiler try-finally block-এ transform করে।
+finally-তে Dispose() call হয় — exception হলেও।
+IDisposable implement করা যেকোনো object-এ ব্যবহার করা যায়।
+
+প্রশ্ন: Finalizer ও IDisposable পার্থক্য?
+
+উত্তর:
+IDisposable.Dispose() → Deterministic। আপনি যখন চান।
+Finalizer (~ClassName) → Non-deterministic। GC যখন চায়।
+
+Best practice: IDisposable implement করুন।
+Unmanaged resource থাকলে finalizer add করুন safety net হিসেবে।
+Dispose() call হলে GC.SuppressFinalize() দিয়ে finalizer skip করুন।
+```
+
+---
+
+<a id="p4-boxing"></a>
+### Topic 10: Boxing ও Unboxing
+
+**সহজ ভাষায়:**
+
+> **Boxing** — value type → reference type (heap allocation)।
+> **Unboxing** — reference type → value type (heap থেকে copy)।
+> **Performance cost** — avoid করুন।
+
+```csharp
+// ── Boxing ────────────────────────────────────────────
+int value = 42;          // stack
+object boxed = value;    // Boxing! heap allocation + copy
+
+// ── Unboxing ──────────────────────────────────────────
+int unboxed = (int)boxed; // Unboxing — cast + copy to stack
+// double wrong = (double)boxed; // ❌ InvalidCastException!
+
+// ── When boxing happens (implicit) ───────────────────
+// 1. Value type in object variable
+object n = 100;  // boxing
+
+// 2. Non-generic collection (legacy code)
+var list = new System.Collections.ArrayList();
+list.Add(42);            // boxing!
+int x = (int)list[0];   // unboxing!
+
+// ✅ Generic collections — no boxing!
+var genericList = new List<int>();
+genericList.Add(42);   // NO boxing
+int y = genericList[0]; // NO unboxing
+
+// 3. Interface access on value type
+IComparable comp = 42;  // boxing (int implements IComparable)
+
+// ── How to avoid boxing ───────────────────────────────
+// ✅ Generic collections: List<T>, Dictionary<K,V>
+// ✅ Generic methods with constraints
+// ✅ IEquatable<T>, IComparable<T> on structs
+// ✅ Span<T> for temporary operations
+
+// ── struct with generic interface — no boxing ─────────
+public struct Temperature : IComparable<Temperature>
+{
+    public double Value { get; }
+    public Temperature(double value) => Value = value;
+    public int CompareTo(Temperature other) => Value.CompareTo(other.Value);
+    // IComparable<Temperature> — generic, no boxing!
+}
+
+var t1 = new Temperature(36.6);
+var t2 = new Temperature(37.0);
+int cmp = t1.CompareTo(t2); // no boxing!
+```
+
+**Performance Impact:**
+
+| Operation | Cost |
+|-----------|------|
+| Boxing | Heap allocation + copy |
+| Unboxing | Cast check + copy |
+| Generic List\<int\> | ~10× faster than ArrayList |
+| GC pressure | Boxing creates short-lived objects |
+
+---
+
+<a id="p4-patterns"></a>
+### Topic 11: Pattern Matching (C# 7–12)
+
+```csharp
+// ── Type patterns ─────────────────────────────────────
+object shape = new Circle { Radius = 5 };
+
+// C# 7 is pattern
+if (shape is Circle c)
+    Console.WriteLine($"Circle radius: {c.Radius}");
+
+// C# 8 switch expression
+string desc = shape switch
+{
+    Circle { Radius: > 10 } c => $"Large circle r={c.Radius}",
+    Circle c                  => $"Small circle r={c.Radius}",
+    Rectangle r               => $"Rect {r.Width}x{r.Height}",
+    null                      => "null",
+    _                         => "Unknown"
+};
+
+// ── Property patterns ─────────────────────────────────
+var order = new Order { Status = "Paid", Amount = 15000m };
+
+string message = order switch
+{
+    { Status: "Pending", Amount: < 1000 }  => "Small pending order",
+    { Status: "Pending", Amount: >= 1000 } => "Large pending order",
+    { Status: "Paid" }                     => "Order paid",
+    { Status: "Cancelled" }               => "Order cancelled",
+    _                                      => "Unknown status"
+};
+
+// ── Tuple patterns ────────────────────────────────────
+(bool isAdmin, bool isActive) user = (true, true);
+
+string access = user switch
+{
+    (true, true)   => "Full access",
+    (true, false)  => "Admin disabled",
+    (false, true)  => "Standard user",
+    (false, false) => "No access"
+};
+
+// ── Relational patterns (C# 9+) ───────────────────────
+int score = 78;
+string grade = score switch
+{
+    >= 90 => "A+",
+    >= 80 => "A",
+    >= 70 => "B",
+    >= 60 => "C",
+    _     => "F"
+}; // "B"
+
+// ── Logical patterns (C# 9+) ─────────────────────────
+string category = score switch
+{
+    > 90 and <= 100 => "Excellent",
+    > 70 and <= 90  => "Good",
+    > 50 and <= 70  => "Average",
+    not > 50        => "Poor",
+    _               => "Invalid"
+};
+
+// ── List patterns (C# 11+) ────────────────────────────
+int[] arr = { 1, 2, 3, 4, 5 };
+
+bool match1 = arr is [1, 2, ..];          // starts with 1, 2
+bool match2 = arr is [.., 4, 5];          // ends with 4, 5
+bool match3 = arr is [1, _, _, _, 5];     // 5 elements, first=1 last=5
+
+if (arr is [var head, .. var tail])
+    Console.WriteLine($"Head: {head}, Tail count: {tail.Length}");
+```
+
+---
+
+## PART 4 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| Delegate | Method reference — type-safe function pointer |
+| Action\<T\> | Delegate returning void |
+| Func\<T, TResult\> | Delegate returning value |
+| Predicate\<T\> | Delegate returning bool |
+| Multicast | += দিয়ে multiple methods attach |
+| Event | Delegate wrapper — only declaring class invokes |
+| Lambda | `x => x * x` — anonymous function |
+| Closure | Outer variable capture — reference, not value |
+| LINQ | Language Integrated Query — method/query syntax |
+| Deferred execution | ToList()/Count() না হলে query চলে না |
+| IEnumerable\<T\> | In-memory LINQ |
+| IQueryable\<T\> | Database LINQ — SQL generates |
+| Generics `<T>` | Type-safe reusable code — no boxing |
+| Generic constraint | `where T : class, IEntity, new()` |
+| async/await | Non-blocking I/O — thread yield করে |
+| Task | Async operation handle |
+| ValueTask | Allocation-free async for hot paths |
+| CancellationToken | Cooperative cancellation |
+| ConfigureAwait(false) | Library code-এ deadlock prevention |
+| async void | ❌ Dangerous — exceptions lost |
+| Parallel.For | CPU-bound parallel execution |
+| lock | Mutual exclusion — shared state protection |
+| ConcurrentDictionary | Thread-safe dictionary |
+| GC Generations | Gen 0 → Gen 1 → Gen 2 |
+| Boxing | Value type → object (heap allocation) |
+| Unboxing | Object → value type (explicit cast) |
+| IDisposable | Deterministic cleanup |
+| using | Guaranteed Dispose() even on exception |
+| Span\<T\> | Zero-copy stack-based slice |
+| Pattern matching | switch expression, is patterns |
+
+---
+
+## PART 4 Interview Q&A
+
+```
+প্রশ্ন: Delegate আর interface-এর পার্থক্য?
+উত্তর: Delegate → single method callback। Event, LINQ।
+       Interface → multiple method contract। OOP, DI।
+       Single method → delegate। Multiple methods → interface।
+
+প্রশ্ন: async/await কীভাবে কাজ করে internally?
+উত্তর: Compiler state machine generate করে।
+await point-এ current state save, thread return করে।
+I/O complete হলে threadpool thread state restore করে continue করে।
+
+প্রশ্ন: LINQ deferred execution কী?
+উত্তর: Where/Select/OrderBy — query object তৈরি করে, execute করে না।
+ToList()/ToArray()/Count()/First() → actually execute হয়।
+
+প্রশ্ন: Boxing কখন হয়?
+উত্তর: Value type object variable-এ store করলে।
+Non-generic collection-এ। Interface cast-এ।
+Generic collection ব্যবহার করলে boxing নেই।
+
+প্রশ্ন: IDisposable কেন implement করবেন?
+উত্তর: Unmanaged resources (file, DB connection, socket)।
+using statement-এ deterministic cleanup guarantee।
+
+প্রশ্ন: Task.WhenAll আর Task.WhenAny পার্থক্য?
+উত্তর: WhenAll → সব tasks complete হওয়ার জন্য wait।
+WhenAny → যেকোনো একটি complete হলেই return।
+WhenAll → parallel fetching (DB + cache + API একসাথে)।
+WhenAny → timeout, fallback, race।
+
+প্রশ্ন: IEnumerable<T> আর IQueryable<T> পার্থক্য?
+উত্তর: IEnumerable → in-memory filter।
+IQueryable → database-এ SQL generate করে filter।
+EF Core-এ সবসময় IQueryable রাখুন, যতক্ষণ না ToList() করতে হয়।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 5 — ASP.NET Core Fundamentals (Middleware, Routing, Dependency Injection, Configuration, Filters, Minimal APIs এবং আরও...)
