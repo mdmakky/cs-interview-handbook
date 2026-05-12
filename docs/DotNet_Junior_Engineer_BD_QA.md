@@ -16,7 +16,7 @@
 |------|-----------|--------|
 | [PART 1](#part1) | .NET Fundamentals | ✅ |
 | [PART 2](#part2) | C# Fundamentals | ✅ |
-| PART 3 | OOP in C# | ⏳ |
+| [PART 3](#part3) | OOP in C# | ✅ |
 | PART 4 | Advanced C# | ⏳ |
 | PART 5 | ASP.NET Core Fundamentals | ⏳ |
 | PART 6 | Web API Development | ⏳ |
@@ -3444,3 +3444,1865 @@ TryGetValue → safe, false return করে।
 ---
 
 > **📌 পরবর্তী:** PART 3 — OOP in C# (Class, Object, Encapsulation, Inheritance, Polymorphism, SOLID Principles এবং আরও...)
+
+---
+
+<a id="part3"></a>
+## PART 3: OOP in C#
+
+> Class & Object, Constructor & Destructor, Encapsulation, Abstraction, Inheritance, Polymorphism, Method Overloading & Overriding, Abstract Class, Interface, Sealed Class, Static Class, Access Modifiers, SOLID Principles, Dependency Injection।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Class ও Object](#p3-class-object) |
+| 2 | [Constructor ও Destructor](#p3-constructor) |
+| 3 | [Encapsulation](#p3-encapsulation) |
+| 4 | [Abstraction](#p3-abstraction) |
+| 5 | [Inheritance](#p3-inheritance) |
+| 6 | [Polymorphism](#p3-polymorphism) |
+| 7 | [Method Overloading vs Overriding](#p3-overload-override) |
+| 8 | [Abstract Class](#p3-abstract-class) |
+| 9 | [Interface](#p3-interface) |
+| 10 | [Abstract Class vs Interface](#p3-abstract-vs-interface) |
+| 11 | [Sealed Class ও Static Class](#p3-sealed-static) |
+| 12 | [Access Modifiers](#p3-access-modifiers) |
+| 13 | [SOLID Principles](#p3-solid) |
+| 14 | [Dependency Injection Basics](#p3-di) |
+
+---
+
+<a id="p3-class-object"></a>
+### Topic 1: Class ও Object
+
+**সহজ ভাষায়:**
+
+- **Class** হলো **blueprint** বা ছাঁচ — যেমন বাড়ির নকশা।
+- **Object** হলো সেই ছাঁচ থেকে তৈরি **real instance** — যেমন নকশা থেকে তৈরি আসল বাড়ি।
+
+```csharp
+// ── Class definition ──────────────────────────────────
+public class BankAccount
+{
+    // ── Fields (state) ─────────────────────────────────
+    private string _accountNumber;
+    private decimal _balance;
+    private readonly string _ownerName;
+
+    // ── Properties (controlled access to fields) ───────
+    public string AccountNumber => _accountNumber;
+    public string OwnerName => _ownerName;
+    public decimal Balance => _balance; // read-only outside
+
+    // ── Auto-property ──────────────────────────────────
+    public DateTime CreatedAt { get; private set; }
+    public bool IsActive { get; set; } = true;
+
+    // ── Constructor ────────────────────────────────────
+    public BankAccount(string accountNumber, string ownerName, decimal initialDeposit)
+    {
+        _accountNumber = accountNumber;
+        _ownerName = ownerName;
+        _balance = initialDeposit;
+        CreatedAt = DateTime.UtcNow;
+    }
+
+    // ── Methods (behaviour) ────────────────────────────
+    public void Deposit(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentException("Deposit amount must be positive");
+        _balance += amount;
+    }
+
+    public bool Withdraw(decimal amount)
+    {
+        if (amount <= 0 || amount > _balance) return false;
+        _balance -= amount;
+        return true;
+    }
+
+    public override string ToString() =>
+        $"Account: {_accountNumber} | Owner: {_ownerName} | Balance: {_balance:C}";
+}
+
+// ── Object creation ───────────────────────────────────
+var account1 = new BankAccount("BD001", "Rahim", 10000m);
+var account2 = new BankAccount("BD002", "Karim", 5000m);
+
+// প্রতিটি object তার নিজস্ব state রাখে
+account1.Deposit(2000m);
+account2.Withdraw(1000m);
+
+Console.WriteLine(account1); // Account: BD001 | Owner: Rahim | Balance: ৳12,000.00
+Console.WriteLine(account2); // Account: BD002 | Owner: Karim | Balance: ৳4,000.00
+```
+
+**Record (C# 9+) — immutable data objects:**
+
+```csharp
+// Record — value equality, immutable by default
+public record Customer(int Id, string Name, string Email);
+
+var c1 = new Customer(1, "Rahim", "rahim@example.com");
+var c2 = new Customer(1, "Rahim", "rahim@example.com");
+
+Console.WriteLine(c1 == c2);    // true — value equality (class হলে false হতো!)
+Console.WriteLine(c1.Name);     // "Rahim"
+// c1.Name = "Karim"; // ❌ init-only, immutable
+
+// Non-destructive mutation (with expression)
+var c3 = c1 with { Email = "new@example.com" };
+Console.WriteLine(c3); // Customer { Id = 1, Name = Rahim, Email = new@example.com }
+```
+
+**Struct vs Class:**
+
+```csharp
+// ── Struct — Value type, stack allocated ──────────────
+public struct Point
+{
+    public double X { get; init; }
+    public double Y { get; init; }
+
+    public Point(double x, double y) { X = x; Y = y; }
+    public double DistanceTo(Point other) =>
+        Math.Sqrt(Math.Pow(X - other.X, 2) + Math.Pow(Y - other.Y, 2));
+}
+
+// ── Class — Reference type, heap allocated ────────────
+public class PointClass
+{
+    public double X { get; set; }
+    public double Y { get; set; }
+}
+
+Point p1 = new Point(3, 4);
+Point p2 = p1;  // COPY — value type
+p2 = p2 with { X = 10 }; // p1 unchanged
+
+PointClass pc1 = new PointClass { X = 3, Y = 4 };
+PointClass pc2 = pc1;  // REFERENCE — same object!
+pc2.X = 10;            // pc1.X ও 10 হয়ে যাবে!
+```
+
+| বৈশিষ্ট্য | Class | Struct |
+|-----------|-------|--------|
+| Type | Reference type | Value type |
+| Memory | Heap | Stack |
+| Null হতে পারে | হ্যাঁ | না (Nullable<T> ছাড়া) |
+| Inheritance | হ্যাঁ | না |
+| Default copy | Reference copy | Value copy |
+| Use case | Complex objects | Small, simple data |
+
+---
+
+<a id="p3-constructor"></a>
+### Topic 2: Constructor ও Destructor
+
+**Constructor:**
+
+```csharp
+public class Person
+{
+    public string Name { get; }
+    public int Age { get; }
+    public string Email { get; private set; }
+
+    // ── 1. Default Constructor ─────────────────────────
+    // C# automatically তৈরি করে যদি কোনো constructor না থাকে
+    // যদি কোনো constructor define করেন, default আর থাকে না
+
+    // ── 2. Parameterized Constructor ──────────────────
+    public Person(string name, int age)
+    {
+        Name = name;
+        Age = age;
+        Email = $"{name.ToLower().Replace(" ", ".")}@example.com";
+    }
+
+    // ── 3. Constructor Overloading ─────────────────────
+    public Person(string name) : this(name, 0)
+    // this(name, 0) → অন্য constructor call করে (constructor chaining)
+    {
+    }
+
+    // ── 4. Static Constructor — class load-এর সময় একবার ─
+    static Person()
+    {
+        Console.WriteLine("Person class loaded");
+        // Static fields initialize করার জন্য
+    }
+
+    // ── 5. Copy Constructor ────────────────────────────
+    public Person(Person other) : this(other.Name, other.Age)
+    {
+        Email = other.Email;
+    }
+}
+
+var p1 = new Person("Rahim", 25);
+var p2 = new Person("Karim");       // Age = 0
+var p3 = new Person(p1);            // copy of p1
+
+Console.WriteLine(p1.Name);         // "Rahim"
+Console.WriteLine(p1.Email);        // "rahim@example.com"
+```
+
+**Object Initializer (Constructor alternative):**
+
+```csharp
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public string Category { get; set; } = "General";
+    public bool IsAvailable { get; set; } = true;
+
+    // Required properties (C# 11+)
+    public required string SKU { get; set; }
+}
+
+// Object initializer — named properties দিয়ে set করা
+var product = new Product
+{
+    Id = 1,
+    Name = "Laptop",
+    Price = 75000m,
+    Category = "Electronics",
+    SKU = "LAP-001"         // required — must be set
+};
+
+// Primary Constructor (C# 12+) — clean syntax
+public class OrderService(IOrderRepository repo, ILogger<OrderService> logger)
+{
+    public async Task<Order> GetOrderAsync(int id) =>
+        await repo.GetByIdAsync(id) ?? throw new KeyNotFoundException();
+}
+```
+
+**Destructor / Finalizer:**
+
+```csharp
+public class ResourceHolder
+{
+    private IntPtr _handle;   // unmanaged resource
+    private bool _disposed = false;
+
+    public ResourceHolder()
+    {
+        _handle = /* allocate native resource */ IntPtr.Zero;
+    }
+
+    // ── Destructor / Finalizer ─────────────────────────
+    // GC যখন object collect করে তখন call করে
+    // ~ClassName() — কখন call হবে guarantee নেই
+    // Expensive — GC-এ extra work করে
+    ~ResourceHolder()
+    {
+        Dispose(false);
+        Console.WriteLine("Finalizer called");
+    }
+
+    // ── IDisposable pattern — সঠিক উপায় ──────────────
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this); // finalizer আর দরকার নেই
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+
+        if (disposing)
+        {
+            // Managed resources dispose করুন
+        }
+        // Unmanaged resources release করুন
+        _handle = IntPtr.Zero;
+        _disposed = true;
+    }
+}
+
+// using statement — automatically Dispose() call করে
+using var resource = new ResourceHolder();
+// resource.Dispose() automatically called এমনকি exception হলেও
+```
+
+**🎤 Interview Q&A:**
+
+```
+প্রশ্ন: Constructor আর Destructor এর কাজ কী?
+
+উত্তর:
+Constructor → Object তৈরির সময় call হয়। Initial state set করে।
+Destructor → Object destroy হওয়ার আগে GC call করে। Unmanaged
+             resources cleanup-এর জন্য। কখন call হবে নিশ্চিত নয়।
+
+সাধারণত IDisposable + using pattern ব্যবহার করুন।
+Destructor শুধু unmanaged resources-এর জন্য।
+
+প্রশ্ন: Static constructor কী?
+
+উত্তর: Class প্রথমবার use হওয়ার সময় একবারই call হয়।
+Static fields initialize করার জন্য।
+Parameter নেই, access modifier নেই।
+```
+
+---
+
+<a id="p3-encapsulation"></a>
+### Topic 3: Encapsulation
+
+**সহজ ভাষায়:**
+
+> **Encapsulation** মানে data ও methods এক জায়গায় bundle করা এবং internal details **লুকিয়ে রাখা**। বাইরে থেকে শুধু যা দরকার তাই expose করা।
+
+**Analogy:** ATM machine — আপনি PIN দেন ও টাকা তোলেন। ভেতরে কীভাবে transaction process হয় জানেন না — এটাই encapsulation।
+
+```csharp
+public class SavingsAccount
+{
+    // ── Private fields — বাইরে সরাসরি access নেই ──────
+    private decimal _balance;
+    private readonly decimal _minimumBalance = 500m;
+    private readonly List<string> _transactionLog = new();
+
+    // ── Public property — controlled read access ───────
+    public decimal Balance => _balance; // get only
+
+    public IReadOnlyList<string> TransactionHistory =>
+        _transactionLog.AsReadOnly(); // safe read-only view
+
+    // ── Constructor — initial state setup ─────────────
+    public SavingsAccount(decimal initialDeposit)
+    {
+        if (initialDeposit < _minimumBalance)
+            throw new InvalidOperationException(
+                $"Minimum initial deposit is {_minimumBalance:C}");
+        _balance = initialDeposit;
+        Log($"Account opened with {initialDeposit:C}");
+    }
+
+    // ── Public methods — controlled behaviour ──────────
+    public void Deposit(decimal amount)
+    {
+        ValidateAmount(amount);
+        _balance += amount;
+        Log($"Deposited {amount:C}. New balance: {_balance:C}");
+    }
+
+    public bool Withdraw(decimal amount)
+    {
+        ValidateAmount(amount);
+        if (_balance - amount < _minimumBalance)
+        {
+            Log($"Withdrawal {amount:C} denied — minimum balance rule");
+            return false;
+        }
+        _balance -= amount;
+        Log($"Withdrew {amount:C}. New balance: {_balance:C}");
+        return true;
+    }
+
+    // ── Private helper — internal implementation ───────
+    private void ValidateAmount(decimal amount)
+    {
+        if (amount <= 0)
+            throw new ArgumentException("Amount must be positive");
+    }
+
+    private void Log(string message) =>
+        _transactionLog.Add($"[{DateTime.Now:HH:mm:ss}] {message}");
+}
+
+// ── Usage ─────────────────────────────────────────────
+var account = new SavingsAccount(1000m);
+account.Deposit(500m);
+account.Withdraw(900m);         // false — would go below minimum
+
+// account._balance = 1000000m; // ❌ Compile error — private!
+Console.WriteLine(account.Balance); // only way to see balance
+```
+
+**Properties — Encapsulation-এর মূল হাতিয়ার:**
+
+```csharp
+public class Employee
+{
+    private string _name = string.Empty;
+    private int _age;
+    private decimal _salary;
+
+    // Full property with validation
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Name cannot be empty");
+            _name = value.Trim();
+        }
+    }
+
+    // Property with range validation
+    public int Age
+    {
+        get => _age;
+        set
+        {
+            if (value < 18 || value > 65)
+                throw new ArgumentOutOfRangeException(nameof(Age), "Age must be 18-65");
+            _age = value;
+        }
+    }
+
+    // Computed / derived property
+    public decimal MonthlySalary
+    {
+        get => _salary;
+        private set => _salary = value > 0 ? value : 0;
+    }
+    public decimal AnnualSalary => _salary * 12; // computed
+
+    // Init-only property (C# 9+) — constructor or initializer only
+    public string EmployeeId { get; init; } = Guid.NewGuid().ToString();
+}
+```
+
+---
+
+<a id="p3-abstraction"></a>
+### Topic 4: Abstraction
+
+**সহজ ভাষায়:**
+
+> **Abstraction** মানে complexity লুকিয়ে শুধু **relevant details** expose করা। "কী করে" বলুন, "কীভাবে করে" লুকান।
+
+**Analogy:** Car চালানো — accelerator চাপলে গাড়ি যায়। Engine internally কীভাবে কাজ করে জানতে হয় না।
+
+```csharp
+// ── Abstract class দিয়ে abstraction ──────────────────
+public abstract class PaymentProcessor
+{
+    // Abstract method — subclass MUST implement করবে
+    public abstract bool ProcessPayment(decimal amount, string reference);
+    public abstract string GetProviderName();
+
+    // Concrete method — shared behaviour
+    public string GenerateReference() =>
+        $"PAY-{DateTime.Now:yyyyMMddHHmmss}-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+
+    // Template method pattern — algorithm structure define করে
+    public bool Execute(decimal amount)
+    {
+        if (amount <= 0) return false;
+        string reference = GenerateReference();
+        bool success = ProcessPayment(amount, reference);
+        if (success)
+            LogSuccess(amount, reference);
+        else
+            LogFailure(amount, reference);
+        return success;
+    }
+
+    private void LogSuccess(decimal amount, string ref_) =>
+        Console.WriteLine($"[{GetProviderName()}] ৳{amount} paid. Ref: {ref_}");
+
+    private void LogFailure(decimal amount, string ref_) =>
+        Console.WriteLine($"[{GetProviderName()}] Payment ৳{amount} FAILED. Ref: {ref_}");
+}
+
+// Concrete implementations — internal details different কিন্তু interface same
+public class BkashProcessor : PaymentProcessor
+{
+    private readonly string _merchantId;
+
+    public BkashProcessor(string merchantId) => _merchantId = merchantId;
+
+    public override string GetProviderName() => "bKash";
+
+    public override bool ProcessPayment(decimal amount, string reference)
+    {
+        // bKash-specific API call
+        Console.WriteLine($"Calling bKash API for merchant {_merchantId}...");
+        return true; // simulate success
+    }
+}
+
+public class NagadProcessor : PaymentProcessor
+{
+    public override string GetProviderName() => "Nagad";
+
+    public override bool ProcessPayment(decimal amount, string reference)
+    {
+        // Nagad-specific API call
+        Console.WriteLine("Calling Nagad API...");
+        return true;
+    }
+}
+
+// ── Usage — caller doesn't care about internals ───────
+PaymentProcessor processor = new BkashProcessor("MERCHANT-001");
+processor.Execute(500m);
+
+processor = new NagadProcessor();
+processor.Execute(1000m);
+// Same interface, different internal implementations
+```
+
+---
+
+<a id="p3-inheritance"></a>
+### Topic 5: Inheritance
+
+**সহজ ভাষায়:**
+
+> **Inheritance** মানে parent class-এর properties ও methods **child class পেয়ে যায়**। Code reuse ও "is-a" relationship।
+
+**Analogy:** Manager is-a Employee। Manager সব Employee কাজ করতে পারে + নিজস্ব extra কাজ।
+
+```csharp
+// ── Base class (Parent) ───────────────────────────────
+public class Employee
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal BaseSalary { get; protected set; }
+    public DateTime JoinDate { get; set; }
+
+    public Employee(int id, string name, decimal baseSalary)
+    {
+        Id = id;
+        Name = name;
+        BaseSalary = baseSalary;
+        JoinDate = DateTime.Today;
+    }
+
+    public virtual decimal CalculateSalary()  // virtual — override করা যাবে
+    {
+        return BaseSalary;
+    }
+
+    public virtual string GetRole() => "Employee";
+
+    public void ClockIn() => Console.WriteLine($"{Name} clocked in");
+    public void ClockOut() => Console.WriteLine($"{Name} clocked out");
+
+    public override string ToString() =>
+        $"[{GetRole()}] {Name} | Salary: {CalculateSalary():C}";
+}
+
+// ── Derived class (Child) ─────────────────────────────
+public class SalesEmployee : Employee
+{
+    public decimal CommissionRate { get; set; }  // extra property
+    public decimal MonthlySales { get; set; }
+
+    public SalesEmployee(int id, string name, decimal baseSalary, decimal commissionRate)
+        : base(id, name, baseSalary)  // base constructor call
+    {
+        CommissionRate = commissionRate;
+    }
+
+    // override — polymorphism
+    public override decimal CalculateSalary() =>
+        BaseSalary + (MonthlySales * CommissionRate / 100);
+
+    public override string GetRole() => "Sales Executive";
+}
+
+// ── Multi-level inheritance ────────────────────────────
+public class SalesManager : SalesEmployee
+{
+    public List<SalesEmployee> TeamMembers { get; } = new();
+
+    public SalesManager(int id, string name, decimal baseSalary)
+        : base(id, name, baseSalary, commissionRate: 5) { }
+
+    public override decimal CalculateSalary()
+    {
+        decimal teamBonus = TeamMembers.Sum(m => m.MonthlySales) * 0.01m;
+        return base.CalculateSalary() + teamBonus;  // base class method call
+    }
+
+    public override string GetRole() => "Sales Manager";
+
+    public void AddTeamMember(SalesEmployee emp) => TeamMembers.Add(emp);
+}
+
+// ── Usage ─────────────────────────────────────────────
+var emp = new Employee(1, "Rahim", 30000m);
+var sales = new SalesEmployee(2, "Karim", 25000m, 3)
+{
+    MonthlySales = 200000m
+};
+var manager = new SalesManager(3, "Jamal", 50000m);
+manager.AddTeamMember(sales);
+
+Console.WriteLine(emp);      // [Employee] Rahim | Salary: ৳30,000.00
+Console.WriteLine(sales);    // [Sales Executive] Karim | Salary: ৳31,000.00
+Console.WriteLine(manager);  // [Sales Manager] Jamal | Salary: ...
+
+// ── Type checking ─────────────────────────────────────
+Employee e = manager;       // upcasting — implicit, safe
+Console.WriteLine(e is SalesManager);    // true
+Console.WriteLine(e is SalesEmployee);   // true (inheritance chain)
+Console.WriteLine(e is Employee);        // true
+
+var m = e as SalesManager;  // downcasting — explicit
+if (m is not null) Console.WriteLine(m.TeamMembers.Count);
+```
+
+**Inheritance Rules — C#:**
+
+```
+✅ C# supports single inheritance (একটি class একটি base class থেকে inherit করে)
+✅ Multi-level inheritance (A → B → C) supported
+✅ Multiple interface implementation supported
+❌ Multiple class inheritance নেই (C++ এর মতো)
+
+sealed class → inherit করা যায় না
+abstract class → directly instantiate করা যায় না
+```
+
+---
+
+<a id="p3-polymorphism"></a>
+### Topic 6: Polymorphism
+
+**সহজ ভাষায়:**
+
+> **Polymorphism** মানে **একই interface, ভিন্ন behaviour**। Same method call → object অনুযায়ী ভিন্ন কাজ।
+
+**Analogy:** "Draw()" বললে Circle বৃত্ত আঁকে, Square বর্গ আঁকে — একই call, ভিন্ন result।
+
+**Runtime Polymorphism (virtual/override):**
+
+```csharp
+public abstract class Shape
+{
+    public string Color { get; set; } = "Black";
+    public abstract double Area();         // abstract — must override
+    public abstract double Perimeter();
+    public virtual void Draw()             // virtual — can override
+    {
+        Console.WriteLine($"Drawing {GetType().Name} in {Color}");
+    }
+    public override string ToString() =>
+        $"{GetType().Name}: Area={Area():F2}, Perimeter={Perimeter():F2}";
+}
+
+public class Circle : Shape
+{
+    public double Radius { get; init; }
+    public Circle(double radius) => Radius = radius;
+    public override double Area() => Math.PI * Radius * Radius;
+    public override double Perimeter() => 2 * Math.PI * Radius;
+}
+
+public class Rectangle : Shape
+{
+    public double Width { get; init; }
+    public double Height { get; init; }
+    public Rectangle(double width, double height) { Width = width; Height = height; }
+    public override double Area() => Width * Height;
+    public override double Perimeter() => 2 * (Width + Height);
+    public override void Draw()
+    {
+        base.Draw(); // parent method call
+        Console.WriteLine($"  Width: {Width}, Height: {Height}");
+    }
+}
+
+public class Triangle : Shape
+{
+    public double A { get; init; }
+    public double B { get; init; }
+    public double C { get; init; }
+    public Triangle(double a, double b, double c) { A = a; B = b; C = c; }
+    public override double Perimeter() => A + B + C;
+    public override double Area()
+    {
+        double s = Perimeter() / 2;
+        return Math.Sqrt(s * (s - A) * (s - B) * (s - C)); // Heron's formula
+    }
+}
+
+// ── Polymorphic behaviour ─────────────────────────────
+var shapes = new List<Shape>
+{
+    new Circle(5),
+    new Rectangle(4, 6),
+    new Triangle(3, 4, 5)
+};
+
+// Same method call → different behaviour per object
+foreach (Shape shape in shapes)
+{
+    shape.Draw();                         // runtime dispatch
+    Console.WriteLine(shape.Area());      // each calculates differently
+}
+
+// Total area — doesn't need to know specific types
+double totalArea = shapes.Sum(s => s.Area());
+Console.WriteLine($"Total area: {totalArea:F2}");
+```
+
+**Compile-time Polymorphism (Overloading):**
+
+```csharp
+public class Printer
+{
+    // Same name, different signature — compile-time resolution
+    public void Print(string text) =>
+        Console.WriteLine($"Text: {text}");
+
+    public void Print(int number) =>
+        Console.WriteLine($"Number: {number}");
+
+    public void Print(string text, ConsoleColor color)
+    {
+        Console.ForegroundColor = color;
+        Console.WriteLine(text);
+        Console.ResetColor();
+    }
+
+    public void Print(object obj) =>
+        Console.WriteLine($"Object: {obj}");
+}
+```
+
+---
+
+<a id="p3-overload-override"></a>
+### Topic 7: Method Overloading vs Overriding
+
+```
+─────────────────────────────────────────────────────────
+         Overloading          vs        Overriding
+─────────────────────────────────────────────────────────
+ Same class                       Parent-Child class
+ Same name, different params      Same name, same params
+ Compile-time resolution          Runtime resolution
+ No inheritance needed            Requires inheritance
+ virtual/override নেই             virtual + override keyword
+ Static / instance উভয়           Instance methods only
+ Return type ভিন্ন হতে পারে       Return type same হতে হবে
+─────────────────────────────────────────────────────────
+```
+
+```csharp
+public class Calculator
+{
+    // ── Overloading — same class, different parameters ─
+    public int Add(int a, int b) => a + b;
+    public double Add(double a, double b) => a + b;
+    public decimal Add(decimal a, decimal b) => a + b;
+    public int Add(int a, int b, int c) => a + b + c;
+    // Compile-time — parameter types দেখে সঠিক version call করে
+}
+
+public class Animal
+{
+    public virtual string Speak() => "...";   // virtual
+    public string Name { get; set; } = "Animal";
+}
+
+public class Dog : Animal
+{
+    public override string Speak() => "Woof!";  // override
+    // Same signature, different implementation
+}
+
+public class Cat : Animal
+{
+    public override string Speak() => "Meow!";  // override
+}
+
+// Polymorphic call — runtime decides
+Animal[] animals = { new Dog(), new Cat(), new Animal() };
+foreach (var a in animals)
+    Console.WriteLine(a.Speak()); // Woof! / Meow! / ...
+
+// ── new keyword — hiding (NOT overriding) ─────────────
+public class Base
+{
+    public virtual void Method() => Console.WriteLine("Base.Method");
+}
+
+public class Derived : Base
+{
+    // override — polymorphic, runtime dispatch
+    public override void Method() => Console.WriteLine("Derived.Method (override)");
+}
+
+public class HiddenDerived : Base
+{
+    // new — hides base method, NOT polymorphic!
+    public new void Method() => Console.WriteLine("HiddenDerived.Method (new/hide)");
+}
+
+Base b = new Derived();
+b.Method(); // "Derived.Method (override)" — runtime dispatch works
+
+Base h = new HiddenDerived();
+h.Method(); // "Base.Method" ← Base version! hiding is NOT polymorphic
+```
+
+**🎤 Interview Trap:**
+
+```
+প্রশ্ন: override আর new-এর পার্থক্য?
+
+উত্তর:
+override → polymorphism। Base class reference দিয়ে call করলেও
+          derived class-এর version call হয়। Runtime dispatch।
+
+new → method hiding। Base class reference হলে base version call হয়।
+     Polymorphism কাজ করে না।
+
+Production code-এ সবসময় override ব্যবহার করুন।
+new/hiding rarely useful — mostly confusing।
+```
+
+---
+
+<a id="p3-abstract-class"></a>
+### Topic 8: Abstract Class
+
+**সহজ ভাষায়:**
+
+> Abstract class হলো **incomplete blueprint** — কিছু method define করে, কিছু implement করে না। Subclass-কে বাকি কাজ complete করতে হয়।
+
+```csharp
+// abstract class — directly instantiate করা যায় না
+public abstract class ReportGenerator
+{
+    // Abstract methods — MUST be overridden
+    protected abstract string GetTitle();
+    protected abstract IEnumerable<string> GetData();
+    protected abstract string FormatRow(string data);
+
+    // Concrete methods — shared implementation
+    public string GenerateHeader() =>
+        $"=== {GetTitle()} — Generated: {DateTime.Now:dd/MM/yyyy} ===";
+
+    public string GenerateFooter() =>
+        $"=== Total: {GetData().Count()} records ===";
+
+    // Template Method — defines the algorithm structure
+    public string Generate()
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine(GenerateHeader());
+        foreach (var item in GetData())
+            sb.AppendLine(FormatRow(item));
+        sb.AppendLine(GenerateFooter());
+        return sb.ToString();
+    }
+
+    // Virtual — can optionally override
+    protected virtual string GetSeparator() => new string('-', 50);
+}
+
+// Concrete implementation — all abstract methods implemented
+public class SalesReport : ReportGenerator
+{
+    private readonly List<(string Product, decimal Amount)> _sales;
+
+    public SalesReport(List<(string, decimal)> sales) => _sales = sales;
+
+    protected override string GetTitle() => "Monthly Sales Report";
+
+    protected override IEnumerable<string> GetData() =>
+        _sales.Select(s => $"{s.Product}|{s.Amount:C}");
+
+    protected override string FormatRow(string data)
+    {
+        var parts = data.Split('|');
+        return $"  {parts[0],-20} {parts[1],12}";
+    }
+}
+
+public class InventoryReport : ReportGenerator
+{
+    private readonly Dictionary<string, int> _stock;
+
+    public InventoryReport(Dictionary<string, int> stock) => _stock = stock;
+
+    protected override string GetTitle() => "Inventory Status Report";
+    protected override IEnumerable<string> GetData() =>
+        _stock.Select(kv => $"{kv.Key}|{kv.Value}");
+    protected override string FormatRow(string data)
+    {
+        var parts = data.Split('|');
+        string status = int.Parse(parts[1]) < 10 ? "⚠ LOW" : "OK";
+        return $"  {parts[0],-20} {parts[1],5} units  [{status}]";
+    }
+}
+
+// Usage
+// var r = new ReportGenerator(); // ❌ Cannot instantiate abstract class!
+
+var salesReport = new SalesReport(new List<(string, decimal)>
+{
+    ("Laptop", 75000m), ("Mouse", 800m), ("Keyboard", 1500m)
+});
+Console.WriteLine(salesReport.Generate());
+```
+
+---
+
+<a id="p3-interface"></a>
+### Topic 9: Interface
+
+**সহজ ভাষায়:**
+
+> **Interface** হলো **contract** — "তুমি এই কাজগুলো করতে পারবে" এই guarantee। Class-কে implement করতে হবে। কোনো implementation নেই (C# 8 default interface members আসার আগে)।
+
+```csharp
+// ── Interface definition ──────────────────────────────
+public interface IRepository<T> where T : class
+{
+    Task<T?> GetByIdAsync(int id);
+    Task<IEnumerable<T>> GetAllAsync();
+    Task<T> AddAsync(T entity);
+    Task UpdateAsync(T entity);
+    Task DeleteAsync(int id);
+    Task<bool> ExistsAsync(int id);
+}
+
+public interface ISearchable<T>
+{
+    Task<IEnumerable<T>> SearchAsync(string query);
+    Task<IEnumerable<T>> FilterAsync(Func<T, bool> predicate);
+}
+
+// ── Multiple interface implementation ─────────────────
+public class CustomerRepository : IRepository<Customer>, ISearchable<Customer>
+{
+    private readonly AppDbContext _context;
+
+    public CustomerRepository(AppDbContext context) => _context = context;
+
+    // IRepository<Customer> implementation
+    public async Task<Customer?> GetByIdAsync(int id) =>
+        await _context.Customers.FindAsync(id);
+
+    public async Task<IEnumerable<Customer>> GetAllAsync() =>
+        await _context.Customers.ToListAsync();
+
+    public async Task<Customer> AddAsync(Customer customer)
+    {
+        _context.Customers.Add(customer);
+        await _context.SaveChangesAsync();
+        return customer;
+    }
+
+    public async Task UpdateAsync(Customer customer)
+    {
+        _context.Customers.Update(customer);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var customer = await GetByIdAsync(id);
+        if (customer is not null)
+        {
+            _context.Customers.Remove(customer);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<bool> ExistsAsync(int id) =>
+        await _context.Customers.AnyAsync(c => c.Id == id);
+
+    // ISearchable<Customer> implementation
+    public async Task<IEnumerable<Customer>> SearchAsync(string query) =>
+        await _context.Customers
+            .Where(c => c.Name.Contains(query) || c.Email.Contains(query))
+            .ToListAsync();
+
+    public async Task<IEnumerable<Customer>> FilterAsync(Func<Customer, bool> predicate) =>
+        (await GetAllAsync()).Where(predicate);
+}
+
+// ── Interface-based programming (Dependency Inversion) ─
+public class CustomerService
+{
+    private readonly IRepository<Customer> _repository;
+    private readonly ISearchable<Customer> _search;
+
+    // Constructor injection — interface দিয়ে, concrete class নয়
+    public CustomerService(IRepository<Customer> repository, ISearchable<Customer> search)
+    {
+        _repository = repository;
+        _search = search;
+    }
+
+    public async Task<Customer?> GetCustomerAsync(int id) =>
+        await _repository.GetByIdAsync(id);
+
+    public async Task<IEnumerable<Customer>> FindCustomersAsync(string query) =>
+        await _search.SearchAsync(query);
+}
+
+// ── Default Interface Methods (C# 8+) ─────────────────
+public interface ILogger
+{
+    void Log(string message);
+
+    // Default implementation — override করতে হবে না
+    void LogWarning(string message) => Log($"[WARN] {message}");
+    void LogError(string message) => Log($"[ERROR] {message}");
+    void LogInfo(string message) => Log($"[INFO] {message}");
+}
+
+public class ConsoleLogger : ILogger
+{
+    public void Log(string message) => Console.WriteLine(message);
+    // LogWarning/LogError/LogInfo — default implementations ব্যবহার হবে
+}
+```
+
+---
+
+<a id="p3-abstract-vs-interface"></a>
+### Topic 10: Abstract Class vs Interface
+
+```
+─────────────────────────────────────────────────────────────
+         Abstract Class              vs        Interface
+─────────────────────────────────────────────────────────────
+ Partial implementation allowed          No impl (C# 8 default আছে)
+ Fields, constructors allowed            No fields, no constructors
+ Single inheritance                      Multiple implementation
+ "is-a" relationship                     "can-do" capability
+ Access modifiers on members             All public by default
+ State (fields) রাখা যায়                State রাখা যায় না
+ Use: shared base behaviour              Use: capability contract
+─────────────────────────────────────────────────────────────
+```
+
+**কখন কোনটা ব্যবহার করবেন:**
+
+```csharp
+// ── Use Abstract Class when: ──────────────────────────
+// Related classes যাদের common state ও behaviour আছে
+
+public abstract class Vehicle
+{
+    // Common state
+    protected int _speed = 0;
+    protected int _fuel;
+
+    // Common behaviour
+    public void Accelerate(int amount) => _speed += amount;
+    public void Brake(int amount) => _speed = Math.Max(0, _speed - amount);
+
+    // Subclass-specific — must implement
+    public abstract void StartEngine();
+    public abstract int GetMaxSpeed();
+}
+
+// ── Use Interface when: ───────────────────────────────
+// Unrelated classes share a capability
+
+public interface ISerializable { string Serialize(); }
+public interface IPrintable { void Print(); }
+public interface IComparable<T> { int CompareTo(T other); }
+
+// Car এবং Log — সম্পূর্ণ আলাদা কিন্তু উভয়ই serializable
+public class Car : Vehicle, ISerializable, IPrintable
+{
+    public override void StartEngine() => Console.WriteLine("Vroom!");
+    public override int GetMaxSpeed() => 200;
+    public string Serialize() => System.Text.Json.JsonSerializer.Serialize(this);
+    public void Print() => Console.WriteLine($"Car: speed={_speed}");
+}
+
+public class AuditLog : ISerializable, IPrintable
+{
+    public string Message { get; set; } = string.Empty;
+    public string Serialize() => $"LOG: {Message}";
+    public void Print() => Console.WriteLine(Serialize());
+}
+
+// ── Real-world pattern — combined ─────────────────────
+// Abstract base + interface
+public abstract class BaseService<T> : IDisposable where T : class
+{
+    protected readonly ILogger _logger;
+    private bool _disposed;
+
+    protected BaseService(ILogger logger) => _logger = logger;
+
+    public abstract Task<T?> GetAsync(int id);
+
+    protected virtual void Log(string msg) => _logger.Log(msg);
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            OnDispose();
+            _disposed = true;
+        }
+    }
+    protected virtual void OnDispose() { }
+}
+```
+
+**🎤 Interview Q&A:**
+
+```
+প্রশ্ন: Abstract class কখন, Interface কখন?
+
+উত্তর:
+Abstract class → Related objects-এর shared code আছে।
+                 Common base behaviour দরকার।
+                 State (fields) দরকার।
+                 "Employee is-a Person" — is-a relationship।
+                 Example: Animal → Dog, Cat, Bird।
+
+Interface → Unrelated objects-এ common capability।
+            Multiple "can-do" behaviours দরকার।
+            Contract define করতে।
+            "CustomerService can-do IRepository operations।"
+            Example: IDisposable, IComparable, IEnumerable।
+
+Rule of thumb:
+Abstract class → inheritance hierarchy, shared code
+Interface → capability/contract, loose coupling
+
+প্রশ্ন: C# Multiple inheritance নেই কেন? কীভাবে solve করা যায়?
+
+উত্তর: Diamond problem এড়াতে। Multiple interface implement করে
+multiple capabilities পাওয়া যায়।
+```
+
+---
+
+<a id="p3-sealed-static"></a>
+### Topic 11: Sealed Class ও Static Class
+
+**Sealed Class:**
+
+```csharp
+// sealed — inherit করা যাবে না
+public sealed class Configuration
+{
+    private static readonly Configuration _instance = new();
+
+    // Singleton pattern — sealed class perfect fit
+    public static Configuration Instance => _instance;
+
+    private Configuration()
+    {
+        DatabaseUrl = Environment.GetEnvironmentVariable("DB_URL") ?? "localhost";
+        AppName = "CS Interview Handbook";
+    }
+
+    public string DatabaseUrl { get; }
+    public string AppName { get; }
+    public bool IsProduction => DatabaseUrl.Contains("prod");
+}
+
+// Inheritance attempt:
+// public class MyConfig : Configuration { } // ❌ Cannot inherit from sealed class
+
+// sealed method — only in non-sealed class, stops further override
+public class Animal
+{
+    public virtual void Breathe() => Console.WriteLine("Breathing...");
+}
+
+public class Mammal : Animal
+{
+    public sealed override void Breathe() =>
+        Console.WriteLine("Lung breathing"); // sealed — cannot override further
+}
+
+public class Dog : Mammal
+{
+    // public override void Breathe() { } // ❌ Cannot override sealed method
+}
+
+// Use cases for sealed:
+// 1. Singleton class
+// 2. Immutable value objects
+// 3. Security-sensitive classes (prevent extension attacks)
+// 4. Performance — JIT can optimize sealed class calls
+```
+
+**Static Class:**
+
+```csharp
+// static class — instance তৈরি করা যায় না, সব members static
+public static class MathHelper
+{
+    public static double Pi = Math.PI;
+
+    public static bool IsPrime(int n)
+    {
+        if (n < 2) return false;
+        for (int i = 2; i <= Math.Sqrt(n); i++)
+            if (n % i == 0) return false;
+        return true;
+    }
+
+    public static int Fibonacci(int n) =>
+        n <= 1 ? n : Fibonacci(n - 1) + Fibonacci(n - 2);
+
+    public static double Clamp(double value, double min, double max) =>
+        Math.Max(min, Math.Min(max, value));
+}
+
+// Extension Methods — static class-এই থাকে
+public static class StringExtensions
+{
+    public static bool IsNullOrEmpty(this string? value) =>
+        string.IsNullOrEmpty(value);
+
+    public static string ToPascalCase(this string value)
+    {
+        if (value.IsNullOrEmpty()) return value ?? "";
+        return string.Join("", value.Split(' ')
+            .Select(word => char.ToUpper(word[0]) + word[1..].ToLower()));
+    }
+
+    public static string Truncate(this string value, int maxLength, string suffix = "...")
+    {
+        if (value.Length <= maxLength) return value;
+        return value[..(maxLength - suffix.Length)] + suffix;
+    }
+}
+
+// Extension method usage — instance method-এর মতো call হয়
+string title = "hello world from bangladesh";
+Console.WriteLine(title.ToPascalCase());    // "Hello World From Bangladesh"
+Console.WriteLine(title.Truncate(15));      // "hello world fro..."
+
+// Static class — no instance, class name দিয়ে call
+Console.WriteLine(MathHelper.IsPrime(17));  // true
+Console.WriteLine(MathHelper.Fibonacci(10)); // 55
+```
+
+---
+
+<a id="p3-access-modifiers"></a>
+### Topic 12: Access Modifiers
+
+```
+───────────────────────────────────────────────────────────────────
+Modifier          Same Class  Same Assembly  Subclass  Anywhere
+───────────────────────────────────────────────────────────────────
+public               ✅            ✅           ✅        ✅
+private              ✅            ❌           ❌        ❌
+protected            ✅            ❌           ✅        ❌
+internal             ✅            ✅           ❌        ❌
+protected internal   ✅            ✅           ✅        ❌
+private protected    ✅            ❌           ✅*       ❌
+───────────────────────────────────────────────────────────────────
+* same assembly-এর subclass শুধু
+```
+
+```csharp
+public class AccessDemo
+{
+    public string PublicField = "Everyone can see";
+    private string _privateField = "Only this class";
+    protected string ProtectedField = "This class + subclasses";
+    internal string InternalField = "This assembly only";
+    protected internal string ProtectedInternal = "Assembly or subclasses";
+    private protected string PrivateProtected = "Same assembly subclasses";
+
+    // ── Common patterns ───────────────────────────────
+    // private field + public property
+    private decimal _balance;
+    public decimal Balance
+    {
+        get => _balance;
+        private set => _balance = value >= 0 ? value : 0;
+    }
+
+    // private set — outside read, only this class writes
+    public DateTime LastUpdated { get; private set; } = DateTime.Now;
+
+    // internal — only within same project/assembly
+    internal void InternalHelper() { }
+
+    // protected — subclass can call, outside cannot
+    protected virtual void OnBalanceChanged(decimal oldBalance) { }
+}
+
+// Practical usage guide:
+// Fields      → private (always)
+// Properties  → public get, private set (usually)
+// Constructor → public (usually)
+// Helper methods → private
+// Methods for subclasses → protected
+// API methods → public
+// Cross-project utilities → internal
+```
+
+---
+
+<a id="p3-solid"></a>
+### Topic 13: SOLID Principles
+
+> **SOLID** — Object-Oriented Design-এর ৫টি মূলনীতি যা maintainable, scalable code লেখতে সাহায্য করে।
+
+---
+
+**S — Single Responsibility Principle (SRP):**
+
+> একটি class-এর একটিমাত্র কারণে পরিবর্তন হওয়া উচিত।
+
+```csharp
+// ❌ BAD — একটি class অনেক responsibility নিয়েছে
+public class OrderManager
+{
+    public void CreateOrder(Order order) { /* DB save */ }
+    public void SendEmail(Order order) { /* SMTP call */ }
+    public void GenerateInvoice(Order order) { /* PDF create */ }
+    public void UpdateInventory(Order order) { /* stock update */ }
+    // এই class কে পরিবর্তন করতে হয় যখন:
+    // DB structure বদলায়, email template বদলায়, invoice format বদলায়...
+}
+
+// ✅ GOOD — প্রতিটি class এক কাজ করে
+public class OrderService
+{
+    private readonly IOrderRepository _repo;
+    public OrderService(IOrderRepository repo) => _repo = repo;
+    public async Task<Order> CreateAsync(CreateOrderDto dto) =>
+        await _repo.AddAsync(dto.ToOrder());
+}
+
+public class OrderEmailService
+{
+    private readonly IEmailSender _email;
+    public OrderEmailService(IEmailSender email) => _email = email;
+    public async Task SendConfirmationAsync(Order order) =>
+        await _email.SendAsync(order.CustomerEmail, "Order Confirmed", BuildBody(order));
+    private string BuildBody(Order order) => $"Your order #{order.Id} is confirmed.";
+}
+
+public class InvoiceService
+{
+    public byte[] GeneratePdf(Order order) { /* PDF logic */ return Array.Empty<byte>(); }
+}
+```
+
+---
+
+**O — Open/Closed Principle (OCP):**
+
+> Software entities **extension-এ open**, **modification-এ closed** হওয়া উচিত।
+
+```csharp
+// ❌ BAD — নতুন discount type যোগ করতে এই method পরিবর্তন করতে হয়
+public decimal CalculateDiscount(Customer customer, decimal price)
+{
+    if (customer.Type == "Premium") return price * 0.20m;
+    if (customer.Type == "Gold") return price * 0.15m;
+    if (customer.Type == "Silver") return price * 0.10m;
+    // নতুন "Diamond" type যোগ করতে এই if-chain বাড়াতে হবে!
+    return 0;
+}
+
+// ✅ GOOD — interface দিয়ে extension, modification ছাড়া
+public interface IDiscountStrategy
+{
+    decimal Calculate(decimal price);
+}
+
+public class PremiumDiscount : IDiscountStrategy
+{
+    public decimal Calculate(decimal price) => price * 0.20m;
+}
+
+public class GoldDiscount : IDiscountStrategy
+{
+    public decimal Calculate(decimal price) => price * 0.15m;
+}
+
+public class SilverDiscount : IDiscountStrategy
+{
+    public decimal Calculate(decimal price) => price * 0.10m;
+}
+
+// নতুন type যোগ করতে শুধু নতুন class তৈরি করুন
+public class DiamondDiscount : IDiscountStrategy
+{
+    public decimal Calculate(decimal price) => price * 0.25m;
+}
+
+// OrderService এ কোনো পরিবর্তন দরকার নেই!
+public class PricingService
+{
+    public decimal GetFinalPrice(decimal price, IDiscountStrategy strategy) =>
+        price - strategy.Calculate(price);
+}
+```
+
+---
+
+**L — Liskov Substitution Principle (LSP):**
+
+> Subclass যেকোনো জায়গায় parent class-এর জায়গায় ব্যবহার করা যাবে।
+
+```csharp
+// ❌ BAD — LSP violation
+public class Rectangle
+{
+    public virtual int Width { get; set; }
+    public virtual int Height { get; set; }
+    public int Area() => Width * Height;
+}
+
+public class Square : Rectangle
+{
+    // Square-এ Width = Height, তাই override করতে হয়
+    public override int Width
+    {
+        get => base.Width;
+        set { base.Width = value; base.Height = value; } // ← এটাই সমস্যা!
+    }
+    public override int Height
+    {
+        get => base.Height;
+        set { base.Width = value; base.Height = value; }
+    }
+}
+
+// LSP violation — Rectangle দিয়ে কাজ করা code Square-এ ভেঙে যায়
+void ResizeRectangle(Rectangle r)
+{
+    r.Width = 5;
+    r.Height = 10;
+    Console.WriteLine(r.Area()); // Rectangle → 50, Square → 100! ❌
+}
+
+// ✅ GOOD — separate hierarchy
+public abstract class Shape2D
+{
+    public abstract int Area();
+}
+
+public class Rectangle2D : Shape2D
+{
+    public int Width { get; init; }
+    public int Height { get; init; }
+    public override int Area() => Width * Height;
+}
+
+public class Square2D : Shape2D
+{
+    public int Side { get; init; }
+    public override int Area() => Side * Side;
+}
+```
+
+---
+
+**I — Interface Segregation Principle (ISP):**
+
+> Clients-কে তাদের প্রয়োজন নেই এমন methods implement করতে বাধ্য করা উচিত নয়।
+
+```csharp
+// ❌ BAD — fat interface
+public interface IWorker
+{
+    void Work();
+    void Eat();
+    void Sleep();
+    void GetPaid();
+}
+// Robot-কে Eat() ও Sleep() implement করতে হয় — অর্থহীন!
+
+// ✅ GOOD — segregated interfaces
+public interface IWorkable { void Work(); }
+public interface IEatable  { void Eat(); void Sleep(); }
+public interface IPayable  { void GetPaid(); }
+
+public class HumanWorker : IWorkable, IEatable, IPayable
+{
+    public void Work()    => Console.WriteLine("Human working");
+    public void Eat()     => Console.WriteLine("Human eating");
+    public void Sleep()   => Console.WriteLine("Human sleeping");
+    public void GetPaid() => Console.WriteLine("Human paid");
+}
+
+public class Robot : IWorkable  // শুধু যা relevant
+{
+    public void Work() => Console.WriteLine("Robot working 24/7");
+}
+
+// Real-world example — repository interfaces
+public interface IReadRepository<T>
+{
+    Task<T?> GetByIdAsync(int id);
+    Task<IEnumerable<T>> GetAllAsync();
+}
+
+public interface IWriteRepository<T>
+{
+    Task<T> AddAsync(T entity);
+    Task UpdateAsync(T entity);
+    Task DeleteAsync(int id);
+}
+
+// Read-only service শুধু IReadRepository নেয়
+public class ReportService
+{
+    private readonly IReadRepository<Order> _repo;
+    public ReportService(IReadRepository<Order> repo) => _repo = repo;
+}
+
+// CQRS command handler শুধু IWriteRepository নেয়
+public class CreateOrderHandler
+{
+    private readonly IWriteRepository<Order> _repo;
+    public CreateOrderHandler(IWriteRepository<Order> repo) => _repo = repo;
+}
+```
+
+---
+
+**D — Dependency Inversion Principle (DIP):**
+
+> High-level modules low-level modules-এর উপর depend করবে না। উভয়ই abstraction-এর উপর depend করবে।
+
+```csharp
+// ❌ BAD — high-level class directly creates low-level dependency
+public class OrderService_Bad
+{
+    // Concrete class directly — tightly coupled!
+    private readonly SqlOrderRepository _repo = new SqlOrderRepository();
+    private readonly SmtpEmailService _email = new SmtpEmailService();
+
+    public void PlaceOrder(Order order)
+    {
+        _repo.Save(order);           // SQL-specific
+        _email.Send(order.Email);    // SMTP-specific
+    }
+    // Test করা impossible — real DB ও SMTP ছাড়া
+    // SQL থেকে MongoDB migrate → এই class পরিবর্তন করতে হবে
+}
+
+// ✅ GOOD — depend on abstractions
+public class OrderService_Good
+{
+    private readonly IOrderRepository _repo;   // interface
+    private readonly IEmailService _email;      // interface
+
+    // Constructor injection — DI container automatically inject করবে
+    public OrderService_Good(IOrderRepository repo, IEmailService email)
+    {
+        _repo = repo;
+        _email = email;
+    }
+
+    public async Task PlaceOrderAsync(Order order)
+    {
+        await _repo.SaveAsync(order);
+        await _email.SendAsync(order.CustomerEmail,
+            "Order Confirmed", $"Order #{order.Id} placed!");
+    }
+}
+
+// Test-এ mock inject করা যায়
+// Production-এ real implementation inject হয়
+// MongoDB migrate করতে শুধু MongoOrderRepository তৈরি করুন
+
+// ASP.NET Core DI registration:
+// builder.Services.AddScoped<IOrderRepository, SqlOrderRepository>();
+// builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+// builder.Services.AddScoped<OrderService_Good>();
+```
+
+---
+
+<a id="p3-di"></a>
+### Topic 14: Dependency Injection Basics
+
+**সহজ ভাষায়:**
+
+> **DI** মানে class নিজে dependency তৈরি না করে **বাইরে থেকে পেয়ে যাওয়া**। Constructor-এ চাইলেই পাওয়া যায়।
+
+**Analogy:** Restaurant customer নিজে রান্না করে না — waiter food দিয়ে যায়। আপনি শুধু order করুন।
+
+```csharp
+// ── Service interfaces ────────────────────────────────
+public interface IProductRepository
+{
+    Task<Product?> GetByIdAsync(int id);
+    Task<IEnumerable<Product>> GetAllAsync();
+    Task<Product> CreateAsync(Product product);
+}
+
+public interface IEmailService
+{
+    Task SendAsync(string to, string subject, string body);
+}
+
+public interface ICacheService
+{
+    Task<T?> GetAsync<T>(string key);
+    Task SetAsync<T>(string key, T value, TimeSpan expiry);
+    Task RemoveAsync(string key);
+}
+
+// ── Service with multiple dependencies ───────────────
+public class ProductService
+{
+    private readonly IProductRepository _repository;
+    private readonly ICacheService _cache;
+    private readonly ILogger<ProductService> _logger;
+
+    // Constructor injection — সব dependencies inject হয়
+    public ProductService(
+        IProductRepository repository,
+        ICacheService cache,
+        ILogger<ProductService> logger)
+    {
+        _repository = repository;
+        _cache = cache;
+        _logger = logger;
+    }
+
+    public async Task<Product?> GetProductAsync(int id)
+    {
+        // Try cache first
+        var cacheKey = $"product:{id}";
+        var cached = await _cache.GetAsync<Product>(cacheKey);
+        if (cached is not null)
+        {
+            _logger.LogInformation("Cache hit for product {Id}", id);
+            return cached;
+        }
+
+        // Fetch from DB
+        var product = await _repository.GetByIdAsync(id);
+        if (product is not null)
+        {
+            await _cache.SetAsync(cacheKey, product, TimeSpan.FromMinutes(10));
+            _logger.LogInformation("Product {Id} cached", id);
+        }
+        return product;
+    }
+
+    public async Task<Product> CreateProductAsync(CreateProductDto dto)
+    {
+        var product = new Product
+        {
+            Name = dto.Name,
+            Price = dto.Price,
+            Category = dto.Category
+        };
+        return await _repository.CreateAsync(product);
+    }
+}
+```
+
+**ASP.NET Core DI Registration:**
+
+```csharp
+// Program.cs — service registration
+var builder = WebApplication.CreateBuilder(args);
+
+// ── Lifetime types ────────────────────────────────────
+
+// Transient — প্রতিটি request-এ নতুন instance
+// Lightweight, stateless services-এর জন্য
+builder.Services.AddTransient<IEmailService, SmtpEmailService>();
+
+// Scoped — প্রতিটি HTTP request-এ একটি instance
+// Web request-এ সব জায়গায় same instance
+// Database context, Unit of Work
+builder.Services.AddScoped<IProductRepository, EfProductRepository>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
+// Singleton — Application জীবনকাল একটি instance
+// Config, cache, expensive objects
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+
+var app = builder.Build();
+```
+
+**DI in Controller:**
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    private readonly ProductService _productService;
+
+    // ASP.NET Core automatically inject করে
+    public ProductsController(ProductService productService)
+    {
+        _productService = productService;
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Product>> GetProduct(int id)
+    {
+        var product = await _productService.GetProductAsync(id);
+        return product is null ? NotFound() : Ok(product);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<Product>> CreateProduct(CreateProductDto dto)
+    {
+        var product = await _productService.CreateProductAsync(dto);
+        return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
+    }
+}
+```
+
+**Service Lifetime — কখন কোনটা:**
+
+```
+Transient  → প্রতিবার নতুন instance চাই।
+             Stateless operations, email sender, validators।
+             ⚠ Singleton-এ inject করলে Captive Dependency!
+
+Scoped     → HTTP request-এর মধ্যে state share করতে চাই।
+             DbContext (default scoped), Unit of Work, basket।
+             ⚠ Singleton-এ inject করবেন না।
+
+Singleton  → Application-wide single instance।
+             Config, connection pool, cache, expensive resources।
+             Thread-safe হতে হবে।
+```
+
+**Testing with DI (Mock):**
+
+```csharp
+// xUnit + Moq
+public class ProductServiceTests
+{
+    private readonly Mock<IProductRepository> _repoMock = new();
+    private readonly Mock<ICacheService> _cacheMock = new();
+    private readonly Mock<ILogger<ProductService>> _loggerMock = new();
+    private readonly ProductService _sut;
+
+    public ProductServiceTests()
+    {
+        _sut = new ProductService(_repoMock.Object, _cacheMock.Object, _loggerMock.Object);
+    }
+
+    [Fact]
+    public async Task GetProductAsync_WhenCached_ReturnsCachedProduct()
+    {
+        // Arrange
+        var expected = new Product { Id = 1, Name = "Laptop", Price = 75000m };
+        _cacheMock.Setup(c => c.GetAsync<Product>("product:1"))
+                  .ReturnsAsync(expected);
+
+        // Act
+        var result = await _sut.GetProductAsync(1);
+
+        // Assert
+        Assert.Equal(expected, result);
+        _repoMock.Verify(r => r.GetByIdAsync(It.IsAny<int>()), Times.Never);
+    }
+}
+```
+
+---
+
+## PART 3 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| Class | Blueprint — state + behaviour |
+| Object | Class-এর instance — real entity |
+| Struct | Value type, stack, copy semantics |
+| Record | Immutable value object, value equality |
+| Encapsulation | Data hiding — private fields, public properties |
+| Abstraction | Complexity hiding — relevant interface expose |
+| Inheritance | Parent → Child, code reuse, is-a relationship |
+| Polymorphism | Same interface, different behaviour |
+| Overloading | Same name, different params — compile-time |
+| Overriding | virtual + override — runtime dispatch |
+| `new` keyword | Method hiding — NOT polymorphic |
+| Abstract Class | Incomplete blueprint, shared code, no instantiation |
+| Interface | Pure contract, multiple implementation |
+| Sealed | No inheritance allowed |
+| Static Class | No instance, utility methods, extension methods |
+| `public` | Everywhere accessible |
+| `private` | This class only |
+| `protected` | This class + subclasses |
+| `internal` | Same assembly only |
+| SRP | One class, one reason to change |
+| OCP | Open for extension, closed for modification |
+| LSP | Subclass substitutable for parent |
+| ISP | Small focused interfaces, not fat ones |
+| DIP | Depend on abstraction, not concrete |
+| DI | Dependencies injected from outside |
+| Transient | New instance every time |
+| Scoped | New instance per HTTP request |
+| Singleton | One instance for app lifetime |
+
+---
+
+## PART 3 Interview Q&A
+
+```
+প্রশ্ন: OOP-এর ৪টি pillar কী?
+উত্তর: Encapsulation, Abstraction, Inheritance, Polymorphism।
+
+প্রশ্ন: Abstract class আর Interface-এর পার্থক্য?
+উত্তর: Abstract class → shared code, fields, single inheritance।
+       Interface → contract, multiple implementation, no state।
+       C# 8+ interface-এ default methods আছে।
+
+প্রশ্ন: SOLID কী?
+উত্তর: S-Single Responsibility, O-Open/Closed, L-Liskov Substitution,
+       I-Interface Segregation, D-Dependency Inversion।
+       Maintainable, testable, extensible code-এর design principles।
+
+প্রশ্ন: Dependency Injection কেন ব্যবহার করা হয়?
+উত্তর: Loose coupling। Unit testing সহজ (mock inject করা যায়)।
+       SOLID-এর Dependency Inversion principle follow করে।
+       ASP.NET Core built-in DI container আছে।
+
+প্রশ্ন: Sealed class কেন ব্যবহার করা হয়?
+উত্তর: Unintended inheritance prevent করে।
+       JIT optimization সুবিধা।
+       Security-sensitive class-এ extension prevent।
+
+প্রশ্ন: override আর new-এর পার্থক্য?
+উত্তর: override → polymorphic। Base reference থেকে derived method call হয়।
+       new → hiding। Base reference থেকে base method call হয়।
+       সবসময় override ব্যবহার করুন।
+
+প্রশ্ন: Constructor chaining কী?
+উত্তর: this() দিয়ে একই class-এর অন্য constructor call।
+       base() দিয়ে parent class constructor call।
+       Code duplication কমায়।
+
+প্রশ্ন: Static constructor কখন call হয়?
+উত্তর: Class প্রথমবার use হওয়ার আগে, একবারই।
+       Static fields/properties initialize করার জন্য।
+       Thread-safe by CLR guarantee।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 4 — Advanced C# (Delegates, Events, Lambda, LINQ, Generics, Async/Await, Threading, TPL, Memory Management, IDisposable, Boxing/Unboxing এবং আরও...)
