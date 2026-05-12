@@ -2133,4 +2133,1867 @@ release, hotfix branches থাকে। আমাদের project-এ continuo
 
 ---
 
-> **📌 পরবর্তী:** PART 3 — Advanced Git *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 3 — Advanced Git
+
+---
+
+<a id="part3"></a>
+## PART 3: Advanced Git
+
+> Git-এর deep internals এবং power features। এই PART-এ Detached HEAD, Reset vs Revert, Reflog, Interactive Rebase, Hooks, Submodules এবং Git-এর object model বিস্তারিত আলোচনা করা হয়েছে।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Detached HEAD State](#p3-detached-head) |
+| 2 | [git reset — Soft, Mixed, Hard](#p3-reset) |
+| 3 | [git revert](#p3-revert) |
+| 4 | [Reset vs Revert — কখন কোনটা](#p3-reset-vs-revert) |
+| 5 | [git reflog — Time Machine](#p3-reflog) |
+| 6 | [Squash Commits ও Interactive Rebase](#p3-squash) |
+| 7 | [Git Hooks](#p3-hooks) |
+| 8 | [Git Submodules](#p3-submodules) |
+| 9 | [Git Internals — Object Model](#p3-internals) |
+| 10 | [SHA Hashing Basics](#p3-sha) |
+| 11 | [Recovery Strategies](#p3-recovery) |
+
+---
+
+<a id="p3-detached-head"></a>
+**Topic 1: Detached HEAD State**
+
+**সংজ্ঞা:**
+Normally HEAD একটি branch-এর দিকে point করে, সেই branch latest commit-এর দিকে। **Detached HEAD** মানে HEAD সরাসরি একটি commit-এর দিকে point করছে — কোনো branch-এ নয়।
+
+```
+Normal (Attached HEAD):
+A ─── B ─── C ─── D
+                   ↑
+                  main ← HEAD
+
+Detached HEAD (after: git checkout B):
+A ─── B ─── C ─── D
+      ↑              ↑
+    HEAD            main
+```
+
+**কীভাবে Detached HEAD হয়:**
+```bash
+# Specific commit checkout করলে
+git checkout 3a7f8b2
+
+# Tag checkout করলে
+git checkout v1.0.0
+
+# Remote branch directly checkout করলে
+git checkout origin/main
+
+# HEAD~N syntax
+git checkout HEAD~3
+```
+
+**Warning message:**
+```
+$ git checkout 3a7f8b2
+Note: switching to '3a7f8b2'.
+
+You are in 'detached HEAD' state. You can look around, make
+experimental changes and commit them, and you can discard any
+commits you make in this state without impacting any branches
+by switching back to a branch.
+
+If you want to create a new branch to retain commits you make,
+you may do so (now or later) by using -c with the switch command.
+HEAD is now at 3a7f8b2 feat: add login
+```
+
+**Detached HEAD-এ করা commits হারিয়ে যাওয়ার বিপদ:**
+```bash
+# Detached HEAD-এ commit করলেন
+git checkout 3a7f8b2
+# code edit করলেন...
+git commit -m "experiment: test something"
+# নতুন commit hash: abc1234
+
+# Branch-এ ফিরে গেলেন
+git checkout main
+# এখন abc1234 কোনো branch-এ নেই — unreachable!
+# Git garbage collection-এ মুছে যাবে
+```
+
+**Detached HEAD থেকে বের হওয়া:**
+```bash
+# Option 1: কোনো branch-এ ফিরে যান (changes হারিয়ে যাবে)
+git checkout main
+git switch main
+
+# Option 2: Detached HEAD-এর commits save করুন (নতুন branch)
+git switch -c my-experiment    # নতুন branch তৈরি
+git checkout -b my-experiment  # same, old syntax
+
+# Option 3: Detached state-এ থেকে commit করুন, তারপর branch
+git add .
+git commit -m "save my work"
+git switch -c saved-experiment
+```
+
+**কখন intentionally Detached HEAD ব্যবহার করবেন:**
+```bash
+# পুরোনো code দেখতে (read-only)
+git checkout v1.0.0
+# ... code পড়লেন ...
+git checkout main  # ফিরে এলেন
+
+# Bug reproduction করতে (পুরোনো version test)
+git checkout 3a7f8b2
+# ... test করলেন ...
+git checkout main
+
+# Bisect-এ (automatically হয়)
+git bisect start
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "Detached HEAD state কী? কীভাবে হয় এবং কীভাবে বের হবেন?"
+
+উত্তর: "Detached HEAD মানে HEAD কোনো branch-এ নয়, সরাসরি
+একটি commit-এ আছে। git checkout [hash] বা git checkout [tag] করলে হয়।
+
+এই state-এ commit করলে সেগুলো কোনো branch-এ নেই — branch-এ ফিরে
+গেলে হারিয়ে যায়। তাই Detached HEAD-এ কাজ করতে হলে আগে
+'git switch -c new-branch-name' দিয়ে branch তৈরি করুন।
+
+দ্রুত বের হতে: git checkout main।"
+```
+
+---
+
+<a id="p3-reset"></a>
+**Topic 2: git reset — Soft, Mixed, Hard**
+
+**সংজ্ঞা:**
+`git reset` HEAD-কে নির্দিষ্ট commit-এ নিয়ে যায় এবং তার পরের commits "undo" করে। তিনটি mode আছে যা বিভিন্ন level-এ কাজ করে।
+
+**তিনটি area আবার মনে করুন:**
+```
+Working Directory  ←→  Staging Area  ←→  Repository (commits)
+```
+
+**তিন mode-এর পার্থক্য:**
+
+| Mode | Repository | Staging Area | Working Directory |
+|------|-----------|--------------|------------------|
+| `--soft` | পরিবর্তিত (HEAD সরে) | অপরিবর্তিত | অপরিবর্তিত |
+| `--mixed` (default) | পরিবর্তিত | Reset (unstaged) | অপরিবর্তিত |
+| `--hard` | পরিবর্তিত | Reset | Reset (changes মুছে যায়) |
+
+**Visual explanation:**
+```
+Commits: A ─── B ─── C ─── D  ← HEAD (main)
+
+git reset --soft HEAD~2  (HEAD → B)
+  → Repository: HEAD = B
+  → Staging: C ও D-এর changes staged আছে
+  → Working Dir: C ও D-এর changes আছে
+  (commits undo, কিন্তু changes staged রয়েছে)
+
+git reset --mixed HEAD~2  (HEAD → B)  [DEFAULT]
+  → Repository: HEAD = B
+  → Staging: empty (C, D-এর changes unstaged)
+  → Working Dir: C ও D-এর changes আছে
+  (commits undo, staging cleared, working dir অক্ষত)
+
+git reset --hard HEAD~2  (HEAD → B)
+  → Repository: HEAD = B
+  → Staging: empty
+  → Working Dir: C ও D-এর changes পুরোপুরি মুছে গেছে ⚠️
+  (সব undo — DESTRUCTIVE!)
+```
+
+**Practical examples:**
+```bash
+# ──────────────────────────────────────────────
+# --soft: Commit undo কিন্তু changes staged রাখুন
+# Use case: Commit message ভুল, বা কয়েকটি commit একসাথে করতে
+# ──────────────────────────────────────────────
+git reset --soft HEAD~1
+# শেষ commit undo হলো, কিন্তু changes staging-এ আছে
+git commit -m "feat: better commit message"  # re-commit
+
+# ──────────────────────────────────────────────
+# --mixed (default): Commit undo, changes working dir-এ
+# Use case: কিছু changes বাদ দিয়ে re-commit করতে
+# ──────────────────────────────────────────────
+git reset HEAD~1       # default = --mixed
+git reset --mixed HEAD~1
+# Changes এখন working directory-তে, unstaged
+# আপনি বেছে git add করতে পারবেন
+
+# ──────────────────────────────────────────────
+# --hard: সব undo — DANGEROUS! ⚠️
+# Use case: পুরোপুরি কোনো feature বাদ দিতে
+# ──────────────────────────────────────────────
+git reset --hard HEAD~1
+# শেষ commit এবং তার সব changes মুছে গেছে!
+# Reflog দিয়ে recover করা যেতে পারে (কিছু সময়ের জন্য)
+
+# Specific commit-এ reset
+git reset --hard 3a7f8b2
+
+# Staging area clear করুন (file মুছে না)
+git reset HEAD              # HEAD = --mixed (সব unstage)
+git reset HEAD filename.py  # specific file unstage
+git restore --staged .      # modern equivalent
+```
+
+**Common use cases:**
+```bash
+# Last commit-এর message fix করতে (push না করলে)
+git reset --soft HEAD~1
+git commit -m "correct message"
+
+# Accidental commit undo (3টি undo, changes রাখুন)
+git reset --mixed HEAD~3
+
+# Feature branch পুরো reset করতে (দরকার নেই আর)
+git reset --hard origin/main
+# অথবা:
+git checkout main
+git branch -D bad-feature
+
+# Staged changes unstage করুন
+git reset HEAD .
+```
+
+**⚠️ Warning:**
+```
+git reset --hard দেওয়ার আগে নিশ্চিত হন —
+এটি working directory-র changes মুছে দেয়।
+Push করা commits-এ reset করা অন্যদের problem করে।
+```
+
+---
+
+<a id="p3-revert"></a>
+**Topic 3: git revert**
+
+**সংজ্ঞা:**
+`git revert` একটি commit-এর changes undo করে একটি **নতুন commit** তৈরি করে। History মুছে না — বরং reverse করে। এটি **safe** কারণ public history পরিবর্তন করে না।
+
+```bash
+# Specific commit revert করুন
+git revert 3a7f8b2
+
+# Last commit revert
+git revert HEAD
+
+# Editor ছাড়াই (default message ব্যবহার করে)
+git revert HEAD --no-edit
+
+# Multiple commits revert
+git revert HEAD~2..HEAD   # last 3 commits revert
+
+# Revert করুন কিন্তু commit করবেন না (staging-এ রাখুন)
+git revert --no-commit HEAD
+git revert -n HEAD        # short form
+# তারপর: git revert --continue
+# বা abort: git revert --abort
+
+# Merge commit revert (parent specify করতে হয়)
+git revert -m 1 HEAD  # -m 1 = main parent
+```
+
+**Revert কী করে:**
+```
+Before:
+A ─── B ─── C ─── D  ← HEAD
+              ↑
+         (bad commit — add wrong feature)
+
+After git revert C:
+A ─── B ─── C ─── D ─── C'  ← HEAD
+                        ↑
+               (new commit that undoes C)
+```
+
+**Output:**
+```
+$ git revert HEAD
+[main abc1234] Revert "feat: add wrong feature"
+ 1 file changed, 50 deletions(-)
+```
+
+---
+
+<a id="p3-reset-vs-revert"></a>
+**Topic 4: Reset vs Revert — কখন কোনটা**
+
+এটি interview-এর সবচেয়ে common question।
+
+| | git reset | git revert |
+|--|-----------|-----------|
+| History | পরিবর্তিত করে | Preserve করে |
+| New commit? | না | হ্যাঁ |
+| Public commits-এ safe? | ❌ না | ✅ হ্যাঁ |
+| Destructive? | হতে পারে (`--hard`) | না |
+| Collaboration-এ | সমস্যা করে | Safe |
+
+**Decision tree:**
+```
+Commit undo করতে হবে?
+│
+├── শুধু local branch? (push করা হয়নি)
+│   └── git reset --soft/mixed/hard
+│       └── ─ message fix → --soft
+│           ─ re-stage → --mixed
+│           ─ পুরো delete → --hard
+│
+└── Already pushed? / Shared branch?
+    └── git revert [commit-hash]
+        └── নতুন "undo" commit তৈরি হবে, history safe
+```
+
+**Real-world scenarios:**
+```bash
+# Scenario 1: Local commit-এ typo fix
+git reset --soft HEAD~1
+git commit -m "correct message"
+
+# Scenario 2: Production-এ bad commit undo
+git revert abc1234    # safe, নতুন commit
+git push origin main
+
+# Scenario 3: Feature branch-এর last 3 commits বাদ দিন (local only)
+git reset --hard HEAD~3
+
+# Scenario 4: Staging area clear করুন
+git reset HEAD .      # --mixed = unstage all
+```
+
+**Interview answer:**
+```
+প্রশ্ন: "git reset এবং git revert-এর পার্থক্য কী?"
+
+উত্তর: "মূল পার্থক্য হলো history।
+
+git reset HEAD-কে পুরোনো commit-এ নিয়ে যায় — পরের commits
+যেন হয়নি এমন। History পরিবর্তন হয়। এটি local, unpushed commits-এ
+safe — কিন্তু pushed commits-এ করলে team-এর সবার repo-তে conflict হয়।
+
+git revert একটি নতুন commit তৈরি করে যা target commit-এর changes
+reverse করে। History অক্ষত থাকে। Production বা shared branch-এ
+এটাই safe option।
+
+Rule: Already pushed = git revert, only local = git reset।"
+```
+
+---
+
+<a id="p3-reflog"></a>
+**Topic 5: git reflog — Time Machine**
+
+**সংজ্ঞা:**
+`git reflog` (reference log) হলো HEAD এবং branch-এর সব movements-এর log — একটি local time machine। এমনকি deleted commits, hard reset-এর পরেও reflog দিয়ে recover করা যায়।
+
+```bash
+git reflog
+# অথবা:
+git reflog show HEAD
+```
+
+**Output:**
+```
+$ git reflog
+3a7f8b2 HEAD@{0}: commit: feat: add payment
+b2c4d5e HEAD@{1}: reset: moving to HEAD~1
+abc1234 HEAD@{2}: commit: feat: add broken feature
+def5678 HEAD@{3}: checkout: moving from feature to main
+111aaaa HEAD@{4}: commit: fix: resolve bug
+```
+
+**Reflog দিয়ে recovery:**
+
+```bash
+# ──────────────────────────────────────────────
+# Scenario 1: git reset --hard করে commit হারিয়েছেন
+# ──────────────────────────────────────────────
+git reset --hard HEAD~3   # oops! 3 commits মুছে গেছে
+
+# Reflog দেখুন
+git reflog
+# abc1234 HEAD@{1}: commit: feat: important feature  ← এটাই দরকার
+
+# Recover করুন
+git reset --hard abc1234
+# অথবা: নতুন branch-এ
+git checkout -b recovered-branch abc1234
+
+# ──────────────────────────────────────────────
+# Scenario 2: Branch delete করে ফেলেছেন
+# ──────────────────────────────────────────────
+git branch -D important-feature   # oops!
+
+# Branch-এর last commit খুঁজুন
+git reflog | grep important-feature
+# abc1234 HEAD@{5}: checkout: moving from important-feature to main
+
+# Branch recreate করুন
+git checkout -b important-feature abc1234
+
+# ──────────────────────────────────────────────
+# Scenario 3: Wrong merge করেছেন
+# ──────────────────────────────────────────────
+git merge wrong-branch   # oops!
+
+git reflog
+# abc1234 HEAD@{1}: merge wrong-branch: ...
+# def5678 HEAD@{2}: commit: last good commit  ← এটাতে ফিরুন
+
+git reset --hard def5678
+```
+
+**Reflog-এর limitations:**
+```
+⚠️ Reflog শুধু LOCAL — remote repository-তে নেই
+⚠️ Default 90 দিন পরে expire হয়
+   (git config gc.reflogExpire)
+⚠️ git gc (garbage collection) পরে হারিয়ে যেতে পারে
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "git reset --hard করে important commits মুছে ফেলেছেন। কীভাবে recover করবেন?"
+
+উত্তর: "git reflog দিয়ে! Reflog সব HEAD movements track করে —
+এমনকি hard reset-এর পরেও। git reflog দিয়ে হারানো commit-এর hash
+খুঁজে git reset --hard [hash] অথবা git checkout -b recovery [hash]
+দিয়ে recover করা যায়।
+
+তবে এটি local — remote-এ নেই, এবং ৯০ দিন পরে expire হয়।"
+```
+
+---
+
+<a id="p3-squash"></a>
+**Topic 6: Squash Commits ও Interactive Rebase**
+
+**Squash কেন দরকার:**
+Feature development-এ অনেক ছোট ছোট commits হয় — "fix typo", "wip", "try again"। Main branch-এ merge করার আগে এগুলো একটি meaningful commit-এ পরিণত করা ভালো practice।
+
+```
+Before squash (messy history):
+feat: add login form
+fix: typo in login
+wip: working on validation
+fix: validation almost done
+fix: actually fixed now
+
+After squash (clean history):
+feat: add login with form validation
+```
+
+**Interactive Rebase দিয়ে squash:**
+```bash
+# শেষ 5টি commit interactive rebase
+git rebase -i HEAD~5
+
+# Editor খুলবে:
+pick a1b2c3d feat: add login form
+pick b2c4d5e fix: typo in login
+pick c3d4e5f wip: working on validation
+pick d4e5f6a fix: validation almost done
+pick e5f6a7b fix: actually fixed now
+
+# পরিবর্তন করুন (প্রথমটি pick, বাকিগুলো squash):
+pick a1b2c3d feat: add login form
+squash b2c4d5e fix: typo in login
+squash c3d4e5f wip: working on validation
+squash d4e5f6a fix: validation almost done
+squash e5f6a7b fix: actually fixed now
+
+# Save করুন (Vim: :wq, VS Code: close tab)
+# তারপর combined message editor আসবে:
+# সব message দেখাবে, সুন্দর একটি message রাখুন:
+feat: add login form with input validation
+```
+
+**Interactive Rebase সব commands:**
+```bash
+# শেষ 4টি commit
+git rebase -i HEAD~4
+
+# Available commands:
+# p, pick   = use commit (unchanged)
+# r, reword = use commit, but edit the commit message
+# e, edit   = use commit, but stop for amending
+# s, squash = use commit, meld into previous commit
+# f, fixup  = like squash, but discard this commit's log message
+# x, exec   = run command (e.g., run tests)
+# b, break  = stop here (continue with 'git rebase --continue')
+# d, drop   = remove commit
+# l, label  = label current HEAD with a name
+# t, reset  = reset HEAD to a label
+# m, merge  = create a merge commit
+```
+
+**Practical example — reword:**
+```bash
+git rebase -i HEAD~3
+
+# Change "pick" to "reword" for first commit:
+reword a1b2c3d feat: add lgin form  ← typo!
+pick b2c4d5e fix: validation
+pick c3d4e5f feat: add logout
+
+# Save → Editor opens with the commit message to fix:
+feat: add login form   ← corrected
+# Save → done
+```
+
+**Practical example — drop:**
+```bash
+git rebase -i HEAD~4
+
+# Remove a commit entirely:
+pick a1b2c3d feat: add login
+drop b2c4d5e debug: console.log passwords  ← security! remove this
+pick c3d4e5f fix: validation
+pick d4e5f6a feat: add logout
+```
+
+**Conflict during interactive rebase:**
+```bash
+# Conflict হলে:
+git status          # conflict দেখুন
+# ... resolve করুন ...
+git add resolved-file.py
+git rebase --continue
+
+# বাদ দিতে:
+git rebase --abort
+```
+
+---
+
+<a id="p3-hooks"></a>
+**Topic 7: Git Hooks**
+
+**সংজ্ঞা:**
+Git Hooks হলো scripts যা নির্দিষ্ট Git events-এ automatically run হয় — commit করার আগে, push করার আগে, merge-এর পরে ইত্যাদি।
+
+**Hook location:**
+```bash
+ls .git/hooks/
+# applypatch-msg.sample    pre-push.sample
+# commit-msg.sample        pre-rebase.sample
+# post-commit.sample       pre-receive.sample
+# pre-applypatch.sample    prepare-commit-msg.sample
+# pre-commit.sample        update.sample
+```
+
+`.sample` extension সরালে active হয়।
+
+**সবচেয়ে বেশি ব্যবহৃত hooks:**
+
+| Hook | কখন চলে | Use case |
+|------|---------|---------|
+| `pre-commit` | commit-এর আগে | Lint, tests, secrets check |
+| `commit-msg` | commit message check | Message format validation |
+| `pre-push` | push-এর আগে | Full test suite run |
+| `post-commit` | commit-এর পরে | Notification |
+| `pre-rebase` | rebase-এর আগে | Safety check |
+
+**pre-commit hook example:**
+```bash
+#!/bin/sh
+# .git/hooks/pre-commit
+
+echo "Running pre-commit checks..."
+
+# Python lint check
+if command -v flake8 &>/dev/null; then
+    flake8 src/
+    if [ $? -ne 0 ]; then
+        echo "❌ Flake8 errors found. Commit aborted."
+        exit 1
+    fi
+fi
+
+# Check for debug statements
+if git diff --cached | grep -E "(console\.log|debugger|pdb\.set_trace|breakpoint\(\))" > /dev/null; then
+    echo "❌ Debug statements found! Remove them before committing."
+    exit 1
+fi
+
+# Check for TODO/FIXME (warning only)
+if git diff --cached | grep -E "(TODO|FIXME)" > /dev/null; then
+    echo "⚠️  Warning: TODO/FIXME found in staged changes"
+fi
+
+echo "✅ Pre-commit checks passed!"
+exit 0
+```
+
+**commit-msg hook — Conventional Commits enforce:**
+```bash
+#!/bin/sh
+# .git/hooks/commit-msg
+
+commit_msg=$(cat "$1")
+pattern="^(feat|fix|docs|style|refactor|test|chore|perf|ci)(\(.+\))?: .{1,72}"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+    echo "❌ Invalid commit message format!"
+    echo "   Required: type(scope): description"
+    echo "   Example:  feat(auth): add login functionality"
+    echo "   Types: feat|fix|docs|style|refactor|test|chore|perf|ci"
+    exit 1
+fi
+
+echo "✅ Commit message valid!"
+exit 0
+```
+
+**Hook activate করুন:**
+```bash
+# .git/hooks/pre-commit তৈরি করুন
+nano .git/hooks/pre-commit
+# উপরের script paste করুন
+
+# Executable করুন
+chmod +x .git/hooks/pre-commit
+```
+
+**Husky — team-wide hooks (Node.js projects):**
+```bash
+npm install -D husky
+npx husky init
+
+# .husky/pre-commit:
+npm test
+npm run lint
+
+# .husky/commit-msg:
+npx commitlint --edit $1
+```
+
+**Hook skip করা (জরুরি অবস্থায়):**
+```bash
+git commit --no-verify -m "emergency: hotfix"
+git push --no-verify
+# ⚠️ সাবধানে ব্যবহার করুন
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "Git Hooks কী? একটি practical example দিন।"
+
+উত্তর: "Git Hooks হলো scripts যা নির্দিষ্ট Git events-এ automatically
+execute হয়। যেমন pre-commit hook commit করার আগে চলে।
+
+আমি pre-commit hook-এ lint check রাখি — code standard maintain করতে।
+commit-msg hook-এ Conventional Commits format validate করি।
+pre-push hook-এ test suite run করি — broken code push না হওয়ার জন্য।
+
+Husky npm package দিয়ে team-এর সবার জন্য same hooks share করা যায়।"
+```
+
+---
+
+<a id="p3-submodules"></a>
+**Topic 8: Git Submodules**
+
+**সংজ্ঞা:**
+Git Submodule দিয়ে একটি Git repository-র ভেতরে আরেকটি Git repository embed করা যায়। External library বা shared component include করতে ব্যবহার হয়।
+
+```bash
+# Submodule add করুন
+git submodule add https://github.com/org/shared-lib.git libs/shared
+
+# .gitmodules file তৈরি হয়:
+[submodule "libs/shared"]
+    path = libs/shared
+    url = https://github.com/org/shared-lib.git
+
+# Submodule সহ clone করুন
+git clone --recursive https://github.com/user/project.git
+
+# বা clone-এর পরে initialize:
+git submodule update --init --recursive
+
+# Submodule update করুন
+git submodule update --remote
+git submodule update --remote --merge  # merge with local
+
+# সব submodule-এ command run করুন
+git submodule foreach 'git pull origin main'
+
+# Submodule status দেখুন
+git submodule status
+```
+
+**Interview tip:**
+```
+প্রশ্ন: "Git Submodule কী? কখন ব্যবহার করবেন?"
+
+উত্তর: "Submodule দিয়ে parent repository-র ভেতরে child repository
+include করা যায়। Monorepo setup বা external shared library pin করতে।
+
+তবে submodule বেশ complex — developer-দের সবসময় --recursive
+flag মনে রাখতে হয়। Modern alternative হলো Git Subtree বা npm/pip
+dependency management। ছোট team-এ submodule avoid করাই ভালো।"
+```
+
+---
+
+<a id="p3-internals"></a>
+**Topic 9: Git Internals — Object Model**
+
+**Git-এর 4টি object type:**
+
+**1. Blob — File content:**
+```bash
+# Blob তৈরি দেখুন
+echo "Hello, Git!" | git hash-object --stdin
+# d8e8fca2dc0f896fd7cb4cb0031ba249  (SHA-1 hash)
+
+# File-এর blob hash
+git hash-object src/app.py
+
+# Blob content দেখুন
+git cat-file -p d8e8fca2dc0f896fd7cb4cb0031ba249
+# Hello, Git!
+```
+
+**2. Tree — Directory structure:**
+```bash
+# Current commit-এর tree
+git cat-file -p HEAD^{tree}
+# 100644 blob a8c3... README.md
+# 040000 tree b2d4... src
+# 100644 blob c5e6... requirements.txt
+
+# src/ directory-এর tree
+git cat-file -p b2d4...
+# 100644 blob d7f8... app.py
+# 100644 blob e9a0... models.py
+```
+
+**3. Commit — Snapshot + metadata:**
+```bash
+git cat-file -p HEAD
+# tree 7b8c...          ← root tree hash
+# parent 3a7f...        ← previous commit
+# author Alice <a@b.com> 1715500000 +0600
+# committer Alice <a@b.com> 1715500000 +0600
+#
+# feat: add login functionality
+```
+
+**4. Tag — Named commit reference:**
+```bash
+git cat-file -p v1.0.0
+# object 3a7f8b2...
+# type commit
+# tag v1.0.0
+# tagger Alice <a@b.com>
+# Initial stable release
+```
+
+**Object storage:**
+```bash
+# Objects কোথায় থাকে:
+.git/objects/
+├── 3a/
+│   └── 7f8b2c...  (first 2 chars = folder, rest = filename)
+├── b2/
+│   └── c4d5e6...
+└── pack/          (compressed objects)
+```
+
+**Interview tip:**
+```
+প্রশ্ন: "Git-এর ভেতরে files কীভাবে store হয়?"
+
+উত্তর: "Git content-addressable storage ব্যবহার করে। প্রতিটি file-এর
+content SHA-1 hash করা হয়, সেই hash-ই key। একই content-এর file
+একাধিক commit-এ থাকলে Git duplicate store করে না — same blob।
+
+4 ধরনের object: Blob (file content), Tree (directory), Commit
+(snapshot + metadata), Tag (named pointer)। এই কারণে Git অনেক
+efficient এবং fast।"
+```
+
+---
+
+<a id="p3-sha"></a>
+**Topic 10: SHA Hashing Basics**
+
+**SHA-1 কী:**
+Git প্রতিটি object-এর জন্য SHA-1 (Secure Hash Algorithm 1) ব্যবহার করে — একটি 40-character hexadecimal string।
+
+```bash
+# SHA-1 demo
+echo "Hello" | sha1sum
+# f7ff9e8b7bb2e09b70935a5d785e0cc5d9d0abf0  -
+
+# Git object-এর hash দেখুন
+git rev-parse HEAD
+# 3a7f8b2c1d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a
+
+git rev-parse HEAD~1
+# b2c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2
+
+# Short hash (first 7 chars, usually unique enough)
+git rev-parse --short HEAD
+# 3a7f8b2
+```
+
+**SHA-1 → SHA-256 transition:**
+```
+Git 2.29+ এ SHA-256 support আসছে (SHA-1 এর collision vulnerability)।
+তবে এখনো বেশিরভাগ project SHA-1 ব্যবহার করে।
+```
+
+**Why SHA:**
+```
+1. Content-addressing: same content → same hash (always)
+2. Integrity: hash mismatch → corruption detected
+3. Deduplication: duplicate files → shared object
+4. Distributed: দুই developer-এর same commit → same hash
+```
+
+---
+
+<a id="p3-recovery"></a>
+**Topic 11: Recovery Strategies**
+
+**সাধারণ disaster scenarios এবং recovery:**
+
+**Scenario 1: Accidental `git reset --hard`**
+```bash
+git reset --hard HEAD~5   # oops! 5 commits মুছে গেছে
+
+# Recovery:
+git reflog
+# abc1234 HEAD@{1}: commit: the commit I need
+
+git reset --hard abc1234  # ফিরে এলাম!
+```
+
+**Scenario 2: Branch accidentally deleted**
+```bash
+git branch -D feature/important  # oops!
+
+# Recovery:
+git reflog | grep "feature/important"
+# def5678 HEAD@{3}: checkout: moving from feature/important to main
+
+git checkout -b feature/important def5678
+```
+
+**Scenario 3: Wrong file committed (sensitive data)**
+```bash
+# .env file commit হয়ে গেছে
+git log --oneline
+# abc1234 add .env accidentally
+
+# Option 1: Revert (push করা হলে)
+git revert abc1234
+git push
+
+# Option 2: Reset (push না হলে)
+git reset --mixed HEAD~1
+echo ".env" >> .gitignore
+git add .gitignore
+git commit -m "chore: add .env to gitignore"
+
+# Option 3: Completely remove from history (nuclear option)
+git filter-branch --index-filter \
+  'git rm --cached --ignore-unmatch .env' HEAD
+# অথবা modern: git filter-repo --path .env --invert-paths
+```
+
+**Scenario 4: Merge করে ফেলেছেন, undo করতে হবে**
+```bash
+# Merge commit hash খুঁজুন
+git log --oneline
+# abc1234 Merge branch 'wrong-feature'  ← এটা undo করতে হবে
+
+# Revert merge commit (-m 1 = main parent)
+git revert -m 1 abc1234
+git push
+
+# অথবা reset (shared branch নয় যদি)
+git reset --hard HEAD~1
+```
+
+**Scenario 5: Push করা হয়নি এমন স্থানে সব কিছু undo করতে**
+```bash
+git reset --hard origin/main
+# Local changes এবং local commits সব বাদ, remote-এর সাথে sync
+```
+
+**Emergency checklist:**
+```
+কিছু ভুল হলে:
+1. panic করবেন না
+2. git status দিন
+3. git log --oneline দিন
+4. git reflog দিন
+5. Force push করবেন না (--force) — team-এ সবার আগে জানান
+6. Stack Overflow / colleague-কে জিজ্ঞেস করুন
+```
+
+---
+
+**PART 3 Quick Revision Table**
+
+| Concept/Command | মূল কথা |
+|----------------|---------|
+| Detached HEAD | HEAD সরাসরি commit-এ, কোনো branch-এ নয় |
+| Detached HEAD fix | `git switch -c new-branch` |
+| `reset --soft` | Commit undo, changes staged রাখে |
+| `reset --mixed` | Commit undo, changes unstaged রাখে (default) |
+| `reset --hard` | Commit undo + সব changes মুছে দেয় ⚠️ |
+| `git revert` | নতুন commit দিয়ে undo — history safe |
+| Reset vs Revert | Local unpushed → reset, Pushed/shared → revert |
+| `git reflog` | সব HEAD movements-এর local log — time machine |
+| Squash commits | Interactive rebase + `squash` command |
+| `git rebase -i` | Commit history rewrite: squash/reword/drop |
+| Git Hooks | Event-based scripts: pre-commit, commit-msg |
+| Submodule | Repo-এর ভেতরে অন্য repo |
+| Blob | File content object |
+| Tree | Directory structure object |
+| Commit object | Snapshot + author + parent reference |
+| SHA-1 | 40-char content-based unique identifier |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part4"></a>
+## PART 4: GitHub Fundamentals
+
+> GitHub হলো Git repository hosting-এর সবচেয়ে popular platform। এই PART-এ GitHub-এর মূল concepts — repository, fork, pull request, code review, issues থেকে শুরু করে professional profile optimization পর্যন্ত সব কিছু বিস্তারিত আলোচনা করা হয়েছে।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [GitHub কী? Git vs GitHub](#p4-github-intro) |
+| 2 | [Repository তৈরি ও Setup](#p4-create-repo) |
+| 3 | [Public vs Private Repository](#p4-public-private) |
+| 4 | [Fork — কী এবং কেন](#p4-fork) |
+| 5 | [Pull Request (PR) — সম্পূর্ণ গাইড](#p4-pr) |
+| 6 | [Code Review Process](#p4-code-review) |
+| 7 | [Issues ও Project Management](#p4-issues) |
+| 8 | [GitHub Discussions](#p4-discussions) |
+| 9 | [README.md ও Markdown](#p4-readme) |
+| 10 | [Releases ও Tags](#p4-releases) |
+| 11 | [GitHub Profile Optimization](#p4-profile) |
+
+---
+
+<a id="p4-github-intro"></a>
+**Topic 1: GitHub কী? Git vs GitHub**
+
+**GitHub কী:**
+GitHub হলো Microsoft-এর মালিকানাধীন একটি **web-based platform** যা Git repository hosting, collaboration tools, CI/CD, project management এবং social coding features প্রদান করে।
+
+**Git vs GitHub — এই প্রশ্ন প্রায় সব interview-এ আসে:**
+
+| | Git | GitHub |
+|--|-----|--------|
+| কী? | Version control software | Web hosting platform |
+| কোথায় চলে? | Local computer-এ | Cloud (github.com) |
+| Internet দরকার? | না (local কাজে) | হ্যাঁ |
+| তৈরি করেছে | Linus Torvalds (2005) | Tom Preston-Werner (2008) |
+| মালিকানা | Open-source | Microsoft (2018 থেকে) |
+| বিকল্প | Mercurial, SVN | GitLab, Bitbucket, Gitea |
+| মূল কাজ | Version control | Collaboration + hosting |
+
+**GitHub ছাড়া কি Git ব্যবহার করা যায়?**
+হ্যাঁ! GitHub শুধু একটি hosting platform। Git একেবারে locally ব্যবহার করা যায়, বা self-hosted GitLab-এও।
+
+**GitHub-এর প্রধান features:**
+```
+✅ Repository hosting (public + private)
+✅ Pull Request + Code Review
+✅ Issues (bug tracking, feature requests)
+✅ GitHub Actions (CI/CD)
+✅ GitHub Pages (static site hosting)
+✅ GitHub Packages (package registry)
+✅ GitHub Copilot (AI coding assistant)
+✅ GitHub Projects (kanban board)
+✅ GitHub Discussions (forum-style Q&A)
+✅ Dependency graph + Dependabot
+✅ GitHub Security Advisories
+```
+
+**Interview answer:**
+```
+প্রশ্ন: "Git এবং GitHub-এর পার্থক্য কী?"
+
+উত্তর: "Git হলো একটি software tool — locally install করে
+version control করা যায়। Internet ছাড়াও কাজ করে।
+
+GitHub হলো একটি web platform যেখানে Git repositories
+host করা হয়। Collaboration-এর জন্য: Pull Request, Code Review,
+Issues, Actions সব এখানে আছে।
+
+Analogy: Git হলো camera, GitHub হলো Instagram — camera দিয়ে
+ছবি তোলা যায় Instagram ছাড়াও, কিন্তু share করতে platform দরকার।"
+```
+
+---
+
+<a id="p4-create-repo"></a>
+**Topic 2: Repository তৈরি ও Setup**
+
+**GitHub-এ নতুন repository:**
+```
+github.com → "+" → "New repository"
+→ Repository name: my-project
+→ Description: Brief description
+→ Public / Private
+→ Initialize with README ✅
+→ Add .gitignore: Python / Node / etc.
+→ License: MIT / Apache / etc.
+→ "Create repository"
+```
+
+**Existing local project → GitHub:**
+```bash
+# Local project আছে, GitHub-এ push করতে হবে
+
+# Step 1: GitHub-এ new repo তৈরি করুন (README ছাড়া)
+
+# Step 2: Local project-এ remote add করুন
+cd my-project
+git init   # আগে init না করলে
+git add .
+git commit -m "feat: initial project setup"
+
+# Step 3: Remote connect করুন
+git remote add origin https://github.com/username/my-project.git
+# অথবা SSH:
+git remote add origin git@github.com:username/my-project.git
+
+# Step 4: Push করুন
+git push -u origin main
+# -u = --set-upstream, পরে শুধু 'git push' কাজ করবে
+```
+
+**GitHub থেকে existing project:**
+```bash
+# HTTPS clone
+git clone https://github.com/username/project.git
+
+# SSH clone (key setup থাকলে)
+git clone git@github.com:username/project.git
+
+# Specific branch
+git clone -b develop https://github.com/username/project.git
+
+# Specific folder নামে
+git clone https://github.com/username/project.git my-folder
+```
+
+**SSH Key Setup (once per machine):**
+```bash
+# SSH key তৈরি করুন
+ssh-keygen -t ed25519 -C "your@email.com"
+# Enter file: ~/.ssh/id_ed25519
+# Passphrase: (optional)
+
+# Public key copy করুন
+cat ~/.ssh/id_ed25519.pub
+
+# GitHub → Settings → SSH and GPG keys → New SSH key
+# Paste করুন
+
+# Test করুন
+ssh -T git@github.com
+# Hi username! You've successfully authenticated.
+```
+
+**Remote management:**
+```bash
+# Remote দেখুন
+git remote -v
+# origin  git@github.com:username/project.git (fetch)
+# origin  git@github.com:username/project.git (push)
+
+# Remote add করুন
+git remote add upstream https://github.com/original/project.git
+
+# Remote rename করুন
+git remote rename origin github
+
+# Remote URL পরিবর্তন করুন (HTTPS → SSH)
+git remote set-url origin git@github.com:username/project.git
+
+# Remote সরান
+git remote remove upstream
+```
+
+---
+
+<a id="p4-public-private"></a>
+**Topic 3: Public vs Private Repository**
+
+| | Public | Private |
+|--|--------|---------|
+| কে দেখতে পারে | সবাই (internet-এ) | শুধু আপনি + collaborators |
+| কে clone করতে পারে | সবাই | শুধু authorized users |
+| GitHub Pages | ✅ Free | ✅ (paid plan-এ) |
+| Open-source | ✅ | ❌ |
+| Free? | ✅ Unlimited | ✅ Unlimited (GitHub Free) |
+| Code search | GitHub-এ সবাই | শুধু authorized |
+
+**কখন কোনটা:**
+```
+Public:
+✅ Open-source project
+✅ Portfolio projects (recruiters দেখবে)
+✅ Study notes, documentation
+✅ GitHub Pages websites
+
+Private:
+✅ Client project (NDA)
+✅ Company/startup product
+✅ WIP project (ready না হলে)
+✅ Sensitive configuration
+```
+
+**Interview tip:**
+```
+প্রশ্ন: "আপনার GitHub-এ কী আছে? Public না Private?"
+
+উত্তর: "আমার portfolio projects public রাখি — recruiters এবং
+interviewer-রা দেখতে পারেন। Client বা company project private।
+Public project-গুলোতে README সুন্দর করে লিখেছি — live demo link,
+tech stack, setup guide সহ।"
+```
+
+---
+
+<a id="p4-fork"></a>
+**Topic 4: Fork — কী এবং কেন**
+
+**সংজ্ঞা:**
+Fork মানে অন্য কারো repository-র একটি complete copy নিজের GitHub account-এ তৈরি করা। Open-source contribution-এর মূল প্রক্রিয়া।
+
+**Fork vs Clone:**
+
+| | Fork | Clone |
+|--|------|-------|
+| কোথায় হয় | GitHub server-এ | Local machine-এ |
+| কার account? | আপনার GitHub-এ copy | শুধু local |
+| Original repo-তে push? | না (PR দিয়ে) | Permission থাকলে |
+| Use case | Open-source contribution | Local development |
+
+**Fork workflow — Open-source contribution:**
+```
+Original Repo (org/project)
+         ↓
+        Fork
+         ↓
+Your Repo (you/project) ← GitHub-এ আপনার copy
+         ↓
+        Clone
+         ↓
+Local Machine → feature branch → commit
+         ↓
+        Push to your fork
+         ↓
+   Pull Request: you/project → org/project
+         ↓
+    Code Review by maintainers
+         ↓
+        Merge ✅
+```
+
+**Fork করার পরে:**
+```bash
+# Step 1: GitHub-এ "Fork" button click
+
+# Step 2: আপনার fork clone করুন
+git clone https://github.com/YOUR-USERNAME/project.git
+cd project
+
+# Step 3: Original repo-কে "upstream" হিসেবে add করুন
+git remote add upstream https://github.com/ORIGINAL/project.git
+
+# Verify:
+git remote -v
+# origin    https://github.com/YOUR-USERNAME/project.git (fetch/push)
+# upstream  https://github.com/ORIGINAL/project.git (fetch)
+
+# Step 4: Feature branch-এ কাজ করুন
+git checkout -b fix/typo-in-readme
+
+# Step 5: Changes করুন, commit করুন
+git add README.md
+git commit -m "docs: fix typo in installation guide"
+
+# Step 6: আপনার fork-এ push করুন
+git push origin fix/typo-in-readme
+
+# Step 7: GitHub-এ Pull Request তৈরি করুন
+# base: ORIGINAL/project:main ← head: YOUR/project:fix/typo-in-readme
+```
+
+**Fork sync (upstream থেকে latest নিন):**
+```bash
+# Upstream-এর latest changes নিন
+git fetch upstream
+
+# main branch sync করুন
+git checkout main
+git merge upstream/main
+# অথবা: git rebase upstream/main
+
+# আপনার fork update করুন
+git push origin main
+```
+
+**Interview Q&A:**
+```
+প্রশ্ন: "Fork এবং Clone-এর পার্থক্য কী?"
+
+উত্তর: "Clone হলো repository-র একটি local copy — আপনার machine-এ।
+Fork হলো GitHub server-এ repository-র copy — আপনার account-এ।
+
+Fork ব্যবহার হয় open-source contribution-এ: original repo-তে
+direct push access নেই, তাই fork করে নিজের copy-তে কাজ করি,
+তারপর Pull Request দিয়ে original-এ merge request করি।"
+```
+
+---
+
+<a id="p4-pr"></a>
+**Topic 5: Pull Request (PR) — সম্পূর্ণ গাইড**
+
+**সংজ্ঞা:**
+Pull Request (PR) হলো GitHub-এর একটি feature যা দিয়ে আপনি অন্যদের জানান "আমি এই changes merge করতে চাই"। এটি code review, discussion এবং automated checks-এর একটি সম্পূর্ণ platform।
+
+**PR তৈরির ধাপ:**
+```
+1. Feature branch-এ কাজ সম্পন্ন
+2. GitHub-এ push: git push origin feature/login
+3. GitHub.com-এ repository খুলুন
+4. "Compare & pull request" notification দেখবেন
+5. অথবা: "Pull requests" tab → "New pull request"
+6. Base: main ← Compare: feature/login
+7. Title, description লিখুন
+8. Reviewers, labels, milestone assign করুন
+9. "Create pull request"
+```
+
+**PR description template (professional):**
+```markdown
+## 📝 কী পরিবর্তন করেছি
+- User authentication system implement করেছি
+- JWT-based login/logout endpoint তৈরি করেছি  
+- Password bcrypt দিয়ে hash করা হচ্ছে
+- Refresh token mechanism add করেছি
+
+## 🎯 কেন এই পরিবর্তন (Motivation)
+Issue #45-এর অংশ হিসেবে — v2.0 release-এর জন্য user auth দরকার।
+আগে session-based ছিল, stateless JWT-তে migrate করছি।
+
+## 🧪 Testing
+- Unit tests: `pytest tests/auth/`
+- Manual testing:
+  1. `POST /api/auth/login` — body: `{"email": "test@test.com", "password": "pass123"}`
+  2. Response-এ JWT token পাবেন
+  3. `Authorization: Bearer <token>` header দিয়ে protected routes access করুন
+
+## 📸 Screenshots (UI change হলে)
+[Before] [After]
+
+## ✅ Checklist
+- [x] Unit tests written and passing
+- [x] No hardcoded secrets or credentials
+- [x] API documentation updated
+- [x] Migration files included
+- [x] No console.log / debug statements
+- [ ] Performance tested (large dataset)
+
+## 🔗 Related
+Closes #45
+Depends on #42 (merged)
+```
+
+**PR labels:**
+```
+Type labels: feature, bug, documentation, refactor
+Status labels: ready-for-review, work-in-progress, blocked
+Priority: critical, high, medium, low
+```
+
+**Draft PR — কাজ চলাকালীন:**
+```bash
+# Push করুন
+git push origin feature/wip-feature
+
+# GitHub-এ: "Create pull request" → "Create draft pull request"
+# Draft PR-এ: code দেখানো যায়, early feedback নেওয়া যায়
+# কিন্তু reviewers merge করতে পারবে না
+# Ready হলে: "Ready for review" button
+```
+
+**PR merge strategies:**
+
+| Strategy | কী করে | কখন |
+|----------|--------|------|
+| Merge commit | Merge commit তৈরি করে (--no-ff) | Full history দেখতে |
+| Squash and merge | সব commits → একটি | Clean history চাইলে |
+| Rebase and merge | Linear history, no merge commit | Linear preference |
+
+**Interview Q&A:**
+```
+প্রশ্ন: "Pull Request কী? Code review-এ কীভাবে অংশগ্রহণ করেন?"
+
+উত্তর: "Pull Request হলো team-এর কাছে 'এই changes main-এ নিন'
+এর formal request। শুধু code change নয় — discussion, review,
+automated CI checks সব এক জায়গায়।
+
+আমি PR-এ বিস্তারিত description লিখি: কী করেছি, কেন করেছি,
+কীভাবে test করবেন। Review comment-এ constructive feedback দিই
+— personal না করে code নিয়ে কথা বলি। Change request-এ
+promptly respond করি।"
+```
+
+---
+
+<a id="p4-code-review"></a>
+**Topic 6: Code Review Process**
+
+**Code review কেন গুরুত্বপূর্ণ:**
+```
+✅ Bug detection — reviewer নতুন চোখে দেখে
+✅ Knowledge sharing — team সবাই code জানে
+✅ Code quality — standards maintain হয়
+✅ Mentoring — junior developer শেখে
+✅ Collective ownership — "আমার code" না, "আমাদের code"
+```
+
+**Review করার সময় কী দেখবেন:**
+```
+Functionality:
+✅ Requested changes সঠিকভাবে implement হয়েছে?
+✅ Edge cases handle হয়েছে?
+✅ Error handling আছে?
+
+Code Quality:
+✅ Code readable ও maintainable?
+✅ DRY principle (Don't Repeat Yourself)?
+✅ Functions/methods ছোট ও focused?
+✅ Naming convention followed?
+
+Security:
+✅ SQL injection, XSS vulnerability নেই?
+✅ Sensitive data hardcoded নেই?
+✅ Authentication/authorization সঠিক?
+
+Performance:
+✅ N+1 query problem নেই?
+✅ Unnecessary loops নেই?
+
+Testing:
+✅ Tests আছে? Sufficient coverage?
+✅ Tests meaningful?
+```
+
+**GitHub review features:**
+```bash
+# Review types:
+# ✅ Approve — merge করা যাবে
+# 💬 Comment — general feedback, merge block করে না
+# ❌ Request changes — এগুলো fix না করে merge করা যাবে না
+
+# Line comment:
+# File-এর specific line-এ click → comment add
+
+# Suggestion (inline fix):
+# ```suggestion
+# corrected code here
+# ```
+# Author "Accept suggestion" click করলে automatically apply হয়
+```
+
+**Code review etiquette:**
+```
+Reviewer হিসেবে:
+✅ "This function is too long" → "Could we break this into smaller functions?"
+✅ Explain WHY, not just WHAT to change
+✅ Distinguish blocking vs non-blocking comments
+✅ Praise good work too: "Nice approach here! 👍"
+✅ Response করুন 24 hours-এর মধ্যে
+✅ "Nit:" prefix minor suggestions-এ
+
+Author হিসেবে:
+✅ প্রতিটি comment-এ response দিন (agree/disagree/question)
+✅ Defensive হবেন না — code improve হচ্ছে
+✅ Change করলে "Done" বা "Fixed in abc1234" লিখুন
+✅ Complex changes-এ PR-এ explanation add করুন
+```
+
+**Branch protection rules (Team settings):**
+```
+GitHub → Repository → Settings → Branches → Branch protection rules
+
+✅ Require pull request before merging
+✅ Require approvals: 1 (minimum)
+✅ Dismiss stale pull request approvals
+✅ Require status checks to pass (CI)
+✅ Require branches to be up to date
+✅ Do not allow force pushes
+✅ Do not allow deletions
+```
+
+---
+
+<a id="p4-issues"></a>
+**Topic 7: Issues ও Project Management**
+
+**GitHub Issues:**
+Issues হলো bug reports, feature requests, এবং tasks track করার জায়গা।
+
+```markdown
+# Issue title: [BUG] Login page crashes on mobile Chrome
+
+## Bug Description
+Login page-এ "Submit" button click করলে mobile Chrome-এ crash হয়।
+
+## Steps to Reproduce
+1. Mobile Chrome-এ example.com/login খুলুন
+2. Email ও password দিন
+3. "Login" button click করুন
+4. Page crash হয় / blank screen
+
+## Expected Behavior
+Dashboard-এ redirect হওয়া উচিত।
+
+## Actual Behavior
+Page crash হয়, console-এ "TypeError: Cannot read property 'token' of undefined"
+
+## Environment
+- OS: Android 13
+- Browser: Chrome 124
+- App version: 2.1.0
+
+## Screenshots
+[screenshot attached]
+
+## Possible Fix
+auth.js line 145-এ null check নেই।
+```
+
+**Issue labels:**
+```
+bug           → red      — কিছু কাজ করছে না
+enhancement   → blue     — নতুন feature
+documentation → green    — docs দরকার
+help wanted   → teal     — community contribution চাই
+good first issue → purple — beginner-friendly
+question      → pink     — প্রশ্ন
+wontfix       → white    — এটা fix করা হবে না
+duplicate     → grey     — আগে থেকেই আছে
+```
+
+**Issue linking:**
+```bash
+# PR description বা commit message-এ issue reference:
+"Closes #45"     → PR merge হলে issue automatically close
+"Fixes #45"      → same
+"Resolves #45"   → same
+
+"Related to #45" → close করে না, শুধু link
+"See #45"        → same
+
+# Commit message-এ:
+git commit -m "fix(auth): resolve null token on mobile (closes #45)"
+```
+
+**GitHub Projects (Kanban):**
+```
+GitHub → Projects → New project → Board
+
+Columns:
+📋 Backlog → 🏃 In Progress → 👀 In Review → ✅ Done
+
+Cards = Issues or Pull Requests
+Automation: PR merged → Issue → Done column
+```
+
+**Milestones:**
+```
+GitHub → Issues → Milestones → New milestone
+Name: v2.0.0 Release
+Due date: June 30, 2026
+Description: All features for major release
+
+Issues assign to milestone → progress tracking
+```
+
+---
+
+<a id="p4-discussions"></a>
+**Topic 8: GitHub Discussions**
+
+**Discussions কী:**
+Issues-এর মতো কিন্তু open-ended conversation-এর জন্য। Q&A, announcements, ideas, polls — formal issue নয় এমন topics-এর জন্য।
+
+```
+Categories:
+📣 Announcements — maintainer announcements
+💬 General — general discussion
+💡 Ideas — feature suggestions
+🙏 Q&A — help questions
+🙌 Show and tell — community showcase
+```
+
+**Issues vs Discussions:**
+
+| | Issues | Discussions |
+|--|--------|------------|
+| উদ্দেশ্য | Bug, task, feature | Open conversation |
+| Close হয়? | হ্যাঁ | না (usually) |
+| Assignee | হ্যাঁ | না |
+| Linked to PR? | হ্যাঁ | সীমিত |
+| Best for | Actionable items | Ideas, Q&A |
+
+---
+
+<a id="p4-readme"></a>
+**Topic 9: README.md ও Markdown**
+
+**README কেন গুরুত্বপূর্ণ:**
+README হলো project-এর "মুখ" — GitHub-এ repository খুললে প্রথমে দেখা যায়। Recruiter ও contributor উভয়ের জন্য গুরুত্বপূর্ণ।
+
+**Professional README structure:**
+```markdown
+# Project Name
+
+Short description (1-2 lines)
+
+![Build Status](badge-url)
+![License](badge-url)
+![Version](badge-url)
+
+## 🎯 Overview
+কী করে এই project, কেন তৈরি করলেন।
+
+## ✨ Features
+- Feature 1
+- Feature 2
+- Feature 3
+
+## 🛠️ Tech Stack
+- React 18, TypeScript
+- FastAPI, PostgreSQL
+- Docker, GitHub Actions
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.11+
+- Node.js 20+
+- Docker
+
+### Installation
+```bash
+# Clone করুন
+git clone https://github.com/username/project.git
+cd project
+
+# Dependencies install করুন
+pip install -r requirements.txt
+
+# Environment variables
+cp .env.example .env
+# .env file edit করুন
+
+# Run করুন
+python manage.py runserver
+```
+
+## 📸 Screenshots
+[Add screenshots or GIFs]
+
+## 📚 API Documentation
+API docs: [https://api.example.com/docs](link)
+
+## 🤝 Contributing
+1. Fork করুন
+2. Feature branch তৈরি করুন (`git checkout -b feature/amazing`)
+3. Commit করুন (`git commit -m 'feat: add amazing feature'`)
+4. Push করুন (`git push origin feature/amazing`)
+5. Pull Request দিন
+
+## 📄 License
+MIT License — [LICENSE](LICENSE) দেখুন।
+
+## 📧 Contact
+Your Name — your@email.com
+GitHub: [@username](https://github.com/username)
+```
+
+**Markdown essentials:**
+```markdown
+# H1 Heading
+## H2 Heading
+### H3 Heading
+
+**bold text**
+*italic text*
+~~strikethrough~~
+`inline code`
+
+```python
+# code block
+def hello():
+    print("Hello!")
+```
+
+- unordered list
+- item 2
+  - nested item
+
+1. ordered list
+2. item 2
+
+[Link text](https://url.com)
+![Image alt](image.png)
+
+| Column 1 | Column 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+
+> Blockquote
+
+---  (horizontal rule)
+
+- [x] checked task
+- [ ] unchecked task
+```
+
+**Shields.io badges:**
+```markdown
+![GitHub Stars](https://img.shields.io/github/stars/user/repo?style=flat)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Python Version](https://img.shields.io/badge/python-3.11+-green)
+![Build](https://github.com/user/repo/actions/workflows/test.yml/badge.svg)
+```
+
+---
+
+<a id="p4-releases"></a>
+**Topic 10: Releases ও Tags**
+
+**GitHub Release তৈরি:**
+```
+GitHub → Repository → Releases → "Draft a new release"
+→ Tag: v1.0.0 (নতুন তৈরি করুন বা existing)
+→ Target: main
+→ Release title: v1.0.0 — First Stable Release
+→ Description (auto-generate from commits)
+→ Attach binaries (optional)
+→ Pre-release checkbox (beta versions)
+→ "Publish release"
+```
+
+**Release notes format:**
+```markdown
+## 🎉 What's New in v2.0.0
+
+### ✨ New Features
+- User authentication with JWT (#45)
+- Payment gateway integration (#67)
+- Dark mode support (#89)
+
+### 🐛 Bug Fixes
+- Fixed login crash on mobile Chrome (#52)
+- Resolved cart quantity bug (#61)
+
+### 💥 Breaking Changes
+- API endpoint `/api/user` renamed to `/api/users`
+- Response format changed: `userId` → `user_id`
+
+### 📦 Dependencies Updated
+- React 17 → 18
+- FastAPI 0.95 → 0.110
+
+### 🙏 Contributors
+Thanks to @alice, @bob, @charlie for contributions!
+
+**Full Changelog**: https://github.com/user/repo/compare/v1.0.0...v2.0.0
+```
+
+**GitHub CLI দিয়ে release:**
+```bash
+# GitHub CLI install
+sudo apt install gh    # Linux
+brew install gh        # macOS
+
+# Login
+gh auth login
+
+# Release তৈরি
+gh release create v1.0.0 \
+  --title "v1.0.0 — First Release" \
+  --notes "Initial stable release" \
+  --target main
+
+# Pre-release
+gh release create v2.0.0-beta.1 --prerelease
+
+# Assets attach করুন
+gh release create v1.0.0 ./dist/app-linux.tar.gz ./dist/app-windows.zip
+```
+
+---
+
+<a id="p4-profile"></a>
+**Topic 11: GitHub Profile Optimization**
+
+**Profile README তৈরি:**
+```bash
+# username/username নামে special repository তৈরি করুন
+# (username = আপনার GitHub username)
+# README.md automatically profile-এ দেখাবে
+```
+
+**Professional profile README:**
+```markdown
+<div align="center">
+
+# Hi, I'm Alice 👋
+
+**Full-Stack Developer | Open Source Enthusiast | Bangladesh 🇧🇩**
+
+[![LinkedIn](badge)](linkedin-url)
+[![Portfolio](badge)](portfolio-url)
+[![Email](badge)](mailto:alice@email.com)
+
+</div>
+
+---
+
+### 🔧 Tech Stack
+
+**Frontend:** React · TypeScript · Next.js · Tailwind CSS  
+**Backend:** Python · FastAPI · Node.js · Express  
+**Database:** PostgreSQL · MongoDB · Redis  
+**DevOps:** Docker · GitHub Actions · Nginx · Vercel  
+
+---
+
+### 📊 GitHub Stats
+
+<div align="center">
+  
+![Stats](https://github-readme-stats.vercel.app/api?username=alice&show_icons=true&theme=dark)
+![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=alice&layout=compact&theme=dark)
+
+</div>
+
+---
+
+### 🚀 Featured Projects
+
+| Project | Description | Tech |
+|---------|-------------|------|
+| [E-Commerce App](link) | Full-stack shopping platform | React, FastAPI, PostgreSQL |
+| [Chat Application](link) | Real-time chat with WebSocket | Node.js, Socket.io, Redis |
+| [CS Handbook](link) | Interview prep in Bangla | Markdown |
+
+---
+
+### 📈 Contribution Graph
+
+![Snake animation](https://github.com/alice/alice/blob/output/github-contribution-grid-snake.svg)
+
+---
+
+*📫 Reach me: alice@email.com | Open to remote opportunities*
+```
+
+**Profile optimization checklist:**
+```
+Profile basics:
+✅ Professional photo (না হলে avatar)
+✅ Full name (real name, professional)
+✅ Bio: role, tech, location
+✅ Location: Dhaka, Bangladesh
+✅ Company/University
+✅ Website/Portfolio link
+✅ Email (public করুন)
+✅ Twitter/LinkedIn link
+
+Repositories:
+✅ 6 repositories pin করুন (best projects)
+✅ প্রতিটি repository-তে description add করুন
+✅ Topics/tags add করুন (react, python, etc.)
+✅ README সুন্দর করুন (screenshot, demo link)
+✅ License add করুন
+
+Activity:
+✅ Green contribution graph (daily habit)
+✅ Open source contributions (even small)
+✅ Stars দিন interesting repos-এ
+✅ Follow relevant developers
+
+What recruiters see:
+✅ Contribution frequency
+✅ Code quality (repo + commits)
+✅ Project variety
+✅ Collaboration (PRs to other repos)
+✅ README quality
+```
+
+**Contribution graph tips:**
+```bash
+# Daily small contribution habits:
+- Everyday কিছু না কিছু commit করুন
+- Documentation improve করুন
+- Issue comment করুন
+- Open source project-এ small PR দিন
+
+# Private repos-ও count করে settings-এ enable করলে:
+# Settings → Contributions → Private contributions
+```
+
+---
+
+**PART 4 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| GitHub কী? | Git repository hosting + collaboration platform |
+| Git vs GitHub | Software vs Platform (camera vs Instagram) |
+| Fork | GitHub-এ অন্যের repo-র আপনার account-এ copy |
+| Fork vs Clone | GitHub server copy vs local machine copy |
+| Pull Request | "আমার changes merge করুন" — review + discussion |
+| `git remote add` | Remote repository connect করা |
+| `git push -u origin main` | First push + upstream set |
+| Upstream remote | Fork-এ original repo-র reference |
+| Code review: Approve | Merge করা যাবে |
+| Code review: Request changes | Fix না করে merge করা যাবে না |
+| Issue close via PR | "Closes #45" PR description-এ |
+| Branch protection | Force push, direct push block করা |
+| SSH key কেন? | Password ছাড়া secure authentication |
+| Profile README | username/username special repo |
+| SemVer | v{MAJOR}.{MINOR}.{PATCH} |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 5 — GitHub Collaboration & Team Workflow *(Next request এ লিখব)*
