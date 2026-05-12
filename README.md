@@ -37,7 +37,7 @@
 | 06 | 🏗️ **System Design** | [System Design Guide →](./SystemDesign_Junior_Engineer_BD_QA.md) | ✅ **Available** | Scalability, CAP Theorem, Load Balancing, CDN, REST, JWT, Caching, Microservices |
 | 07 | 🐍 **Python** | [Python Guide →](./Python_Junior_Engineer_BD_QA.md) | ✅ **Complete** (PART 1–12) | Fundamentals, Data Structures, OOP, Advanced Python, File Handling, Backend, Automation, DSA, Testing, Projects |
 | 08 | ⚡ **FastAPI** | [FastAPI Guide →](./FastAPI_Junior_Engineer_BD_QA.md) | ✅ **Available** (PART 1–12) | Complete Handbook: Fundamentals, Routing, Database, Auth, Async, Advanced, Testing, DevOps, System Design, Projects, Interview Q&A, Bangladesh Prep |
-| 09 | 🔀 **Git & GitHub** | [Git Guide →](./Git_Junior_Engineer_BD_QA.md) | 🔄 **In Progress** (PART 1–2) | Fundamentals, Branching, Advanced Git, GitHub, CI/CD, Real Projects, Interview Q&A, BD Prep |
+| 09 | 🔀 **Git & GitHub** | [Git Guide →](./Git_Junior_Engineer_BD_QA.md) | ✅ **Complete** (PART 1–10) | Fundamentals, Branching, Advanced Git, GitHub, CI/CD, Actions, Best Practices, Interview Q&A |
 | 10 | 🧩 **OOP (Python/Java)** | [OOP Guide →](./OOP_Junior_Engineer_BD_QA.md) | ✅ **Available** | OOP Concepts, Design Patterns, SOLID, Mock Interview |
 
 ---
