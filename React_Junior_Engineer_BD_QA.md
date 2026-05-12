@@ -18,18 +18,18 @@
 |---|---|---|
 | PART 1 | React Fundamentals | ✅ |
 | PART 2 | React Hooks | ✅ |
-| PART 3 | Component Architecture | 🔄 |
-| PART 4 | Routing & Navigation | 🔄 |
-| PART 5 | State Management | 🔄 |
-| PART 6 | API Integration & Async | 🔄 |
-| PART 7 | Performance Optimization | 🔄 |
-| PART 8 | Advanced React | 🔄 |
-| PART 9 | Backend & Authentication | 🔄 |
-| PART 10 | React Projects | 🔄 |
-| PART 11 | Interview Questions Bank | 🔄 |
-| PART 12 | Next.js Basics | 🔄 |
-| PART 13 | Testing & Best Practices | 🔄 |
-| PART 14 | BD Interview Preparation | 🔄 |
+| PART 3 | Component Architecture | ✅ |
+| PART 4 | Routing & Navigation | ✅ |
+| PART 5 | State Management | ✅ |
+| PART 6 | API Integration & Async | ✅ |
+| PART 7 | Performance Optimization | ✅ |
+| PART 8 | Advanced React | ✅ |
+| PART 9 | Backend & Authentication | ✅ |
+| PART 10 | React Projects | ✅ |
+| PART 11 | Interview Questions Bank | ✅ |
+| PART 12 | Next.js Basics | ✅ |
+| PART 13 | Testing & Best Practices | ✅ |
+| PART 14 | BD Interview Preparation | ✅ |
 
 ---
 
