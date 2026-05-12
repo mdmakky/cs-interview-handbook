@@ -18,7 +18,7 @@
 | [PART 2](#part2) | C# Fundamentals | ✅ |
 | [PART 3](#part3) | OOP in C# | ✅ |
 | [PART 4](#part4) | Advanced C# | ✅ |
-| PART 5 | ASP.NET Core Fundamentals | ⏳ |
+| [PART 5](#part5) | ASP.NET Core Fundamentals | ✅ |
 | PART 6 | Web API Development | ⏳ |
 | PART 7 | Database & Entity Framework Core | ⏳ |
 | PART 8 | Authentication & Security | ⏳ |
@@ -6414,3 +6414,1053 @@ EF Core-এ সবসময় IQueryable রাখুন, যতক্ষণ �
 ---
 
 > **📌 পরবর্তী:** PART 5 — ASP.NET Core Fundamentals (Middleware, Routing, Dependency Injection, Configuration, Filters, Minimal APIs এবং আরও...)
+
+---
+
+<a id="part5"></a>
+## PART 5: ASP.NET Core Fundamentals
+
+> Middleware Pipeline, Routing, Dependency Injection, Configuration, Filters, Minimal APIs, Model Binding ও Validation।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [ASP.NET Core Architecture](#p5-architecture) |
+| 2 | [Middleware Pipeline](#p5-middleware) |
+| 3 | [Routing](#p5-routing) |
+| 4 | [Dependency Injection Container](#p5-di) |
+| 5 | [Configuration System](#p5-config) |
+| 6 | [Action Filters ও Resource Filters](#p5-filters) |
+| 7 | [Minimal APIs vs Controllers](#p5-minimal) |
+| 8 | [Model Binding](#p5-binding) |
+| 9 | [Validation](#p5-validation) |
+| 10 | [Request/Response Pipeline Internals](#p5-pipeline) |
+
+---
+
+<a id="p5-architecture"></a>
+### Topic 1: ASP.NET Core Architecture
+
+```
+┌─────────────────────────────────────────────────┐
+│                  Client (Browser/Mobile)         │
+└─────────────────────┬───────────────────────────┘
+                      │ HTTP Request
+┌─────────────────────▼───────────────────────────┐
+│               Kestrel (HTTP Server)              │
+└─────────────────────┬───────────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────────┐
+│          ASP.NET Core Middleware Pipeline        │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
+│  │Exception │→ │  Auth    │→ │   Routing    │  │
+│  │Handler   │  │Middleware│  │  Middleware  │  │
+│  └──────────┘  └──────────┘  └──────────────┘  │
+│  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
+│  │  CORS    │→ │  Static  │→ │  Endpoints   │  │
+│  │Middleware│  │  Files   │  │  (Controller │  │
+│  └──────────┘  └──────────┘  │   / Minimal) │  │
+│                               └──────────────┘  │
+└─────────────────────────────────────────────────┘
+```
+
+```csharp
+// ── Program.cs — .NET 6+ minimal hosting model ────────
+var builder = WebApplication.CreateBuilder(args);
+
+// ── Service Registration (DI Container) ───────────────
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<AppDbContext>(opt =>
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddMemoryCache();
+
+var app = builder.Build();
+
+// ── Middleware Pipeline ────────────────────────────────
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();   // HTTPS redirect
+app.UseStaticFiles();        // wwwroot files
+app.UseCors("AllowAll");     // CORS
+app.UseAuthentication();     // who are you?
+app.UseAuthorization();      // what can you do?
+app.MapControllers();        // route to controllers
+
+app.Run();
+```
+
+---
+
+<a id="p5-middleware"></a>
+### Topic 2: Middleware Pipeline
+
+**সহজ ভাষায়:**
+
+> **Middleware** হলো pipeline-এর প্রতিটি পদক্ষেপ। Request → middleware 1 → middleware 2 → ... → endpoint → ... → middleware 2 → middleware 1 → Response।
+
+**Analogy:** Airport security — passport check, luggage scan, boarding gate — প্রতিটি step request process করে এবং পরের step-এ pass করে।
+
+```csharp
+// ── Middleware execution order (CRITICAL) ─────────────
+//
+//  Request →  A  →  B  →  C  →  Handler
+//  Response ← A  ← B  ← C  ←
+//
+//  app.Use() — pipeline-এ add, পরের middleware call করে
+//  app.Run() — terminal, পরের middleware call করে না
+//  app.Map() — path prefix-এ branch করে
+
+// ── Built-in middleware ordering ─────────────────────
+app.UseExceptionHandler("/error"); // 1. সবার আগে — সব exception catch
+app.UseHsts();                     // 2. HSTS header
+app.UseHttpsRedirection();         // 3. HTTP → HTTPS
+app.UseStaticFiles();              // 4. wwwroot files (no auth needed)
+app.UseRouting();                  // 5. Route matching
+app.UseCors();                     // 6. CORS headers
+app.UseAuthentication();           // 7. Auth check (JWT, Cookie)
+app.UseAuthorization();            // 8. Permission check
+app.MapControllers();              // 9. Controller/endpoint dispatch
+
+// ── Custom Middleware — class approach ────────────────
+public class RequestLoggingMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<RequestLoggingMiddleware> _logger;
+
+    public RequestLoggingMiddleware(RequestDelegate next,
+        ILogger<RequestLoggingMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        var sw = Stopwatch.StartNew();
+        _logger.LogInformation(
+            "Request {Method} {Path} started",
+            context.Request.Method,
+            context.Request.Path);
+
+        await _next(context);  // pass to next middleware
+
+        sw.Stop();
+        _logger.LogInformation(
+            "Request {Method} {Path} completed {StatusCode} in {Elapsed}ms",
+            context.Request.Method,
+            context.Request.Path,
+            context.Response.StatusCode,
+            sw.ElapsedMilliseconds);
+    }
+}
+
+// Extension method — clean registration
+public static class MiddlewareExtensions
+{
+    public static IApplicationBuilder UseRequestLogging(
+        this IApplicationBuilder app) =>
+        app.UseMiddleware<RequestLoggingMiddleware>();
+}
+
+// Usage:
+app.UseRequestLogging();
+
+// ── Inline middleware (simple cases) ─────────────────
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Request-Id"] = Guid.NewGuid().ToString();
+    await next(context);
+});
+
+// ── Short-circuit middleware ───────────────────────────
+app.Use(async (context, next) =>
+{
+    if (context.Request.Headers["X-Maintenance-Key"] != "secret-key" &&
+        IsMaintenanceMode())
+    {
+        context.Response.StatusCode = 503;
+        await context.Response.WriteAsync("Under maintenance");
+        return;  // short-circuit — পরের middleware call হয় না!
+    }
+    await next(context);
+});
+
+// ── Branching middleware ───────────────────────────────
+app.Map("/health", healthApp =>
+{
+    healthApp.Run(async context =>
+    {
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync("{\"status\":\"healthy\"}");
+    });
+});
+
+// MapWhen — condition-based branching
+app.MapWhen(
+    ctx => ctx.Request.Path.StartsWithSegments("/api/v1"),
+    v1App => v1App.UseMiddleware<V1ApiMiddleware>()
+);
+```
+
+**🎤 Interview Q&A:**
+
+```
+প্রশ্ন: Middleware order কেন important?
+
+উত্তর: UseAuthentication আগে না হলে UseAuthorization কাজ করে না।
+UseExceptionHandler সবার আগে দিতে হয় — নাহলে আগের middleware-র exceptions miss হয়।
+UseStaticFiles → UseRouting এর আগে — auth ছাড়াই static files serve করতে।
+
+প্রশ্ন: app.Use() আর app.Run() পার্থক্য?
+
+উত্তর:
+Use() → next(context) call করে পরের middleware-এ pass করে।
+Run() → terminal middleware। কোনো পরের middleware call করে না।
+Map() → path prefix match করলে branch করে।
+```
+
+---
+
+<a id="p5-routing"></a>
+### Topic 3: Routing
+
+```csharp
+// ── Conventional routing ──────────────────────────────
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// ── Attribute routing (API সবচেয়ে বেশি ব্যবহৃত) ──────
+[ApiController]
+[Route("api/v1/[controller]")] // [controller] → "orders"
+public class OrdersController : ControllerBase
+{
+    // GET api/v1/orders
+    [HttpGet]
+    public IActionResult GetAll() => Ok();
+
+    // GET api/v1/orders/5
+    [HttpGet("{id:int}")]
+    public IActionResult GetById(int id) => Ok();
+
+    // GET api/v1/orders/5/items
+    [HttpGet("{id:int}/items")]
+    public IActionResult GetItems(int id) => Ok();
+
+    // POST api/v1/orders
+    [HttpPost]
+    public IActionResult Create([FromBody] CreateOrderDto dto) => Ok();
+
+    // PUT api/v1/orders/5
+    [HttpPut("{id:int}")]
+    public IActionResult Update(int id, [FromBody] UpdateOrderDto dto) => Ok();
+
+    // DELETE api/v1/orders/5
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete(int id) => Ok();
+}
+
+// ── Route constraints ─────────────────────────────────
+// {id:int}        — integer only
+// {id:guid}       — GUID
+// {id:min(1)}     — int >= 1
+// {id:range(1,100)} — int between 1-100
+// {name:alpha}    — letters only
+// {name:length(3,20)} — string 3-20 chars
+// {id:required}   — must be provided
+
+[HttpGet("{id:int:min(1)}")]       // id must be positive int
+public IActionResult Get(int id) => Ok();
+
+[HttpGet("{slug:alpha:length(3,50)}")]  // alpha, 3-50 chars
+public IActionResult GetBySlug(string slug) => Ok();
+
+// ── Route parameters ─────────────────────────────────
+[HttpGet("search")]
+public IActionResult Search(
+    [FromQuery] string? q,          // /search?q=laptop
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 20) => Ok();
+
+[HttpPost("upload")]
+public IActionResult Upload([FromForm] IFormFile file) => Ok();
+
+[HttpGet]
+public IActionResult GetWithHeader(
+    [FromHeader(Name = "X-Api-Key")] string apiKey) => Ok();
+```
+
+---
+
+<a id="p5-di"></a>
+### Topic 4: Dependency Injection Container
+
+**সহজ ভাষায়:**
+
+> **DI Container** নিজেই object তৈরি করে inject করে। Manual `new` করতে হয় না। Testable, loosely coupled code।
+
+```csharp
+// ── Service lifetimes ─────────────────────────────────
+//
+// Transient  — প্রতি inject-এ নতুন instance
+// Scoped     — প্রতি HTTP request-এ একটি instance
+// Singleton  — Application lifetime-এ একটি instance
+
+builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
+
+// ── Keyed services (C# .NET 8+) ──────────────────────
+builder.Services.AddKeyedScoped<IPaymentGateway, BkashGateway>("bkash");
+builder.Services.AddKeyedScoped<IPaymentGateway, NagadGateway>("nagad");
+
+// Usage in controller:
+public class PaymentController : ControllerBase
+{
+    private readonly IPaymentGateway _bkash;
+    private readonly IPaymentGateway _nagad;
+
+    public PaymentController(
+        [FromKeyedServices("bkash")] IPaymentGateway bkash,
+        [FromKeyedServices("nagad")] IPaymentGateway nagad)
+    {
+        _bkash = bkash;
+        _nagad = nagad;
+    }
+}
+
+// ── Factory registration ──────────────────────────────
+builder.Services.AddScoped<IDbConnection>(_ =>
+    new SqlConnection(builder.Configuration.GetConnectionString("Default")));
+
+// ── Options pattern — configure DI with settings ──────
+public class SmtpOptions
+{
+    public string Host    { get; set; } = "";
+    public int    Port    { get; set; }
+    public string UserName { get; set; } = "";
+    public string Password { get; set; } = "";
+}
+
+builder.Services.Configure<SmtpOptions>(
+    builder.Configuration.GetSection("Smtp"));
+
+// Service consuming options:
+public class EmailService
+{
+    private readonly SmtpOptions _options;
+    public EmailService(IOptions<SmtpOptions> options) =>
+        _options = options.Value;
+}
+
+// ── Resolve from DI manually ──────────────────────────
+// Avoid! Only in startup/factory code
+using var scope = app.Services.CreateScope();
+var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+await dbContext.Database.MigrateAsync();
+```
+
+**🎤 Interview Q&A:**
+
+```
+প্রশ্ন: Scoped service Singleton-এ inject করলে কী হয়?
+
+উত্তর: "Captive dependency" problem!
+Singleton একটিই — পুরো app lifetime।
+Scoped service প্রতি request-এ নতুন হওয়ার কথা।
+Singleton এ inject হলে প্রথম request-এর Scoped instance সবার জন্য shared!
+
+Solution: IServiceScopeFactory inject করে runtime-এ scope তৈরি করুন।
+
+প্রশ্ন: Transient, Scoped, Singleton কোনটি কখন?
+
+উত্তর:
+Transient → Stateless, lightweight service। Email sender।
+Scoped    → DB Context, Unit of Work। Per-request state।
+Singleton → Cache, Configuration। Shared state। Thread-safe হতে হবে।
+```
+
+---
+
+<a id="p5-config"></a>
+### Topic 5: Configuration System
+
+```csharp
+// ── appsettings.json ──────────────────────────────────
+// {
+//   "ConnectionStrings": {
+//     "Default": "Server=localhost;Database=MyDb;Trusted_Connection=true"
+//   },
+//   "Smtp": {
+//     "Host": "smtp.gmail.com",
+//     "Port": 587
+//   },
+//   "Jwt": {
+//     "Key": "super-secret-key-min-32-chars",
+//     "Issuer": "https://myapi.com",
+//     "ExpiryMinutes": 60
+//   },
+//   "Logging": {
+//     "LogLevel": { "Default": "Information" }
+//   }
+// }
+
+// ── Reading configuration ─────────────────────────────
+var connStr = builder.Configuration.GetConnectionString("Default");
+var smtpHost = builder.Configuration["Smtp:Host"];
+var port = builder.Configuration.GetValue<int>("Smtp:Port");
+
+// ── Options pattern (strongly-typed, recommended) ─────
+public class JwtOptions
+{
+    public const string SectionName = "Jwt";
+    public string Key            { get; set; } = "";
+    public string Issuer         { get; set; } = "";
+    public int    ExpiryMinutes  { get; set; } = 60;
+}
+
+builder.Services
+    .AddOptions<JwtOptions>()
+    .BindConfiguration(JwtOptions.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+// ── Environment variables override appsettings ────────
+// Env: ConnectionStrings__Default=Server=prod-server...
+// Env: Smtp__Host=smtp.sendgrid.com
+// __ (double underscore) = : (colon) in hierarchy
+
+// ── User Secrets — local dev only ────────────────────
+// dotnet user-secrets init
+// dotnet user-secrets set "Jwt:Key" "my-dev-secret-key"
+// Stored in ~/.microsoft/usersecrets/{guid}/secrets.json
+// Never commit to git!
+
+// ── Environment-specific settings ────────────────────
+// appsettings.json           — base config
+// appsettings.Development.json — dev overrides
+// appsettings.Production.json  — prod overrides
+// Loaded in order, later overrides earlier
+
+// ── IConfiguration in controller ─────────────────────
+[ApiController]
+[Route("api/[controller]")]
+public class InfoController : ControllerBase
+{
+    private readonly IConfiguration _config;
+    private readonly JwtOptions _jwt;
+
+    public InfoController(IConfiguration config, IOptions<JwtOptions> jwt)
+    {
+        _config = config;
+        _jwt = jwt.Value;
+    }
+
+    [HttpGet("env")]
+    public IActionResult GetEnv() =>
+        Ok(new { env = _config["ASPNETCORE_ENVIRONMENT"] ?? "Production" });
+}
+```
+
+---
+
+<a id="p5-filters"></a>
+### Topic 6: Action Filters ও Resource Filters
+
+**সহজ ভাষায়:**
+
+> **Filter** — controller action-এর আগে/পরে code চালানো। Logging, auth check, caching, validation — cross-cutting concerns।
+
+```
+Filter Pipeline:
+────────────────────────────────────────────────────
+Authorization → Resource → Exception
+                    ↓
+               Action (Before) → Controller Action → Action (After)
+                    ↓
+               Result (Before) → Result Execution → Result (After)
+────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Action Filter — before/after action method ────────
+public class LogActionFilter : IActionFilter
+{
+    private readonly ILogger<LogActionFilter> _logger;
+    public LogActionFilter(ILogger<LogActionFilter> logger) => _logger = logger;
+
+    public void OnActionExecuting(ActionExecutingContext context)
+    {
+        _logger.LogInformation(
+            "Action {Action} starting with args: {@Args}",
+            context.ActionDescriptor.DisplayName,
+            context.ActionArguments);
+    }
+
+    public void OnActionExecuted(ActionExecutedContext context)
+    {
+        if (context.Exception is not null)
+            _logger.LogError(context.Exception, "Action threw exception");
+        else
+            _logger.LogInformation("Action completed");
+    }
+}
+
+// ── Async Action Filter ───────────────────────────────
+public class ValidateModelFilter : IAsyncActionFilter
+{
+    public async Task OnActionExecutionAsync(
+        ActionExecutingContext context,
+        ActionExecutionDelegate next)
+    {
+        // Before action
+        if (!context.ModelState.IsValid)
+        {
+            context.Result = new BadRequestObjectResult(context.ModelState);
+            return;  // short-circuit
+        }
+
+        await next();  // execute action
+
+        // After action
+    }
+}
+
+// ── Exception Filter ──────────────────────────────────
+public class GlobalExceptionFilter : IExceptionFilter
+{
+    private readonly ILogger<GlobalExceptionFilter> _logger;
+    public GlobalExceptionFilter(ILogger<GlobalExceptionFilter> logger) =>
+        _logger = logger;
+
+    public void OnException(ExceptionContext context)
+    {
+        _logger.LogError(context.Exception, "Unhandled exception");
+
+        var problem = new ProblemDetails
+        {
+            Status = context.Exception is KeyNotFoundException ? 404 : 500,
+            Title  = context.Exception is KeyNotFoundException
+                        ? "Resource not found" : "Internal server error",
+            Detail = context.Exception.Message
+        };
+
+        context.Result = new ObjectResult(problem) { StatusCode = problem.Status };
+        context.ExceptionHandled = true;
+    }
+}
+
+// ── Register globally ─────────────────────────────────
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<ValidateModelFilter>();
+    options.Filters.Add<GlobalExceptionFilter>();
+    options.Filters.Add<LogActionFilter>();
+});
+
+// ── Register per controller/action via attribute ──────
+[ServiceFilter(typeof(LogActionFilter))]
+public class OrdersController : ControllerBase
+{
+    [HttpPost]
+    [ServiceFilter(typeof(ValidateModelFilter))]
+    public IActionResult Create([FromBody] CreateOrderDto dto) => Ok();
+}
+
+// ── Custom attribute filter ───────────────────────────
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+public class RequireApiKeyAttribute : ActionFilterAttribute
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        if (!context.HttpContext.Request.Headers.TryGetValue("X-Api-Key", out var key) ||
+            key != "expected-key")
+        {
+            context.Result = new UnauthorizedResult();
+        }
+    }
+}
+
+[HttpGet("internal")]
+[RequireApiKey]
+public IActionResult InternalEndpoint() => Ok();
+```
+
+---
+
+<a id="p5-minimal"></a>
+### Topic 7: Minimal APIs vs Controllers
+
+```csharp
+// ── Minimal API — .NET 6+ ─────────────────────────────
+var app = WebApplication.Create(args);
+
+// Simple endpoints
+app.MapGet("/", () => "Hello World");
+
+app.MapGet("/orders/{id:int}", async (int id, IOrderService service) =>
+{
+    var order = await service.GetByIdAsync(id);
+    return order is null ? Results.NotFound() : Results.Ok(order);
+});
+
+app.MapPost("/orders", async (CreateOrderDto dto, IOrderService service) =>
+{
+    var order = await service.CreateAsync(dto);
+    return Results.Created($"/orders/{order.Id}", order);
+});
+
+app.MapPut("/orders/{id:int}", async (int id, UpdateOrderDto dto, IOrderService service) =>
+{
+    var updated = await service.UpdateAsync(id, dto);
+    return updated ? Results.NoContent() : Results.NotFound();
+});
+
+app.MapDelete("/orders/{id:int}", async (int id, IOrderService service) =>
+{
+    var deleted = await service.DeleteAsync(id);
+    return deleted ? Results.NoContent() : Results.NotFound();
+});
+
+// ── Minimal API groups (organise routes) ─────────────
+var ordersGroup = app.MapGroup("/api/v1/orders")
+    .WithTags("Orders")
+    .RequireAuthorization();
+
+ordersGroup.MapGet("/", GetAllOrders);
+ordersGroup.MapGet("/{id:int}", GetOrderById);
+ordersGroup.MapPost("/", CreateOrder);
+
+// ── Static handler methods ────────────────────────────
+static async Task<IResult> GetAllOrders(IOrderService service) =>
+    Results.Ok(await service.GetAllAsync());
+
+static async Task<IResult> GetOrderById(int id, IOrderService service) =>
+    await service.GetByIdAsync(id) is {} order
+        ? Results.Ok(order)
+        : Results.NotFound();
+
+// ── Minimal API vs Controller — comparison ────────────
+//
+// Minimal API:
+// ✅ Less boilerplate — no class, no [Route]
+// ✅ Fast startup — fewer reflection overhead
+// ✅ Simple CRUD APIs, microservices
+// ❌ Harder to organise large codebases
+// ❌ Less built-in features (filters, model binding)
+//
+// Controller:
+// ✅ Convention-based routing
+// ✅ Filters, action results, model binding
+// ✅ Better for large, complex APIs
+// ✅ Familiar MVC pattern
+// ❌ More boilerplate
+// ❌ Heavier startup
+```
+
+---
+
+<a id="p5-binding"></a>
+### Topic 8: Model Binding
+
+**সহজ ভাষায়:**
+
+> **Model Binding** — HTTP request-এর data (query string, body, route, header, form) → C# object-এ automatically convert।
+
+```csharp
+[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    // ── Binding sources ───────────────────────────────
+
+    // [FromRoute] — route parameter থেকে
+    [HttpGet("{id:int}")]
+    public IActionResult Get([FromRoute] int id) => Ok();
+
+    // [FromQuery] — query string থেকে → /products?page=2&pageSize=10
+    [HttpGet]
+    public IActionResult GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? search = null) => Ok();
+
+    // [FromBody] — JSON request body থেকে
+    [HttpPost]
+    public IActionResult Create([FromBody] CreateProductDto dto) => Ok();
+
+    // [FromHeader] — request header থেকে
+    [HttpGet("check")]
+    public IActionResult Check(
+        [FromHeader(Name = "X-Correlation-Id")] string correlationId) => Ok();
+
+    // [FromForm] — multipart/form-data থেকে
+    [HttpPost("upload")]
+    public IActionResult Upload(
+        [FromForm] string title,
+        [FromForm] IFormFile image) => Ok();
+
+    // Multiple sources in one action
+    [HttpPut("{id:int}")]
+    public IActionResult Update(
+        [FromRoute] int id,
+        [FromBody] UpdateProductDto dto,
+        [FromHeader(Name = "If-Match")] string? etag = null) => Ok();
+}
+
+// ── Complex binding — nested objects ─────────────────
+public class SearchRequest
+{
+    [FromQuery] public string? Query    { get; set; }
+    [FromQuery] public int     Page     { get; set; } = 1;
+    [FromQuery] public int     PageSize { get; set; } = 20;
+    [FromQuery] public string? Sort     { get; set; } = "name";
+    [FromQuery] public bool    Ascending { get; set; } = true;
+}
+
+[HttpGet("search")]
+public IActionResult Search([FromQuery] SearchRequest request) => Ok();
+// GET /search?Query=laptop&Page=2&Sort=price&Ascending=false
+
+// ── Custom model binder ───────────────────────────────
+public class CommaSeparatedBinder : IModelBinder
+{
+    public Task BindModelAsync(ModelBindingContext context)
+    {
+        var value = context.ValueProvider.GetValue(context.ModelName).FirstValue;
+        if (string.IsNullOrEmpty(value))
+        {
+            context.Result = ModelBindingResult.Success(Array.Empty<int>());
+            return Task.CompletedTask;
+        }
+
+        var ids = value.Split(',')
+            .Select(s => int.TryParse(s, out var n) ? n : -1)
+            .Where(n => n > 0)
+            .ToArray();
+
+        context.Result = ModelBindingResult.Success(ids);
+        return Task.CompletedTask;
+    }
+}
+
+// Usage: GET /products?ids=1,2,3,4
+[HttpGet("bulk")]
+public IActionResult GetBulk(
+    [ModelBinder(typeof(CommaSeparatedBinder))] int[] ids) => Ok();
+```
+
+---
+
+<a id="p5-validation"></a>
+### Topic 9: Validation
+
+```csharp
+// ── Data Annotations ─────────────────────────────────
+public class CreateOrderDto
+{
+    [Required(ErrorMessage = "Customer ID is required")]
+    public int CustomerId { get; set; }
+
+    [Required]
+    [StringLength(200, MinimumLength = 3, ErrorMessage = "Notes must be 3-200 chars")]
+    public string Notes { get; set; } = "";
+
+    [Required]
+    [MinLength(1, ErrorMessage = "At least one item required")]
+    public List<OrderItemDto> Items { get; set; } = new();
+
+    [Range(0, double.MaxValue, ErrorMessage = "Discount cannot be negative")]
+    public decimal Discount { get; set; }
+
+    [EmailAddress]
+    public string? ContactEmail { get; set; }
+
+    [Phone]
+    public string? ContactPhone { get; set; }
+
+    [Url]
+    public string? CallbackUrl { get; set; }
+}
+
+public class OrderItemDto
+{
+    [Required]
+    [Range(1, int.MaxValue)]
+    public int ProductId { get; set; }
+
+    [Required]
+    [Range(1, 1000)]
+    public int Quantity { get; set; }
+
+    [Range(0.01, double.MaxValue)]
+    public decimal UnitPrice { get; set; }
+}
+
+// ── [ApiController] — automatic 400 on invalid model ──
+// [ApiController] attribute থাকলে ModelState invalid হলে
+// automatically 400 BadRequest return হয়।
+// explicit if (!ModelState.IsValid) check দরকার নেই।
+
+[ApiController]  // auto-validates!
+[Route("api/[controller]")]
+public class OrdersController : ControllerBase
+{
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
+    {
+        // No need to check ModelState — [ApiController] handles it
+        var order = await _service.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
+    }
+}
+
+// ── Custom validation attribute ────────────────────────
+public class FutureDateAttribute : ValidationAttribute
+{
+    protected override ValidationResult? IsValid(
+        object? value, ValidationContext context)
+    {
+        if (value is DateTime date && date > DateTime.UtcNow)
+            return ValidationResult.Success;
+
+        return new ValidationResult("Date must be in the future.");
+    }
+}
+
+public class DeliveryDto
+{
+    [Required]
+    [FutureDate]
+    public DateTime DeliveryDate { get; set; }
+}
+
+// ── IValidatableObject — cross-field validation ────────
+public class TransferDto : IValidatableObject
+{
+    [Required]
+    public string FromAccount { get; set; } = "";
+    [Required]
+    public string ToAccount { get; set; } = "";
+    [Range(1, 10_000_000)]
+    public decimal Amount { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext context)
+    {
+        if (FromAccount == ToAccount)
+            yield return new ValidationResult(
+                "Cannot transfer to same account.",
+                new[] { nameof(FromAccount), nameof(ToAccount) });
+
+        if (Amount > 100_000 && string.IsNullOrEmpty(Notes))
+            yield return new ValidationResult(
+                "Notes required for transfers over 100,000.",
+                new[] { nameof(Notes) });
+    }
+
+    public string? Notes { get; set; }
+}
+
+// ── FluentValidation (preferred for complex rules) ─────
+// Install: dotnet add package FluentValidation.AspNetCore
+
+public class CreateOrderValidator : AbstractValidator<CreateOrderDto>
+{
+    private readonly IProductRepository _products;
+
+    public CreateOrderValidator(IProductRepository products)
+    {
+        _products = products;
+
+        RuleFor(x => x.CustomerId)
+            .GreaterThan(0).WithMessage("Invalid customer ID");
+
+        RuleFor(x => x.Items)
+            .NotEmpty().WithMessage("Order must have at least one item")
+            .Must(items => items.Count <= 100).WithMessage("Max 100 items");
+
+        RuleForEach(x => x.Items).ChildRules(item =>
+        {
+            item.RuleFor(x => x.Quantity).InclusiveBetween(1, 1000);
+            item.RuleFor(x => x.UnitPrice).GreaterThan(0);
+            item.RuleFor(x => x.ProductId)
+                .MustAsync(async (id, ct) => await _products.ExistsAsync(id))
+                .WithMessage("Product not found");
+        });
+
+        RuleFor(x => x.Discount)
+            .InclusiveBetween(0, 100).WithMessage("Discount must be 0-100%");
+    }
+}
+
+// Register:
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddScoped<IValidator<CreateOrderDto>, CreateOrderValidator>();
+```
+
+---
+
+<a id="p5-pipeline"></a>
+### Topic 10: Request/Response Pipeline Internals
+
+```csharp
+// ── HttpContext — request/response সব তথ্য ────────────
+app.Use(async (HttpContext ctx, RequestDelegate next) =>
+{
+    // Request
+    var method  = ctx.Request.Method;          // "GET", "POST"
+    var path    = ctx.Request.Path;            // "/api/orders"
+    var query   = ctx.Request.QueryString;     // "?page=1"
+    var headers = ctx.Request.Headers;
+    var body    = ctx.Request.Body;            // Stream
+    var ip      = ctx.Connection.RemoteIpAddress;
+
+    // User (after authentication)
+    var userId  = ctx.User.FindFirst("sub")?.Value;
+    var isAdmin = ctx.User.IsInRole("Admin");
+
+    // Response
+    ctx.Response.StatusCode = 200;
+    ctx.Response.Headers["X-Custom"] = "value";
+    ctx.Response.ContentType = "application/json";
+    await ctx.Response.WriteAsync("{}");
+
+    // Items — pass data between middleware
+    ctx.Items["RequestId"] = Guid.NewGuid();
+    await next(ctx);
+    var reqId = ctx.Items["RequestId"] as Guid?;
+});
+
+// ── IHttpContextAccessor — access HttpContext in services ─
+builder.Services.AddHttpContextAccessor();
+
+public class CurrentUserService
+{
+    private readonly IHttpContextAccessor _accessor;
+    public CurrentUserService(IHttpContextAccessor accessor) =>
+        _accessor = accessor;
+
+    public int? GetUserId()
+    {
+        var claim = _accessor.HttpContext?.User.FindFirst("sub");
+        return int.TryParse(claim?.Value, out var id) ? id : null;
+    }
+}
+
+// ── Problem Details — RFC 7807 standard error response ──
+[HttpGet("{id:int}")]
+public async Task<ActionResult<OrderDto>> GetById(int id)
+{
+    var order = await _service.GetByIdAsync(id);
+    if (order is null)
+        return Problem(
+            statusCode: 404,
+            title: "Order not found",
+            detail: $"Order with ID {id} does not exist.");
+    return Ok(order);
+}
+
+// Response:
+// {
+//   "type": "https://tools.ietf.org/html/rfc7231#section-6.5.4",
+//   "title": "Order not found",
+//   "status": 404,
+//   "detail": "Order with ID 99 does not exist."
+// }
+```
+
+---
+
+## PART 5 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| Middleware | Request/Response pipeline-এর প্রতিটি step |
+| app.Use() | Next middleware-এ pass করে |
+| app.Run() | Terminal — পরের middleware call করে না |
+| Middleware order | ExceptionHandler → HTTPS → Static → Routing → CORS → Auth → Authz → Endpoints |
+| Conventional routing | `{controller}/{action}/{id?}` pattern |
+| Attribute routing | `[Route]`, `[HttpGet]`, `[HttpPost]` |
+| Route constraints | `{id:int}`, `{id:guid}`, `{name:alpha}` |
+| Transient | নতুন instance প্রতি inject-এ |
+| Scoped | নতুন instance প্রতি HTTP request-এ |
+| Singleton | একটি instance পুরো app-এ |
+| Captive dependency | Scoped in Singleton = bug! |
+| Options pattern | Strongly-typed config binding |
+| User Secrets | Dev-এ secrets → never commit |
+| Action Filter | Action আগে/পরে code চালানো |
+| Exception Filter | Unhandled exceptions catch করা |
+| `[ApiController]` | Auto 400 on invalid ModelState |
+| Model Binding | HTTP data → C# object |
+| `[FromBody]` | JSON body থেকে |
+| `[FromQuery]` | Query string থেকে |
+| `[FromRoute]` | Route parameter থেকে |
+| `[FromHeader]` | Request header থেকে |
+| Data Annotations | `[Required]`, `[Range]`, `[StringLength]` |
+| FluentValidation | Complex business rule validation |
+| `IValidatableObject` | Cross-field validation |
+| Minimal API | Controller-less endpoint — less boilerplate |
+| `Results.Ok()` | Minimal API result helper |
+| HttpContext | Request/Response সব data |
+| Problem Details | RFC 7807 standard error response format |
+
+---
+
+## PART 5 Interview Q&A
+
+```
+প্রশ্ন: Middleware আর Filter-এর পার্থক্য?
+উত্তর:
+Middleware → Entire pipeline-এ কাজ করে। Any request।
+Filter → Controller/Action scope-এ কাজ করে। MVC/API specific।
+Auth, logging, CORS → Middleware।
+Validation, response shaping → Filter।
+
+প্রশ্ন: [ApiController] কী করে?
+উত্তর:
+1. ModelState invalid হলে auto 400 return।
+2. [FromBody] inference — explicit attribute না লিখলেও complex type = from body।
+3. Problem Details format।
+4. Route attribute required।
+
+প্রশ্ন: Transient vs Scoped কোনটা DbContext-এ?
+উত্তর: Scoped! DbContext per-request একটি থাকা উচিত।
+Change tracking, transaction same request-এর সব operations-এ share হয়।
+Transient হলে প্রতি inject-এ নতুন context — tracking হারায়।
+Singleton হলে concurrency bug, connection leak।
+
+প্রশ্ন: Configuration hierarchy কীভাবে কাজ করে?
+উত্তর:
+1. appsettings.json (base)
+2. appsettings.{Environment}.json (override)
+3. User Secrets (dev only, override)
+4. Environment Variables (highest priority, override)
+পরে load হওয়া same key-এর value আগেরটা override করে।
+
+প্রশ্ন: FluentValidation কেন DataAnnotations-এর চেয়ে ভালো?
+উত্তর:
+DataAnnotations → Simple rules, attribute-based।
+FluentValidation → Complex rules, async validation, dependency inject করা যায়।
+                   DB check, conditional rules, unit testable।
+Production complex validation → FluentValidation।
+
+প্রশ্ন: Minimal API কখন ব্যবহার করবেন?
+উত্তর:
+Simple CRUD, microservice, small API → Minimal API।
+Complex business logic, filters, multiple versioning → Controller।
+.NET 8-এ দুটো একসাথেও ব্যবহার করা যায়।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 6 — Web API Development (REST Principles, HTTP Methods, Status Codes, API Versioning, Swagger/OpenAPI, Rate Limiting এবং আরও...)
