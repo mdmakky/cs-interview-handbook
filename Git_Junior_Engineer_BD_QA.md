@@ -20,15 +20,14 @@
 |------|------|--------|
 | [PART 1](#part1) | Git Fundamentals | ✅ |
 | [PART 2](#part2) | Git Branching & Workflow | ✅ |
-| PART 3 | Advanced Git | 🔜 |
-| PART 4 | GitHub Fundamentals | 🔜 |
-| PART 5 | GitHub Collaboration & Team Workflow | 🔜 |
-| PART 6 | GitHub Actions & CI/CD Basics | 🔜 |
-| PART 7 | Git & GitHub for Real Projects | 🔜 |
-| PART 8 | Git Command Mastery | 🔜 |
-| PART 9 | Git & GitHub Interview Questions | 🔜 |
-| PART 10 | Professional Developer Workflow | 🔜 |
-| PART 11 | Bangladeshi Interview Preparation | 🔜 |
+| PART 3 | Advanced Git | ✅ |
+| PART 4 | GitHub Fundamentals | ✅ |
+| PART 5 | GitHub Collaboration & Team Workflow | ✅ |
+| PART 6 | GitHub Actions & CI/CD Basics | ✅ |
+| PART 7 | Git & GitHub for Real Projects | ✅ |
+| PART 8 | Git Command Mastery | ✅ |
+| PART 9 | Git & GitHub Interview Questions | ✅ |
+| PART 10 | Professional Developer Workflow | ✅ |
 
 ---
 
