@@ -19,8 +19,8 @@
 | [PART 3](#part3) | OOP in C# | ✅ |
 | [PART 4](#part4) | Advanced C# | ✅ |
 | [PART 5](#part5) | ASP.NET Core Fundamentals | ✅ |
-| PART 6 | Web API Development | ⏳ |
-| PART 7 | Database & Entity Framework Core | ⏳ |
+| [PART 6](#part6) | Web API Development | ✅ |
+| [PART 7](#part7) | Database & Entity Framework Core | ✅ |
 | PART 8 | Authentication & Security | ⏳ |
 | PART 9 | Frontend Integration & Full Stack | ⏳ |
 | PART 10 | Testing & Debugging | ⏳ |
@@ -7464,3 +7464,1778 @@ Complex business logic, filters, multiple versioning → Controller।
 ---
 
 > **📌 পরবর্তী:** PART 6 — Web API Development (REST Principles, HTTP Methods, Status Codes, API Versioning, Swagger/OpenAPI, Rate Limiting এবং আরও...)
+
+---
+
+<a id="part6"></a>
+## PART 6: Web API Development
+
+> REST Principles, HTTP Methods, Status Codes, Controllers, Response Shaping, API Versioning, Swagger/OpenAPI, CORS, Rate Limiting।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [REST Principles](#p6-rest) |
+| 2 | [HTTP Methods ও Status Codes](#p6-http) |
+| 3 | [Controller Best Practices](#p6-controller) |
+| 4 | [Response Shaping ও DTOs](#p6-dto) |
+| 5 | [API Versioning](#p6-versioning) |
+| 6 | [Swagger / OpenAPI](#p6-swagger) |
+| 7 | [CORS](#p6-cors) |
+| 8 | [Rate Limiting](#p6-ratelimit) |
+| 9 | [Health Checks](#p6-health) |
+| 10 | [Global Error Handling](#p6-errors) |
+
+---
+
+<a id="p6-rest"></a>
+### Topic 1: REST Principles
+
+**REST (Representational State Transfer) — 6টি constraint:**
+
+| Constraint | ব্যাখ্যা |
+|------------|---------|
+| **Client-Server** | UI এবং data logic আলাদা |
+| **Stateless** | প্রতি request নিজেই complete — server session রাখে না |
+| **Cacheable** | Response cacheable হলে indicate করতে হবে |
+| **Uniform Interface** | Resource-based URL, HTTP methods |
+| **Layered System** | Client জানে না কতটি layer আছে (proxy, LB, cache) |
+| **Code on Demand** | Optional — server client code পাঠাতে পারে |
+
+```
+REST URL Design:
+───────────────────────────────────────────────────
+✅ Resource-based (noun, not verb)
+
+GET    /api/orders          — list all orders
+GET    /api/orders/5        — get order by id
+POST   /api/orders          — create new order
+PUT    /api/orders/5        — full update order 5
+PATCH  /api/orders/5        — partial update order 5
+DELETE /api/orders/5        — delete order 5
+
+GET    /api/orders/5/items  — order 5-এর items
+POST   /api/orders/5/items  — order 5-তে item add
+
+❌ Verb-based (not REST)
+GET /api/getOrder?id=5
+POST /api/createOrder
+POST /api/deleteOrder/5
+GET /api/getAllActiveOrders
+```
+
+---
+
+<a id="p6-http"></a>
+### Topic 2: HTTP Methods ও Status Codes
+
+```
+HTTP Methods:
+────────────────────────────────────────────────────
+Method   | Safe? | Idempotent? | Body?  | Use
+────────────────────────────────────────────────────
+GET      |  ✅   |    ✅       |  ❌   | Read resource
+HEAD     |  ✅   |    ✅       |  ❌   | Headers only (no body)
+OPTIONS  |  ✅   |    ✅       |  ❌   | CORS preflight, capabilities
+POST     |  ❌   |    ❌       |  ✅   | Create resource
+PUT      |  ❌   |    ✅       |  ✅   | Full replace
+PATCH    |  ❌   |    ❌       |  ✅   | Partial update
+DELETE   |  ❌   |    ✅       |  ❌   | Delete resource
+────────────────────────────────────────────────────
+Safe = no side effects। Idempotent = same result multiple times।
+```
+
+```
+HTTP Status Codes:
+────────────────────────────────────────────────────
+2xx Success:
+200 OK              — GET, PUT, PATCH success
+201 Created         — POST success (+ Location header)
+204 No Content      — DELETE, PUT success (no body)
+
+3xx Redirection:
+301 Moved Permanently — permanent redirect
+302 Found            — temporary redirect
+304 Not Modified     — cached response still valid
+
+4xx Client Error:
+400 Bad Request      — invalid input, validation fail
+401 Unauthorized     — not authenticated (no/bad token)
+403 Forbidden        — authenticated but no permission
+404 Not Found        — resource doesn't exist
+405 Method Not Allowed — wrong HTTP method
+409 Conflict         — duplicate, version conflict
+422 Unprocessable    — validation error (semantic)
+429 Too Many Requests — rate limit exceeded
+
+5xx Server Error:
+500 Internal Server Error — unexpected exception
+502 Bad Gateway      — upstream server failed
+503 Service Unavailable — overloaded/maintenance
+────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Returning correct status codes ───────────────────
+[ApiController]
+[Route("api/v1/[controller]")]
+public class OrdersController : ControllerBase
+{
+    private readonly IOrderService _service;
+    public OrdersController(IOrderService service) => _service = service;
+
+    // 200 OK
+    [HttpGet]
+    public async Task<ActionResult<PagedResult<OrderDto>>> GetAll(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
+    {
+        var result = await _service.GetPagedAsync(page, pageSize);
+        return Ok(result);
+    }
+
+    // 200 OK or 404 Not Found
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<OrderDto>> GetById(int id)
+    {
+        var order = await _service.GetByIdAsync(id);
+        return order is null ? NotFound() : Ok(order);
+    }
+
+    // 201 Created
+    [HttpPost]
+    public async Task<ActionResult<OrderDto>> Create([FromBody] CreateOrderDto dto)
+    {
+        var order = await _service.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
+        // Sets Location: /api/v1/orders/42
+    }
+
+    // 204 No Content or 404
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateOrderDto dto)
+    {
+        var updated = await _service.UpdateAsync(id, dto);
+        return updated ? NoContent() : NotFound();
+    }
+
+    // 204 or 404
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _service.DeleteAsync(id);
+        return deleted ? NoContent() : NotFound();
+    }
+
+    // 409 Conflict — duplicate
+    [HttpPost("bulk")]
+    public async Task<IActionResult> BulkCreate([FromBody] List<CreateOrderDto> dtos)
+    {
+        try
+        {
+            var result = await _service.BulkCreateAsync(dtos);
+            return Ok(result);
+        }
+        catch (DuplicateOrderException ex)
+        {
+            return Conflict(new { message = ex.Message, duplicateId = ex.OrderId });
+        }
+    }
+}
+```
+
+---
+
+<a id="p6-controller"></a>
+### Topic 3: Controller Best Practices
+
+```csharp
+// ── Thin controller — business logic service-এ ───────
+// ❌ Fat controller — avoid!
+[HttpPost]
+public async Task<IActionResult> CreateBad([FromBody] CreateOrderDto dto)
+{
+    // Business logic in controller = bad!
+    var customer = await _db.Customers.FindAsync(dto.CustomerId);
+    if (customer is null) return BadRequest("Customer not found");
+    var inventory = await _db.Products
+        .Where(p => dto.Items.Select(i => i.ProductId).Contains(p.Id))
+        .ToListAsync();
+    foreach (var item in dto.Items)
+    {
+        var product = inventory.First(p => p.Id == item.ProductId);
+        if (product.Stock < item.Quantity) return BadRequest($"Insufficient stock for {product.Name}");
+        product.Stock -= item.Quantity;
+    }
+    var order = new Order { /* map */ };
+    _db.Orders.Add(order);
+    await _db.SaveChangesAsync();
+    return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
+}
+
+// ✅ Thin controller — just orchestrate
+[HttpPost]
+public async Task<ActionResult<OrderDto>> Create([FromBody] CreateOrderDto dto)
+{
+    var order = await _orderService.CreateAsync(dto);
+    return CreatedAtAction(nameof(GetById), new { id = order.Id }, order);
+}
+
+// ── ActionResult<T> — typed responses ────────────────
+// ActionResult<T> allows both typed return and IActionResult
+[HttpGet("{id:int}")]
+public async Task<ActionResult<OrderDto>> GetById(int id)
+{
+    var order = await _service.GetByIdAsync(id);
+    if (order is null) return NotFound();  // IActionResult
+    return order;                          // implicit Ok(order)
+}
+
+// ── Async all the way ─────────────────────────────────
+// ✅ Always use async Task for I/O operations
+[HttpGet]
+public async Task<ActionResult<IEnumerable<OrderDto>>> GetAll(
+    CancellationToken ct) // ASP.NET Core injects this automatically
+{
+    var orders = await _service.GetAllAsync(ct);
+    return Ok(orders);
+}
+
+// ── Pagination standard response ──────────────────────
+[HttpGet]
+public async Task<ActionResult<PagedResponse<OrderDto>>> GetPaged(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 20)
+{
+    if (page < 1) return BadRequest("Page must be >= 1");
+    if (pageSize is < 1 or > 100) return BadRequest("PageSize must be 1-100");
+
+    var (items, total) = await _service.GetPagedAsync(page, pageSize);
+    var response = new PagedResponse<OrderDto>
+    {
+        Data       = items,
+        Page       = page,
+        PageSize   = pageSize,
+        TotalCount = total,
+        TotalPages = (int)Math.Ceiling(total / (double)pageSize)
+    };
+    return Ok(response);
+}
+
+public class PagedResponse<T>
+{
+    public IEnumerable<T> Data   { get; set; } = Enumerable.Empty<T>();
+    public int Page              { get; set; }
+    public int PageSize          { get; set; }
+    public int TotalCount        { get; set; }
+    public int TotalPages        { get; set; }
+    public bool HasNextPage      => Page < TotalPages;
+    public bool HasPreviousPage  => Page > 1;
+}
+```
+
+---
+
+<a id="p6-dto"></a>
+### Topic 4: Response Shaping ও DTOs
+
+```csharp
+// ── DTO pattern — never expose domain model directly ──
+// Domain entity (never send to client!)
+public class Order
+{
+    public int Id               { get; set; }
+    public int CustomerId       { get; set; }
+    public Customer Customer    { get; set; } = null!;
+    public List<OrderItem> Items { get; set; } = new();
+    public decimal TotalAmount  { get; set; }
+    public string Status        { get; set; } = "";
+    public DateTime CreatedAt   { get; set; }
+    public string InternalNotes { get; set; } = ""; // sensitive!
+    public bool IsDeleted       { get; set; }        // internal!
+}
+
+// Response DTO — what client sees
+public record OrderDto(
+    int    Id,
+    string CustomerName,
+    decimal TotalAmount,
+    string Status,
+    DateTime CreatedAt,
+    IReadOnlyList<OrderItemDto> Items);
+
+public record OrderItemDto(
+    int    ProductId,
+    string ProductName,
+    int    Quantity,
+    decimal UnitPrice,
+    decimal LineTotal);
+
+// Create DTO — what client sends
+public record CreateOrderDto(
+    int CustomerId,
+    List<CreateOrderItemDto> Items,
+    string? Notes);
+
+public record CreateOrderItemDto(int ProductId, int Quantity);
+
+// ── AutoMapper configuration ──────────────────────────
+// Install: dotnet add package AutoMapper.Extensions.Microsoft.DependencyInjection
+public class OrderMappingProfile : Profile
+{
+    public OrderMappingProfile()
+    {
+        CreateMap<Order, OrderDto>()
+            .ForMember(dest => dest.CustomerName,
+                       opt => opt.MapFrom(src => src.Customer.FullName));
+
+        CreateMap<OrderItem, OrderItemDto>()
+            .ForMember(dest => dest.ProductName,
+                       opt => opt.MapFrom(src => src.Product.Name))
+            .ForMember(dest => dest.LineTotal,
+                       opt => opt.MapFrom(src => src.Quantity * src.UnitPrice));
+
+        CreateMap<CreateOrderDto, Order>();
+    }
+}
+
+builder.Services.AddAutoMapper(typeof(OrderMappingProfile));
+
+// Usage in service:
+public async Task<OrderDto> GetByIdAsync(int id)
+{
+    var order = await _db.Orders
+        .Include(o => o.Customer)
+        .Include(o => o.Items).ThenInclude(i => i.Product)
+        .FirstOrDefaultAsync(o => o.Id == id)
+        ?? throw new KeyNotFoundException();
+
+    return _mapper.Map<OrderDto>(order);
+}
+```
+
+---
+
+<a id="p6-versioning"></a>
+### Topic 5: API Versioning
+
+```csharp
+// Install: dotnet add package Asp.Versioning.Mvc
+
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true; // adds API-Supported-Versions header
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),   // /api/v1/orders
+        new HeaderApiVersionReader("X-Api-Version"), // header
+        new QueryStringApiVersionReader("api-version") // ?api-version=1.0
+    );
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// ── URL segment versioning ────────────────────────────
+[ApiController]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+public class OrdersV1Controller : ControllerBase
+{
+    [HttpGet]
+    public IActionResult GetAll() => Ok(new { version = "v1", orders = Array.Empty<object>() });
+}
+
+[ApiController]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("2.0")]
+public class OrdersV2Controller : ControllerBase
+{
+    [HttpGet]
+    public IActionResult GetAll() =>
+        Ok(new { version = "v2", orders = Array.Empty<object>(), meta = new { pagination = true } });
+
+    [HttpGet("{id:int}")]
+    [MapToApiVersion("2.0")]
+    public IActionResult GetById(int id) => Ok();
+}
+
+// ── Deprecating old versions ──────────────────────────
+[ApiVersion("1.0", Deprecated = true)]
+[ApiVersion("2.0")]
+public class ProductsController : ControllerBase { /* ... */ }
+```
+
+---
+
+<a id="p6-swagger"></a>
+### Topic 6: Swagger / OpenAPI
+
+```csharp
+// Install: dotnet add package Swashbuckle.AspNetCore
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title       = "My API",
+        Version     = "v1",
+        Description = "Complete API documentation",
+        Contact     = new OpenApiContact
+        {
+            Name  = "Dev Team",
+            Email = "dev@example.com"
+        }
+    });
+
+    // XML comments (enable in .csproj: <GenerateDocumentationFile>true</GenerateDocumentationFile>)
+    var xml = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
+    options.IncludeXmlComments(xml);
+
+    // JWT auth in Swagger UI
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name         = "Authorization",
+        Type         = SecuritySchemeType.Http,
+        Scheme       = "Bearer",
+        BearerFormat = "JWT",
+        In           = ParameterLocation.Header,
+        Description  = "Enter: Bearer {token}"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                    { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// Middleware:
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API v1");
+        c.RoutePrefix = ""; // Swagger at root URL
+    });
+}
+
+// ── XML Documentation comments ─────────────────────────
+/// <summary>Get order by ID</summary>
+/// <param name="id">Order ID (positive integer)</param>
+/// <returns>Order details</returns>
+/// <response code="200">Order found</response>
+/// <response code="404">Order not found</response>
+[HttpGet("{id:int}")]
+[ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
+[ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+public async Task<ActionResult<OrderDto>> GetById(int id) =>
+    await _service.GetByIdAsync(id) is {} order ? Ok(order) : NotFound();
+```
+
+---
+
+<a id="p6-cors"></a>
+### Topic 7: CORS
+
+```csharp
+// CORS — Cross-Origin Resource Sharing
+// Browser security: frontend (localhost:3000) → API (localhost:5000) blocked by default
+
+builder.Services.AddCors(options =>
+{
+    // Development — allow all
+    options.AddPolicy("Development", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader());
+
+    // Production — specific origins
+    options.AddPolicy("Production", policy =>
+        policy.WithOrigins(
+                "https://myapp.com",
+                "https://www.myapp.com",
+                "https://admin.myapp.com")
+              .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+              .WithHeaders("Authorization", "Content-Type", "X-Api-Key")
+              .AllowCredentials()  // cookies/auth headers
+              .SetPreflightMaxAge(TimeSpan.FromMinutes(10))); // cache preflight
+});
+
+// Apply in pipeline (after UseRouting, before UseAuthorization)
+app.UseCors(app.Environment.IsDevelopment() ? "Development" : "Production");
+
+// ── Per-endpoint CORS ──────────────────────────────────
+[HttpGet("public")]
+[EnableCors("Development")]
+public IActionResult PublicEndpoint() => Ok();
+
+[HttpPost("internal")]
+[DisableCors]
+public IActionResult InternalEndpoint() => Ok();
+```
+
+---
+
+<a id="p6-ratelimit"></a>
+### Topic 8: Rate Limiting
+
+```csharp
+// .NET 7+ built-in rate limiting
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = 429;
+
+    // Fixed window — per window reset
+    options.AddFixedWindowLimiter("fixed", opt =>
+    {
+        opt.Window            = TimeSpan.FromMinutes(1);
+        opt.PermitLimit       = 100;
+        opt.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        opt.QueueLimit        = 10;
+    });
+
+    // Sliding window — smoother
+    options.AddSlidingWindowLimiter("sliding", opt =>
+    {
+        opt.Window            = TimeSpan.FromMinutes(1);
+        opt.SegmentsPerWindow = 6; // 10s segments
+        opt.PermitLimit       = 100;
+    });
+
+    // Token bucket — burst-friendly
+    options.AddTokenBucketLimiter("token", opt =>
+    {
+        opt.TokenLimit          = 100;
+        opt.ReplenishmentPeriod = TimeSpan.FromSeconds(10);
+        opt.TokensPerPeriod     = 20;
+    });
+
+    // Concurrency — simultaneous requests
+    options.AddConcurrencyLimiter("concurrency", opt =>
+    {
+        opt.PermitLimit = 10;
+        opt.QueueLimit  = 5;
+    });
+
+    // Per-user rate limiting
+    options.AddPolicy("per-user", context =>
+    {
+        var userId = context.User.FindFirst("sub")?.Value ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(userId, _ =>
+            new FixedWindowRateLimiterOptions
+            {
+                Window      = TimeSpan.FromMinutes(1),
+                PermitLimit = 60
+            });
+    });
+
+    // On rejection — custom response
+    options.OnRejected = async (context, ct) =>
+    {
+        context.HttpContext.Response.StatusCode = 429;
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            context.HttpContext.Response.Headers["Retry-After"] =
+                retryAfter.TotalSeconds.ToString();
+        await context.HttpContext.Response.WriteAsync(
+            "Rate limit exceeded. Try again later.", ct);
+    };
+});
+
+app.UseRateLimiter(); // add to pipeline
+
+// Apply to endpoints
+app.MapControllers().RequireRateLimiting("per-user");
+
+[HttpPost("upload")]
+[EnableRateLimiting("concurrency")]
+public IActionResult Upload([FromForm] IFormFile file) => Ok();
+
+[HttpGet("public")]
+[DisableRateLimiting]
+public IActionResult Public() => Ok("No rate limiting here");
+```
+
+---
+
+<a id="p6-health"></a>
+### Topic 9: Health Checks
+
+```csharp
+// Install: dotnet add package AspNetCore.HealthChecks.SqlServer
+//          dotnet add package AspNetCore.HealthChecks.Redis
+
+builder.Services.AddHealthChecks()
+    .AddSqlServer(
+        connectionString: builder.Configuration.GetConnectionString("Default")!,
+        name: "database",
+        tags: new[] { "db", "sql" })
+    .AddRedis(
+        redisConnectionString: builder.Configuration["Redis:Connection"]!,
+        name: "redis",
+        tags: new[] { "cache" })
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" });
+
+// Map endpoints
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("db") || check.Tags.Contains("cache"),
+    ResultStatusCodes =
+    {
+        [HealthStatus.Healthy]   = 200,
+        [HealthStatus.Degraded]  = 200,
+        [HealthStatus.Unhealthy] = 503
+    }
+});
+
+// Custom health check
+public class ExternalApiHealthCheck : IHealthCheck
+{
+    private readonly HttpClient _http;
+    public ExternalApiHealthCheck(IHttpClientFactory factory) =>
+        _http = factory.CreateClient();
+
+    public async Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _http.GetAsync("https://api.external.com/ping", ct);
+            return response.IsSuccessStatusCode
+                ? HealthCheckResult.Healthy("External API reachable")
+                : HealthCheckResult.Degraded($"External API returned {response.StatusCode}");
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy("External API unreachable", ex);
+        }
+    }
+}
+
+builder.Services.AddHealthChecks()
+    .AddCheck<ExternalApiHealthCheck>("external-api");
+```
+
+---
+
+<a id="p6-errors"></a>
+### Topic 10: Global Error Handling
+
+```csharp
+// ── Exception handler middleware ──────────────────────
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var feature = context.Features.Get<IExceptionHandlerPathFeature>();
+        var exception = feature?.Error;
+        var logger = context.RequestServices
+            .GetRequiredService<ILogger<Program>>();
+
+        logger.LogError(exception, "Unhandled exception at {Path}", feature?.Path);
+
+        var (status, title) = exception switch
+        {
+            KeyNotFoundException       => (404, "Resource not found"),
+            UnauthorizedAccessException => (403, "Forbidden"),
+            ArgumentException          => (400, "Bad request"),
+            _                          => (500, "Internal server error")
+        };
+
+        context.Response.StatusCode = status;
+        context.Response.ContentType = "application/problem+json";
+        var problem = new ProblemDetails
+        {
+            Status = status,
+            Title  = title,
+            Detail = exception?.Message,
+            Instance = context.Request.Path
+        };
+        await context.Response.WriteAsJsonAsync(problem);
+    });
+});
+
+// ── IExceptionHandler (.NET 8+) — clean separation ────
+public class GlobalExceptionHandler : IExceptionHandler
+{
+    private readonly ILogger<GlobalExceptionHandler> _logger;
+    public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) =>
+        _logger = logger;
+
+    public async ValueTask<bool> TryHandleAsync(
+        HttpContext context,
+        Exception exception,
+        CancellationToken ct)
+    {
+        _logger.LogError(exception, "Unhandled exception");
+
+        var (status, title) = exception switch
+        {
+            KeyNotFoundException       => (404, "Not Found"),
+            ValidationException ve     => (400, ve.Message),
+            UnauthorizedAccessException => (403, "Forbidden"),
+            _                          => (500, "Internal Server Error")
+        };
+
+        context.Response.StatusCode = status;
+        await context.Response.WriteAsJsonAsync(
+            new ProblemDetails { Status = status, Title = title, Detail = exception.Message },
+            ct);
+
+        return true; // handled
+    }
+}
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+app.UseExceptionHandler();
+```
+
+---
+
+## PART 6 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| REST | Resource-based URL, stateless, HTTP methods |
+| GET | Read — safe, idempotent |
+| POST | Create — not idempotent → 201 Created |
+| PUT | Full replace — idempotent → 204 No Content |
+| PATCH | Partial update → 204 |
+| DELETE | Delete — idempotent → 204 |
+| 400 | Bad Request — validation fail |
+| 401 | Unauthorized — not authenticated |
+| 403 | Forbidden — no permission |
+| 404 | Not Found |
+| 409 | Conflict — duplicate |
+| 429 | Too Many Requests — rate limit |
+| DTO | Domain model expose করবেন না |
+| `CreatedAtAction` | 201 + Location header |
+| `ActionResult<T>` | Typed return + IActionResult |
+| API Versioning | URL segment `/v1/`, header, query string |
+| Swagger | OpenAPI spec, XML comments, ProducesResponseType |
+| CORS | Cross-origin browser policy — WithOrigins |
+| Rate Limiting | Fixed/Sliding Window, Token Bucket, per-user |
+| Health Check | /health, /health/live, /health/ready |
+| IExceptionHandler | .NET 8+ global error handler |
+| Problem Details | RFC 7807 standard error format |
+
+---
+
+## PART 6 Interview Q&A
+
+```
+প্রশ্ন: PUT আর PATCH পার্থক্য?
+উত্তর:
+PUT → পুরো resource replace করে। সব fields পাঠাতে হবে।
+      Missing fields → null/default হয়ে যায়।
+PATCH → শুধু changed fields পাঠান। Partial update।
+        PUT idempotent। PATCH generally not idempotent।
+
+প্রশ্ন: 401 আর 403 পার্থক্য?
+উত্তর:
+401 Unauthorized → "আপনি কে?" — token নেই বা invalid।
+                   Login করুন।
+403 Forbidden → "আমি জানি আপনি কে, কিন্তু আপনার permission নেই।"
+                Admin resource normal user hit করলে।
+
+প্রশ্ন: API Versioning কেন দরকার?
+উত্তর: Breaking changes করলে existing clients break হয়।
+Version করলে পুরনো clients /v1/ ব্যবহার করতে পারে,
+নতুন clients /v2/ তে migrate করতে পারে।
+URL versioning সবচেয়ে visible এবং cacheable।
+
+প্রশ্ন: CORS কী এবং কীভাবে handle করে?
+উত্তর: Browser same-origin policy enforce করে।
+Frontend (port 3000) → API (port 5000) — different origin।
+Server WithOrigins() দিয়ে allowed origins declare করে।
+Browser preflight OPTIONS request পাঠায়।
+Server Access-Control-Allow-Origin header দিয়ে response দেয়।
+CORS server-side security নয় — browser enforcement।
+
+প্রশ্ন: Rate limiting কেন দরকার?
+উত্তর: DoS/DDoS protection। Resource overuse prevent।
+API abuse prevent। Fair usage enforce।
+Fixed Window → simple কিন্তু window edge-এ burst।
+Token Bucket → burst allow করে, সবচেয়ে flexible।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 7 — Database ও Entity Framework Core (EF Core Setup, Migrations, LINQ Queries, Relationships, Performance Optimization এবং আরও...)
+
+---
+
+<a id="part7"></a>
+## PART 7: Database ও Entity Framework Core
+
+> EF Core Setup, DbContext, Migrations, CRUD Operations, Relationships, LINQ Queries, Performance Optimization, Transactions, Dapper।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [EF Core Setup ও DbContext](#p7-setup) |
+| 2 | [Migrations](#p7-migrations) |
+| 3 | [CRUD Operations](#p7-crud) |
+| 4 | [Relationships (1:1, 1:N, M:N)](#p7-relationships) |
+| 5 | [LINQ Queries ও Loading Strategies](#p7-queries) |
+| 6 | [Change Tracking](#p7-tracking) |
+| 7 | [Transactions](#p7-transactions) |
+| 8 | [Performance Optimization](#p7-performance) |
+| 9 | [Raw SQL ও Dapper](#p7-rawsql) |
+| 10 | [Repository Pattern with EF Core](#p7-repository) |
+
+---
+
+<a id="p7-setup"></a>
+### Topic 1: EF Core Setup ও DbContext
+
+```csharp
+// Install:
+// dotnet add package Microsoft.EntityFrameworkCore.SqlServer
+// dotnet add package Microsoft.EntityFrameworkCore.Tools
+
+// ── Entity models ─────────────────────────────────────
+public class Customer
+{
+    public int    Id        { get; set; }
+    public string FullName  { get; set; } = "";
+    public string Email     { get; set; } = "";
+    public string Phone     { get; set; } = "";
+    public bool   IsActive  { get; set; } = true;
+    public DateTime CreatedAt { get; set; }
+
+    // Navigation properties
+    public List<Order> Orders { get; set; } = new();
+}
+
+public class Order
+{
+    public int      Id         { get; set; }
+    public int      CustomerId { get; set; }
+    public decimal  TotalAmount { get; set; }
+    public string   Status     { get; set; } = "Pending";
+    public DateTime OrderDate  { get; set; }
+
+    // Navigation properties
+    public Customer        Customer { get; set; } = null!;
+    public List<OrderItem> Items    { get; set; } = new();
+}
+
+public class OrderItem
+{
+    public int     Id        { get; set; }
+    public int     OrderId   { get; set; }
+    public int     ProductId { get; set; }
+    public int     Quantity  { get; set; }
+    public decimal UnitPrice { get; set; }
+
+    public Order   Order   { get; set; } = null!;
+    public Product Product { get; set; } = null!;
+}
+
+public class Product
+{
+    public int     Id       { get; set; }
+    public string  Name     { get; set; } = "";
+    public decimal Price    { get; set; }
+    public int     Stock    { get; set; }
+    public int     CategoryId { get; set; }
+    public Category Category { get; set; } = null!;
+}
+
+// ── DbContext ─────────────────────────────────────────
+public class AppDbContext : DbContext
+{
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+    public DbSet<Customer>  Customers  { get; set; }
+    public DbSet<Order>     Orders     { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Product>   Products   { get; set; }
+    public DbSet<Category>  Categories { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Apply all entity configurations from assembly
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // Soft delete global filter
+        modelBuilder.Entity<Customer>()
+            .HasQueryFilter(c => !c.IsDeleted);
+
+        base.OnModelCreating(modelBuilder);
+    }
+
+    // Audit: auto-set CreatedAt/UpdatedAt
+    public override Task<int> SaveChangesAsync(CancellationToken ct = default)
+    {
+        foreach (var entry in ChangeTracker.Entries<IAuditableEntity>())
+        {
+            if (entry.State == EntityState.Added)
+                entry.Entity.CreatedAt = DateTime.UtcNow;
+            if (entry.State is EntityState.Added or EntityState.Modified)
+                entry.Entity.UpdatedAt = DateTime.UtcNow;
+        }
+        return base.SaveChangesAsync(ct);
+    }
+}
+
+// ── Fluent API Configuration ──────────────────────────
+public class OrderConfiguration : IEntityTypeConfiguration<Order>
+{
+    public void Configure(EntityTypeBuilder<Order> builder)
+    {
+        builder.ToTable("Orders");
+        builder.HasKey(o => o.Id);
+
+        builder.Property(o => o.Status)
+            .HasMaxLength(20)
+            .HasDefaultValue("Pending")
+            .IsRequired();
+
+        builder.Property(o => o.TotalAmount)
+            .HasColumnType("decimal(18,2)");
+
+        builder.HasOne(o => o.Customer)
+            .WithMany(c => c.Orders)
+            .HasForeignKey(o => o.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(o => o.CustomerId);
+        builder.HasIndex(o => new { o.Status, o.OrderDate });
+    }
+}
+
+// ── Registration ──────────────────────────────────────
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("Default"),
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorNumbersToAdd: null);
+            sqlOptions.CommandTimeout(30);
+        })
+    .EnableSensitiveDataLogging(builder.Environment.IsDevelopment())
+    .LogTo(Console.WriteLine, LogLevel.Information));
+```
+
+---
+
+<a id="p7-migrations"></a>
+### Topic 2: Migrations
+
+```bash
+# ── Common EF Core CLI commands ────────────────────────
+
+# Migration create করুন
+dotnet ef migrations add InitialCreate
+
+# Migration apply করুন (DB update)
+dotnet ef database update
+
+# Specific migration পর্যন্ত update
+dotnet ef database update AddOrderIndex
+
+# Migration rollback (one step)
+dotnet ef database update PreviousMigrationName
+
+# Migration SQL script generate (production use)
+dotnet ef migrations script --output migration.sql
+
+# Migration remove (last unapplied)
+dotnet ef migrations remove
+
+# DbContext list
+dotnet ef dbcontext list
+
+# DbContext info
+dotnet ef dbcontext info
+```
+
+```csharp
+// ── Programmatic migration (startup) ─────────────────
+// Production-এ startup migration apply
+app.Services.CreateScope().ServiceProvider
+    .GetRequiredService<AppDbContext>()
+    .Database.MigrateAsync()
+    .GetAwaiter().GetResult();
+
+// ── Data seeding ──────────────────────────────────────
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Category>().HasData(
+        new Category { Id = 1, Name = "Electronics" },
+        new Category { Id = 2, Name = "Clothing" },
+        new Category { Id = 3, Name = "Books" }
+    );
+}
+
+// ── Custom migration ──────────────────────────────────
+public partial class AddFullTextSearch : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.Sql(
+            "CREATE FULLTEXT INDEX ON Products(Name, Description) KEY INDEX PK_Products");
+    }
+
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.Sql("DROP FULLTEXT INDEX ON Products");
+    }
+}
+```
+
+---
+
+<a id="p7-crud"></a>
+### Topic 3: CRUD Operations
+
+```csharp
+public class OrderService
+{
+    private readonly AppDbContext _db;
+    public OrderService(AppDbContext db) => _db = db;
+
+    // ── Create ────────────────────────────────────────
+    public async Task<Order> CreateAsync(CreateOrderDto dto, CancellationToken ct = default)
+    {
+        var order = new Order
+        {
+            CustomerId = dto.CustomerId,
+            OrderDate  = DateTime.UtcNow,
+            Status     = "Pending",
+            Items = dto.Items.Select(i => new OrderItem
+            {
+                ProductId = i.ProductId,
+                Quantity  = i.Quantity,
+                UnitPrice = i.UnitPrice
+            }).ToList()
+        };
+
+        order.TotalAmount = order.Items.Sum(i => i.Quantity * i.UnitPrice);
+
+        _db.Orders.Add(order);
+        await _db.SaveChangesAsync(ct);
+        return order;
+    }
+
+    // ── Read ──────────────────────────────────────────
+    public async Task<Order?> GetByIdAsync(int id, CancellationToken ct = default) =>
+        await _db.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.Items).ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(o => o.Id == id, ct);
+
+    public async Task<List<Order>> GetByCustomerAsync(int customerId, CancellationToken ct = default) =>
+        await _db.Orders
+            .Where(o => o.CustomerId == customerId)
+            .OrderByDescending(o => o.OrderDate)
+            .AsNoTracking()  // read-only — faster!
+            .ToListAsync(ct);
+
+    // ── Update ────────────────────────────────────────
+    public async Task<bool> UpdateStatusAsync(int id, string status, CancellationToken ct = default)
+    {
+        var order = await _db.Orders.FindAsync(new object[] { id }, ct);
+        if (order is null) return false;
+
+        order.Status = status;
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    // ── Bulk update (ExecuteUpdateAsync — EF Core 7+) ─
+    public async Task<int> BulkCancelPendingAsync(DateTime before, CancellationToken ct = default) =>
+        await _db.Orders
+            .Where(o => o.Status == "Pending" && o.OrderDate < before)
+            .ExecuteUpdateAsync(setter =>
+                setter.SetProperty(o => o.Status, "Cancelled"),
+            ct);
+    // No entity load — direct SQL UPDATE!
+
+    // ── Delete ────────────────────────────────────────
+    public async Task<bool> DeleteAsync(int id, CancellationToken ct = default)
+    {
+        var order = await _db.Orders.FindAsync(new object[] { id }, ct);
+        if (order is null) return false;
+
+        _db.Orders.Remove(order);
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
+    // ── Bulk delete (ExecuteDeleteAsync — EF Core 7+) ─
+    public async Task<int> DeleteOldOrdersAsync(DateTime before, CancellationToken ct = default) =>
+        await _db.Orders
+            .Where(o => o.Status == "Cancelled" && o.OrderDate < before)
+            .ExecuteDeleteAsync(ct);
+    // Direct SQL DELETE — no entity load!
+}
+```
+
+---
+
+<a id="p7-relationships"></a>
+### Topic 4: Relationships
+
+```csharp
+// ── One-to-Many (সবচেয়ে সাধারণ) ─────────────────────
+// Customer → Orders (1 customer has many orders)
+public class Customer
+{
+    public int Id { get; set; }
+    public List<Order> Orders { get; set; } = new(); // collection nav
+}
+public class Order
+{
+    public int CustomerId { get; set; }       // FK
+    public Customer Customer { get; set; } = null!; // reference nav
+}
+
+// Fluent config:
+builder.HasOne(o => o.Customer)
+    .WithMany(c => c.Orders)
+    .HasForeignKey(o => o.CustomerId)
+    .OnDelete(DeleteBehavior.Restrict); // don't cascade delete
+
+// ── One-to-One ────────────────────────────────────────
+public class User
+{
+    public int Id { get; set; }
+    public UserProfile? Profile { get; set; }
+}
+public class UserProfile
+{
+    public int UserId { get; set; } // PK = FK
+    public User User  { get; set; } = null!;
+    public string Bio { get; set; } = "";
+}
+
+builder.Entity<UserProfile>()
+    .HasOne(p => p.User)
+    .WithOne(u => u.Profile)
+    .HasForeignKey<UserProfile>(p => p.UserId);
+
+// ── Many-to-Many (EF Core 5+) ─────────────────────────
+// Product ↔ Tag (many-to-many with join table)
+public class Product
+{
+    public int Id { get; set; }
+    public List<Tag> Tags { get; set; } = new();
+}
+public class Tag
+{
+    public int Id { get; set; }
+    public List<Product> Products { get; set; } = new();
+}
+
+// EF Core 5+ auto join table (no explicit join entity needed):
+modelBuilder.Entity<Product>()
+    .HasMany(p => p.Tags)
+    .WithMany(t => t.Products)
+    .UsingEntity(j => j.ToTable("ProductTags"));
+
+// ── Many-to-Many with payload (explicit join entity) ──
+public class StudentCourse
+{
+    public int StudentId  { get; set; }
+    public int CourseId   { get; set; }
+    public DateTime EnrolledAt { get; set; }
+    public string? Grade  { get; set; }
+
+    public Student Student { get; set; } = null!;
+    public Course  Course  { get; set; } = null!;
+}
+
+modelBuilder.Entity<StudentCourse>()
+    .HasKey(sc => new { sc.StudentId, sc.CourseId }); // composite PK
+
+modelBuilder.Entity<StudentCourse>()
+    .HasOne(sc => sc.Student)
+    .WithMany(s => s.Courses)
+    .HasForeignKey(sc => sc.StudentId);
+
+modelBuilder.Entity<StudentCourse>()
+    .HasOne(sc => sc.Course)
+    .WithMany(c => c.Students)
+    .HasForeignKey(sc => sc.CourseId);
+```
+
+---
+
+<a id="p7-queries"></a>
+### Topic 5: LINQ Queries ও Loading Strategies
+
+```csharp
+// ── Loading strategies ────────────────────────────────
+
+// 1. Eager Loading — Include দিয়ে একসাথে load
+var orders = await _db.Orders
+    .Include(o => o.Customer)
+    .Include(o => o.Items)
+        .ThenInclude(i => i.Product)
+            .ThenInclude(p => p.Category)
+    .Where(o => o.Status == "Pending")
+    .ToListAsync();
+
+// 2. Explicit Loading — পরে চাওয়ার সময় load
+var order = await _db.Orders.FindAsync(id);
+await _db.Entry(order).Reference(o => o.Customer).LoadAsync();
+await _db.Entry(order).Collection(o => o.Items).LoadAsync();
+
+// 3. Lazy Loading — access করলে auto load (avoid in API!)
+// dotnet add package Microsoft.EntityFrameworkCore.Proxies
+// options.UseLazyLoadingProxies() — N+1 problem risk!
+
+// ── Projection — Select করুন শুধু দরকারি fields ────────
+var summaries = await _db.Orders
+    .Where(o => o.CustomerId == customerId)
+    .Select(o => new OrderSummaryDto
+    {
+        Id         = o.Id,
+        OrderDate  = o.OrderDate,
+        TotalAmount = o.TotalAmount,
+        Status     = o.Status,
+        ItemCount  = o.Items.Count  // EF translates to COUNT(*)
+    })
+    .OrderByDescending(o => o.OrderDate)
+    .ToListAsync();
+
+// ── Filtered Include (EF Core 5+) ─────────────────────
+var customers = await _db.Customers
+    .Include(c => c.Orders.Where(o => o.Status == "Pending")
+                          .OrderByDescending(o => o.OrderDate)
+                          .Take(5))
+    .ToListAsync();
+
+// ── Compiled queries — repeated query performance ─────
+private static readonly Func<AppDbContext, int, Task<Order?>> GetOrderById =
+    EF.CompileAsyncQuery((AppDbContext db, int id) =>
+        db.Orders.Include(o => o.Customer).FirstOrDefault(o => o.Id == id));
+
+// Usage — skips query compilation overhead
+var order = await GetOrderById(_db, 42);
+
+// ── Split query — avoid cartesian explosion ───────────
+// Large Include chains → JOIN produces many rows
+var orders = await _db.Orders
+    .Include(o => o.Items)
+    .Include(o => o.Tags)
+    .AsSplitQuery()  // 3 separate SQL queries instead of 1 huge JOIN
+    .ToListAsync();
+
+// Global split query:
+options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+```
+
+---
+
+<a id="p7-tracking"></a>
+### Topic 6: Change Tracking
+
+```csharp
+// EF Core tracks entity changes — Added, Modified, Deleted, Unchanged
+
+// ── AsNoTracking — read-only queries ─────────────────
+// No snapshot, no tracking → faster!
+var products = await _db.Products
+    .AsNoTracking()
+    .Where(p => p.IsActive)
+    .ToListAsync();
+
+// ── AsNoTrackingWithIdentityResolution (EF Core 5+) ───
+// AsNoTracking but handles duplicate entities in graph
+var orders = await _db.Orders
+    .Include(o => o.Items).ThenInclude(i => i.Product)
+    .AsNoTrackingWithIdentityResolution()
+    .ToListAsync();
+
+// ── Tracking state management ─────────────────────────
+var order = new Order { Id = 5, Status = "Shipped" };
+
+// Attach — tell EF this entity exists (but we loaded it outside)
+_db.Attach(order);
+_db.Entry(order).Property(o => o.Status).IsModified = true;
+await _db.SaveChangesAsync(); // only updates Status column
+
+// Entry state
+var entry = _db.Entry(order);
+Console.WriteLine(entry.State); // EntityState.Unchanged/Modified/Added/Deleted
+
+// Detach
+_db.Entry(order).State = EntityState.Detached;
+```
+
+---
+
+<a id="p7-transactions"></a>
+### Topic 7: Transactions
+
+```csharp
+// ── Implicit transaction — SaveChanges-এ auto ─────────
+// সব changes একটি transaction-এ
+_db.Orders.Add(order);
+_db.Inventory.Update(inventory);
+await _db.SaveChangesAsync(); // ✅ atomic
+
+// ── Explicit transaction — multiple SaveChanges ────────
+await using var transaction = await _db.Database.BeginTransactionAsync();
+try
+{
+    // Step 1
+    var order = new Order { /* ... */ };
+    _db.Orders.Add(order);
+    await _db.SaveChangesAsync();
+
+    // Step 2 — needs order.Id from step 1
+    await _paymentService.ProcessAsync(order.Id, dto.Amount);
+
+    // Step 3
+    order.Status = "Paid";
+    await _db.SaveChangesAsync();
+
+    await transaction.CommitAsync();
+}
+catch
+{
+    await transaction.RollbackAsync();
+    throw;
+}
+
+// ── Savepoints (EF Core 5+) ───────────────────────────
+await using var transaction = await _db.Database.BeginTransactionAsync();
+
+await _db.Orders.AddAsync(order);
+await _db.SaveChangesAsync();
+
+await transaction.CreateSavepointAsync("OrderCreated");
+
+try
+{
+    await _db.Notifications.AddAsync(notification);
+    await _db.SaveChangesAsync();
+}
+catch
+{
+    await transaction.RollbackToSavepointAsync("OrderCreated");
+    // order still saved, notification rolled back
+}
+
+await transaction.CommitAsync();
+
+// ── Optimistic concurrency ────────────────────────────
+public class Product
+{
+    public int    Id     { get; set; }
+    public int    Stock  { get; set; }
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = null!; // concurrency token
+}
+
+try
+{
+    var product = await _db.Products.FindAsync(id);
+    product.Stock -= quantity;
+    await _db.SaveChangesAsync();
+}
+catch (DbUpdateConcurrencyException)
+{
+    // Another user updated the same record — handle conflict
+    // Reload and retry, or return 409 Conflict
+}
+```
+
+---
+
+<a id="p7-performance"></a>
+### Topic 8: Performance Optimization
+
+```csharp
+// ── 1. AsNoTracking for read-only ─────────────────────
+var list = await _db.Products.AsNoTracking().ToListAsync();
+
+// ── 2. Select only needed columns ─────────────────────
+// ❌ loads all columns
+var products = await _db.Products.ToListAsync();
+
+// ✅ loads only needed
+var names = await _db.Products
+    .Select(p => new { p.Id, p.Name, p.Price })
+    .ToListAsync();
+
+// ── 3. Avoid N+1 — use Include ────────────────────────
+// ❌ N+1 — 1 query for orders + N queries for customers
+var orders = await _db.Orders.ToListAsync();
+foreach (var o in orders)
+    Console.WriteLine(o.Customer.FullName); // lazy load = N queries!
+
+// ✅ 1 query with JOIN
+var orders = await _db.Orders.Include(o => o.Customer).ToListAsync();
+
+// ── 4. Bulk operations — ExecuteUpdate/Delete (EF7+) ──
+// ❌ loads all, updates one by one
+var products = await _db.Products.Where(p => p.Stock == 0).ToListAsync();
+foreach (var p in products) p.IsActive = false;
+await _db.SaveChangesAsync(); // N UPDATE statements
+
+// ✅ single SQL UPDATE
+await _db.Products
+    .Where(p => p.Stock == 0)
+    .ExecuteUpdateAsync(s => s.SetProperty(p => p.IsActive, false));
+
+// ── 5. Pagination ─────────────────────────────────────
+// ❌ loads everything into memory first
+var all = await _db.Orders.ToListAsync();
+var page = all.Skip(20).Take(10);
+
+// ✅ OFFSET FETCH in SQL
+var page = await _db.Orders
+    .OrderByDescending(o => o.OrderDate)
+    .Skip((pageNumber - 1) * pageSize)
+    .Take(pageSize)
+    .ToListAsync();
+
+// ── 6. Indexes ────────────────────────────────────────
+protected override void OnModelCreating(ModelBuilder builder)
+{
+    builder.Entity<Order>()
+        .HasIndex(o => o.CustomerId);
+
+    builder.Entity<Order>()
+        .HasIndex(o => new { o.Status, o.OrderDate })
+        .HasFilter("Status <> 'Completed'"); // partial index
+
+    builder.Entity<Product>()
+        .HasIndex(p => p.Name)
+        .IsUnique();
+}
+
+// ── 7. Compiled queries ────────────────────────────────
+private static readonly Func<AppDbContext, string, IAsyncEnumerable<Product>>
+    GetProductsByCategory =
+        EF.CompileAsyncQuery((AppDbContext db, string category) =>
+            db.Products
+                .Where(p => p.Category.Name == category && p.IsActive)
+                .AsNoTracking());
+
+// ── 8. Connection pooling — default enabled ────────────
+// DbContext Scoped → reused per request
+// Don't use Singleton DbContext!
+
+// ── 9. Second-level caching ────────────────────────────
+// Cache frequently read, rarely changed data
+public async Task<List<Category>> GetCategoriesAsync()
+{
+    const string key = "all-categories";
+    if (_cache.TryGetValue(key, out List<Category>? cached))
+        return cached!;
+
+    var categories = await _db.Categories.AsNoTracking().ToListAsync();
+    _cache.Set(key, categories, TimeSpan.FromMinutes(10));
+    return categories;
+}
+```
+
+---
+
+<a id="p7-rawsql"></a>
+### Topic 9: Raw SQL ও Dapper
+
+```csharp
+// ── EF Core Raw SQL ───────────────────────────────────
+// FromSqlRaw — tracked entities
+var orders = await _db.Orders
+    .FromSqlRaw("SELECT * FROM Orders WHERE CustomerId = {0}", customerId)
+    .Include(o => o.Customer)
+    .ToListAsync();
+
+// FromSqlInterpolated — parameterized (SQL injection safe!)
+var orders2 = await _db.Orders
+    .FromSqlInterpolated($"SELECT * FROM Orders WHERE CustomerId = {customerId}")
+    .ToListAsync();
+
+// ExecuteSqlRawAsync — non-query (UPDATE, DELETE, stored procedures)
+await _db.Database.ExecuteSqlRawAsync(
+    "UPDATE Products SET Stock = Stock - {0} WHERE Id = {1}",
+    quantity, productId);
+
+// ── Dapper — micro-ORM, raw SQL-এর জন্য সেরা ─────────
+// dotnet add package Dapper
+
+public class OrderReportService
+{
+    private readonly IDbConnection _db;
+    public OrderReportService(IDbConnection db) => _db = db;
+
+    // Simple query
+    public async Task<IEnumerable<OrderDto>> GetByCustomerAsync(int customerId) =>
+        await _db.QueryAsync<OrderDto>(
+            "SELECT Id, TotalAmount, Status, OrderDate FROM Orders WHERE CustomerId = @CustomerId",
+            new { CustomerId = customerId });
+
+    // Multi-map — JOIN two tables
+    public async Task<IEnumerable<OrderWithCustomer>> GetOrdersWithCustomerAsync()
+    {
+        const string sql = @"
+            SELECT o.Id, o.TotalAmount, o.Status,
+                   c.Id, c.FullName, c.Email
+            FROM Orders o
+            INNER JOIN Customers c ON o.CustomerId = c.Id";
+
+        return await _db.QueryAsync<Order, Customer, OrderWithCustomer>(
+            sql,
+            (order, customer) => { order.Customer = customer; return order; },
+            splitOn: "Id");
+    }
+
+    // Stored procedure
+    public async Task<SalesReport> GetSalesReportAsync(DateTime from, DateTime to) =>
+        await _db.QueryFirstOrDefaultAsync<SalesReport>(
+            "sp_GetSalesReport",
+            new { FromDate = from, ToDate = to },
+            commandType: CommandType.StoredProcedure)
+        ?? throw new InvalidOperationException("Report not available");
+
+    // Scalar
+    public async Task<int> GetOrderCountAsync(int customerId) =>
+        await _db.ExecuteScalarAsync<int>(
+            "SELECT COUNT(*) FROM Orders WHERE CustomerId = @Id",
+            new { Id = customerId });
+}
+
+// Register IDbConnection
+builder.Services.AddScoped<IDbConnection>(_ =>
+    new SqlConnection(builder.Configuration.GetConnectionString("Default")));
+```
+
+---
+
+<a id="p7-repository"></a>
+### Topic 10: Repository Pattern with EF Core
+
+```csharp
+// ── Generic Repository ────────────────────────────────
+public interface IRepository<T> where T : class
+{
+    Task<T?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<IReadOnlyList<T>> GetAllAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
+    Task AddAsync(T entity, CancellationToken ct = default);
+    void Update(T entity);
+    void Delete(T entity);
+}
+
+public class Repository<T> : IRepository<T> where T : class
+{
+    protected readonly AppDbContext _db;
+    public Repository(AppDbContext db) => _db = db;
+
+    public Task<T?> GetByIdAsync(int id, CancellationToken ct) =>
+        _db.Set<T>().FindAsync(new object[] { id }, ct).AsTask();
+
+    public Task<IReadOnlyList<T>> GetAllAsync(CancellationToken ct) =>
+        _db.Set<T>().AsNoTracking().ToListAsync(ct)
+            .ContinueWith(t => (IReadOnlyList<T>)t.Result);
+
+    public async Task<IReadOnlyList<T>> FindAsync(
+        Expression<Func<T, bool>> predicate, CancellationToken ct)
+    {
+        return await _db.Set<T>().AsNoTracking().Where(predicate).ToListAsync(ct);
+    }
+
+    public async Task AddAsync(T entity, CancellationToken ct) =>
+        await _db.Set<T>().AddAsync(entity, ct);
+
+    public void Update(T entity) => _db.Set<T>().Update(entity);
+    public void Delete(T entity) => _db.Set<T>().Remove(entity);
+}
+
+// ── Specific repository ───────────────────────────────
+public interface IOrderRepository : IRepository<Order>
+{
+    Task<Order?> GetWithDetailsAsync(int id, CancellationToken ct = default);
+    Task<PagedResult<Order>> GetPagedByCustomerAsync(
+        int customerId, int page, int pageSize, CancellationToken ct = default);
+}
+
+public class OrderRepository : Repository<Order>, IOrderRepository
+{
+    public OrderRepository(AppDbContext db) : base(db) { }
+
+    public Task<Order?> GetWithDetailsAsync(int id, CancellationToken ct) =>
+        _db.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.Items).ThenInclude(i => i.Product)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.Id == id, ct);
+
+    public async Task<PagedResult<Order>> GetPagedByCustomerAsync(
+        int customerId, int page, int pageSize, CancellationToken ct)
+    {
+        var query = _db.Orders
+            .Where(o => o.CustomerId == customerId)
+            .OrderByDescending(o => o.OrderDate);
+
+        var total = await query.CountAsync(ct);
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize)
+            .AsNoTracking().ToListAsync(ct);
+
+        return new PagedResult<Order>(items, total, page, pageSize);
+    }
+}
+
+// ── Unit of Work ──────────────────────────────────────
+public interface IUnitOfWork : IAsyncDisposable
+{
+    IOrderRepository Orders { get; }
+    IRepository<Customer> Customers { get; }
+    IRepository<Product> Products { get; }
+    Task<int> SaveChangesAsync(CancellationToken ct = default);
+}
+
+public class UnitOfWork : IUnitOfWork
+{
+    private readonly AppDbContext _db;
+    public IOrderRepository     Orders    { get; }
+    public IRepository<Customer> Customers { get; }
+    public IRepository<Product>  Products  { get; }
+
+    public UnitOfWork(AppDbContext db)
+    {
+        _db = db;
+        Orders    = new OrderRepository(db);
+        Customers = new Repository<Customer>(db);
+        Products  = new Repository<Product>(db);
+    }
+
+    public Task<int> SaveChangesAsync(CancellationToken ct) =>
+        _db.SaveChangesAsync(ct);
+
+    public ValueTask DisposeAsync() => _db.DisposeAsync();
+}
+
+// Register:
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+```
+
+---
+
+## PART 7 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| DbContext | EF Core-এর unit of work — DB connection |
+| DbSet\<T\> | Entity table representation |
+| Fluent API | `OnModelCreating` → table, columns, relations configure |
+| Data Annotations | `[Key]`, `[Required]`, `[MaxLength]` |
+| Migration | Code → Database schema change |
+| `dotnet ef migrations add` | New migration create |
+| `dotnet ef database update` | Apply migrations |
+| Include | Eager loading — related data |
+| ThenInclude | Nested eager loading |
+| AsNoTracking | Read-only → faster, no snapshot |
+| Lazy Loading | Access করলে auto load → N+1 risk |
+| N+1 Problem | Loop-এ per-entity query → use Include |
+| ExecuteUpdateAsync | Load ছাড়া bulk UPDATE (EF7+) |
+| ExecuteDeleteAsync | Load ছাড়া bulk DELETE (EF7+) |
+| AsSplitQuery | Multiple queries instead of cartesian JOIN |
+| Compiled Query | EF.CompileAsyncQuery — repeated use optimization |
+| Transaction | `BeginTransactionAsync`, Commit, Rollback |
+| Optimistic Concurrency | `[Timestamp]` / RowVersion |
+| Savepoint | Transaction-এর মধ্যে partial rollback |
+| Dapper | Micro-ORM — raw SQL, fast, stored procedures |
+| Repository Pattern | Data access abstraction |
+| Unit of Work | Multiple repos, single SaveChanges |
+| Global Query Filter | `HasQueryFilter` — soft delete |
+| Index | `HasIndex` — query performance |
+
+---
+
+## PART 7 Interview Q&A
+
+```
+প্রশ্ন: EF Core আর Dapper কোনটা কখন?
+
+উত্তর:
+EF Core → Complex domain model, migrations, LINQ, change tracking।
+          CRUD-heavy applications।
+Dapper → Performance-critical, complex reporting queries।
+          Stored procedures। Raw SQL control দরকার।
+          বেশিরভাগ production app-এ দুটোই ব্যবহার হয়।
+
+প্রশ্ন: N+1 problem কী?
+
+উত্তর: 1 query তে list load, তারপর প্রতি item-এর জন্য আলাদা query।
+10টি orders → 1 + 10 = 11 queries।
+Solution: Include() দিয়ে eager loading।
+Detection: EF Core logging enable করুন।
+
+প্রশ্ন: AsNoTracking কখন ব্যবহার করবেন?
+
+উত্তর: Read-only operations-এ। API GET responses।
+Change tracking না লাগলে — update করবেন না।
+Performance difference: ~20-30% faster, কম memory।
+ডেটা update করতে হলে → tracking দরকার।
+
+প্রশ্ন: Optimistic আর Pessimistic concurrency পার্থক্য?
+
+উত্তর:
+Optimistic → conflict rare ধরে নেয়। RowVersion দিয়ে conflict detect।
+             DbUpdateConcurrencyException → retry বা 409।
+             EF Core default।
+Pessimistic → lock ধরে রাখে। SELECT ... WITH (UPDLOCK)।
+             High contention scenario। EF Core-এ manual।
+
+প্রশ্ন: Repository Pattern-এর সুবিধা কী?
+
+উত্তর: Data access abstraction। Service layer DB জানে না।
+       Unit test-এ mock করা যায়।
+       ORM swap করা সহজ হয়।
+       Cons: EF Core নিজেই Unit of Work + Repository।
+             Over-engineering হতে পারে simple apps-এ।
+
+প্রশ্ন: Migration rollback কীভাবে করবেন?
+
+উত্তর: dotnet ef database update PreviousMigrationName
+       তারপর dotnet ef migrations remove।
+       Production-এ: migration script generate করে DBA দিয়ে run।
+       Down() method সবসময় implement করুন।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 8 — Authentication ও Security (JWT, Cookie Auth, Identity, OAuth2/OIDC, Role-based & Policy-based Authorization, Data Protection এবং আরও...)
