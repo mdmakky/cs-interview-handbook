@@ -3696,4 +3696,1710 @@ Tradeoff: Index → faster read, slower write (index update), বেশি stora
 
 ---
 
-> **📌 পরবর্তী:** PART 5 — Authentication ও Authorization *(Next request এ লিখব)*
+> **📌 পরবর্তী:** PART 5 — Authentication ও Authorization
+
+---
+
+<a id="part5"></a>
+## PART 5: Authentication ও Authorization
+
+> JWT, bcrypt, session-based auth, OAuth2, refresh tokens, role-based access control — সব কিছু practical code সহ।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Authentication vs Authorization](#p5-concepts) |
+| 2 | [Password Hashing — bcrypt](#p5-bcrypt) |
+| 3 | [JWT — JSON Web Token](#p5-jwt) |
+| 4 | [Registration ও Login Flow](#p5-auth-flow) |
+| 5 | [Refresh Token Pattern](#p5-refresh) |
+| 6 | [Session-based Authentication](#p5-session) |
+| 7 | [OAuth2 ও Social Login](#p5-oauth) |
+| 8 | [Role-Based Access Control (RBAC)](#p5-rbac) |
+| 9 | [Auth Security Best Practices](#p5-security) |
+| 10 | [PART 5 Interview Q&A](#p5-qa) |
+
+---
+
+<a id="p5-concepts"></a>
+**Topic 1: Authentication vs Authorization**
+
+```
+Authentication (AuthN) — "তুমি কে?"
+→ Identity verify করা
+→ Login: email + password → "হ্যাঁ, এই user আছে"
+→ Examples: username/password, biometric, OTP, SSO
+
+Authorization (AuthZ) — "তুমি কী করতে পারবে?"
+→ Permission check করা
+→ "এই user কি admin dashboard দেখতে পারবে?"
+→ Examples: RBAC, ABAC, ACL, Policies
+
+Flow:
+Request → Authentication (valid user?) → Authorization (permission?) → Resource
+```
+
+**Common auth strategies:**
+```
+1. Session-based   — Server-side session store, cookie (traditional)
+2. JWT             — Stateless token, client stores (modern REST API)
+3. API Key         — Long-lived key (machine-to-machine)
+4. OAuth2          — Third-party login (Google, GitHub)
+5. mTLS            — Certificate-based (microservices)
+```
+
+---
+
+<a id="p5-bcrypt"></a>
+**Topic 2: Password Hashing — bcrypt**
+
+```bash
+npm install bcryptjs
+```
+
+```javascript
+const bcrypt = require('bcryptjs');
+
+// ────────────────────────────────────────────
+// Hash password (Registration-এ)
+// ────────────────────────────────────────────
+async function hashPassword(plainPassword) {
+    const saltRounds = 12;  // cost factor — higher = slower = more secure
+    // saltRounds 10 → ~100ms, 12 → ~400ms, 14 → ~1.5s
+    const hash = await bcrypt.hash(plainPassword, saltRounds);
+    return hash;
+    // '$2a$12$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
+}
+
+// ────────────────────────────────────────────
+// Verify password (Login-এ)
+// ────────────────────────────────────────────
+async function verifyPassword(plainPassword, hashedPassword) {
+    const isMatch = await bcrypt.compare(plainPassword, hashedPassword);
+    return isMatch;  // true or false
+}
+
+// ────────────────────────────────────────────
+// Mongoose pre-hook-এ (PART 4 এ দেখেছিলাম)
+// ────────────────────────────────────────────
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+    this.password = await bcrypt.hash(this.password, 12);
+    next();
+});
+
+// ────────────────────────────────────────────
+// কেন plain MD5/SHA1 নয়?
+// ────────────────────────────────────────────
+// MD5/SHA1: Fast → rainbow table attack possible
+// bcrypt: Intentionally slow + salt → brute force infeasible
+// Salt: প্রতিটি hash-এ random value — same password, different hash
+
+console.log(await bcrypt.hash('password123', 10));
+// '$2a$10$...' (different each time due to random salt)
+console.log(await bcrypt.hash('password123', 10));
+// '$2a$10$...' (different again!)
+// compare() salt extract করে automatically verify করে
+```
+
+---
+
+<a id="p5-jwt"></a>
+**Topic 3: JWT — JSON Web Token**
+
+```bash
+npm install jsonwebtoken
+```
+
+**JWT structure:**
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkFsaWNlIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3MTU1MDAwMDAsImV4cCI6MTcxNjEwNDgwMH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+Header.Payload.Signature
+
+Header:  { "alg": "HS256", "typ": "JWT" }
+Payload: { "sub": "user_id", "name": "Alice", "role": "user", "iat": ..., "exp": ... }
+Signature: HMACSHA256(base64(header) + "." + base64(payload), secret)
+```
+
+```javascript
+const jwt = require('jsonwebtoken');
+const config = require('./config/env');
+
+// ────────────────────────────────────────────
+// Token generate করুন
+// ────────────────────────────────────────────
+function generateAccessToken(user) {
+    return jwt.sign(
+        {
+            sub: user._id.toString(),   // subject — user ID
+            email: user.email,
+            role: user.role
+        },
+        config.jwtSecret,
+        {
+            expiresIn: '15m',           // Access token: short-lived
+            issuer: 'my-app',
+            audience: 'my-app-users'
+        }
+    );
+}
+
+function generateRefreshToken(user) {
+    return jwt.sign(
+        { sub: user._id.toString() },
+        config.jwtRefreshSecret,
+        { expiresIn: '7d' }             // Refresh token: long-lived
+    );
+}
+
+// ────────────────────────────────────────────
+// Token verify করুন
+// ────────────────────────────────────────────
+function verifyAccessToken(token) {
+    try {
+        return jwt.verify(token, config.jwtSecret, {
+            issuer: 'my-app',
+            audience: 'my-app-users'
+        });
+        // Returns: { sub: '...', email: '...', role: '...', iat: ..., exp: ... }
+    } catch (err) {
+        if (err.name === 'TokenExpiredError') {
+            throw new AppError('Token expired', 401, 'TOKEN_EXPIRED');
+        }
+        if (err.name === 'JsonWebTokenError') {
+            throw new AppError('Invalid token', 401, 'INVALID_TOKEN');
+        }
+        throw err;
+    }
+}
+
+// ────────────────────────────────────────────
+// Auth middleware
+// ────────────────────────────────────────────
+async function requireAuth(req, res, next) {
+    try {
+        // Header থেকে token extract করুন
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const token = authHeader.substring(7);  // 'Bearer ' remove
+        const payload = verifyAccessToken(token);
+
+        // User DB থেকে load করুন (optional — payload-এ enough info থাকলে skip)
+        // const user = await User.findById(payload.sub);
+        // if (!user || !user.isActive) return res.status(401).json({ error: 'User not found' });
+
+        req.user = {
+            id: payload.sub,
+            email: payload.email,
+            role: payload.role
+        };
+
+        next();
+    } catch (err) {
+        next(err);
+    }
+}
+
+module.exports = { generateAccessToken, generateRefreshToken, verifyAccessToken, requireAuth };
+```
+
+---
+
+<a id="p5-auth-flow"></a>
+**Topic 4: Registration ও Login Flow**
+
+```javascript
+// src/services/authService.js
+const User = require('../models/User');
+const { generateAccessToken, generateRefreshToken } = require('../utils/jwt');
+const { AppError } = require('../middleware/errorHandler');
+
+// ────────────────────────────────────────────
+// Registration
+// ────────────────────────────────────────────
+async function register(name, email, password) {
+    // 1. Email already exists?
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing) {
+        throw new AppError('Email already registered', 409, 'DUPLICATE_EMAIL');
+    }
+
+    // 2. User create করুন (password Mongoose pre-hook-এ hash হবে)
+    const user = await User.create({ name, email, password });
+
+    // 3. Tokens generate করুন
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    // 4. Refresh token DB-তে save করুন (revocation-এর জন্য)
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return {
+        user: user.toSafeObject(),
+        accessToken,
+        refreshToken
+    };
+}
+
+// ────────────────────────────────────────────
+// Login
+// ────────────────────────────────────────────
+async function login(email, password) {
+    // 1. User খুঁজুন (password select করুন — normally hidden)
+    const user = await User.findOne({ email: email.toLowerCase() })
+                           .select('+password');
+
+    if (!user) {
+        // Timing attack prevent: always compare (even if user not found)
+        await bcrypt.compare(password, '$2a$12$dummy.hash.to.prevent.timing');
+        throw new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
+    }
+
+    // 2. Password verify করুন
+    const isValid = await user.comparePassword(password);
+    if (!isValid) {
+        throw new AppError('Invalid email or password', 401, 'INVALID_CREDENTIALS');
+    }
+
+    // 3. Account active?
+    if (!user.isActive) {
+        throw new AppError('Account is deactivated', 403, 'ACCOUNT_INACTIVE');
+    }
+
+    // 4. Last login update করুন
+    user.lastLogin = new Date();
+    await user.save({ validateBeforeSave: false });
+
+    // 5. Tokens generate করুন
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return {
+        user: user.toSafeObject(),
+        accessToken,
+        refreshToken
+    };
+}
+
+// ────────────────────────────────────────────
+// Controller
+// ────────────────────────────────────────────
+// src/controllers/authController.js
+exports.register = async (req, res, next) => {
+    try {
+        const { name, email, password } = req.body;
+        const result = await authService.register(name, email, password);
+
+        // Refresh token HttpOnly cookie-তে
+        res.cookie('refreshToken', result.refreshToken, {
+            httpOnly: true,
+            secure: config.isProd,
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+        });
+
+        res.status(201).json({
+            success: true,
+            data: {
+                user: result.user,
+                accessToken: result.accessToken  // client localStorage/memory-তে রাখবে
+            }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.login = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        const result = await authService.login(email, password);
+
+        res.cookie('refreshToken', result.refreshToken, {
+            httpOnly: true, secure: config.isProd, sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({
+            success: true,
+            data: { user: result.user, accessToken: result.accessToken }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.logout = async (req, res, next) => {
+    try {
+        // DB থেকে refresh token remove করুন
+        await User.findByIdAndUpdate(req.user.id, { $unset: { refreshToken: 1 } });
+
+        res.clearCookie('refreshToken');
+        res.json({ success: true, message: 'Logged out' });
+    } catch (err) {
+        next(err);
+    }
+};
+```
+
+---
+
+<a id="p5-refresh"></a>
+**Topic 5: Refresh Token Pattern**
+
+```
+কেন Refresh Token?
+Access Token: short-lived (15min) → secure কিন্তু frequent re-login
+Refresh Token: long-lived (7d) → new access token পেতে ব্যবহার করি
+
+Flow:
+1. Login → access_token (15min) + refresh_token (7d, httpOnly cookie)
+2. API call → Bearer access_token
+3. Access token expire → 401
+4. POST /auth/refresh → cookie-তে refresh_token পাঠাও
+5. Server verify refresh_token → নতুন access_token return করো
+6. Retry original API call
+```
+
+```javascript
+// src/controllers/authController.js
+exports.refresh = async (req, res, next) => {
+    try {
+        // HttpOnly cookie থেকে refresh token
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
+            return res.status(401).json({ error: 'No refresh token' });
+        }
+
+        // Verify refresh token
+        let payload;
+        try {
+            payload = jwt.verify(refreshToken, config.jwtRefreshSecret);
+        } catch {
+            return res.status(401).json({ error: 'Invalid refresh token' });
+        }
+
+        // User exists এবং token matches?
+        const user = await User.findById(payload.sub).select('+refreshToken');
+        if (!user || user.refreshToken !== refreshToken) {
+            return res.status(401).json({ error: 'Refresh token revoked' });
+        }
+
+        // নতুন access token generate করুন
+        const newAccessToken = generateAccessToken(user);
+
+        // Token rotation (optional, more secure)
+        const newRefreshToken = generateRefreshToken(user);
+        user.refreshToken = newRefreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true, secure: config.isProd, sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({
+            success: true,
+            data: { accessToken: newAccessToken }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+```
+
+**Token storage best practice:**
+```
+Access Token:
+✅ Memory (JS variable) — most secure, lost on page refresh
+✅ sessionStorage — tab closes-এ lost
+❌ localStorage — XSS-এ vulnerable (avoid for sensitive apps)
+
+Refresh Token:
+✅ HttpOnly Cookie — JS access নেই, XSS safe
+   CSRF protection: sameSite: 'strict' বা CSRF token
+❌ localStorage — XSS-এ vulnerable
+```
+
+---
+
+<a id="p5-session"></a>
+**Topic 6: Session-based Authentication**
+
+```bash
+npm install express-session connect-mongo
+```
+
+```javascript
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+
+app.use(session({
+    secret: config.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: config.mongoUri,
+        ttl: 7 * 24 * 60 * 60,  // 7 days
+        touchAfter: 24 * 3600    // 24h-এ একবার update (performance)
+    }),
+    cookie: {
+        httpOnly: true,
+        secure: config.isProd,
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+    },
+    name: 'sessionId'  // default 'connect.sid' চেঞ্জ করুন
+}));
+
+// Login — session create করুন
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email }).select('+password');
+    if (!user || !await user.comparePassword(password)) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    req.session.userId = user._id.toString();
+    req.session.role = user.role;
+
+    res.json({ success: true, user: user.toSafeObject() });
+});
+
+// Auth middleware
+async function requireAuth(req, res, next) {
+    if (!req.session.userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+    req.user = { id: req.session.userId, role: req.session.role };
+    next();
+}
+
+// Logout — session destroy করুন
+app.post('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) return res.status(500).json({ error: 'Logout failed' });
+        res.clearCookie('sessionId');
+        res.json({ success: true });
+    });
+});
+```
+
+**JWT vs Session:**
+
+| | JWT | Session |
+|---|---|---|
+| Storage | Client (token) | Server (session store) |
+| Scalability | ✅ Stateless — horizontal scale সহজ | ❌ Shared store দরকার (Redis) |
+| Revocation | ❌ কঠিন (blacklist বা short expiry) | ✅ সহজ (session delete) |
+| Size | Larger payload | Small cookie ID |
+| Best for | REST API, microservices | Traditional web app, SSR |
+
+---
+
+<a id="p5-oauth"></a>
+**Topic 7: OAuth2 ও Social Login**
+
+```bash
+npm install passport passport-google-oauth20 passport-jwt
+```
+
+**OAuth2 Flow:**
+```
+1. User "Login with Google" click করে
+2. App → Google Authorization URL redirect করে
+3. User Google-এ login করে, permission দেয়
+4. Google → App-এর callback URL-এ authorization code পাঠায়
+5. App → Google-এ code + client_secret দিয়ে access_token চায়
+6. Google → access_token + user info দেয়
+7. App নিজের user create/find করে, নিজের session/JWT দেয়
+```
+
+```javascript
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
+passport.use(new GoogleStrategy(
+    {
+        clientID: config.googleClientId,
+        clientSecret: config.googleClientSecret,
+        callbackURL: `${config.apiUrl}/auth/google/callback`
+    },
+    async (accessToken, refreshToken, profile, done) => {
+        try {
+            // User DB-তে আছে?
+            let user = await User.findOne({ googleId: profile.id });
+
+            if (!user) {
+                // Email দিয়ে existing user খুঁজুন
+                user = await User.findOne({ email: profile.emails[0].value });
+
+                if (user) {
+                    // Existing user-এ googleId connect করুন
+                    user.googleId = profile.id;
+                    await user.save();
+                } else {
+                    // নতুন user তৈরি করুন
+                    user = await User.create({
+                        name: profile.displayName,
+                        email: profile.emails[0].value,
+                        googleId: profile.id,
+                        avatar: profile.photos[0]?.value,
+                        password: crypto.randomBytes(32).toString('hex')
+                    });
+                }
+            }
+
+            done(null, user);
+        } catch (err) {
+            done(err, null);
+        }
+    }
+));
+
+// Routes
+app.get('/auth/google',
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+app.get('/auth/google/callback',
+    passport.authenticate('google', { session: false }),
+    async (req, res) => {
+        const accessToken = generateAccessToken(req.user);
+        const refreshToken = generateRefreshToken(req.user);
+
+        // Refresh token cookie-তে
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
+
+        // Frontend-এ redirect করুন access token সহ
+        res.redirect(`${config.frontendUrl}/auth/callback?token=${accessToken}`);
+    }
+);
+```
+
+---
+
+<a id="p5-rbac"></a>
+**Topic 8: Role-Based Access Control (RBAC)**
+
+```javascript
+// ────────────────────────────────────────────
+// Simple role middleware
+// ────────────────────────────────────────────
+function requireRole(...roles) {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({ error: 'Forbidden — insufficient role' });
+        }
+        next();
+    };
+}
+
+// Usage
+app.get('/admin/users', requireAuth, requireRole('admin'), handler);
+app.get('/dashboard', requireAuth, requireRole('admin', 'moderator'), handler);
+app.get('/profile', requireAuth, requireRole('admin', 'moderator', 'user'), handler);
+
+// ────────────────────────────────────────────
+// Permission-based RBAC (more granular)
+// ────────────────────────────────────────────
+const PERMISSIONS = {
+    admin:     ['read:users', 'write:users', 'delete:users', 'read:reports', 'write:settings'],
+    moderator: ['read:users', 'write:users', 'read:reports'],
+    user:      ['read:users']
+};
+
+function requirePermission(permission) {
+    return (req, res, next) => {
+        const userPermissions = PERMISSIONS[req.user?.role] || [];
+        if (!userPermissions.includes(permission)) {
+            return res.status(403).json({
+                error: 'Forbidden',
+                required: permission
+            });
+        }
+        next();
+    };
+}
+
+// Usage
+app.delete('/users/:id', requireAuth, requirePermission('delete:users'), handler);
+app.get('/reports', requireAuth, requirePermission('read:reports'), handler);
+
+// ────────────────────────────────────────────
+// Resource ownership check
+// ────────────────────────────────────────────
+async function requireOwnerOrAdmin(req, res, next) {
+    const resource = await User.findById(req.params.id);
+    if (!resource) {
+        return res.status(404).json({ error: 'Not found' });
+    }
+
+    const isOwner = resource._id.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    req.resource = resource;  // next handler-এ পাবে
+    next();
+}
+
+app.put('/users/:id', requireAuth, requireOwnerOrAdmin, updateHandler);
+```
+
+---
+
+<a id="p5-security"></a>
+**Topic 9: Auth Security Best Practices**
+
+```javascript
+// ────────────────────────────────────────────
+// 1. Input validation (express-validator)
+// ────────────────────────────────────────────
+const { body, validationResult } = require('express-validator');
+
+const registerValidation = [
+    body('name').trim().isLength({ min: 2, max: 50 }).withMessage('Name: 2-50 chars'),
+    body('email').isEmail().normalizeEmail().withMessage('Invalid email'),
+    body('password')
+        .isLength({ min: 8 })
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('Password: 8+ chars, uppercase, lowercase, number')
+];
+
+const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+};
+
+app.post('/register', registerValidation, validate, registerHandler);
+
+// ────────────────────────────────────────────
+// 2. Rate limiting for auth routes (brute force prevent)
+// ────────────────────────────────────────────
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,  // 15 minutes
+    max: 5,                      // 5 attempts
+    skipSuccessfulRequests: true,
+    message: { error: 'Too many login attempts, try again in 15 minutes' }
+});
+
+app.post('/auth/login', loginLimiter, loginHandler);
+
+// ────────────────────────────────────────────
+// 3. Timing attack prevention
+// ────────────────────────────────────────────
+// ❌ User not found → fast response; wrong password → slow bcrypt compare
+// → attacker can tell if email exists
+// ✅ Always run bcrypt compare (same time regardless)
+const dummyHash = '$2a$12$LRezBexLNmMobHj3GYFiLuNfFhOmgNiDJFE.WL0.cJW5v9OAFhnuO';
+if (!user) {
+    await bcrypt.compare(password, dummyHash);  // prevent timing attack
+    throw new AppError('Invalid credentials', 401);
+}
+
+// ────────────────────────────────────────────
+// 4. Account lockout
+// ────────────────────────────────────────────
+userSchema.add({
+    loginAttempts: { type: Number, default: 0 },
+    lockUntil: { type: Date }
+});
+
+userSchema.methods.incLoginAttempts = async function () {
+    if (this.lockUntil && this.lockUntil > Date.now()) return; // already locked
+    this.loginAttempts += 1;
+    if (this.loginAttempts >= 5) {
+        this.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 min lock
+    }
+    await this.save();
+};
+
+// ────────────────────────────────────────────
+// 5. Password reset (secure)
+// ────────────────────────────────────────────
+const crypto = require('crypto');
+
+async function requestPasswordReset(email) {
+    const user = await User.findOne({ email });
+    if (!user) return;  // Don't reveal if email exists
+
+    // Cryptographically secure random token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    user.passwordResetToken = hashedToken;   // DB-তে hash store করুন
+    user.passwordResetExpiry = new Date(Date.now() + 10 * 60 * 1000);  // 10 min
+    await user.save({ validateBeforeSave: false });
+
+    // Email-এ plain token পাঠান (URL-এ)
+    const resetUrl = `${config.frontendUrl}/reset-password?token=${resetToken}`;
+    await sendEmail({ to: email, subject: 'Password Reset', text: resetUrl });
+}
+
+async function resetPassword(plainToken, newPassword) {
+    const hashedToken = crypto.createHash('sha256').update(plainToken).digest('hex');
+    const user = await User.findOne({
+        passwordResetToken: hashedToken,
+        passwordResetExpiry: { $gt: Date.now() }
+    });
+    if (!user) throw new AppError('Invalid or expired reset token', 400);
+
+    user.password = newPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpiry = undefined;
+    await user.save();
+}
+
+// ────────────────────────────────────────────
+// 6. HTTPS only in production
+// ────────────────────────────────────────────
+if (config.isProd) {
+    app.use((req, res, next) => {
+        if (req.header('x-forwarded-proto') !== 'https') {
+            return res.redirect(`https://${req.header('host')}${req.url}`);
+        }
+        next();
+    });
+}
+```
+
+---
+
+<a id="p5-qa"></a>
+**Topic 10: PART 5 Interview Q&A**
+
+```
+প্রশ্ন: JWT কীভাবে কাজ করে? এর সুবিধা ও অসুবিধা?
+উত্তর: JWT = Header.Payload.Signature।
+Server secret দিয়ে sign করে। Verify করতে secret লাগে।
+Payload publicly readable (base64) — sensitive data রাখবেন না।
+
+সুবিধা: Stateless — DB check ছাড়া verify, horizontal scaling।
+অসুবিধা: Revocation কঠিন — logout করলেও token valid থাকে expiry পর্যন্ত।
+Solution: Short expiry (15min) + refresh token + blacklist (Redis)।
+
+প্রশ্ন: bcrypt-এ salt rounds কেন?
+উত্তর: Salt rounds মানে hashing কতবার repeat হবে। 12 মানে 2^12 = 4096 বার।
+বেশি rounds → slower → brute force expensive।
+Salt: প্রতিটি hash-এ random — same password, different hash → rainbow table useless।
+
+প্রশ্ন: Refresh token কেন HttpOnly cookie-তে রাখি?
+উত্তর: HttpOnly cookie JS থেকে access করা যায় না।
+XSS attack হলেও document.cookie দিয়ে refresh token চুরি করা যাবে না।
+Access token memory/sessionStorage-এ রাখলে XSS-এ চুরি হতে পারে,
+কিন্তু short-lived হওয়ায় damage কম।
+
+প্রশ্ন: Token revocation কীভাবে করবেন?
+উত্তর: Options:
+1. Short expiry (15min) — tolerable risk
+2. Redis blacklist — logout-এ token blacklist করুন
+3. Version number — user-এ tokenVersion field, token-এ include।
+   Logout-এ version increment → old tokens invalid
+4. Refresh token rotation — প্রতিবার refresh-এ নতুন token
+
+প্রশ্ন: OAuth2 ও JWT কি same?
+উত্তর: না। OAuth2 হলো authorization framework (third-party access delegation)।
+JWT হলো token format।
+OAuth2 access token হিসেবে JWT ব্যবহার করা যায়।
+"Login with Google" OAuth2 + OpenID Connect (authentication layer) ব্যবহার করে।
+
+প্রশ্ন: RBAC ও ABAC পার্থক্য?
+উত্তর:
+RBAC (Role-Based): User-এর role দেখে permission দেয়।
+Simple — admin, user, moderator।
+
+ABAC (Attribute-Based): User, resource, environment attributes দেখে।
+Complex — "user.department === resource.department && time.isBusinessHours"
+Fine-grained control দরকার হলে ABAC।
+```
+
+---
+
+**PART 5 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| Authentication | "তুমি কে?" — identity verify |
+| Authorization | "কী করতে পারবে?" — permission check |
+| bcrypt | Slow hash + salt — brute force prevent |
+| salt rounds | 12 recommended — higher = slower |
+| JWT | Header.Payload.Signature — stateless |
+| `jwt.sign()` | Token generate |
+| `jwt.verify()` | Token validate |
+| Access token | Short-lived (15min) — Bearer header |
+| Refresh token | Long-lived (7d) — HttpOnly cookie |
+| Token rotation | Refresh করলে নতুন refresh token |
+| Session-based | Server-side store — revocation সহজ |
+| RBAC | Role দেখে permission |
+| requirePermission | Granular permission check |
+| Timing attack | Always bcrypt.compare, same response time |
+| Password reset | Crypto random token + hash in DB |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+<a id="part6"></a>
+## PART 6: REST API Design ও Validation
+
+> Professional REST API design principles, input validation, file upload, API versioning, documentation এবং testing-ready architecture।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [REST Principles ও Constraints](#p6-rest) |
+| 2 | [HTTP Status Codes](#p6-status-codes) |
+| 3 | [API Response Format Standards](#p6-response-format) |
+| 4 | [Input Validation — express-validator](#p6-validation) |
+| 5 | [Pagination, Filtering ও Sorting](#p6-pagination) |
+| 6 | [File Upload — Multer](#p6-upload) |
+| 7 | [API Versioning](#p6-versioning) |
+| 8 | [API Documentation — Swagger/OpenAPI](#p6-docs) |
+| 9 | [CORS Configuration](#p6-cors) |
+| 10 | [Complete CRUD API Example](#p6-complete) |
+| 11 | [PART 6 Interview Q&A](#p6-qa) |
+
+---
+
+<a id="p6-rest"></a>
+**Topic 1: REST Principles ও Constraints**
+
+**REST কী:**
+Representational State Transfer — web service design architectural style।
+
+**6 REST Constraints:**
+```
+1. Client-Server    — Frontend ও Backend আলাদা
+2. Stateless        — প্রতিটি request self-contained, server state রাখে না
+3. Cacheable        — Response cache করা যাবে
+4. Uniform Interface— Consistent URL, HTTP methods, status codes
+5. Layered System   — Load balancer, CDN, proxy — client জানে না
+6. Code on Demand   — Optional: server JS send করতে পারে (rare)
+```
+
+**RESTful URL design:**
+```
+Resource: users
+
+GET    /api/users              → সব users (list)
+POST   /api/users              → নতুন user তৈরি
+GET    /api/users/:id          → specific user
+PUT    /api/users/:id          → user পুরোটা update
+PATCH  /api/users/:id          → user partial update
+DELETE /api/users/:id          → user delete
+
+Nested resources:
+GET    /api/users/:id/posts    → user-এর সব posts
+POST   /api/users/:id/posts    → user-এর নতুন post
+GET    /api/users/:id/posts/:postId → specific post
+
+Actions (verb URL — শুধু যদি REST-এ fit না হয়):
+POST   /api/users/:id/activate
+POST   /api/users/:id/deactivate
+POST   /api/auth/login
+POST   /api/auth/logout
+POST   /api/payments/:id/refund
+```
+
+**URL best practices:**
+```
+✅ Lowercase: /api/users, /api/blog-posts
+✅ Plural nouns: /users (not /user)
+✅ Hyphens for multi-word: /blog-posts (not /blogPosts)
+✅ Versioning: /api/v1/users
+❌ Verbs in URL: /api/getUsers, /api/createPost
+❌ Mixed case: /api/BlogPosts
+❌ Underscores: /api/blog_posts
+```
+
+---
+
+<a id="p6-status-codes"></a>
+**Topic 2: HTTP Status Codes**
+
+```
+2xx — Success
+200 OK             — GET, PUT, PATCH success
+201 Created        — POST success (new resource created)
+204 No Content     — DELETE success (no body)
+
+3xx — Redirection
+301 Moved Permanently   — permanent redirect (SEO-এ)
+302 Found               — temporary redirect
+304 Not Modified        — cache valid
+
+4xx — Client Error
+400 Bad Request         — Invalid input, validation error
+401 Unauthorized        — Not authenticated (no/invalid token)
+403 Forbidden           — Authenticated but no permission
+404 Not Found           — Resource doesn't exist
+405 Method Not Allowed  — GET /users-এ POST নেই
+409 Conflict            — Duplicate (email already exists)
+410 Gone                — Resource permanently deleted
+422 Unprocessable Entity — Validation failed (alternative to 400)
+429 Too Many Requests   — Rate limit exceeded
+
+5xx — Server Error
+500 Internal Server Error — Unexpected error
+502 Bad Gateway         — Upstream server error
+503 Service Unavailable — Server down/overloaded
+504 Gateway Timeout     — Upstream timeout
+```
+
+**Common mistakes:**
+```
+❌ 200 OK + { error: "User not found" }  — always use correct status code!
+❌ 500 for validation errors             — 400/422 ব্যবহার করুন
+❌ 403 when 401 is correct               — 401: not logged in, 403: logged in but no permission
+❌ 404 for wrong method                  — 405 Method Not Allowed
+```
+
+---
+
+<a id="p6-response-format"></a>
+**Topic 3: API Response Format Standards**
+
+```javascript
+// ────────────────────────────────────────────
+// Success response
+// ────────────────────────────────────────────
+// Single resource
+{
+    "success": true,
+    "data": {
+        "id": "507f1f77bcf86cd799439011",
+        "name": "Alice",
+        "email": "alice@example.com",
+        "role": "user",
+        "createdAt": "2026-05-13T10:00:00.000Z"
+    }
+}
+
+// List with pagination
+{
+    "success": true,
+    "data": [
+        { "id": "...", "name": "Alice" },
+        { "id": "...", "name": "Bob" }
+    ],
+    "pagination": {
+        "page": 1,
+        "limit": 10,
+        "total": 150,
+        "pages": 15,
+        "hasNext": true,
+        "hasPrev": false
+    }
+}
+
+// ────────────────────────────────────────────
+// Error response
+// ────────────────────────────────────────────
+// Single error
+{
+    "success": false,
+    "error": {
+        "message": "User not found",
+        "code": "NOT_FOUND"
+    }
+}
+
+// Validation errors
+{
+    "success": false,
+    "error": {
+        "message": "Validation failed",
+        "code": "VALIDATION_ERROR",
+        "details": [
+            { "field": "email", "message": "Invalid email format" },
+            { "field": "password", "message": "Must be at least 8 characters" }
+        ]
+    }
+}
+
+// ────────────────────────────────────────────
+// Response helpers
+// ────────────────────────────────────────────
+// src/utils/response.js
+const sendSuccess = (res, data, statusCode = 200, meta = null) => {
+    const response = { success: true, data };
+    if (meta) response.pagination = meta;
+    res.status(statusCode).json(response);
+};
+
+const sendError = (res, message, statusCode = 500, code = null, details = null) => {
+    const error = { message };
+    if (code) error.code = code;
+    if (details) error.details = details;
+    res.status(statusCode).json({ success: false, error });
+};
+
+const sendPaginated = (res, data, page, limit, total) => {
+    sendSuccess(res, data, 200, {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        pages: Math.ceil(total / limit),
+        hasNext: page * limit < total,
+        hasPrev: page > 1
+    });
+};
+
+module.exports = { sendSuccess, sendError, sendPaginated };
+```
+
+---
+
+<a id="p6-validation"></a>
+**Topic 4: Input Validation — express-validator**
+
+```bash
+npm install express-validator
+```
+
+```javascript
+const { body, param, query, validationResult } = require('express-validator');
+
+// ────────────────────────────────────────────
+// Validation chains
+// ────────────────────────────────────────────
+const createUserValidation = [
+    body('name')
+        .trim()
+        .notEmpty().withMessage('Name is required')
+        .isLength({ min: 2, max: 50 }).withMessage('Name: 2-50 characters')
+        .matches(/^[a-zA-Z\s]+$/).withMessage('Name: letters and spaces only'),
+
+    body('email')
+        .isEmail().withMessage('Invalid email format')
+        .normalizeEmail()
+        .toLowerCase(),
+
+    body('password')
+        .isLength({ min: 8 }).withMessage('Password: minimum 8 characters')
+        .matches(/[A-Z]/).withMessage('Password: at least one uppercase letter')
+        .matches(/[a-z]/).withMessage('Password: at least one lowercase letter')
+        .matches(/\d/).withMessage('Password: at least one number'),
+
+    body('age')
+        .optional()
+        .isInt({ min: 18, max: 120 }).withMessage('Age: 18-120')
+        .toInt(),
+
+    body('role')
+        .optional()
+        .isIn(['user', 'admin', 'moderator']).withMessage('Invalid role')
+];
+
+const updateUserValidation = [
+    param('id').isMongoId().withMessage('Invalid user ID'),
+    body('name').optional().trim().isLength({ min: 2, max: 50 }),
+    body('email').optional().isEmail().normalizeEmail()
+];
+
+const paginationValidation = [
+    query('page').optional().isInt({ min: 1 }).toInt().default(1),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt().default(10),
+    query('sort').optional().isIn(['name', 'email', 'createdAt', '-createdAt'])
+];
+
+// ────────────────────────────────────────────
+// Validation middleware
+// ────────────────────────────────────────────
+const validate = (req, res, next) => {
+    const errors = validationResult(req);
+    if (errors.isEmpty()) return next();
+
+    const details = errors.array().map(err => ({
+        field: err.path,
+        message: err.msg,
+        value: err.value
+    }));
+
+    return res.status(400).json({
+        success: false,
+        error: {
+            message: 'Validation failed',
+            code: 'VALIDATION_ERROR',
+            details
+        }
+    });
+};
+
+// ────────────────────────────────────────────
+// Routes-এ apply করুন
+// ────────────────────────────────────────────
+router.post('/', createUserValidation, validate, userController.create);
+router.put('/:id', updateUserValidation, validate, userController.update);
+router.get('/', paginationValidation, validate, userController.getAll);
+
+// ────────────────────────────────────────────
+// Custom validator
+// ────────────────────────────────────────────
+body('email').custom(async (email) => {
+    const user = await User.findOne({ email });
+    if (user) throw new Error('Email already in use');
+    return true;
+});
+
+body('confirmPassword').custom((confirmPassword, { req }) => {
+    if (confirmPassword !== req.body.password) {
+        throw new Error('Passwords do not match');
+    }
+    return true;
+});
+```
+
+---
+
+<a id="p6-pagination"></a>
+**Topic 5: Pagination, Filtering ও Sorting**
+
+```javascript
+// src/utils/queryBuilder.js
+// MongoDB query helper
+
+function buildQuery(reqQuery) {
+    const {
+        page = 1, limit = 10, sort = '-createdAt',
+        fields, search,
+        ...filters
+    } = reqQuery;
+
+    // ────────────────────────────────────────────
+    // Filter — comparison operators
+    // GET /users?age[gte]=18&age[lte]=30&role=user
+    // ────────────────────────────────────────────
+    let filterStr = JSON.stringify(filters);
+    filterStr = filterStr.replace(/\b(gte|gt|lte|lt|in|nin|ne)\b/g, '$$$1');
+    const parsedFilters = JSON.parse(filterStr);
+
+    // ────────────────────────────────────────────
+    // Search — text search
+    // GET /users?search=alice
+    // ────────────────────────────────────────────
+    if (search) {
+        parsedFilters.$or = [
+            { name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } }
+        ];
+    }
+
+    // ────────────────────────────────────────────
+    // Pagination
+    // ────────────────────────────────────────────
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    const skip = (pageNum - 1) * limitNum;
+
+    // ────────────────────────────────────────────
+    // Sort — GET /users?sort=-createdAt,name
+    // ────────────────────────────────────────────
+    const sortStr = sort.split(',').join(' ');
+
+    // ────────────────────────────────────────────
+    // Field selection — GET /users?fields=name,email
+    // ────────────────────────────────────────────
+    const selectStr = fields ? fields.split(',').join(' ') : '-__v -password';
+
+    return {
+        filter: parsedFilters,
+        sort: sortStr,
+        select: selectStr,
+        skip,
+        limit: limitNum,
+        page: pageNum
+    };
+}
+
+// Controller-এ:
+exports.getAll = async (req, res, next) => {
+    try {
+        const { filter, sort, select, skip, limit, page } = buildQuery(req.query);
+
+        const [data, total] = await Promise.all([
+            User.find(filter).sort(sort).select(select).skip(skip).limit(limit).lean(),
+            User.countDocuments(filter)
+        ]);
+
+        sendPaginated(res, data, page, limit, total);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Usage examples:
+// GET /api/users                        → page 1, limit 10
+// GET /api/users?page=2&limit=20        → page 2, 20 per page
+// GET /api/users?sort=-createdAt        → newest first
+// GET /api/users?sort=name              → alphabetical
+// GET /api/users?fields=name,email      → only name+email
+// GET /api/users?search=alice           → search by name/email
+// GET /api/users?role=admin             → filter by role
+// GET /api/users?age[gte]=18&age[lte]=30 → age range
+```
+
+---
+
+<a id="p6-upload"></a>
+**Topic 6: File Upload — Multer**
+
+```bash
+npm install multer sharp
+```
+
+```javascript
+// src/middleware/upload.js
+const multer = require('multer');
+const sharp = require('sharp');
+const path = require('path');
+const crypto = require('crypto');
+const { AppError } = require('./errorHandler');
+
+// ────────────────────────────────────────────
+// Memory storage (process before saving)
+// ────────────────────────────────────────────
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new AppError('Only JPEG, PNG, WebP images allowed', 400), false);
+    }
+};
+
+const upload = multer({
+    storage: multerStorage,
+    fileFilter: multerFilter,
+    limits: {
+        fileSize: 5 * 1024 * 1024,   // 5MB
+        files: 5                      // max 5 files
+    }
+});
+
+// ────────────────────────────────────────────
+// Image processing middleware
+// ────────────────────────────────────────────
+async function processAvatar(req, res, next) {
+    if (!req.file) return next();
+
+    // Unique filename
+    const filename = `user-${req.user.id}-${crypto.randomBytes(8).toString('hex')}.webp`;
+
+    // Process with sharp — resize, format, optimize
+    await sharp(req.file.buffer)
+        .resize(300, 300, { fit: 'cover' })
+        .toFormat('webp', { quality: 80 })
+        .toFile(path.join(__dirname, '../../uploads/avatars', filename));
+
+    req.file.filename = filename;
+    req.file.path = `/uploads/avatars/${filename}`;
+    next();
+}
+
+// ────────────────────────────────────────────
+// Routes
+// ────────────────────────────────────────────
+// Single file
+router.post('/avatar',
+    requireAuth,
+    upload.single('avatar'),   // form field name: 'avatar'
+    processAvatar,
+    async (req, res) => {
+        await User.findByIdAndUpdate(req.user.id, { avatar: req.file.path });
+        res.json({ success: true, avatar: req.file.path });
+    }
+);
+
+// Multiple files
+router.post('/gallery',
+    requireAuth,
+    upload.array('photos', 10),  // max 10 files
+    async (req, res) => {
+        const filePaths = req.files.map(f => f.path);
+        res.json({ success: true, files: filePaths });
+    }
+);
+
+// Mixed fields
+router.post('/post',
+    requireAuth,
+    upload.fields([
+        { name: 'cover', maxCount: 1 },
+        { name: 'attachments', maxCount: 5 }
+    ]),
+    async (req, res) => {
+        const cover = req.files.cover?.[0];
+        const attachments = req.files.attachments || [];
+        // ...
+    }
+);
+
+// ────────────────────────────────────────────
+// Disk storage (direct save)
+// ────────────────────────────────────────────
+const diskStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/documents');
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const name = `${Date.now()}-${crypto.randomBytes(8).toString('hex')}${ext}`;
+        cb(null, name);
+    }
+});
+
+module.exports = { upload, processAvatar };
+```
+
+---
+
+<a id="p6-versioning"></a>
+**Topic 7: API Versioning**
+
+```javascript
+// ────────────────────────────────────────────
+// URL-based versioning (most common)
+// ────────────────────────────────────────────
+app.use('/api/v1', v1Routes);
+app.use('/api/v2', v2Routes);
+
+// v1/routes/users.js → old format
+// v2/routes/users.js → new format (breaking changes)
+
+// ────────────────────────────────────────────
+// Header-based versioning
+// ────────────────────────────────────────────
+app.use((req, res, next) => {
+    const version = req.headers['api-version'] || 'v1';
+    req.apiVersion = version;
+    next();
+});
+
+// ────────────────────────────────────────────
+// Query param versioning
+// ────────────────────────────────────────────
+// GET /api/users?version=2
+
+// ────────────────────────────────────────────
+// Version deprecation
+// ────────────────────────────────────────────
+app.use('/api/v1', (req, res, next) => {
+    res.setHeader('Deprecation', 'true');
+    res.setHeader('Sunset', 'Sat, 31 Dec 2026 23:59:59 GMT');
+    res.setHeader('Link', '<https://api.example.com/api/v2>; rel="successor-version"');
+    next();
+}, v1Routes);
+```
+
+---
+
+<a id="p6-docs"></a>
+**Topic 8: API Documentation — Swagger/OpenAPI**
+
+```bash
+npm install swagger-jsdoc swagger-ui-express
+```
+
+```javascript
+// src/config/swagger.js
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+const options = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'My API',
+            version: '1.0.0',
+            description: 'Node.js REST API documentation'
+        },
+        servers: [
+            { url: 'http://localhost:3000/api/v1', description: 'Development' },
+            { url: 'https://api.example.com/api/v1', description: 'Production' }
+        ],
+        components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT'
+                }
+            }
+        }
+    },
+    apis: ['./src/routes/*.js']  // JSDoc comments scan করবে
+};
+
+const specs = swaggerJsdoc(options);
+
+// app.js-এ:
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+// http://localhost:3000/api-docs — interactive docs
+
+// Route file-এ JSDoc:
+/**
+ * @swagger
+ * /users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [Users]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Users list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/', requireAuth, userController.getAll);
+```
+
+---
+
+<a id="p6-cors"></a>
+**Topic 9: CORS Configuration**
+
+```javascript
+const cors = require('cors');
+
+// ────────────────────────────────────────────
+// Simple CORS
+// ────────────────────────────────────────────
+app.use(cors());  // সব origins allow — development only!
+
+// ────────────────────────────────────────────
+// Specific origins
+// ────────────────────────────────────────────
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://myapp.com',
+    'https://www.myapp.com'
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Postman (no origin) বা allowed origins
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
+    exposedHeaders: ['X-Total-Count', 'X-Request-Id'],
+    credentials: true,    // Cookie পাঠাতে হলে
+    maxAge: 86400         // Preflight cache: 1 day
+}));
+
+// ────────────────────────────────────────────
+// CORS কী?
+// ────────────────────────────────────────────
+// Browser security: origin A → origin B-এর API call block করে।
+// CORS headers দিয়ে server বলে "এই origins থেকে allow করি"।
+// Preflight: Browser OPTIONS request পাঠায় → server CORS headers দেয় → actual request
+
+// Origin = protocol + domain + port
+// http://localhost:3000 ≠ http://localhost:5000 (different port = different origin)
+// http://example.com ≠ https://example.com (different protocol)
+```
+
+---
+
+<a id="p6-complete"></a>
+**Topic 10: Complete CRUD API Example**
+
+```javascript
+// src/routes/posts.js
+const express = require('express');
+const router = express.Router();
+const { body, param, query } = require('express-validator');
+const { requireAuth } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const postController = require('../controllers/postController');
+
+const postValidation = [
+    body('title').trim().notEmpty().isLength({ max: 200 }),
+    body('content').trim().notEmpty().isLength({ max: 10000 }),
+    body('tags').optional().isArray().withMessage('Tags must be an array'),
+    body('tags.*').optional().isString().trim(),
+    body('published').optional().isBoolean().toBoolean()
+];
+
+// GET /api/posts
+router.get('/',
+    [
+        query('page').optional().isInt({ min: 1 }).toInt(),
+        query('limit').optional().isInt({ min: 1, max: 50 }).toInt(),
+        query('search').optional().trim().isLength({ max: 100 }),
+        query('published').optional().isBoolean().toBoolean()
+    ],
+    validate,
+    postController.getAll
+);
+
+// GET /api/posts/:id
+router.get('/:id',
+    [param('id').isMongoId()],
+    validate,
+    postController.getById
+);
+
+// POST /api/posts
+router.post('/',
+    requireAuth,
+    postValidation,
+    validate,
+    postController.create
+);
+
+// PUT /api/posts/:id
+router.put('/:id',
+    requireAuth,
+    [param('id').isMongoId(), ...postValidation],
+    validate,
+    postController.update
+);
+
+// DELETE /api/posts/:id
+router.delete('/:id',
+    requireAuth,
+    [param('id').isMongoId()],
+    validate,
+    postController.remove
+);
+
+module.exports = router;
+```
+
+---
+
+<a id="p6-qa"></a>
+**Topic 11: PART 6 Interview Q&A**
+
+```
+প্রশ্ন: REST API design-এ কোন best practices follow করেন?
+উত্তর:
+- Plural nouns: /users, /posts (verbs না)
+- HTTP methods সঠিকভাবে: GET=read, POST=create, PUT=full update,
+  PATCH=partial, DELETE=remove
+- Correct status codes: 201 for create, 204 for delete, 401/403 distinction
+- Consistent response format: { success, data, pagination/error }
+- Versioning: /api/v1/... (breaking changes-এ v2)
+- Pagination সব list endpoints-এ
+- Input validation সব mutating endpoints-এ
+
+প্রশ্ন: 401 ও 403-এর পার্থক্য?
+উত্তর:
+401 Unauthorized: Not authenticated — token নেই বা invalid।
+"আপনি কে সেটা জানি না।"
+
+403 Forbidden: Authenticated কিন্তু permission নেই।
+"আপনি কে জানি, কিন্তু এটা করার permission নেই।"
+
+প্রশ্ন: CORS কী? কেন দরকার?
+উত্তর: Browser-এর same-origin policy। Origin A থেকে Origin B-তে
+API call করলে browser block করে।
+Server CORS headers দিয়ে কোন origins allow — browser সেটা দেখে allow করে।
+credentials: true থাকলে cookie পাঠানো যায়।
+Server-to-server (Node → DB) CORS নেই — only browser।
+
+প্রশ্ন: File upload-এ কী security check করবেন?
+উত্তর:
+1. MIME type check (file.mimetype) — শুধু allowed types
+2. File size limit (multer limits)
+3. Filename sanitize — original filename use করবেন না
+4. Random filename generate করুন (crypto)
+5. Scan for malware (optional, production)
+6. Uploads directory outside public web root
+7. CDN/S3-এ store করুন (not server disk)
+
+প্রশ্ন: API versioning কেন দরকার?
+উত্তর: Existing clients break না করে API change করতে।
+v1 client চলতে থাকে, নতুন clients v2 use করে।
+Deprecation header দিয়ে v1 ব্যবহারকারীদের v2-তে migrate করতে জানান।
+URL versioning (/v1/) সবচেয়ে visible ও popular।
+
+প্রশ্ন: express-validator vs Joi vs Zod?
+উত্তর:
+express-validator: Express middleware — req directly validate।
+Joi: Object schema validation — any JS object।
+Zod: TypeScript-first — type inference সহ।
+
+Simple Express app: express-validator ভালো।
+TypeScript project: Zod excellent।
+Complex schemas: Joi flexible।
+```
+
+---
+
+**PART 6 Quick Revision Table**
+
+| Concept | মূল কথা |
+|---------|---------|
+| REST constraints | Stateless, Uniform Interface, Client-Server |
+| URL design | Plural nouns, lowercase, no verbs |
+| 200/201/204 | OK / Created / No Content |
+| 400/401/403/404 | Bad Request / Unauth / Forbidden / Not Found |
+| 409/429/500 | Conflict / Rate Limit / Server Error |
+| Response format | `{ success, data, pagination/error }` |
+| express-validator | `body().isEmail()`, `validationResult()` |
+| Pagination | page, limit, skip, total, pages |
+| Multer | File upload middleware |
+| `memoryStorage` | Buffer-এ রাখো, process করো (sharp) |
+| `diskStorage` | Disk-এ সরাসরি save |
+| API versioning | `/api/v1/` URL path |
+| Swagger | JSDoc → interactive docs at /api-docs |
+| CORS | Browser security — allowed origins |
+| `credentials: true` | Cookie cross-origin পাঠাতে |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 7 — Error Handling ও Logging *(Next request এ লিখব)*
