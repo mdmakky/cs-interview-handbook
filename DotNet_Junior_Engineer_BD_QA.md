@@ -25,8 +25,8 @@
 | [PART 9](#part9) | Frontend Integration & Full Stack | ✅ |
 | [PART 10](#part10) | Testing & Debugging | ✅ |
 | [PART 11](#part11) | Deployment & DevOps Basics | ✅ |
-| PART 12 | System Design with .NET | ⏳ |
-| PART 13 | .NET Projects | ⏳ |
+| [PART 12](#part12) | System Design with .NET | ✅ |
+| [PART 13](#part13) | .NET Projects | ✅ |
 | PART 14 | Interview Questions Bank | ⏳ |
 | PART 15 | Bangladeshi Interview Preparation | ⏳ |
 
@@ -12614,3 +12614,1535 @@ Environment secrets → production-only deployment।
 ---
 
 > **📌 পরবর্তী:** PART 12 — System Design with .NET (Microservices, DDD, CQRS, Event Sourcing, Clean Architecture এবং আরও...)
+
+---
+
+<a id="part12"></a>
+## PART 12: System Design with .NET
+
+> Clean Architecture, DDD, CQRS, Event Sourcing, Microservices, API Gateway, Saga Pattern।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Clean Architecture](#p12-clean) |
+| 2 | [Domain-Driven Design (DDD)](#p12-ddd) |
+| 3 | [CQRS Pattern](#p12-cqrs) |
+| 4 | [MediatR — in-process messaging](#p12-mediatr) |
+| 5 | [Event Sourcing](#p12-eventsourcing) |
+| 6 | [Microservices Architecture](#p12-microservices) |
+| 7 | [API Gateway Pattern](#p12-gateway) |
+| 8 | [Saga Pattern — distributed transactions](#p12-saga) |
+
+---
+
+<a id="p12-clean"></a>
+### Topic 1: Clean Architecture
+
+```
+Clean Architecture Layers:
+────────────────────────────────────────────────────────
+  ┌─────────────────────────────────────────────┐
+  │  Presentation (API, Controllers, Blazor)    │
+  │  ┌─────────────────────────────────────┐    │
+  │  │  Infrastructure (EF Core, Redis,    │    │
+  │  │  Email, File Storage, External APIs)│    │
+  │  │  ┌───────────────────────────────┐  │    │
+  │  │  │  Application (Use Cases,      │  │    │
+  │  │  │  Commands, Queries, DTOs,     │  │    │
+  │  │  │  Interfaces, Validators)      │  │    │
+  │  │  │  ┌─────────────────────────┐  │  │    │
+  │  │  │  │  Domain (Entities,      │  │  │    │
+  │  │  │  │  Value Objects, Events, │  │  │    │
+  │  │  │  │  Aggregates, Rules)     │  │  │    │
+  │  │  │  └─────────────────────────┘  │  │    │
+  │  │  └───────────────────────────────┘  │    │
+  │  └─────────────────────────────────────┘    │
+  └─────────────────────────────────────────────┘
+  Dependency direction: Inward only
+  Domain knows nothing about outer layers
+────────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Folder structure ──────────────────────────────────
+// MyApp.Domain/
+//   Entities/Order.cs, Product.cs
+//   ValueObjects/Money.cs, Address.cs
+//   Events/OrderCreatedEvent.cs
+//   Interfaces/IRepository.cs           ← abstract contract
+//   Exceptions/DomainException.cs
+
+// MyApp.Application/
+//   Orders/Commands/CreateOrder/
+//     CreateOrderCommand.cs
+//     CreateOrderCommandHandler.cs
+//     CreateOrderCommandValidator.cs
+//   Orders/Queries/GetOrder/
+//     GetOrderQuery.cs
+//     GetOrderQueryHandler.cs
+//     OrderDto.cs
+//   Common/Interfaces/IAppDbContext.cs
+
+// MyApp.Infrastructure/
+//   Persistence/AppDbContext.cs         ← implements IAppDbContext
+//   Repositories/OrderRepository.cs    ← implements IRepository
+//   Services/EmailService.cs
+
+// MyApp.Api/
+//   Controllers/OrdersController.cs
+//   Program.cs
+
+// ── Domain Entity ─────────────────────────────────────
+public class Order : BaseEntity
+{
+    public int    CustomerId  { get; private set; }
+    public Money  TotalAmount { get; private set; } = Money.Zero;
+    public OrderStatus Status { get; private set; } = OrderStatus.Pending;
+
+    private readonly List<OrderItem> _items = new();
+    public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
+
+    private readonly List<IDomainEvent> _events = new();
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _events.AsReadOnly();
+
+    // Private constructor — use factory method
+    private Order() { }
+
+    public static Order Create(int customerId)
+    {
+        Guard.Against.NegativeOrZero(customerId, nameof(customerId));
+        var order = new Order { CustomerId = customerId };
+        order._events.Add(new OrderCreatedEvent(order.Id, customerId));
+        return order;
+    }
+
+    public void AddItem(Product product, int quantity)
+    {
+        Guard.Against.NegativeOrZero(quantity, nameof(quantity));
+        if (Status != OrderStatus.Pending)
+            throw new DomainException("Cannot add items to a non-pending order");
+
+        var item = new OrderItem(product.Id, quantity, product.Price);
+        _items.Add(item);
+        TotalAmount = TotalAmount.Add(product.Price.Multiply(quantity));
+    }
+
+    public void Submit()
+    {
+        if (!_items.Any())
+            throw new DomainException("Cannot submit empty order");
+        Status = OrderStatus.Submitted;
+        _events.Add(new OrderSubmittedEvent(Id, CustomerId, TotalAmount));
+    }
+
+    public void ClearDomainEvents() => _events.Clear();
+}
+
+// ── Value Object ─────────────────────────────────────
+public record Money(decimal Amount, string Currency)
+{
+    public static readonly Money Zero = new(0, "BDT");
+
+    public Money Add(Money other)
+    {
+        if (Currency != other.Currency)
+            throw new DomainException("Cannot add different currencies");
+        return new Money(Amount + other.Amount, Currency);
+    }
+
+    public Money Multiply(int qty) => new(Amount * qty, Currency);
+}
+
+// ── Application interface (ports) ────────────────────
+public interface IAppDbContext
+{
+    DbSet<Order>   Orders   { get; }
+    DbSet<Product> Products { get; }
+    Task<int> SaveChangesAsync(CancellationToken ct);
+}
+```
+
+---
+
+<a id="p12-ddd"></a>
+### Topic 2: Domain-Driven Design (DDD)
+
+```
+DDD Building Blocks:
+────────────────────────────────────────────────────────
+Entity          → Identity দিয়ে distinguish। Order, Customer।
+Value Object    → Equality by value। Money, Address, Email।
+Aggregate       → Consistency boundary। Order + OrderItems।
+Aggregate Root  → Aggregate-এর entry point। Order only।
+Domain Event    → Something happened। OrderCreated, OrderShipped।
+Repository      → Aggregate persistence abstraction।
+Domain Service  → Logic যা single entity-তে fit করে না।
+Factory         → Complex aggregate creation।
+Bounded Context → একটি domain model-এর boundary।
+────────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Aggregate example ─────────────────────────────────
+// Order is Aggregate Root. Access OrderItems only through Order.
+// Never: orderItemRepository.Add(item) — go through Order.AddItem()
+
+// ── Domain Service — cross-aggregate logic ────────────
+public class PricingDomainService
+{
+    public Money CalculateOrderTotal(Order order, IReadOnlyList<Discount> discounts)
+    {
+        var subtotal = order.Items
+            .Aggregate(Money.Zero, (sum, item) => sum.Add(item.LineTotal));
+
+        var applicableDiscount = discounts
+            .Where(d => d.IsApplicableTo(order))
+            .OrderByDescending(d => d.Amount)
+            .FirstOrDefault();
+
+        return applicableDiscount is not null
+            ? subtotal.Subtract(applicableDiscount.Amount)
+            : subtotal;
+    }
+}
+
+// ── Domain Events — dispatch after SaveChanges ────────
+public class AppDbContext : DbContext
+{
+    private readonly IPublisher _publisher;
+
+    public override async Task<int> SaveChangesAsync(CancellationToken ct)
+    {
+        var result = await base.SaveChangesAsync(ct);
+
+        // Dispatch domain events after persisting
+        var events = ChangeTracker.Entries<BaseEntity>()
+            .SelectMany(e => e.Entity.DomainEvents)
+            .ToList();
+
+        foreach (var @event in events)
+        {
+            ChangeTracker.Entries<BaseEntity>()
+                .ToList()
+                .ForEach(e => e.Entity.ClearDomainEvents());
+            await _publisher.Publish(@event, ct);
+        }
+
+        return result;
+    }
+}
+
+// ── Ubiquitous Language ───────────────────────────────
+// Code uses same terms as domain experts:
+// "Submit order" not "ChangeOrderStatusToSubmitted"
+// "Cancel" not "SetStatusCancelled"
+// Use domain vocabulary in class, method, variable names
+
+// ── Bounded Contexts ─────────────────────────────────
+// OrderManagement BC → Order, OrderItem, OrderStatus
+// Inventory BC       → Product, StockLevel, Reservation
+// Billing BC         → Invoice, Payment, Refund
+// Each BC has its own DB schema, its own Order concept
+```
+
+---
+
+<a id="p12-cqrs"></a>
+### Topic 3: CQRS Pattern
+
+```
+CQRS — Command Query Responsibility Segregation:
+────────────────────────────────────────────────────────
+Command → Write side। State change। Returns void/id।
+           CreateOrderCommand, CancelOrderCommand
+Query   → Read side। No state change। Returns data।
+           GetOrderQuery, ListOrdersQuery
+
+Benefits:
+  - Read/write independently scaled and optimized
+  - Read model = denormalized, fast SELECT
+  - Write model = normalized, domain logic enforced
+────────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Command ───────────────────────────────────────────
+public record CreateOrderCommand(int CustomerId, List<OrderItemDto> Items)
+    : IRequest<int>;  // returns created Order Id
+
+public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int>
+{
+    private readonly IAppDbContext _db;
+    private readonly IMapper _mapper;
+
+    public CreateOrderCommandHandler(IAppDbContext db, IMapper mapper)
+    {
+        _db     = db;
+        _mapper = mapper;
+    }
+
+    public async Task<int> Handle(CreateOrderCommand request, CancellationToken ct)
+    {
+        var order = Order.Create(request.CustomerId);
+
+        foreach (var item in request.Items)
+        {
+            var product = await _db.Products.FindAsync(new object[] { item.ProductId }, ct)
+                ?? throw new NotFoundException(nameof(Product), item.ProductId);
+            order.AddItem(product, item.Quantity);
+        }
+
+        _db.Orders.Add(order);
+        await _db.SaveChangesAsync(ct);
+        return order.Id;
+    }
+}
+
+// ── Query ─────────────────────────────────────────────
+public record GetOrderByIdQuery(int Id) : IRequest<OrderDetailDto?>;
+
+public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, OrderDetailDto?>
+{
+    private readonly IAppDbContext _db;
+    private readonly IMapper _mapper;
+
+    public async Task<OrderDetailDto?> Handle(GetOrderByIdQuery request, CancellationToken ct)
+    {
+        // Read side: project directly to DTO — skip domain model
+        return await _db.Orders
+            .AsNoTracking()
+            .Where(o => o.Id == request.Id)
+            .ProjectTo<OrderDetailDto>(_mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync(ct);
+    }
+}
+
+// ── Controller ────────────────────────────────────────
+[ApiController, Route("api/[controller]")]
+public class OrdersController : ControllerBase
+{
+    private readonly ISender _mediator;
+    public OrdersController(ISender mediator) => _mediator = mediator;
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateOrderCommand command,
+        CancellationToken ct)
+    {
+        var id = await _mediator.Send(command, ct);
+        return CreatedAtAction(nameof(GetById), new { id }, null);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<OrderDetailDto>> GetById(int id, CancellationToken ct)
+    {
+        var result = await _mediator.Send(new GetOrderByIdQuery(id), ct);
+        return result is null ? NotFound() : Ok(result);
+    }
+}
+```
+
+---
+
+<a id="p12-mediatr"></a>
+### Topic 4: MediatR — in-process messaging
+
+```csharp
+// dotnet add package MediatR
+// dotnet add package MediatR.Extensions.Microsoft.DependencyInjection
+// (or FluentValidation.DependencyInjectionExtensions)
+
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CreateOrderCommand).Assembly));
+
+// ── Pipeline Behaviors ────────────────────────────────
+// Cross-cutting concerns: logging, validation, caching
+
+// 1. Validation behavior (FluentValidation)
+public class ValidationBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
+{
+    private readonly IEnumerable<IValidator<TRequest>> _validators;
+
+    public ValidationBehavior(IEnumerable<IValidator<TRequest>> validators)
+        => _validators = validators;
+
+    public async Task<TResponse> Handle(TRequest request,
+        RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        if (!_validators.Any()) return await next();
+
+        var context = new ValidationContext<TRequest>(request);
+        var failures = _validators
+            .Select(v => v.Validate(context))
+            .SelectMany(r => r.Errors)
+            .Where(f => f is not null)
+            .ToList();
+
+        if (failures.Any())
+            throw new ValidationException(failures);
+
+        return await next();
+    }
+}
+
+// 2. Logging behavior
+public class LoggingBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
+{
+    private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
+
+    public async Task<TResponse> Handle(TRequest request,
+        RequestHandlerDelegate<TResponse> next, CancellationToken ct)
+    {
+        var name = typeof(TRequest).Name;
+        _logger.LogInformation("Handling {Request}: {@RequestData}", name, request);
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            var response = await next();
+            _logger.LogInformation(
+                "Handled {Request} in {Elapsed}ms", name, sw.ElapsedMilliseconds);
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling {Request}", name);
+            throw;
+        }
+    }
+}
+
+// Register behaviors:
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(CreateOrderCommand).Assembly);
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+    cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+});
+
+// FluentValidation:
+public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
+{
+    public CreateOrderCommandValidator()
+    {
+        RuleFor(c => c.CustomerId).GreaterThan(0);
+        RuleFor(c => c.Items).NotEmpty();
+        RuleForEach(c => c.Items).ChildRules(item =>
+        {
+            item.RuleFor(i => i.ProductId).GreaterThan(0);
+            item.RuleFor(i => i.Quantity).InclusiveBetween(1, 100);
+        });
+    }
+}
+```
+
+---
+
+<a id="p12-eventsourcing"></a>
+### Topic 5: Event Sourcing
+
+```
+Event Sourcing:
+────────────────────────────────────────────────────────
+Traditional:  Save current state → UPDATE orders SET status='Shipped'
+Event Sourcing: Save events  → INSERT: OrderCreated, ItemAdded, OrderShipped
+
+Benefits:
+  - Complete audit log — who did what, when
+  - Temporal queries — state at any point in time
+  - Event replay — rebuild projections
+  - CQRS natural fit
+
+Concepts:
+  Event Store  → append-only log of all events
+  Projection   → current state built by replaying events
+  Snapshot     → optimization — periodically persist state
+────────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Domain Events ─────────────────────────────────────
+public abstract record DomainEvent(Guid EventId, DateTime OccurredAt)
+{
+    protected DomainEvent() : this(Guid.NewGuid(), DateTime.UtcNow) { }
+}
+
+public record OrderCreatedEvent(int OrderId, int CustomerId) : DomainEvent;
+public record OrderItemAddedEvent(int OrderId, int ProductId, int Qty, decimal Price) : DomainEvent;
+public record OrderSubmittedEvent(int OrderId, decimal Total) : DomainEvent;
+public record OrderShippedEvent(int OrderId, string TrackingNumber) : DomainEvent;
+
+// ── Event-sourced Aggregate ───────────────────────────
+public class EventSourcedOrder
+{
+    public int    Id         { get; private set; }
+    public int    CustomerId { get; private set; }
+    public string Status     { get; private set; } = "Pending";
+    public decimal Total     { get; private set; }
+
+    private readonly List<DomainEvent> _uncommittedEvents = new();
+
+    // Rebuild from events (replay)
+    public static EventSourcedOrder Rehydrate(IEnumerable<DomainEvent> events)
+    {
+        var order = new EventSourcedOrder();
+        foreach (var e in events) order.Apply(e);
+        return order;
+    }
+
+    public void Create(int customerId)
+    {
+        var @event = new OrderCreatedEvent(Id, customerId);
+        Apply(@event);
+        _uncommittedEvents.Add(@event);
+    }
+
+    public void Ship(string trackingNumber)
+    {
+        if (Status != "Submitted")
+            throw new DomainException("Only submitted orders can be shipped");
+        var @event = new OrderShippedEvent(Id, trackingNumber);
+        Apply(@event);
+        _uncommittedEvents.Add(@event);
+    }
+
+    // Apply — pure state transition, no side effects
+    private void Apply(DomainEvent @event)
+    {
+        switch (@event)
+        {
+            case OrderCreatedEvent e:
+                Id         = e.OrderId;
+                CustomerId = e.CustomerId;
+                Status     = "Pending";
+                break;
+            case OrderSubmittedEvent e:
+                Status = "Submitted";
+                Total  = e.Total;
+                break;
+            case OrderShippedEvent:
+                Status = "Shipped";
+                break;
+        }
+    }
+
+    public IReadOnlyList<DomainEvent> GetUncommittedEvents() =>
+        _uncommittedEvents.AsReadOnly();
+    public void ClearUncommittedEvents() => _uncommittedEvents.Clear();
+}
+
+// ── Event Store ───────────────────────────────────────
+public class EventStore
+{
+    private readonly AppDbContext _db;
+
+    public async Task AppendAsync(int aggregateId, IEnumerable<DomainEvent> events,
+        int expectedVersion, CancellationToken ct)
+    {
+        var currentVersion = await _db.EventStore
+            .CountAsync(e => e.AggregateId == aggregateId, ct);
+
+        if (currentVersion != expectedVersion)
+            throw new ConcurrencyException($"Expected version {expectedVersion}, got {currentVersion}");
+
+        foreach (var @event in events)
+        {
+            _db.EventStore.Add(new StoredEvent
+            {
+                AggregateId = aggregateId,
+                EventType   = @event.GetType().Name,
+                Payload     = JsonSerializer.Serialize(@event),
+                OccurredAt  = @event.OccurredAt,
+                Version     = ++currentVersion
+            });
+        }
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task<IEnumerable<DomainEvent>> GetEventsAsync(int aggregateId,
+        CancellationToken ct)
+    {
+        return await _db.EventStore
+            .Where(e => e.AggregateId == aggregateId)
+            .OrderBy(e => e.Version)
+            .Select(e => Deserialize(e.EventType, e.Payload))
+            .ToListAsync(ct);
+    }
+}
+```
+
+---
+
+<a id="p12-microservices"></a>
+### Topic 6: Microservices Architecture
+
+```
+Microservices — .NET Context:
+────────────────────────────────────────────────────────
+Services:
+  OrderService    → orders DB (PostgreSQL)
+  ProductService  → products DB (PostgreSQL)
+  PaymentService  → payments DB (PostgreSQL)
+  NotificationService → sends emails/SMS
+
+Communication:
+  Synchronous  → gRPC (internal), REST (external)
+  Asynchronous → Message Bus (RabbitMQ, Azure Service Bus)
+
+Each service:
+  - Own DB (database-per-service)
+  - Own deployment (Docker container)
+  - Independent scaling
+  - Independent deploy
+────────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Service communication via HTTP ───────────────────
+public class ProductServiceClient
+{
+    private readonly HttpClient _http;
+
+    public ProductServiceClient(HttpClient http) => _http = http;
+
+    public async Task<ProductDto?> GetProductAsync(int id, CancellationToken ct)
+    {
+        try
+        {
+            return await _http.GetFromJsonAsync<ProductDto>($"/api/products/{id}", ct);
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
+
+    public async Task<bool> ReserveStockAsync(int productId, int quantity,
+        CancellationToken ct)
+    {
+        var response = await _http.PostAsJsonAsync(
+            $"/api/products/{productId}/reserve",
+            new { quantity }, ct);
+        return response.IsSuccessStatusCode;
+    }
+}
+
+// Register:
+builder.Services.AddHttpClient<ProductServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Services:ProductService"]!);
+}).AddStandardResilienceHandler();
+
+// ── Service Discovery (Kubernetes) ───────────────────
+// K8s DNS: http://product-service.default.svc.cluster.local
+// appsettings.Production.json:
+// "Services": { "ProductService": "http://product-service" }
+
+// ── Async messaging ───────────────────────────────────
+// OrderService publishes: OrderCreated event
+// ProductService subscribes → decrements stock
+// NotificationService subscribes → sends confirmation email
+// PaymentService subscribes → initiates charge
+```
+
+---
+
+<a id="p12-gateway"></a>
+### Topic 7: API Gateway Pattern
+
+```yaml
+# YARP (Yet Another Reverse Proxy) — .NET API Gateway
+# dotnet add package Yarp.ReverseProxy
+
+# appsettings.json
+{
+  "ReverseProxy": {
+    "Routes": {
+      "orders-route": {
+        "ClusterId": "orders-cluster",
+        "Match": { "Path": "/api/orders/{**catch-all}" }
+      },
+      "products-route": {
+        "ClusterId": "products-cluster",
+        "Match": { "Path": "/api/products/{**catch-all}" }
+      }
+    },
+    "Clusters": {
+      "orders-cluster": {
+        "Destinations": {
+          "primary": { "Address": "http://order-service" }
+        }
+      },
+      "products-cluster": {
+        "Destinations": {
+          "primary": { "Address": "http://product-service" }
+        }
+      }
+    }
+  }
+}
+```
+
+```csharp
+// Program.cs — API Gateway
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
+// Add auth at gateway level
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(/* ... */);
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Custom middleware — rate limiting, request enrichment
+app.Use(async (context, next) =>
+{
+    // Add correlation ID to forward to downstream services
+    context.Request.Headers["X-Correlation-Id"] =
+        context.TraceIdentifier;
+    await next();
+});
+
+app.MapReverseProxy();
+```
+
+---
+
+<a id="p12-saga"></a>
+### Topic 8: Saga Pattern — distributed transactions
+
+```
+Saga Pattern:
+────────────────────────────────────────────────────────
+Problem: Microservices — no distributed ACID transactions।
+         Order → Reserve Stock → Charge Payment → Send Email
+         What if Payment fails? Need to undo Stock Reservation।
+
+Saga types:
+  Choreography → Events drive flow। No central coordinator।
+                 Each service reacts to events।
+                 
+  Orchestration → Central saga orchestrator।
+                  MassTransit StateMachine, Temporal।
+
+Compensating Transactions: Undo completed steps on failure।
+────────────────────────────────────────────────────────
+```
+
+```csharp
+// ── Orchestration Saga (MassTransit StateMachine) ─────
+// dotnet add package MassTransit.RabbitMQ
+
+public class OrderSagaState : SagaStateMachineInstance
+{
+    public Guid  CorrelationId  { get; set; }
+    public string CurrentState  { get; set; } = "";
+    public int   OrderId        { get; set; }
+    public int   CustomerId     { get; set; }
+    public bool  StockReserved  { get; set; }
+    public bool  PaymentCharged { get; set; }
+}
+
+public class OrderSaga : MassTransitStateMachine<OrderSagaState>
+{
+    public State AwaitingStockReservation { get; private set; } = null!;
+    public State AwaitingPayment          { get; private set; } = null!;
+    public State Completed                { get; private set; } = null!;
+    public State Failed                   { get; private set; } = null!;
+
+    public Event<OrderSubmittedEvent>      OrderSubmitted      { get; private set; } = null!;
+    public Event<StockReservedEvent>       StockReserved       { get; private set; } = null!;
+    public Event<StockReservationFailed>   StockFailed         { get; private set; } = null!;
+    public Event<PaymentChargedEvent>      PaymentCharged      { get; private set; } = null!;
+    public Event<PaymentFailedEvent>       PaymentFailed       { get; private set; } = null!;
+
+    public OrderSaga()
+    {
+        InstanceState(x => x.CurrentState);
+
+        Event(() => OrderSubmitted,  x => x.CorrelateById(m => m.Message.CorrelationId));
+        Event(() => StockReserved,   x => x.CorrelateById(m => m.Message.CorrelationId));
+        Event(() => PaymentCharged,  x => x.CorrelateById(m => m.Message.CorrelationId));
+        Event(() => PaymentFailed,   x => x.CorrelateById(m => m.Message.CorrelationId));
+
+        Initially(
+            When(OrderSubmitted)
+                .Then(ctx =>
+                {
+                    ctx.Saga.OrderId    = ctx.Message.OrderId;
+                    ctx.Saga.CustomerId = ctx.Message.CustomerId;
+                })
+                .Publish(ctx => new ReserveStockCommand(ctx.Saga.CorrelationId, ctx.Saga.OrderId))
+                .TransitionTo(AwaitingStockReservation));
+
+        During(AwaitingStockReservation,
+            When(StockReserved)
+                .Then(ctx => ctx.Saga.StockReserved = true)
+                .Publish(ctx => new ChargePaymentCommand(ctx.Saga.CorrelationId, ctx.Saga.OrderId))
+                .TransitionTo(AwaitingPayment),
+            When(StockFailed)
+                .Publish(ctx => new CancelOrderCommand(ctx.Saga.OrderId, "Stock unavailable"))
+                .TransitionTo(Failed));
+
+        During(AwaitingPayment,
+            When(PaymentCharged)
+                .Then(ctx => ctx.Saga.PaymentCharged = true)
+                .Publish(ctx => new SendOrderConfirmationCommand(ctx.Saga.OrderId))
+                .TransitionTo(Completed),
+            When(PaymentFailed)
+                // Compensate: release stock
+                .Publish(ctx => new ReleaseStockCommand(ctx.Saga.OrderId))
+                .Publish(ctx => new CancelOrderCommand(ctx.Saga.OrderId, "Payment failed"))
+                .TransitionTo(Failed));
+    }
+}
+```
+
+---
+
+## PART 12 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| Clean Architecture | Domain → Application → Infrastructure → Presentation |
+| Dependency Rule | Dependencies point inward only |
+| Entity | ID-based identity। Mutable state। |
+| Value Object | Value equality। Immutable। `record` in C#। |
+| Aggregate Root | Consistency boundary entry point |
+| Domain Event | Something happened in domain — `OrderCreated` |
+| Bounded Context | Domain model-এর isolated boundary |
+| CQRS | Command (write) + Query (read) separation |
+| Command | State change, returns id/void |
+| Query | Read only, returns DTO |
+| MediatR | in-process `ISender.Send()` dispatch |
+| Pipeline Behavior | Cross-cutting — validation, logging, caching |
+| Event Sourcing | State = replay of all events |
+| Event Store | Append-only event log |
+| Microservices | DB-per-service, independent deploy |
+| YARP | .NET reverse proxy / API Gateway |
+| Saga | Distributed transaction coordination |
+| Compensating Transaction | Undo on failure |
+| Choreography Saga | Event-driven, no coordinator |
+| Orchestration Saga | Central state machine (MassTransit) |
+
+---
+
+## PART 12 Interview Q&A
+
+```
+প্রশ্ন: Clean Architecture-এ layer কীভাবে কাজ করে?
+উত্তর: Dependency rule: শুধু inward।
+Domain → কাউকে চেনে না।
+Application → শুধু Domain।
+Infrastructure → Application interface implement করে।
+Presentation → Application commands/queries send করে।
+Interface (IOrderRepository) Application-এ। Implementation Infrastructure-এ।
+
+প্রশ্ন: CQRS কেন ব্যবহার করবেন?
+উত্তর:
+Read আর Write pattern আলাদা।
+Write → complex domain logic, validation, transaction।
+Read → fast projection, JOIN, DTO directly।
+Separately scale করা যায়। Read replica।
+MediatR দিয়ে Controller slim রাখা যায়।
+
+প্রশ্ন: Event Sourcing আর traditional persistence-এর পার্থক্য?
+উত্তর:
+Traditional: Current state store। History হারিয়ে যায়।
+Event Sourcing: All events store। Current state = replay।
+Audit log free। Time travel queries।
+Complex — snapshot ছাড়া replay slow হতে পারে।
+কোথায়: Financial systems, compliance-heavy domains।
+
+প্রশ্ন: Saga কেন দরকার?
+উত্তর: Microservices-এ distributed ACID transaction নেই।
+Order → Stock → Payment — যেকোনো step fail হতে পারে।
+Saga → compensating transactions দিয়ে consistency।
+Orchestration (MassTransit StateMachine) → central coordinator।
+Choreography → events-driven, decoupled।
+
+প্রশ্ন: Bounded Context কী?
+উত্তর: একই শব্দের আলাদা meaning আলাদা context-এ।
+Order: OrderService-এ → items, total, status।
+Order: BillingService-এ → invoice, payment terms।
+দুটো context নিজেদের Order model maintain করে।
+Anti-Corruption Layer (ACL) দিয়ে boundaries cross করে।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 13 — .NET Projects (Portfolio Projects with Full Source Code...)
+
+---
+
+<a id="part13"></a>
+## PART 13: .NET Portfolio Projects
+
+> Interview-এ দেখানোর জন্য ৫টি real-world project — structure, key code patterns, এবং what to highlight।
+
+| # | Project | Stack | Difficulty |
+|---|---------|-------|-----------|
+| 1 | [REST API — E-Commerce Backend](#p13-ecom) | ASP.NET Core + EF Core + PostgreSQL | ⭐⭐ |
+| 2 | [Clean Architecture — Task Manager](#p13-task) | Clean Arch + CQRS + MediatR | ⭐⭐⭐ |
+| 3 | [Real-time Chat App](#p13-chat) | SignalR + React + Redis | ⭐⭐⭐ |
+| 4 | [Microservices — Order System](#p13-micro) | .NET + Docker + RabbitMQ | ⭐⭐⭐⭐ |
+| 5 | [Full Stack — Job Board](#p13-jobboard) | ASP.NET Core + Blazor + Azure | ⭐⭐⭐ |
+
+---
+
+<a id="p13-ecom"></a>
+### Project 1: REST API — E-Commerce Backend
+
+**GitHub-এ দেখানোর মতো কী আছে:**
+- JWT Authentication + Refresh Tokens
+- Role-based Authorization (Admin, Customer)
+- EF Core migrations + seeding
+- Generic Repository + Unit of Work
+- FluentValidation + global error handling
+- Swagger/OpenAPI documentation
+- Pagination, filtering, sorting
+
+```
+Project Structure:
+ECommerceApi/
+├── Controllers/
+│   ├── AuthController.cs       ← login, register, refresh
+│   ├── ProductsController.cs   ← CRUD + search + pagination
+│   ├── OrdersController.cs     ← create, list, cancel
+│   └── AdminController.cs      ← admin-only endpoints
+├── Models/
+│   ├── Entities/               ← Product, Order, User, Category
+│   └── DTOs/                   ← Request/Response DTOs
+├── Services/
+│   ├── AuthService.cs
+│   ├── OrderService.cs
+│   └── EmailService.cs
+├── Repositories/
+│   ├── IRepository.cs          ← generic interface
+│   ├── Repository.cs           ← generic EF implementation
+│   └── IUnitOfWork.cs
+├── Data/
+│   ├── AppDbContext.cs
+│   └── Migrations/
+├── Middleware/
+│   └── ExceptionHandlingMiddleware.cs
+└── Program.cs
+```
+
+```csharp
+// ── Generic Repository ────────────────────────────────
+public interface IRepository<T> where T : BaseEntity
+{
+    Task<T?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<IReadOnlyList<T>> GetAllAsync(CancellationToken ct = default);
+    Task<IReadOnlyList<T>> GetAsync(Expression<Func<T, bool>> predicate,
+        CancellationToken ct = default);
+    Task AddAsync(T entity, CancellationToken ct = default);
+    void Update(T entity);
+    void Remove(T entity);
+}
+
+public class Repository<T> : IRepository<T> where T : BaseEntity
+{
+    protected readonly AppDbContext _db;
+    protected readonly DbSet<T> _set;
+
+    public Repository(AppDbContext db)
+    {
+        _db  = db;
+        _set = db.Set<T>();
+    }
+
+    public async Task<T?> GetByIdAsync(int id, CancellationToken ct)
+        => await _set.FindAsync(new object[] { id }, ct);
+
+    public async Task<IReadOnlyList<T>> GetAsync(
+        Expression<Func<T, bool>> predicate, CancellationToken ct)
+        => await _set.Where(predicate).AsNoTracking().ToListAsync(ct);
+
+    public async Task AddAsync(T entity, CancellationToken ct)
+        => await _set.AddAsync(entity, ct);
+
+    public void Update(T entity) => _set.Update(entity);
+    public void Remove(T entity) => _set.Remove(entity);
+
+    public async Task<IReadOnlyList<T>> GetAllAsync(CancellationToken ct)
+        => await _set.AsNoTracking().ToListAsync(ct);
+}
+
+// ── Pagination ────────────────────────────────────────
+public record PagedResult<T>(
+    IReadOnlyList<T> Items,
+    int TotalCount,
+    int Page,
+    int PageSize)
+{
+    public int TotalPages => (int)Math.Ceiling(TotalCount / (double)PageSize);
+    public bool HasNextPage => Page < TotalPages;
+    public bool HasPreviousPage => Page > 1;
+}
+
+public static class QueryableExtensions
+{
+    public static async Task<PagedResult<T>> ToPagedResultAsync<T>(
+        this IQueryable<T> query, int page, int pageSize, CancellationToken ct)
+    {
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+        return new PagedResult<T>(items, total, page, pageSize);
+    }
+}
+
+// Usage:
+[HttpGet]
+public async Task<ActionResult<PagedResult<ProductDto>>> GetProducts(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 20,
+    [FromQuery] string? search = null,
+    [FromQuery] string? category = null,
+    CancellationToken ct = default)
+{
+    var query = _db.Products.AsNoTracking()
+        .Where(p => p.IsActive);
+
+    if (!string.IsNullOrEmpty(search))
+        query = query.Where(p => p.Name.Contains(search) ||
+                                  p.Description.Contains(search));
+    if (!string.IsNullOrEmpty(category))
+        query = query.Where(p => p.Category.Slug == category);
+
+    var result = await query
+        .ProjectTo<ProductDto>(_mapper.ConfigurationProvider)
+        .OrderBy(p => p.Name)
+        .ToPagedResultAsync(page, pageSize, ct);
+
+    return Ok(result);
+}
+```
+
+**Interview-এ বলার points:**
+- Generic Repository-এ Expression<Func<T,bool>> কীভাবে কাজ করে
+- JWT refresh token rotation কেন important
+- PagedResult record-এ computed properties
+- AsNoTracking কেন read-only queries-তে
+
+---
+
+<a id="p13-task"></a>
+### Project 2: Clean Architecture — Task Manager API
+
+**GitHub-এ দেখানোর মতো কী আছে:**
+- Clean Architecture 4-layer structure
+- CQRS + MediatR + FluentValidation
+- Pipeline behaviors (logging, validation)
+- Domain events + event handlers
+- Result pattern (no exceptions for business errors)
+
+```
+Project Structure:
+TaskManager/
+├── TaskManager.Domain/
+│   ├── Entities/Task.cs, Project.cs, User.cs
+│   ├── ValueObjects/TaskStatus.cs, Priority.cs
+│   ├── Events/TaskCreatedEvent.cs, TaskCompletedEvent.cs
+│   ├── Interfaces/ITaskRepository.cs
+│   └── Exceptions/DomainException.cs
+├── TaskManager.Application/
+│   ├── Tasks/
+│   │   ├── Commands/CreateTask/, CompleteTask/, DeleteTask/
+│   │   └── Queries/GetTask/, ListTasks/
+│   ├── Common/
+│   │   ├── Behaviors/ValidationBehavior.cs, LoggingBehavior.cs
+│   │   ├── Interfaces/IAppDbContext.cs, ICurrentUser.cs
+│   │   └── Models/Result.cs
+│   └── DependencyInjection.cs
+├── TaskManager.Infrastructure/
+│   ├── Persistence/AppDbContext.cs, Migrations/
+│   ├── Repositories/TaskRepository.cs
+│   └── DependencyInjection.cs
+└── TaskManager.Api/
+    ├── Controllers/TasksController.cs
+    ├── Middleware/ExceptionHandlingMiddleware.cs
+    └── Program.cs
+```
+
+```csharp
+// ── Result pattern — no throw for business errors ─────
+public class Result<T>
+{
+    public bool   IsSuccess { get; }
+    public T?     Value     { get; }
+    public string Error     { get; }
+
+    private Result(T value)          { IsSuccess = true;  Value = value; Error = ""; }
+    private Result(string error)     { IsSuccess = false; Value = default; Error = error; }
+
+    public static Result<T> Success(T value) => new(value);
+    public static Result<T> Failure(string error) => new(error);
+
+    public TResult Match<TResult>(Func<T, TResult> onSuccess, Func<string, TResult> onFailure)
+        => IsSuccess ? onSuccess(Value!) : onFailure(Error);
+}
+
+// Domain method returns Result:
+public Result<Unit> Complete(int userId)
+{
+    if (Status == TaskStatus.Completed)
+        return Result<Unit>.Failure("Task is already completed");
+    if (AssignedUserId != userId)
+        return Result<Unit>.Failure("Only assigned user can complete this task");
+
+    Status      = TaskStatus.Completed;
+    CompletedAt = DateTime.UtcNow;
+    _events.Add(new TaskCompletedEvent(Id, userId));
+    return Result<Unit>.Success(Unit.Value);
+}
+
+// Handler uses result:
+public async Task<Result<Unit>> Handle(CompleteTaskCommand cmd, CancellationToken ct)
+{
+    var task = await _db.Tasks.FindAsync(new object[] { cmd.TaskId }, ct);
+    if (task is null) return Result<Unit>.Failure("Task not found");
+
+    var result = task.Complete(cmd.UserId);
+    if (!result.IsSuccess) return result;
+
+    await _db.SaveChangesAsync(ct);
+    return Result<Unit>.Success(Unit.Value);
+}
+
+// Controller maps to HTTP:
+[HttpPatch("{id:int}/complete")]
+public async Task<IActionResult> Complete(int id, CancellationToken ct)
+{
+    var result = await _mediator.Send(new CompleteTaskCommand(id, _currentUser.Id), ct);
+    return result.Match<IActionResult>(
+        _ => NoContent(),
+        error => BadRequest(new { error }));
+}
+
+// ── ICurrentUser — from JWT claims ───────────────────
+public interface ICurrentUser
+{
+    int    Id       { get; }
+    string Email    { get; }
+    bool   IsAdmin  { get; }
+}
+
+public class CurrentUser : ICurrentUser
+{
+    private readonly IHttpContextAccessor _http;
+    public CurrentUser(IHttpContextAccessor http) => _http = http;
+
+    public int    Id      => int.Parse(_http.HttpContext!.User.FindFirstValue("sub")!);
+    public string Email   => _http.HttpContext!.User.FindFirstValue(ClaimTypes.Email)!;
+    public bool   IsAdmin => _http.HttpContext!.User.IsInRole("Admin");
+}
+```
+
+---
+
+<a id="p13-chat"></a>
+### Project 3: Real-time Chat App
+
+**GitHub-এ দেখানোর মতো কী আছে:**
+- SignalR Hub with groups (chat rooms)
+- React frontend with @microsoft/signalr
+- Redis backplane (multiple server instances)
+- Message persistence (last 50 messages on join)
+- Online presence tracking
+
+```csharp
+// ── Chat Hub ──────────────────────────────────────────
+[Authorize]
+public class ChatHub : Hub
+{
+    private readonly IChatRepository _repo;
+    private readonly IConnectionTracker _tracker;
+
+    public ChatHub(IChatRepository repo, IConnectionTracker tracker)
+    {
+        _repo    = repo;
+        _tracker = tracker;
+    }
+
+    public override async Task OnConnectedAsync()
+    {
+        var userId = GetUserId();
+        await _tracker.AddConnectionAsync(userId, Context.ConnectionId);
+        await Clients.Others.SendAsync("UserOnline", userId);
+        await base.OnConnectedAsync();
+    }
+
+    public override async Task OnDisconnectedAsync(Exception? ex)
+    {
+        var userId = GetUserId();
+        await _tracker.RemoveConnectionAsync(userId, Context.ConnectionId);
+        var isStillOnline = await _tracker.IsOnlineAsync(userId);
+        if (!isStillOnline)
+            await Clients.Others.SendAsync("UserOffline", userId);
+        await base.OnDisconnectedAsync(ex);
+    }
+
+    public async Task JoinRoom(string roomId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+
+        // Send last 50 messages
+        var history = await _repo.GetRecentMessagesAsync(roomId, count: 50);
+        await Clients.Caller.SendAsync("ChatHistory", history);
+    }
+
+    public async Task SendMessage(string roomId, string content)
+    {
+        if (string.IsNullOrWhiteSpace(content) || content.Length > 2000)
+            throw new HubException("Invalid message");
+
+        var userId   = GetUserId();
+        var userName = GetUserName();
+        var msg = await _repo.SaveMessageAsync(new ChatMessage
+        {
+            RoomId    = roomId,
+            SenderId  = userId,
+            Content   = content,   // sanitized before save
+            SentAt    = DateTime.UtcNow
+        });
+
+        await Clients.Group(roomId).SendAsync("NewMessage", new
+        {
+            msg.Id, msg.SentAt, content,
+            sender = new { id = userId, name = userName }
+        });
+    }
+
+    private int    GetUserId()   => int.Parse(Context.User!.FindFirstValue("sub")!);
+    private string GetUserName() => Context.User!.FindFirstValue(ClaimTypes.Name)!;
+}
+
+// ── Redis backplane — scale-out ───────────────────────
+builder.Services.AddSignalR()
+    .AddStackExchangeRedis(builder.Configuration["Redis:Connection"]!,
+        opts => opts.Configuration.ChannelPrefix = RedisChannel.Literal("chat"));
+```
+
+---
+
+<a id="p13-micro"></a>
+### Project 4: Microservices — Order System
+
+**GitHub-এ দেখানোর মতো কী আছে:**
+- 3 independent .NET services (Order, Product, Notification)
+- RabbitMQ message bus (MassTransit)
+- Docker Compose local dev
+- Outbox pattern
+- YARP API Gateway
+- Distributed tracing (OpenTelemetry)
+
+```yaml
+# docker-compose.yml
+services:
+  gateway:
+    build: ./Gateway
+    ports: ["8080:8080"]
+    depends_on: [order-service, product-service]
+
+  order-service:
+    build: ./OrderService
+    environment:
+      - ConnectionStrings__Default=Host=order-db;Database=orders;...
+      - RabbitMQ__Host=rabbitmq
+    depends_on: [order-db, rabbitmq]
+
+  product-service:
+    build: ./ProductService
+    environment:
+      - ConnectionStrings__Default=Host=product-db;Database=products;...
+    depends_on: [product-db]
+
+  notification-service:
+    build: ./NotificationService
+    environment:
+      - RabbitMQ__Host=rabbitmq
+      - Smtp__Host=mailhog
+    depends_on: [rabbitmq]
+
+  order-db:     { image: postgres:16-alpine }
+  product-db:   { image: postgres:16-alpine }
+  rabbitmq:     { image: rabbitmq:3-management }
+  mailhog:      { image: mailhog/mailhog }
+```
+
+```csharp
+// ── MassTransit setup (OrderService) ──────────────────
+builder.Services.AddMassTransit(x =>
+{
+    x.AddConsumers(typeof(Program).Assembly);
+
+    x.UsingRabbitMq((ctx, cfg) =>
+    {
+        cfg.Host(builder.Configuration["RabbitMQ:Host"], h =>
+        {
+            h.Username(builder.Configuration["RabbitMQ:User"]);
+            h.Password(builder.Configuration["RabbitMQ:Password"]);
+        });
+        cfg.ConfigureEndpoints(ctx);
+    });
+});
+
+// OrderService publishes:
+public class OrderService
+{
+    private readonly IBus _bus;
+
+    public async Task<int> CreateAsync(CreateOrderDto dto, CancellationToken ct)
+    {
+        var order = Order.Create(dto.CustomerId);
+        // ... add items, save to DB
+
+        await _bus.Publish(new OrderCreatedEvent
+        {
+            OrderId    = order.Id,
+            CustomerId = order.CustomerId,
+            Total      = (double)order.TotalAmount,
+            Items      = order.Items.Select(i => new OrderItemDto(i.ProductId, i.Quantity)).ToList()
+        }, ct);
+
+        return order.Id;
+    }
+}
+
+// NotificationService subscribes:
+public class OrderCreatedConsumer : IConsumer<OrderCreatedEvent>
+{
+    private readonly IEmailService _email;
+
+    public async Task Consume(ConsumeContext<OrderCreatedEvent> context)
+    {
+        var msg = context.Message;
+        await _email.SendOrderConfirmationAsync(msg.CustomerId, msg.OrderId, msg.Total);
+    }
+}
+```
+
+---
+
+<a id="p13-jobboard"></a>
+### Project 5: Full Stack — Job Board (Blazor + ASP.NET Core)
+
+**GitHub-এ দেখানোর মতো কী আছে:**
+- Blazor Server UI + ASP.NET Core API
+- ASP.NET Core Identity (registration, login, roles)
+- Employer posts jobs → Job Seeker applies
+- File upload (CV/Resume → Azure Blob Storage)
+- Email notifications (application received)
+- Azure deployment
+
+```csharp
+// ── Blazor component — Job Listing ───────────────────
+@page "/jobs"
+@inject IJobApiClient JobApi
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>Job Listings</PageTitle>
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <input class="form-control" placeholder="Search jobs..."
+                   @bind="_searchTerm" @bind:event="oninput"
+                   @oninput="OnSearchChanged" />
+        </div>
+        <div class="col-md-4">
+            <select class="form-select" @bind="_selectedCategory" @bind:after="LoadJobs">
+                <option value="">All Categories</option>
+                @foreach (var cat in _categories)
+                {
+                    <option value="@cat.Id">@cat.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="text-center"><div class="spinner-border"></div></div>
+    }
+    else
+    {
+        @foreach (var job in _jobs)
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">@job.Title</h5>
+                    <p class="text-muted">@job.CompanyName • @job.Location</p>
+                    <p>@job.SalaryRange</p>
+                    <button class="btn btn-primary btn-sm"
+                            @onclick="() => Nav.NavigateTo($\"/jobs/{job.Id}\")">
+                        View Details
+                    </button>
+                    @if (_isAuthenticated && _isJobSeeker)
+                    {
+                        <button class="btn btn-outline-success btn-sm ms-2"
+                                @onclick="() => ApplyToJob(job.Id)">
+                            Quick Apply
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+
+        <Pagination CurrentPage="_page" TotalPages="_totalPages"
+                    OnPageChanged="OnPageChanged" />
+    }
+</div>
+
+@code {
+    private List<JobSummaryDto> _jobs    = new();
+    private List<CategoryDto>   _categories = new();
+    private bool   _loading      = true;
+    private bool   _isAuthenticated;
+    private bool   _isJobSeeker;
+    private string _searchTerm   = "";
+    private string _selectedCategory = "";
+    private int    _page         = 1;
+    private int    _totalPages   = 1;
+    private Timer? _debounceTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthState.GetAuthenticationStateAsync();
+        _isAuthenticated = auth.User.Identity?.IsAuthenticated ?? false;
+        _isJobSeeker     = auth.User.IsInRole("JobSeeker");
+
+        _categories = await JobApi.GetCategoriesAsync();
+        await LoadJobs();
+    }
+
+    private async Task LoadJobs()
+    {
+        _loading = true;
+        var result = await JobApi.GetJobsAsync(_page, _searchTerm, _selectedCategory);
+        _jobs       = result.Items.ToList();
+        _totalPages = result.TotalPages;
+        _loading    = false;
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        _searchTerm = e.Value?.ToString() ?? "";
+        _debounceTimer?.Dispose();
+        _debounceTimer = new Timer(async _ =>
+        {
+            _page = 1;
+            await InvokeAsync(async () => { await LoadJobs(); StateHasChanged(); });
+        }, null, 400, Timeout.Infinite);
+    }
+
+    private async Task ApplyToJob(int jobId)
+    {
+        // Navigate to apply page with CV upload
+        Nav.NavigateTo($"/jobs/{jobId}/apply");
+    }
+
+    private async Task OnPageChanged(int newPage)
+    {
+        _page = newPage;
+        await LoadJobs();
+    }
+}
+
+// ── File Upload — CV to Azure Blob ───────────────────
+public class BlobStorageService
+{
+    private readonly BlobServiceClient _client;
+    private readonly string _container;
+
+    public BlobStorageService(IConfiguration config)
+    {
+        _client    = new BlobServiceClient(config["AzureStorage:ConnectionString"]);
+        _container = config["AzureStorage:CvContainer"]!;
+    }
+
+    public async Task<string> UploadCvAsync(Stream fileStream, string fileName,
+        CancellationToken ct)
+    {
+        // Sanitize filename
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        if (extension is not ".pdf" and not ".docx")
+            throw new ValidationException("Only PDF and DOCX files allowed");
+
+        var safeFileName = $"{Guid.NewGuid()}{extension}";
+        var container    = _client.GetBlobContainerClient(_container);
+        var blob         = container.GetBlobClient(safeFileName);
+
+        await blob.UploadAsync(fileStream, new BlobHttpHeaders
+        {
+            ContentType = extension == ".pdf"
+                ? "application/pdf"
+                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        }, cancellationToken: ct);
+
+        return blob.Uri.ToString();
+    }
+}
+```
+
+---
+
+## PART 13 Project Checklist
+
+| প্রতিটি Project-এ থাকা উচিত | কেন? |
+|------------------------------|------|
+| README with screenshots | প্রথম impression — interviewer সবার আগে দেখে |
+| Architecture diagram | যে কোনো level-এর interviewer বুঝতে পারে |
+| Setup instructions | `docker compose up` one command করে চালানো যায় |
+| Unit + Integration tests | `dotnet test` দিয়ে pass করে |
+| CI/CD (GitHub Actions) | Badge দিয়ে দেখানো যায় — passing ✅ |
+| `.env.example` (no secrets) | `.env` বা secrets committed না থাকা |
+| Swagger UI | `/swagger` → live API documentation |
+| Proper .gitignore | `bin/`, `obj/`, `.env`, `*.pfx` committed না |
+
+## PART 13 Interview Talking Points
+
+```
+প্রশ্ন: আপনার most complex project কোনটা?
+উত্তর: (Microservices project সম্পর্কে বলুন)
+"আমি একটা order management system বানিয়েছি যেখানে 3টা
+independent .NET microservice আছে। RabbitMQ + MassTransit
+দিয়ে async communication। Docker Compose দিয়ে local dev।
+সবচেয়ে interesting challenge ছিল outbox pattern implement
+করা যাতে DB save আর event publish atomic হয়।"
+
+প্রশ্ন: Clean Architecture কেন choose করলেন?
+উত্তর: "Domain logic আর infrastructure সম্পূর্ণ আলাদা।
+Test করতে সুবিধা — domain আর application layer-এ
+কোনো DB dependency নেই, pure unit test।
+আর পরে যদি PostgreSQL থেকে MongoDB-তে যেতে হয়,
+শুধু Infrastructure layer change হবে।"
+
+প্রশ্ন: আপনার project-এ কী improve করতেন?
+উত্তর: "এখন basic Redis caching আছে। Production-এ
+Output Cache + Redis distributed cache combination,
+আর database query-গুলোতে query plans analyze করতাম।
+Microservices project-এ distributed tracing (Jaeger/Tempo)
+আরও properly integrate করতাম।"
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 14 — Interview Questions Bank (150 Theoretical + 100 Coding + 30 Tricky + 20 Rapid Fire + 30 Scenario-based...)
