@@ -27,8 +27,8 @@
 | [PART 11](#part11) | Deployment & DevOps Basics | ✅ |
 | [PART 12](#part12) | System Design with .NET | ✅ |
 | [PART 13](#part13) | .NET Projects | ✅ |
-| PART 14 | Interview Questions Bank | ⏳ |
-| PART 15 | Bangladeshi Interview Preparation | ⏳ |
+| [PART 14](#part14) | Interview Questions Bank | ✅ |
+| [PART 15](#part15) | Bangladeshi Interview Preparation | ✅ |
 
 ---
 
@@ -14146,3 +14146,1860 @@ Microservices project-এ distributed tracing (Jaeger/Tempo)
 ---
 
 > **📌 পরবর্তী:** PART 14 — Interview Questions Bank (150 Theoretical + 100 Coding + 30 Tricky + 20 Rapid Fire + 30 Scenario-based...)
+
+---
+
+<a id="part14"></a>
+## PART 14: Interview Questions Bank
+
+> 150+ Theoretical + 50 Coding + 30 Tricky + 20 Rapid Fire + 30 Scenario-based প্রশ্ন।
+
+| # | Section |
+|---|---------|
+| 1 | [.NET & C# Fundamentals (30Q)](#p14-fundamentals) |
+| 2 | [OOP & Design Patterns (20Q)](#p14-oop) |
+| 3 | [ASP.NET Core & API (25Q)](#p14-aspnet) |
+| 4 | [EF Core & Database (20Q)](#p14-efcore) |
+| 5 | [Security & Auth (15Q)](#p14-security) |
+| 6 | [Coding Challenges (50Q)](#p14-coding) |
+| 7 | [Tricky Questions (30Q)](#p14-tricky) |
+| 8 | [Rapid Fire (20Q)](#p14-rapidfire) |
+| 9 | [Scenario-based (30Q)](#p14-scenario) |
+
+---
+
+<a id="p14-fundamentals"></a>
+### Section 1: .NET & C# Fundamentals (30 Questions)
+
+```
+Q1.  .NET Framework, .NET Core, এবং .NET 5+ এর মধ্যে পার্থক্য কী?
+A:   Framework → Windows-only, legacy। Core → cross-platform, open-source।
+     .NET 5+ → unified platform (Core + Framework features)। LTS: .NET 6, .NET 8।
+
+Q2.  CLR কী? এর কাজ কী?
+A:   Common Language Runtime — .NET execution engine।
+     JIT compilation, GC, type safety, exception handling, thread management।
+
+Q3.  JIT Compilation কীভাবে কাজ করে?
+A:   IL (Intermediate Language) → JIT → native machine code।
+     First call-এ compile হয়। পরের call-এ cached।
+     Tiered JIT (.NET Core 3+): Tier 0 (quick), Tier 1 (optimized)।
+
+Q4.  Value Type আর Reference Type পার্থক্য কী?
+A:   Value Type (struct, int, bool) → Stack। Copy semantics।
+     Reference Type (class, string) → Heap। Reference semantics।
+     Exception: class field হলে value type heap-এ।
+
+Q5.  Boxing আর Unboxing কী? কেন সমস্যা?
+A:   Boxing: int i = 5; object o = i; → heap allocation।
+     Unboxing: int j = (int)o; → cast + copy।
+     Performance cost — avoid in hot paths। Use generics instead।
+
+Q6.  Managed heap-এ GC কীভাবে কাজ করে?
+A:   Gen 0, Gen 1, Gen 2 — young → old generations।
+     Gen 0 most frequent (short-lived objects)।
+     Large Object Heap (LOH) → 85KB+ objects।
+     Mark → Sweep → Compact। GC.Collect() rarely call করবেন।
+
+Q7.  IDisposable আর using statement কী কাজ করে?
+A:   Unmanaged resources (file, socket, DB connection) release।
+     using → Dispose() automatically call করে।
+     using declaration (.NET Core 3+): using var file = new StreamWriter();
+     Dispose() + GC.SuppressFinalize(this) pattern।
+
+Q8.  async/await কীভাবে কাজ করে internally?
+A:   State machine generate করে compiler।
+     await → suspend method, thread release।
+     Continuation-এ resume (same SynchronizationContext বা thread pool)।
+     ConfigureAwait(false) → library code-এ context capture avoid।
+
+Q9.  Task আর ValueTask পার্থক্য কী?
+A:   Task → heap allocation। Reusable।
+     ValueTask → struct। Hot path-এ sync complete হলে zero allocation।
+     Use ValueTask: frequently called, often sync complete।
+
+Q10. delegate, Func, Action, Predicate পার্থক্য কী?
+A:   delegate → custom function type।
+     Func<T, TResult> → returns value।
+     Action<T> → returns void।
+     Predicate<T> → returns bool। Func<T, bool>-এর alias।
+
+Q11. LINQ Deferred Execution মানে কী?
+A:   Query define করলে execute হয় না।
+     ToList(), foreach, First(), Count() → তখন execute।
+     Multiple enumeration → multiple DB queries → use ToList() একবার।
+
+Q12. IEnumerable vs IQueryable পার্থক্য কী?
+A:   IEnumerable → in-memory, LINQ to Objects।
+     IQueryable → expression tree, translates to SQL।
+     IEnumerable-এ Where() → সব load করে filter।
+     IQueryable-এ Where() → SQL WHERE clause।
+
+Q13. string আর StringBuilder পার্থক্য?
+A:   string → immutable। + operator → new string allocation।
+     StringBuilder → mutable buffer। Append → no new allocation।
+     Loop 1000+ concatenation → StringBuilder।
+
+Q14. Nullable Reference Types (.NET 6+)?
+A:   #nullable enable → compiler warns on possible null dereference।
+     string? → nullable। string → non-nullable।
+     ?? operator: var name = user?.Name ?? "Guest";
+     ?.operator: var len = user?.Name?.Length;
+
+Q15. record vs class vs struct?
+A:   record → value equality, immutable by default, with-expression।
+     class  → reference equality, mutable।
+     struct → value type, stack, no inheritance।
+     record struct → value type + value equality।
+
+Q16. Pattern Matching কোথায় ব্যবহার করবেন?
+A:   switch expression, is pattern, property pattern।
+     var result = shape switch {
+       Circle c => Math.PI * c.Radius * c.Radius,
+       Rectangle r => r.Width * r.Height,
+       _ => 0
+     };
+
+Q17. Extension Method কী? কীভাবে লেখেন?
+A:   Existing type-এ method add without inheritance।
+     public static class StringExtensions {
+       public static bool IsEmail(this string s) => s.Contains('@');
+     }
+
+Q18. yield return কী?
+A:   Iterator method। Lazy evaluation।
+     IEnumerable<int> Generate() { for(int i=0;;i++) yield return i; }
+     Infinite sequence সম্ভব। State machine generate করে।
+
+Q19. Generic Constraint কী?
+A:   where T : class → reference type।
+     where T : struct → value type।
+     where T : IComparable<T> → interface।
+     where T : new() → parameterless constructor।
+
+Q20. Span<T> ও Memory<T> কী?
+A:   Span<T> → stack-only, zero-copy slice of array/string/memory।
+     Memory<T> → heap-safe, async-compatible।
+     High performance parsing, avoid substring allocations।
+     ReadOnlySpan<char> s = "hello world".AsSpan(0, 5);
+
+Q21. ref, out, in parameter কী?
+A:   ref → caller initialize করে, method পরিবর্তন করতে পারে।
+     out → method initialize করে। caller দেয় না।
+     in → readonly reference। copy avoid।
+
+Q22. static constructor কী?
+A:   Class first use-এর আগে একবার run। Instance ছাড়া।
+     static MyClass() { /* initialization */ }
+     Thread-safe, lazy by CLR।
+
+Q23. Covariance ও Contravariance কী?
+A:   Covariance (out T): IEnumerable<Derived> → IEnumerable<Base>।
+     Contravariance (in T): Action<Base> → Action<Derived>।
+     Generic interfaces-এ out/in keyword।
+
+Q24. Expression<Func<T>> vs Func<T>?
+A:   Func<T> → compiled delegate, execute directly।
+     Expression<Func<T>> → expression tree, inspect/translate।
+     EF Core: .Where(Expression) → SQL।
+     .Where(Func) → in-memory।
+
+Q25. Reflection কী? কোথায় ব্যবহার করেন?
+A:   Runtime-এ type information inspect/invoke।
+     typeof(Order).GetProperties()
+     Activator.CreateInstance(type)
+     DI containers, ORMs, serializers use reflection।
+     Source generators alternative for performance।
+
+Q26. volatile keyword কী?
+A:   Multi-threaded: compiler/CPU caching prevent।
+     Memory barrier — always read from main memory।
+     Rare use — prefer Interlocked or lock।
+
+Q27. checked/unchecked context?
+A:   checked: int.MaxValue + 1 → OverflowException।
+     unchecked (default): wraps around।
+     checked { var x = int.MaxValue + 1; }
+
+Q28. partial class কী?
+A:   Same class multiple files-এ।
+     Generated code (EF, WinForms) + custom code আলাদা।
+     Compile time-এ merge।
+
+Q29. Finalizer (~MyClass()) কখন ব্যবহার করবেন?
+A:   Unmanaged resource cleanup — GC thread-এ run।
+     Non-deterministic। Slow।
+     Prefer IDisposable + GC.SuppressFinalize()।
+     SafeHandle pattern is better।
+
+Q30. Assembly আর Namespace পার্থক্য?
+A:   Assembly → .dll/.exe — deployment unit, versioned।
+     Namespace → logical grouping of types।
+     Multiple namespaces in one assembly। Same namespace in multiple assemblies।
+```
+
+---
+
+<a id="p14-oop"></a>
+### Section 2: OOP & Design Patterns (20 Questions)
+
+```
+Q31. SOLID Principles উদাহরণসহ বলুন।
+A:   S: Single Responsibility — class-এ একটাই reason to change।
+     O: Open/Closed — extension-এ open, modification-এ closed। Interface/abstract।
+     L: Liskov Substitution — subclass parent-এর জায়গায় কাজ করবে।
+     I: Interface Segregation — ছোট focused interfaces।
+     D: Dependency Inversion — concrete নয়, abstraction-এ depend করুন।
+
+Q32. Abstract Class আর Interface-এর পার্থক্য (C# 8+ context)?
+A:   Abstract Class: state (fields), constructor, partial impl।
+     Interface: contract, default impl (C# 8+), multiple implement।
+     Abstract → IS-A relationship।
+     Interface → CAN-DO relationship।
+     abstract class + DI → prefer interface।
+
+Q33. Repository Pattern কেন ব্যবহার করবেন?
+A:   Data access logic isolate। Domain আর persistence separate।
+     Unit test-এ mock করা সহজ।
+     EF Core DbContext-কে directly service-এ না দিয়ে।
+     Generic Repository + specific methods combination।
+
+Q34. Factory Pattern উদাহরণ দিন।
+A:   Object creation logic encapsulate।
+     PaymentProcessorFactory.Create("stripe") → StripeProcessor।
+     Caller creation detail জানে না।
+     Abstract Factory → family of related objects।
+
+Q35. Strategy Pattern কোথায় ব্যবহার করবেন?
+A:   Algorithm family, encapsulate, interchangeable।
+     IShippingStrategy: StandardShipping, ExpressShipping, FreeShipping।
+     OrderService-এ inject করুন। Runtime swap।
+     if-else → strategy দিয়ে replace।
+
+Q36. Observer Pattern — .NET এ কীভাবে implement করেন?
+A:   IObservable<T> + IObserver<T> built-in।
+     Event/delegate — পরিচিত Observer।
+     MediatR Notifications — in-process Observer।
+     Message Bus — distributed Observer।
+
+Q37. Decorator Pattern?
+A:   Behavior add without subclassing।
+     ICacheDecorator wraps IProductService।
+     ASP.NET Core Middleware → Decorator chain।
+
+Q38. Singleton Pattern-এ thread safety কীভাবে নিশ্চিত করবেন?
+A:   Lazy<T> initialization — thread-safe built-in।
+     private static readonly Lazy<MySingleton> _instance =
+       new(() => new MySingleton());
+     DI container-এ .AddSingleton() → handles this।
+
+Q39. Command Pattern — CQRS-এ কীভাবে relate করে?
+A:   Command → encapsulates request। Receiver + parameters।
+     CQRS Commands → Command Pattern অনুসরণ করে।
+     MediatR: IRequest<T> → Command। IRequestHandler → Receiver।
+
+Q40. Template Method Pattern?
+A:   Algorithm skeleton in base class। Steps override in subclass।
+     abstract class ReportGenerator {
+       public void Generate() { FetchData(); ProcessData(); RenderOutput(); }
+       protected abstract void FetchData();
+       protected abstract void RenderOutput();
+     }
+
+Q41. Composition vs Inheritance কখন কোনটা?
+A:   Inheritance: IS-A, shared behavior, clear hierarchy।
+     Composition: HAS-A, flexible, testable, prefer।
+     "Favor composition over inheritance" — GoF।
+     DI + interfaces → composition।
+
+Q42. DI Container কীভাবে কাজ করে?
+A:   Service registration → Service Locator internally।
+     Reflection/Source Gen দিয়ে constructors resolve।
+     Lifetime: Transient (new each), Scoped (per request), Singleton (shared)।
+
+Q43. Fluent Interface কী?
+A:   Method chaining — readable DSL।
+     builder.WithName("Alice").WithAge(30).Build()
+     EF Core ModelBuilder, FluentValidation, LINQ।
+
+Q44. Anti-pattern: God Object কী?
+A:   একটা class সব কাজ করে। SRP violation।
+     100+ methods, 1000+ lines।
+     Break into focused classes + services।
+
+Q45. Anti-pattern: Anemic Domain Model কী?
+A:   Domain objects শুধু properties। No behavior।
+     Business logic service layer-এ। DDD violation।
+     Fix: move behavior into entity। Order.Submit() not OrderService.SubmitOrder()।
+
+Q46. Open Generic Registration কী?
+A:   services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+     IRepository<Product>, IRepository<Order> → automatically resolved।
+
+Q47. Mediator Pattern vs Direct Service Call?
+A:   Direct: OrderController → IOrderService → depends on service।
+     Mediator: Controller → ISender.Send(command) → decoupled।
+     Add cross-cutting behaviors without touching handlers।
+
+Q48. Unit of Work Pattern?
+A:   Group DB operations. Commit all or rollback।
+     IUnitOfWork.SaveChangesAsync() → single transaction।
+     EF Core DbContext IS a Unit of Work।
+
+Q49. Specification Pattern কী?
+A:   Business rules encapsulate in reusable classes।
+     ActiveProductSpec, InStockSpec → combine।
+     query.Where(new ActiveProductSpec().And(new InStockSpec()).ToExpression())
+
+Q50. Value Object কীভাবে implement করবেন?
+A:   Equality by value, not reference। Immutable।
+     record Money(decimal Amount, string Currency) — records in C#।
+     Validate in constructor: if (Amount < 0) throw।
+```
+
+---
+
+<a id="p14-aspnet"></a>
+### Section 3: ASP.NET Core & API (25 Questions)
+
+```
+Q51. Middleware Pipeline কীভাবে কাজ করে?
+A:   Request → Middleware 1 → Middleware 2 → Endpoint → Response
+     app.Use() → next() call করলে forward।
+     app.Run() → terminal, next() call করে না।
+     Order matters: UseAuthentication before UseAuthorization।
+
+Q52. app.Use() vs app.Map() vs app.Run()?
+A:   Use → middleware, calls next।
+     Map → branch on path, no next।
+     Run → terminal middleware।
+     MapWhen → conditional branching।
+
+Q53. Controller-based API আর Minimal API পার্থক্য?
+A:   Controller: MVC structure, [ApiController], rich features।
+     Minimal: app.MapGet(), fewer lines, faster startup।
+     Production complex API → Controller। Simple/microservice → Minimal।
+
+Q54. Model Binding কীভাবে কাজ করে?
+A:   [FromBody] → JSON body। [FromQuery] → query string।
+     [FromRoute] → route params। [FromHeader] → headers।
+     [FromForm] → form data। Custom model binders সম্ভব।
+
+Q55. Action Filter vs Middleware পার্থক্য?
+A:   Middleware → all requests, pipeline level।
+     Action Filter → specific controllers/actions, MVC level।
+     IActionFilter: OnActionExecuting, OnActionExecuted।
+     [ServiceFilter(typeof(LoggingFilter))] → DI-friendly।
+
+Q56. [ApiController] attribute কী কী করে?
+A:   Automatic model validation (400 if invalid)।
+     Binding source inference ([FromBody] etc.)।
+     Problem Details response format।
+     Route attribute required।
+
+Q57. IActionResult vs ActionResult<T>?
+A:   IActionResult → any response type।
+A:   ActionResult<T> → typed + IActionResult। Swagger better inference।
+     Ok(dto) → 200. NotFound() → 404. CreatedAtAction() → 201।
+
+Q58. Content Negotiation কীভাবে কাজ করে?
+A:   Accept header → JSON, XML, etc।
+     AddControllers().AddXmlSerializerFormatters()
+     Default: JSON। Client requests XML via Accept: application/xml।
+
+Q59. Rate Limiting (.NET 7+) কীভাবে configure করবেন?
+A:   builder.Services.AddRateLimiter(options => options
+       .AddFixedWindowLimiter("api", o => {
+         o.PermitLimit = 100; o.Window = TimeSpan.FromMinutes(1);
+       }));
+     [EnableRateLimiting("api")] on controller।
+
+Q60. CORS কেন দরকার? কীভাবে করবেন?
+A:   Browser security। Cross-origin request block।
+     services.AddCors() → policy define।
+     app.UseCors() → middleware।
+     AllowAnyOrigin() → development only, never production।
+
+Q61. API Versioning কোন approach best?
+A:   URL: /api/v1/orders, /api/v2/orders — simplest, cacheable।
+     Header: Api-Version: 1.0 — URL clean।
+     Query: ?api-version=1.0 — easy testing।
+     Asp.Versioning.Mvc NuGet package।
+
+Q62. Request/Response Compression কীভাবে করবেন?
+A:   builder.Services.AddResponseCompression(opts =>
+       opts.EnableForHttps = true);
+     app.UseResponseCompression();
+     Brotli > gzip। Accept-Encoding header।
+
+Q63. Problem Details (RFC 7807) কী?
+A:   Standard error response format।
+     { type, title, status, detail, instance }
+     builder.Services.AddProblemDetails();
+     app.UseExceptionHandler() → Problem Details automatically।
+
+Q64. OutputFormatter কী?
+A:   Response serialization। JSON → System.Text.Json/Newtonsoft।
+     Custom formatter: returns CSV, binary।
+     MediaTypeFormatter → content negotiation।
+
+Q65. Endpoint Filters (Minimal API)?
+A:   app.MapPost("/orders", handler).AddEndpointFilter<ValidationFilter>();
+     IEndpointFilter: InvokeAsync — like middleware for single endpoint।
+
+Q66. Health Check কেন /health/live আর /health/ready আলাদা?
+A:   live → process running? restart করবে K8s।
+     ready → traffic নিতে পারবে? LB থেকে সরাবে।
+     Startup-এ DB connect না হলেও live = healthy, ready = unhealthy।
+
+Q67. IHostedService lifetime কীভাবে manage হয়?
+A:   App start → StartAsync(). App stop → StopAsync()।
+     CancellationToken → graceful shutdown signal।
+     stoppingToken.IsCancellationRequested দিয়ে check।
+
+Q68. HTTP/2 ASP.NET Core-এ কীভাবে enable হয়?
+A:   Kestrel: automatically with HTTPS।
+     app.UseHsts(), HTTPS required।
+     HTTP/3 (QUIC) → .UseQuic() in .NET 7+।
+
+Q69. gRPC কি HTTP/2 mandatory?
+A:   Yes, gRPC requires HTTP/2।
+     Browser-এ grpc-web proxy দরকার।
+     Kestrel + TLS → gRPC works।
+
+Q70. IOptions vs IOptionsSnapshot vs IOptionsMonitor?
+A:   IOptions<T> → singleton, no reload।
+     IOptionsSnapshot<T> → scoped, per-request, file reload।
+     IOptionsMonitor<T> → singleton, file reload, OnChange callback।
+     Library code → IOptionsMonitor।
+
+Q71. Static files কীভাবে serve করবেন?
+A:   app.UseStaticFiles() → wwwroot।
+     UseStaticFiles(new StaticFileOptions { FileProvider = ... })।
+     CDN header: Cache-Control: public, max-age=31536000।
+
+Q72. Custom Middleware লেখার pattern?
+A:   public class MyMiddleware(RequestDelegate next) {
+       public async Task InvokeAsync(HttpContext ctx) {
+         // before next
+         await next(ctx);
+         // after next
+       }
+     }
+     app.UseMiddleware<MyMiddleware>();
+
+Q73. WebSockets vs SignalR?
+A:   WebSocket → raw protocol, manual management।
+     SignalR → abstracts WebSocket + SSE + Long Polling।
+     Hub API, auto-reconnect, groups, authentication।
+     Use SignalR unless WebSocket protocol control needed।
+
+Q74. API response caching কোন scenarios-এ?
+A:   Static/slow-changing data: categories, config।
+     Public endpoints (no user-specific data)।
+     [ResponseCache] বা Output Cache।
+     Vary by query params, user roles।
+
+Q75. Swagger/OpenAPI কীভাবে JWT auth যোগ করবেন?
+A:   builder.Services.AddSwaggerGen(c => {
+       c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {...});
+       c.AddSecurityRequirement(new OpenApiSecurityRequirement {...});
+     });
+```
+
+---
+
+<a id="p14-efcore"></a>
+### Section 4: EF Core & Database (20 Questions)
+
+```
+Q76. DbContext Lifetime কেন Scoped হওয়া উচিত?
+A:   Per-HTTP-request। Change tracking per request।
+     Singleton DbContext → thread safety issues, stale data।
+     Transient → new context per service call, inefficient।
+     Background services → IServiceScopeFactory দিয়ে scope create।
+
+Q77. AsNoTracking() কখন ব্যবহার করবেন?
+A:   Read-only queries। Update করবেন না।
+     Change tracking overhead avoid।
+     Performance improvement (~20-30% for large result sets)।
+     List, GetById for display → AsNoTracking()।
+
+Q78. Eager, Lazy, Explicit Loading পার্থক্য?
+A:   Eager: .Include(o => o.Items) — JOIN in SQL।
+     Lazy: UseLazyLoadingProxies() — property access-এ auto load (N+1 risk)।
+     Explicit: db.Entry(order).Collection(o => o.Items).LoadAsync()।
+
+Q79. N+1 Query Problem কী? কীভাবে solve করবেন?
+A:   1 query for orders + N queries for each order's items।
+     Fix: .Include(o => o.Items) → single JOIN query।
+     Or: Split query: .AsSplitQuery()।
+     Detect: EnableSensitiveDataLogging + logging।
+
+Q80. Migration কীভাবে production-এ run করবেন?
+A:   dotnet ef migrations bundle → single executable।
+     app.Services.GetRequiredService<AppDbContext>()
+       .Database.MigrateAsync() → startup-এ (small apps)।
+     CI/CD step: run migration before deploy (preferred)।
+     Never: automatic migration in prod without review।
+
+Q81. Global Query Filters কী?
+A:   modelBuilder.Entity<Post>()
+       .HasQueryFilter(p => !p.IsDeleted && p.TenantId == _tenantId);
+     Soft delete, multi-tenancy।
+     .IgnoreQueryFilters() → bypass when needed।
+
+Q82. Owned Entity Type কী?
+A:   Value Object mapping।
+     modelBuilder.Entity<Order>().OwnsOne(o => o.Address);
+     Address → same table, no separate identity।
+
+Q83. Concurrency Conflict কীভাবে handle করবেন?
+A:   [ConcurrencyCheck] or [Timestamp] → RowVersion।
+     DbUpdateConcurrencyException catch।
+     Optimistic concurrency — no lock, detect conflict on save।
+     Retry or inform user।
+
+Q84. Compiled Queries কী?
+A:   var query = EF.CompileAsyncQuery((AppDbContext db, int id) =>
+       db.Orders.Where(o => o.Id == id).FirstOrDefault());
+     Expression tree compilation cache। Hot path performance।
+
+Q85. ExecuteUpdate / ExecuteDelete (.NET 7+)?
+A:   Bulk operations without loading entities।
+     db.Orders.Where(o => o.Status == "Cancelled")
+       .ExecuteDeleteAsync(); → single DELETE SQL।
+     No change tracking। No entity instantiation।
+
+Q86. Table-per-Hierarchy (TPH) vs Table-per-Type (TPT)?
+A:   TPH (default): single table, discriminator column।
+       Simpler queries, nullable columns।
+     TPT: separate table per type।
+       Normalized, JOINs needed।
+
+Q87. Shadow Properties কী?
+A:   DB column without C# property।
+     modelBuilder.Entity<Blog>().Property<DateTime>("CreatedAt");
+     EF Core manages. Auditing, soft delete।
+
+Q88. Interceptors কী?
+A:   IDbCommandInterceptor, ISaveChangesInterceptor।
+     Query logging, audit trails, soft delete।
+     Without modifying DbContext code।
+
+Q89. Dapper কখন EF Core-এর চেয়ে ভালো?
+A:   Complex reporting queries — raw SQL faster।
+     Stored procedures।
+     Read-heavy, no ORM overhead।
+     Use both: EF Core writes, Dapper reads।
+
+Q90. Database Index কীভাবে EF Core-এ define করবেন?
+A:   modelBuilder.Entity<Order>()
+       .HasIndex(o => o.CustomerId)
+       .HasDatabaseName("IX_Orders_CustomerId");
+     Composite: .HasIndex(o => new { o.CustomerId, o.Status })
+     Unique: .IsUnique()
+
+Q91. Connection Resiliency?
+A:   builder.UseSqlServer(conn, opts =>
+       opts.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null));
+     Transient errors: deadlocks, timeout → auto retry।
+
+Q92. Change Tracker কীভাবে কাজ করে?
+A:   Added, Modified, Deleted, Unchanged, Detached states।
+     SaveChangesAsync() → change tracker examine → SQL generate।
+     AsNoTracking() → Detached state।
+
+Q93. Seed Data কীভাবে করবেন?
+A:   modelBuilder.Entity<Category>().HasData(
+       new Category { Id = 1, Name = "Electronics" });
+     Migration-এ include হয়।
+     Prod: separate seeder service।
+
+Q94. DbContextFactory কখন ব্যবহার করবেন?
+A:   IDbContextFactory<AppDbContext> → create short-lived contexts।
+     Background services, multi-threaded scenarios।
+     builder.Services.AddDbContextFactory<AppDbContext>()।
+
+Q95. ValueConverter কী?
+A:   .HasConversion<string>() → enum to string in DB।
+     Custom: .HasConversion(v => v.ToString(), v => Enum.Parse<Status>(v))।
+     Money, strongly-typed IDs।
+```
+
+---
+
+<a id="p14-security"></a>
+### Section 5: Security & Auth (15 Questions)
+
+```
+Q96.  JWT Token-এর 3টি অংশ কী?
+A:    Header (alg, typ) . Payload (claims) . Signature
+      Base64Url encoded। Signature verify করে tamper detect।
+      Never store sensitive data in payload — it's readable।
+
+Q97.  JWT-কে কোথায় store করবেন?
+A:    HttpOnly cookie → XSS-safe, CSRF vulnerable (use SameSite=Strict)।
+      localStorage → CSRF-safe, XSS vulnerable।
+      Memory (JS variable) → XSS-safe, page refresh-এ হারায়।
+      Production: HttpOnly + SameSite=Strict cookie preferred।
+
+Q98.  Refresh Token কেন দরকার?
+A:    Access token short-lived (15min)। Re-auth avoid।
+      Refresh token long-lived, server-side stored।
+      Rotation: হর refresh-এ new refresh token issue।
+      Revocation: logout-এ DB থেকে delete।
+
+Q99.  SQL Injection কীভাবে prevent করবেন?
+A:    EF Core: parameterized queries by default।
+      Raw SQL: db.Orders.FromSqlInterpolated($"SELECT * FROM orders WHERE id={id}")।
+      Never: FromSqlRaw("...WHERE id=" + id)।
+      Input validation + parameterization।
+
+Q100. XSS কীভাবে prevent করবেন ASP.NET Core-এ?
+A:    Razor/Blazor → auto HTML encode।
+      Content-Security-Policy header।
+      HtmlEncoder.Default.Encode() for manual encoding।
+      Avoid [AllowHtml] unnecessarily।
+
+Q101. CSRF কীভাবে prevent করবেন?
+A:    [ValidateAntiForgeryToken] on POST/PUT/DELETE।
+      SPA + JWT → CSRF risk কম (no cookie auth)।
+      Cookie auth + SPA → SameSite=Strict।
+
+Q102. HTTPS কীভাবে enforce করবেন?
+A:    app.UseHttpsRedirection()।
+      app.UseHsts() → Strict-Transport-Security header।
+      IIS/nginx level redirect।
+      Certificates: Let's Encrypt (free)।
+
+Q103. Password কীভাবে store করবেন?
+A:    Never plain text। Never MD5/SHA1।
+      BCrypt, Argon2, PBKDF2 (ASP.NET Core Identity default)।
+      Salt + key stretching।
+      PasswordHasher<User> built-in।
+
+Q104. Role-based vs Policy-based Authorization পার্থক্য?
+A:    Role: [Authorize(Roles = "Admin")] → simple, but rigid।
+      Policy: IAuthorizationRequirement + Handler → flexible, testable।
+      Policy: age verification, subscription level, resource ownership।
+      Prefer policy for complex rules।
+
+Q105. OAuth2 আর OpenID Connect পার্থক্য?
+A:    OAuth2 → Authorization (access token, resource access)।
+      OIDC → Authentication on top of OAuth2 (ID token, user info)।
+      Login with Google → OIDC।
+      API access on user's behalf → OAuth2।
+
+Q106. Data Protection API কী কাজ করে?
+A:    Symmetric encryption for short-lived tokens।
+      Email confirmation, password reset links।
+      IDataProtector: Protect() / Unprotect()।
+      Key rotation automatic।
+
+Q107. Sensitive data কীভাবে log করা থেকে বিরত থাকবেন?
+A:    [LoggerMessage] → compile-time।
+      পাসওয়ার্ড, CC number → never log।
+      Serilog Destructure policy → mask sensitive fields।
+      EnableSensitiveDataLogging → never in production।
+
+Q108. Secret Management production-এ?
+A:    Azure Key Vault + Managed Identity।
+      AWS Secrets Manager, HashiCorp Vault।
+      Never: connection strings in source code।
+      GitHub Actions: ${{ secrets.NAME }}।
+
+Q109. OWASP A01 (Broken Access Control) কীভাবে prevent করবেন?
+A:    Resource-based authorization।
+      Verify: current user owns the resource।
+      Never trust user-supplied IDs without checking ownership।
+      var order = await _db.Orders.FirstOrDefaultAsync(
+        o => o.Id == id && o.CustomerId == currentUserId);
+
+Q110. Rate Limiting Security aspect?
+A:    Brute force login attempts prevent।
+      API abuse / DDoS mitigation।
+      Per-IP, per-user, per-endpoint limits।
+      Fixed window vs sliding window vs token bucket।
+```
+
+---
+
+<a id="p14-coding"></a>
+### Section 6: Coding Challenges (50 Questions)
+
+```csharp
+// ── String & Array ────────────────────────────────────
+
+// Q111. String Reverse (without built-in)
+static string Reverse(string s)
+{
+    var chars = s.ToCharArray();
+    int l = 0, r = chars.Length - 1;
+    while (l < r) { (chars[l], chars[r]) = (chars[r], chars[l]); l++; r--; }
+    return new string(chars);
+}
+
+// Q112. Palindrome Check
+static bool IsPalindrome(string s)
+{
+    s = s.ToLower().Where(char.IsLetterOrDigit).Aggregate("", (a, c) => a + c);
+    int l = 0, r = s.Length - 1;
+    while (l < r) { if (s[l++] != s[r--]) return false; }
+    return true;
+}
+
+// Q113. Anagram Check
+static bool IsAnagram(string a, string b)
+    => a.Length == b.Length &&
+       a.GroupBy(c => c).ToDictionary(g => g.Key, g => g.Count())
+        .All(kv => b.Count(c => c == kv.Key) == kv.Value);
+
+// Q114. Find duplicates in array
+static IEnumerable<int> FindDuplicates(int[] arr)
+    => arr.GroupBy(x => x).Where(g => g.Count() > 1).Select(g => g.Key);
+
+// Q115. Two Sum
+static (int, int) TwoSum(int[] nums, int target)
+{
+    var map = new Dictionary<int, int>();
+    for (int i = 0; i < nums.Length; i++)
+    {
+        int complement = target - nums[i];
+        if (map.TryGetValue(complement, out int j)) return (j, i);
+        map[nums[i]] = i;
+    }
+    return (-1, -1);
+}
+
+// Q116. FizzBuzz (LINQ style)
+static IEnumerable<string> FizzBuzz(int n)
+    => Enumerable.Range(1, n).Select(i =>
+        i % 15 == 0 ? "FizzBuzz" :
+        i % 3 == 0  ? "Fizz" :
+        i % 5 == 0  ? "Buzz" : i.ToString());
+
+// Q117. Max Consecutive Ones
+static int MaxConsecutiveOnes(int[] nums)
+{
+    int max = 0, curr = 0;
+    foreach (var n in nums) { curr = n == 1 ? curr + 1 : 0; max = Math.Max(max, curr); }
+    return max;
+}
+
+// Q118. Group Anagrams
+static IEnumerable<List<string>> GroupAnagrams(string[] words)
+    => words.GroupBy(w => string.Concat(w.OrderBy(c => c)))
+            .Select(g => g.ToList());
+
+// ── Linked List ───────────────────────────────────────
+// Q119. Reverse Linked List
+static ListNode? ReverseList(ListNode? head)
+{
+    ListNode? prev = null, curr = head;
+    while (curr != null) { var next = curr.Next; curr.Next = prev; prev = curr; curr = next; }
+    return prev;
+}
+
+// Q120. Detect Cycle (Floyd's algorithm)
+static bool HasCycle(ListNode? head)
+{
+    var slow = head; var fast = head;
+    while (fast?.Next != null) {
+        slow = slow!.Next; fast = fast.Next.Next;
+        if (slow == fast) return true;
+    }
+    return false;
+}
+
+// ── Recursion & DP ────────────────────────────────────
+// Q121. Fibonacci (memoized)
+static long Fib(int n, Dictionary<int, long>? memo = null)
+{
+    memo ??= new();
+    if (n <= 1) return n;
+    if (memo.TryGetValue(n, out var v)) return v;
+    return memo[n] = Fib(n - 1, memo) + Fib(n - 2, memo);
+}
+
+// Q122. Factorial (iterative)
+static long Factorial(int n) => Enumerable.Range(1, n).Aggregate(1L, (acc, x) => acc * x);
+
+// Q123. Coin Change (minimum coins)
+static int CoinChange(int[] coins, int amount)
+{
+    var dp = new int[amount + 1];
+    Array.Fill(dp, amount + 1);
+    dp[0] = 0;
+    for (int i = 1; i <= amount; i++)
+        foreach (var coin in coins)
+            if (coin <= i) dp[i] = Math.Min(dp[i], dp[i - coin] + 1);
+    return dp[amount] > amount ? -1 : dp[amount];
+}
+
+// Q124. Longest Common Subsequence
+static int LCS(string a, string b)
+{
+    int m = a.Length, n = b.Length;
+    var dp = new int[m + 1, n + 1];
+    for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++)
+            dp[i, j] = a[i-1] == b[j-1] ? dp[i-1, j-1] + 1
+                                          : Math.Max(dp[i-1, j], dp[i, j-1]);
+    return dp[m, n];
+}
+
+// ── LINQ ──────────────────────────────────────────────
+// Q125. Top 3 most expensive products per category
+var result = products
+    .GroupBy(p => p.Category)
+    .Select(g => new {
+        Category = g.Key,
+        TopProducts = g.OrderByDescending(p => p.Price).Take(3)
+    });
+
+// Q126. Flatten nested list
+IEnumerable<int> Flatten(IEnumerable<IEnumerable<int>> nested)
+    => nested.SelectMany(x => x);
+
+// Q127. Distinct by property (before .NET 6)
+var distinct = items.GroupBy(x => x.Category).Select(g => g.First());
+// .NET 6+: items.DistinctBy(x => x.Category)
+
+// Q128. Running total
+var runningTotal = orders
+    .OrderBy(o => o.Date)
+    .Select((o, i) => new { o.Id, o.Amount,
+        RunningTotal = orders.Take(i + 1).Sum(x => x.Amount) });
+
+// ── Async ─────────────────────────────────────────────
+// Q129. Parallel HTTP calls (don't await in loop)
+static async Task<List<Product>> GetProductsBatchAsync(
+    IEnumerable<int> ids, HttpClient http)
+{
+    var tasks = ids.Select(id =>
+        http.GetFromJsonAsync<Product>($"/products/{id}"));
+    var results = await Task.WhenAll(tasks);
+    return results.Where(p => p != null).ToList()!;
+}
+
+// Q130. Retry with exponential backoff
+static async Task<T> RetryAsync<T>(Func<Task<T>> operation, int maxAttempts = 3)
+{
+    for (int attempt = 1; attempt <= maxAttempts; attempt++)
+    {
+        try { return await operation(); }
+        catch when (attempt < maxAttempts)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt)));
+        }
+    }
+    return await operation(); // last attempt — let exception propagate
+}
+
+// ── OOP ───────────────────────────────────────────────
+// Q131. Generic Stack implementation
+public class Stack<T>
+{
+    private readonly List<T> _items = new();
+    public void Push(T item) => _items.Add(item);
+    public T Pop()
+    {
+        if (_items.Count == 0) throw new InvalidOperationException("Stack is empty");
+        var item = _items[^1];
+        _items.RemoveAt(_items.Count - 1);
+        return item;
+    }
+    public T Peek() => _items.Count == 0
+        ? throw new InvalidOperationException("Stack is empty") : _items[^1];
+    public int Count => _items.Count;
+}
+
+// Q132. LRU Cache
+public class LRUCache
+{
+    private readonly int _capacity;
+    private readonly Dictionary<int, LinkedListNode<(int Key, int Value)>> _map = new();
+    private readonly LinkedList<(int Key, int Value)> _list = new();
+
+    public LRUCache(int capacity) => _capacity = capacity;
+
+    public int Get(int key)
+    {
+        if (!_map.TryGetValue(key, out var node)) return -1;
+        _list.Remove(node); _list.AddFirst(node);
+        return node.Value.Value;
+    }
+
+    public void Put(int key, int value)
+    {
+        if (_map.TryGetValue(key, out var node)) { _list.Remove(node); _map.Remove(key); }
+        if (_map.Count >= _capacity) { _map.Remove(_list.Last!.Value.Key); _list.RemoveLast(); }
+        var newNode = _list.AddFirst((key, value));
+        _map[key] = newNode;
+    }
+}
+
+// Q133. Producer-Consumer with Channel<T>
+static async Task ProducerConsumerDemo()
+{
+    var channel = Channel.CreateBounded<int>(capacity: 10);
+
+    var producer = Task.Run(async () => {
+        for (int i = 0; i < 20; i++) {
+            await channel.Writer.WriteAsync(i);
+            await Task.Delay(10);
+        }
+        channel.Writer.Complete();
+    });
+
+    var consumer = Task.Run(async () => {
+        await foreach (var item in channel.Reader.ReadAllAsync())
+            Console.WriteLine($"Consumed: {item}");
+    });
+
+    await Task.WhenAll(producer, consumer);
+}
+
+// Q134. Custom LINQ operator
+public static class EnumerableExtensions
+{
+    public static IEnumerable<IEnumerable<T>> Batch<T>(
+        this IEnumerable<T> source, int size)
+    {
+        var batch = new List<T>(size);
+        foreach (var item in source)
+        {
+            batch.Add(item);
+            if (batch.Count == size) { yield return batch; batch = new List<T>(size); }
+        }
+        if (batch.Count > 0) yield return batch;
+    }
+}
+
+// Q135. Thread-safe counter
+public class ThreadSafeCounter
+{
+    private int _count;
+    public void Increment() => Interlocked.Increment(ref _count);
+    public void Decrement() => Interlocked.Decrement(ref _count);
+    public int Value => Volatile.Read(ref _count);
+}
+```
+
+---
+
+<a id="p14-tricky"></a>
+### Section 7: Tricky Questions (30 Questions)
+
+```
+Q136. string s = null; s?.Length কী return করে?
+A:    null (nullable int?)। NullReferenceException না।
+
+Q137. int? a = null; a ?? 0 কী return করে?
+A:    0। Null coalescing operator।
+
+Q138. new List<int>() { 1, 2, 3 }.ForEach(x => x *= 2) কি কাজ করে?
+A:    না। x value copy। Original list পরিবর্তন হয় না।
+      for loop দিয়ে index-based modify করতে হবে।
+
+Q139. DateTime.Now আর DateTime.UtcNow পার্থক্য?
+A:    Now → local timezone। UtcNow → UTC।
+      DB, logs, API → সবসময় UTC। Display → local convert।
+      DateTimeOffset → timezone info সহ।
+
+Q140. StringBuilder thread-safe?
+A:    না। Concurrent access-এ synchronize করতে হবে।
+      string concat → thread-safe (immutable)।
+
+Q141. IEnumerable<T>-এ Count() কতবার enumerate করে?
+A:    একবার। কিন্তু underlying sequence-কে iterate করে।
+      List<T> → O(1) Count property।
+      IEnumerable → O(n) iterate করতে হয়।
+      .Count() vs .Count property — difference matters।
+
+Q142. async void কেন বিপদজনক?
+A:    Exception catch করা যায় না (caller-এ)।
+      Unhandled → process crash।
+      শুধু event handlers-এ। Otherwise async Task।
+
+Q143. Task.Result বা .Wait() কখন deadlock হয়?
+A:    SynchronizationContext আছে (ASP.NET classic, WinForms)-এ।
+      await → context capture। .Result → block → deadlock।
+      Modern ASP.NET Core-এ কম likely।
+      Never block async code synchronously।
+
+Q144. Equals() আর == পার্থক্য?
+A:    class: == reference equality। Equals() → override করা যায়।
+      record: == value equality by default।
+      string: == value equality (overridden)।
+      int: == value equality।
+
+Q145. GetHashCode() override করলে কী করতে হবে?
+A:    Equals() ও override করতে হবে।
+      Rule: a.Equals(b) → a.GetHashCode() == b.GetHashCode()।
+      Dictionary, HashSet use GetHashCode for bucket।
+
+Q146. finally block কি সবসময় run হয়?
+A:    প্রায় সবসময়। Exception বা না।
+      না হলে: Environment.FailFast(), process kill, Thread.Abort।
+      StackOverflowException → finally নাও run হতে পারে।
+
+Q147. checked { int x = int.MaxValue + 1; } কী হয়?
+A:    OverflowException throw।
+      unchecked (default) → wraps to int.MinValue।
+
+Q148. params keyword কী করে?
+A:    void Log(string msg, params object[] args)
+      Caller: Log("Hello {0}", name, age)
+      Array create করে automatically।
+
+Q149. is vs as operator?
+A:    is: pattern matching, returns bool।
+      as: safe cast, returns null on failure (reference types only)।
+      (Type)obj → InvalidCastException on failure।
+
+Q150. null forgiving operator (!) কী?
+A:    string name = user!.Name; → "I know this is not null"।
+      Compiler null warning suppress।
+      Runtime null-check bypass করে না।
+      Careful use — masks actual null bugs।
+
+Q151. List<T> আর LinkedList<T> কখন কোনটা?
+A:    List<T>: random access O(1)। Add at end O(1) amortized।
+     LinkedList<T>: Insert/remove middle O(1)। No random access।
+     98% cases: List<T>।
+
+Q152. Dictionary<K,V> GetOrAdd thread-safe?
+A:    না। ConcurrentDictionary<K,V>.GetOrAdd() → thread-safe।
+     Dictionary → lock নিন নিজে।
+
+Q153. using System.Linq; ছাড়া .Where() কাজ করে না কেন?
+A:    Where() → IEnumerable<T>-এর extension method।
+     System.Linq namespace-এ। Import না হলে not found।
+
+Q154. var কি performance impact করে?
+A:    না। Compile time type inference। Runtime no difference।
+     var x = 5; → int x = 5; identical IL।
+
+Q155. string interning কী?
+A:    Same literal strings → same memory reference।
+     string.Intern() → manual intern।
+     "hello" == "hello" → true (interned)।
+     new string(new[]{'h','e','l','l','o'}) → different reference।
+
+Q156. Dispose() কি GC-কে trigger করে?
+A:    না। Dispose() → managed cleanup, IDisposable।
+     GC → memory reclaim, non-deterministic।
+     Dispose() → GC.SuppressFinalize() → finalizer skip।
+
+Q157. abstract method-এ body থাকতে পারে?
+A:    না। abstract class-এ abstract method → no body।
+     virtual method → body থাকে, override optional।
+
+Q158. sealed class-এ override করা যায়?
+A:    sealed class → inherit করা যায় না।
+     sealed override method → আর override করা যায় না।
+     String class sealed।
+
+Q159. interface default implementation কি override mandatory?
+A:    না। Implementing class skip করতে পারে — default use হবে।
+     Override করতে চাইলে পারবেন।
+
+Q160. record-এ mutable property থাকতে পারে?
+A:    Yes! { get; set; } দিলে mutable।
+     { get; init; } → init-only (immutable after construction)।
+     with expression → new copy with changed values।
+
+Q161. Span<T> কি async method-এ ব্যবহার করা যায়?
+A:    না। Span<T> ref struct → stack only।
+     async state machine → heap allocation।
+     Use Memory<T> বা ArraySegment<T> for async।
+
+Q162. CancellationToken কীভাবে pass করবেন?
+A:    Method signature-এ last parameter।
+     async Task DoWork(CancellationToken ct = default)
+     ct.ThrowIfCancellationRequested() → explicit check।
+     Pass to all inner awaits।
+
+Q163. IAsyncEnumerable<T> কোথায় ব্যবহার করবেন?
+A:    Large result sets. Stream from DB.
+     await foreach (var item in repo.StreamAsync(ct))
+     SignalR streaming, file reading।
+
+Q164. Thread.Sleep vs Task.Delay?
+A:    Thread.Sleep → blocks thread।
+     Task.Delay → async wait, thread released।
+     Never Thread.Sleep in async code।
+
+Q165. WeakReference কী?
+A:    Object reference যা GC collect করতে পারে।
+     Cache scenario — memory pressure-এ evict।
+     var wr = new WeakReference<MyObj>(obj);
+     wr.TryGetTarget(out var target)।
+```
+
+---
+
+<a id="p14-rapidfire"></a>
+### Section 8: Rapid Fire (20 Questions)
+
+```
+Q166. Default HTTP port?       → 80 (HTTP), 443 (HTTPS)
+Q167. REST-এ PUT vs PATCH?     → PUT: full replace. PATCH: partial update
+Q168. 201 status code মানে?   → Created
+Q169. 401 vs 403?              → 401: Unauthenticated. 403: Unauthorized (no permission)
+Q170. HTTP GET idempotent?     → Yes. GET same result multiple times
+Q171. EF Core default lazy loading? → Disabled. Explicit enable করতে হয়
+Q172. var vs dynamic?          → var: compile-time type. dynamic: runtime type
+Q173. IEnumerable vs List?     → IEnumerable: read-only iteration. List: mutable, indexable
+Q174. async/await কি new thread তৈরি করে? → না। Thread pool reuse করে
+Q175. ConfigureAwait(false) কখন? → Library code. UI context-এ না
+Q176. Dependency Injection 3 lifetime? → Transient, Scoped, Singleton
+Q177. EF Core SaveChanges কী করে? → Change tracker → SQL generate → execute → commit
+Q178. JWT Algorithm default? → HS256 (HMAC-SHA256)
+Q179. CORS কোথায় handle হয়? → Browser। Server শুধু headers পাঠায়
+Q180. Blazor Server vs WASM?   → Server: SignalR. WASM: .NET in browser
+Q181. Docker image vs container? → Image: template. Container: running instance
+Q182. K8s Pod vs Deployment?   → Pod: single unit. Deployment: manages pod replicas
+Q183. gRPC vs REST?            → gRPC: binary, HTTP/2, typed. REST: JSON, HTTP/1.1, flexible
+Q184. Outbox pattern কেন?      → Atomic DB save + event publish
+Q185. Clean Architecture dependency direction? → Inward only. Domain knows nothing
+```
+
+---
+
+<a id="p14-scenario"></a>
+### Section 9: Scenario-based (30 Questions)
+
+```
+Q186. API হঠাৎ slow হয়ে গেছে। কীভাবে diagnose করবেন?
+A:    1. dotnet-counters → CPU, GC, requests/sec দেখুন।
+     2. Application Insights / Serilog → slow query logs।
+     3. EF Core logging → N+1 queries check।
+     4. dotnet-trace → CPU flamegraph।
+     5. DB query plans → EXPLAIN ANALYZE।
+     6. Redis cache miss rate check।
+     7. External API timeout আছে কিনা।
+
+Q187. Production-এ memory leak হচ্ছে। কী করবেন?
+A:    1. dotnet-counters → GC heap size growing?
+     2. dotnet-dump → dumpheap -stat → কোন type বেশি?
+     3. Static collections check — ever cleared?
+     4. Event subscription leak → -= করা হয়েছে?
+     5. Dispose() call হচ্ছে? IDisposable implement করা?
+     6. Singleton-এ Scoped service inject?
+
+Q188. Database suddenly returning stale data। কারণ কী হতে পারে?
+A:    1. Cache invalidation missed → Redis/memory cache old data।
+     2. Read replica lag → write primary, read replica (replication delay)।
+     3. EF Core change tracking → detached entity old values।
+     4. Distributed cache not invalidated on update।
+     Fix: Cache-aside with TTL + explicit invalidation on update।
+
+Q189. API rate limit bypass হচ্ছে। কীভাবে fix করবেন?
+A:    1. IP-based → VPN/proxy bypass করতে পারে।
+     2. User-based → JWT claims-এ user ID দিয়ে limit।
+     3. Combine IP + User ID।
+     4. Redis distributed rate limiter → consistent across instances।
+     5. API Gateway level (Azure APIM, YARP)।
+
+Q190. Microservices-এ circular dependency হলে?
+A:    Service A → B → A → deadlock scenario।
+     Fix 1: Extract common dependency to Service C।
+     Fix 2: Async messaging → A publishes event, B subscribes।
+     Fix 3: API Gateway aggregation layer।
+     Design: bounded contexts clearly define।
+
+Q191. JWT secret leaked। Immediate actions?
+A:    1. Immediately rotate secret key।
+     2. All existing tokens invalid করুন (new key → old tokens fail)।
+     3. Refresh token blacklist।
+     4. Audit logs check → unauthorized access?
+     5. Secret manager → Key Vault-এ move।
+     6. Incident report।
+
+Q192. High concurrency-তে duplicate order submit হচ্ছে।
+A:    1. Idempotency Key header → same key = same response।
+     2. Unique DB constraint (customer_id + idempotency_key)।
+     3. Optimistic concurrency → version check।
+     4. Redis lock (SETNX) → short-lived distributed lock।
+     5. Frontend: disable submit button on click।
+
+Q193. EF Core query generating too many SQL calls।
+A:    1. Enable logging → see all queries।
+     2. .Include() missing → lazy loading N+1।
+     3. .AsSplitQuery() for multiple collections।
+     4. ProjectTo<DTO> → only needed columns SELECT।
+     5. Compiled queries for hot paths।
+
+Q194. Docker container memory OOM killed। কী করবেন?
+A:    1. K8s resource limits বাড়ান (temporarily)।
+     2. Memory leak check → dotnet-dump।
+     3. Large object allocations → BenchmarkDotNet।
+     4. StringBuilder vs string concat in loops।
+     5. Stream large responses instead of buffer all in memory।
+
+Q195. Azure deployment-এ config পরিবর্তন করতে হবে restart ছাড়া।
+A:    IOptionsMonitor<T> → file change automatic reload।
+     Azure App Configuration → feature flags, dynamic config।
+     app.config.json reload:
+     builder.AddJsonFile("appsettings.json", reloadOnChange: true)।
+
+Q196. Multi-tenant application-এ data isolation কীভাবে করবেন?
+A:    1. Row-level: TenantId column + Global Query Filter।
+     2. Schema-per-tenant: PostgreSQL schemas।
+     3. DB-per-tenant: separate connection strings।
+     Trade-off: row-level সহজ, DB-per-tenant সবচেয়ে isolated।
+
+Q197. SignalR connection drop হচ্ছে behind load balancer।
+A:    Sticky sessions (Azure ARR affinity) → same server।
+     Or: Redis backplane → all servers share state।
+     .AddStackExchangeRedis() → horizontal scale।
+
+Q198. Unit test mock করা repository-তে SaveChanges কাজ করছে না।
+A:    Mock<IOrderRepository>-এ SaveChanges call নেই।
+     IUnitOfWork mock আলাদা করুন।
+     Or: InMemory EF Core for repository tests।
+     Integration test-এ TestContainers → real DB।
+
+Q199. gRPC service timeout হচ্ছে।
+A:    Default deadline নেই → infinite wait।
+     Client: var headers = new Metadata();
+             headers.Add("grpc-timeout", "5S");
+     Or: CallOptions with deadline।
+     Server: context.CancellationToken check।
+
+Q200. Blazor WASM initial load slow।
+A:    1. Lazy loading assemblies (.LoadAssembliesAsync)।
+     2. Publish trimming: PublishTrimmed=true।
+     3. AOT compilation (faster execution, larger download)।
+     4. CDN for static files।
+     5. Progressive loading indicator।
+
+Q201. Background job failed silently।
+A:    1. ExecuteAsync-এ try-catch + ILogger।
+     2. Hangfire/Quartz.NET → built-in retry + dashboard।
+     3. Dead-letter queue for message queue failures।
+     4. Health check shows failed jobs।
+     5. Alert on error log spike।
+
+Q202. API থেকে large CSV export slow এবং memory high।
+A:    Stream response instead of buffer all:
+     Response.ContentType = "text/csv";
+     await foreach (var row in _db.StreamAsync())
+       await Response.WriteAsync(row.ToCsvLine());
+     Avoid: .ToList() on millions of rows।
+
+Q203. JWT token size বড় হয়ে যাচ্ছে।
+A:    Claims কমান — শুধু প্রয়োজনীয়।
+     Role list long → permission system (policy-based)।
+     Reference token: opaque token → lookup DB/Redis।
+     Token এর payload compress করুন না (security issue)।
+
+Q204. CI/CD pipeline হঠাৎ fail করছে।
+A:    1. Build error → dotnet build locally।
+     2. Test fail → dotnet test locally।
+     3. Docker build fail → Dockerfile syntax, base image pull।
+     4. Secret expired → GitHub/Azure secret rotate।
+     5. NuGet restore fail → private feed auth।
+     6. Environment variable missing → workflow env check।
+
+Q205. Slow startup time in production।
+A:    1. EF Core: .EnsureCreated() on startup → move to migration।
+     2. Eager DI registration → Lazy<T> injection।
+     3. Health check slow → async, timeout set করুন।
+     4. Startup.Configure() heavy work → BackgroundService-এ move।
+     5. Docker image pull → pre-pull or warm instance।
+
+Q206. Two developers merge conflict in migration।
+A:    1. Pull latest, rebase।
+     2. Conflicting migration → delete both, recreate from fresh।
+     3. dotnet ef migrations add Merged — timestamp order matters।
+     4. Dev branch-এ migrations → merge to main only when ready।
+     5. Convention: one developer does migrations on feature branch।
+
+Q207. User complaint: "my order disappeared"।
+A:    1. Logs check → OrderId, UserId, timestamp।
+     2. Soft delete filter? Global query filter IsDeleted।
+     3. Multi-tenant filter → wrong tenant?
+     4. DB replication lag → read from replica?
+     5. Cache stale data?
+     6. Authorization — user sees only own orders?
+
+Q208. Redis suddenly unavailable। Impact?
+A:    1. Distributed cache miss → DB fallback (graceful degradation)।
+     2. Session loss if stored in Redis।
+     3. SignalR Redis backplane → messages not delivered cross-server।
+     4. Rate limiting → bypass or in-memory fallback।
+     Design: Redis outage graceful handling with fallback।
+
+Q209. Needs to add audit log to every entity change।
+A:    EF Core Interceptor: ISaveChangesInterceptor।
+     In SavingChanges: ChangeTracker entries → audit records।
+     Same transaction → always consistent।
+     Or: Domain Events → AuditEventHandler।
+     Audit table: EntityName, EntityId, Action, OldValue, NewValue, UserId, Timestamp।
+
+Q210. Microservice event consumer is slow — queue backing up।
+A:    1. Increase consumer instances (horizontal scale)।
+     2. Prefetch count increase।
+     3. Parallel consume with SemaphoreSlim।
+     4. Async all DB operations in handler।
+     5. Batch processing → group messages।
+     6. Profile consumer → bottleneck identify।
+```
+
+---
+
+## PART 14 Summary
+
+| Section | Questions | Focus |
+|---------|-----------|-------|
+| Fundamentals | Q1–Q30 | .NET internals, C# features |
+| OOP & Patterns | Q31–Q50 | SOLID, design patterns |
+| ASP.NET Core | Q51–Q75 | Middleware, API, DI |
+| EF Core | Q76–Q95 | ORM, performance |
+| Security | Q96–Q110 | Auth, OWASP, secrets |
+| Coding | Q111–Q135 | Algorithms, LINQ, async |
+| Tricky | Q136–Q165 | Edge cases, gotchas |
+| Rapid Fire | Q166–Q185 | Quick recall |
+| Scenario | Q186–Q210 | Real-world problem solving |
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 15 — Bangladeshi Interview Preparation (BD Company Patterns, Salary Negotiation, Common Mistakes, Mock Interview Guide...)
+
+---
+
+<a id="part15"></a>
+## PART 15: Bangladeshi Interview Preparation
+
+> BD software company-র interview pattern, salary negotiation, CV tips, mock interview guide এবং career roadmap।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [BD Software Industry Overview](#p15-industry) |
+| 2 | [BD Company Interview Patterns](#p15-patterns) |
+| 3 | [CV/Resume Tips for BD Market](#p15-cv) |
+| 4 | [Common Interview Mistakes](#p15-mistakes) |
+| 5 | [Salary Negotiation Guide](#p15-salary) |
+| 6 | [Mock Interview Questions (BD Context)](#p15-mock) |
+| 7 | [Career Roadmap — Junior to Senior](#p15-roadmap) |
+| 8 | [Resources & Study Plan](#p15-resources) |
+
+---
+
+<a id="p15-industry"></a>
+### Topic 1: BD Software Industry Overview
+
+```
+Bangladesh Software Industry 2024-2026:
+────────────────────────────────────────────────────────
+Major Tech Hubs:
+  Dhaka        → 80%+ companies. Gulshan, Motijheel, Uttara।
+  Chittagong   → Growing. Outsourcing focus।
+  Remote       → Post-COVID increase।
+
+Company Types:
+  Outsourcing/Software Farm → Most common। Client: USA/Europe/Australia।
+                               Stack: .NET, Java, React, PHP।
+  Product Company           → Growing। Own SaaS, fintech, e-commerce।
+                               Stack: .NET Core, Node.js, React, Go।
+  Startup                   → Fast-paced। Less formal process।
+  Govt IT                   → Slow. Java, .NET. Job security।
+  Multinational (Samsung R&D, Pathao, etc.) → Competitive।
+
+Salary Range (2025-2026):
+  Junior .NET Dev (0-2 yr)   → ৳25,000 – ৳55,000
+  Mid .NET Dev (2-4 yr)      → ৳55,000 – ৳1,20,000
+  Senior .NET Dev (4-7 yr)   → ৳1,20,000 – ৳2,50,000
+  Lead/Architect (7+ yr)     → ৳2,50,000 – ৳5,00,000+
+  Remote (USD)               → $15-$50/hr depending on client
+
+High Demand Skills:
+  .NET Core, C#, ASP.NET Core Web API
+  React/Angular (full stack সুবিধা)
+  Azure / AWS basics
+  Docker, CI/CD (GitHub Actions)
+  EF Core, PostgreSQL, SQL Server
+────────────────────────────────────────────────────────
+```
+
+---
+
+<a id="p15-patterns"></a>
+### Topic 2: BD Company Interview Patterns
+
+```
+Round 1 — Written/Online Test (30-60 min):
+─────────────────────────────────────────
+  OOP MCQ: Abstract vs Interface, Access Modifiers
+  C# specific: nullable, delegates, LINQ output predict
+  SQL queries: JOIN, GROUP BY, subquery
+  Algorithm: FizzBuzz, reverse string, find duplicate
+  .NET: CLR, GC, managed/unmanaged
+  Tip: Practice on HackerRank .NET track
+
+Round 2 — Technical Phone/Google Meet (45-60 min):
+──────────────────────────────────────────────────
+  CV review: "আপনার last project describe করুন"
+  Live coding: simple problem in shared editor
+  OOP questions: SOLID, design pattern examples
+  ASP.NET Core: middleware, DI, JWT flow
+  EF Core: lazy vs eager, N+1 problem
+  Tip: Talk through thinking before coding।
+
+Round 3 — Technical Face-to-face / Panel (1-2 hr):
+──────────────────────────────────────────────────
+  Deep dive on project architecture
+  System design: "design an order management system"
+  Code review: find bugs in given code
+  Performance: "কীভাবে API 10x faster করবেন"
+  Security: "SQL injection কীভাবে prevent করবেন"
+  Tip: Draw architecture diagram while explaining।
+
+Round 4 — HR / Management (30 min):
+────────────────────────────────────
+  Why this company?
+  Career goals (3-5 year plan)
+  Team conflict handling
+  Salary expectation
+  Notice period / joining date
+  Tip: Research company beforehand। Specific answer দিন।
+
+Common .NET Questions in BD Interviews:
+───────────────────────────────────────
+  1. OOP 4 principles কী? উদাহরণসহ বলুন।
+  2. Abstract class আর Interface পার্থক্য।
+  3. SOLID Principles — S বলুন উদাহরণসহ।
+  4. Dependency Injection কী? কেন ব্যবহার করবেন?
+  5. async/await কীভাবে কাজ করে?
+  6. EF Core-এ Lazy Loading কী? সমস্যা কী?
+  7. JWT কীভাবে কাজ করে? Token-এ কী থাকে?
+  8. REST API-তে HTTP methods কখন কোনটা?
+  9. Database index কখন দেবেন?
+  10. আপনার project-এ সবচেয়ে বড় technical challenge কী ছিল?
+```
+
+---
+
+<a id="p15-cv"></a>
+### Topic 3: CV/Resume Tips for BD Market
+
+```
+CV Format (1-2 pages max):
+────────────────────────────────────────────────────────
+✅ English CV preferred (even for BD companies)।
+✅ Photo optional (some BD companies ask, MNCs avoid)।
+✅ Clear header: Name, Phone, Email, GitHub, LinkedIn।
+✅ Summary: 3-4 lines। "2+ years .NET Core developer।
+   ASP.NET Core Web API, EF Core, React। Clean Architecture
+   এবং CQRS experience। Azure deploy করেছি।"
+
+Technical Skills Section:
+  Languages:  C#, TypeScript, JavaScript, SQL
+  Frameworks: ASP.NET Core, Entity Framework Core, React
+  Databases:  PostgreSQL, SQL Server, Redis
+  Tools:      Docker, Git, GitHub Actions, Azure
+  Patterns:   REST API, Clean Architecture, CQRS, DDD
+
+Projects Section (most important!):
+  ✅ Project name + 1-line description
+  ✅ Tech stack: ASP.NET Core 8, EF Core, PostgreSQL, React, Docker
+  ✅ Key achievement: "50K+ daily requests handle করে"
+  ✅ GitHub link: github.com/yourusername/project-name
+  ✅ Live URL if available
+
+Work Experience:
+  ✅ Role, Company, Duration (Month Year – Month Year)
+  ✅ Bullet points: action verb + what + result
+     ❌ "Worked on order management system"
+     ✅ "Designed and implemented order management REST API
+        using ASP.NET Core, reducing checkout latency by 40%"
+
+Common CV Mistakes:
+  ❌ "Proficient in all programming languages"
+  ❌ Skills: MS Word, MS Excel (না লেখাই ভালো)
+  ❌ Objective: "I want to grow in a challenging environment"
+  ❌ Personal info: Father's name, NID, religion (MNC-তে avoid)
+  ❌ Same CV for every job (customize করুন)
+
+GitHub Profile Checklist:
+  ✅ README.md in every project (screenshots দিন)
+  ✅ Pinned repositories: best 6 projects
+  ✅ Commit messages meaningful (not "update", "fix")
+  ✅ Profile README: tech stack badges, recent activity
+  ✅ No committed secrets/passwords
+────────────────────────────────────────────────────────
+```
+
+---
+
+<a id="p15-mistakes"></a>
+### Topic 4: Common Interview Mistakes
+
+```
+Technical Mistakes:
+───────────────────
+❌ সরাসরি code লেখা শুরু, problem না বুঝে।
+   ✅ প্রথমে problem clarify করুন: "Input/output কী?" "Edge case?"
+
+❌ "জানি না" বলে চুপ করে থাকা।
+   ✅ "Exact syntax মনে নেই, কিন্তু logic হবে এরকম..." বলুন।
+
+❌ Memorized definition পড়া।
+   ✅ নিজের ভাষায় + উদাহরণ দিন।
+
+❌ শুধু happy path code লেখা।
+   ✅ Edge cases mention: null check, empty list, exception।
+
+❌ Project-এর সব detail না জানা।
+   ✅ নিজের project-এর architecture, DB schema, key decisions।
+
+❌ "আমাদের team lead এটা করেছে" — দায় এড়ানো।
+   ✅ "Team-এ আমি এই অংশটা করেছিলাম" — specific contribution।
+
+Communication Mistakes:
+───────────────────────
+❌ Very fast বলা। Interviewer follow করতে পারছে না।
+   ✅ Slow, clear, pause নিন।
+
+❌ Question-এর আগেই answer শুরু।
+   ✅ পুরো প্রশ্ন শুনুন, think করুন, তারপর বলুন।
+
+❌ Salary উল্টো জিজ্ঞেস করা — "আপনারা কত দেবেন?"
+   ✅ Range বলুন: "আমি ৳X-Y expect করছি based on experience।"
+
+❌ Negative about previous employer।
+   ✅ "Better opportunity এবং growth-এর জন্য"।
+
+Attitude Mistakes:
+──────────────────
+❌ Overconfident: "এটা তো basic, জানি।" তারপর ভুল।
+   ✅ Humble + accurate।
+
+❌ কোনো প্রশ্ন না করা। Interview শেষে।
+   ✅ "Team structure কেমন?" "Tech stack migration plan আছে?"
+      "সবচেয়ে interesting technical challenge কী?"
+
+❌ Follow-up না করা (email thank you)।
+   ✅ Interview-এর পরদিন: "Thank you for the opportunity..."
+```
+
+---
+
+<a id="p15-salary"></a>
+### Topic 5: Salary Negotiation Guide
+
+```
+Before Negotiation — Research:
+────────────────────────────────
+  LinkedIn Salary, glassdoor.com (limited BD data)।
+  Developer community: Facebook groups "Bangladesh Developers Forum"।
+  Ask friends in similar roles/companies।
+  Stack Overflow Developer Survey — BD data।
+
+Salary Expectation Formula:
+  Current Salary × 1.3-1.5 (30-50% hike for job change)।
+  Market rate (researched) as anchor।
+  Never go below your minimum。
+
+Negotiation Phrases:
+  "আমি currently ৳X পাচ্ছি। New role-এ ৳Y expect করছি।"
+  "আমার skill set এবং experience consider করলে ৳X reasonable।"
+  "অন্য company ৳X offer করেছে, আপনারা match করতে পারবেন?"
+  "Base কি negotiate হবে? Total package কী?"
+
+Beyond Base Salary — Ask About:
+  ✅ Festival bonus (2 Eid typically mandatory)
+  ✅ Performance bonus (annual)
+  ✅ Annual increment policy (% range)
+  ✅ Remote work policy (WFH days)
+  ✅ Training/certification budget (AWS, Azure exam)
+  ✅ Provident fund / gratuity
+  ✅ Medical insurance (self + family)
+  ✅ Internet allowance (if WFH)
+  ✅ Equipment (laptop provided?)
+
+Red Flags:
+  ❌ "Salary হবে, কিন্তু probation period-এ কম"
+  ❌ "Performance দেখে ৩ মাস পরে decide করব"
+  ❌ Verbal-only offer — always get written offer letter
+  ❌ "Market-এ এটাই standard" — verify yourself
+
+Sample Negotiation Script:
+  HR: "আপনার salary expectation?"
+  You: "আমার current package ৳50,000। নতুন role-এর responsibility
+        এবং market rate consider করে ৳75,000 expect করছি।
+        Total compensation package-এর বিষয়ে কথা বলতে পারি।"
+  HR: "আমরা ৳65,000 offer করতে পারি।"
+  You: "৳70,000 হলে আমি join করতে পারব। Performance bonus
+        structure কী আছে সেটাও জানতে চাই।"
+```
+
+---
+
+<a id="p15-mock"></a>
+### Topic 6: Mock Interview Questions (BD Context)
+
+```
+Behavioral Questions (BD Companies):
+─────────────────────────────────────
+Q: আপনি কেন .NET choose করলেন?
+A: "University-তে C# শিখেছিলাম। Enterprise application
+   development-এ .NET ecosystem খুবই mature।
+   ASP.NET Core cross-platform, high performance।
+   Bangladesh-এ outsourcing companies-এ .NET-এর demand বেশি।
+   Azure integration সহজ — Microsoft stack একসাথে ভালো কাজ করে।"
+
+Q: আপনার সবচেয়ে challenging project কোনটা?
+A: STAR method — Situation, Task, Action, Result।
+   "আমাদের e-commerce platform-এ peak season-এ
+   performance issue ছিল (Situation)।
+   API response time 3 seconds ছিল (Task)।
+   EF Core N+1 fix করলাম, Redis cache add করলাম,
+   pagination implement করলাম (Action)।
+   Response time 300ms-এ নামল, 98th percentile (Result)।"
+
+Q: Team conflict কীভাবে handle করেন?
+A: "একবার code review-তে colleague-এর approach নিয়ে
+   মতভেদ হয়েছিল। Private-এ কথা বললাম, দুজনের
+   reasoning share করলাম। Senior developer-এর opinion নিলাম।
+   Team decision follow করলাম। Ego ছাড়া।"
+
+Q: আপনি কেন এই company-তে আসতে চাইছেন?
+A: Research করে specific বলুন!
+   "আপনাদের product [X] use করি। Architecture blog পড়েছি।
+   Clean Code নিয়ে team-এর focus impressive।
+   .NET Core migration project interesting।
+   এই environment-এ grow করতে চাই।"
+
+Technical BD-specific:
+──────────────────────
+Q: বাংলাদেশে outsourcing project-এ কীভাবে work করেছেন?
+A: "Client requirement gather করা — timezone difference।
+   Jira/Trello ticket system।
+   Daily standup (async বা live)।
+   Code review + PR process।
+   Client demo — communicate clearly।"
+
+Q: Remote work experience আছে?
+A: "Zoom/Teams meeting। Async communication (Slack)।
+   Self-disciplined, time-tracking।
+   Clear written communication important।"
+
+Q: 5 বছর পরে আপনি কোথায় থাকতে চান?
+A: Realistic + aligned with company।
+   "Technical leadership role-এ। Team lead বা architect।
+   .NET ecosystem-এ expert হতে চাই।
+   আপনাদের company grow করার সাথে আমিও grow করতে চাই।"
+   (startup হলে: "শুরু থেকে product build করার experience নিতে চাই।")
+```
+
+---
+
+<a id="p15-roadmap"></a>
+### Topic 7: Career Roadmap — Junior to Senior
+
+```
+Junior .NET Developer (0-2 years):
+────────────────────────────────────
+Must Know:
+  ✅ C# fundamentals, OOP, SOLID
+  ✅ ASP.NET Core Web API basics
+  ✅ EF Core CRUD + migrations
+  ✅ SQL basics (SELECT, JOIN, GROUP BY)
+  ✅ Git (commit, branch, PR)
+  ✅ REST API design
+  ✅ JWT authentication
+  ✅ Unit testing basics (xUnit + Moq)
+
+Goals:
+  → Build 2-3 portfolio projects (GitHub + README)
+  → Contribute to team code reviews
+  → Learn from senior code
+  → Read .NET documentation habitually
+
+Mid-level Developer (2-4 years):
+──────────────────────────────────
+Add:
+  ✅ Design Patterns (Factory, Strategy, Repository, Mediator)
+  ✅ Clean Architecture / layered architecture
+  ✅ CQRS + MediatR
+  ✅ Redis caching
+  ✅ Docker basics
+  ✅ CI/CD (GitHub Actions)
+  ✅ Performance profiling (dotnet-trace)
+  ✅ Integration testing (WebApplicationFactory)
+  ✅ Azure App Service / basic cloud
+
+Goals:
+  → Lead features end-to-end
+  → Mentor junior devs
+  → Technical blog post লিখুন (dev.to, medium)
+  → Open source contribution
+
+Senior Developer (4-7 years):
+───────────────────────────────
+Add:
+  ✅ System Design (microservices, DDD, Event Sourcing)
+  ✅ Kubernetes basics
+  ✅ Azure (Key Vault, Service Bus, App Insights)
+  ✅ Performance at scale (BenchmarkDotNet, OpenTelemetry)
+  ✅ Security expertise (OWASP, penetration testing basics)
+  ✅ Distributed systems (Saga, Outbox, CQRS read replica)
+  ✅ Team leadership, hiring interviews
+
+Goals:
+  → Define technical direction for team
+  → Architecture decisions + documentation
+  → Conference talk বা meetup presentation
+  → Certification: AZ-204 (Azure Developer) বা AWS SAA
+
+Lead / Architect (7+ years):
+──────────────────────────────
+  → Cross-team coordination
+  → Technology selection + vendor evaluation
+  → Budget + resource planning
+  → Hiring + team building
+  → Stakeholder communication
+
+Remote / International Career Path:
+─────────────────────────────────────
+  Toptal, Upwork, Contra → freelance
+  Remote.com, WeWorkRemotely → remote jobs
+  LinkedIn (USD jobs) → direct apply
+  Requirements: Strong English, reliable internet,
+               3+ years experience, portfolio, GitHub active
+```
+
+---
+
+<a id="p15-resources"></a>
+### Topic 8: Resources & Study Plan
+
+```
+Essential Books:
+────────────────
+  C# in Depth — Jon Skeet (C# সবচেয়ে ভালো)
+  Clean Code — Robert C. Martin
+  Clean Architecture — Robert C. Martin
+  Domain-Driven Design — Eric Evans
+  Designing Data-Intensive Applications — Martin Kleppmann
+  The Pragmatic Programmer — Hunt & Thomas
+
+Online Resources:
+──────────────────
+  docs.microsoft.com/dotnet — Official, best
+  learn.microsoft.com — Free structured courses
+  Andrew Lock's blog (andrewlock.net) — ASP.NET Core deep dive
+  Nick Chapsas YouTube — .NET advanced topics
+  Milan Jovanovic (milanjovanovic.tech) — Clean Arch, CQRS
+  Ardalis blog (ardalis.com) — DDD, Clean Architecture
+
+Courses:
+─────────
+  Pluralsight — .NET comprehensive
+  Udemy — "Complete guide to ASP.NET Core" (discount-এ কিনুন)
+  freeCodeCamp YouTube — free .NET courses
+
+Practice Platforms:
+────────────────────
+  LeetCode (Easy/Medium) — algorithm practice
+  HackerRank .NET track
+  Exercism.io/tracks/csharp — C# exercises with mentor
+  CodeWars — kata practice
+
+BD Tech Communities:
+─────────────────────
+  Facebook: "Bangladesh .NET Developers"
+  Facebook: "Bangladesh Software Developer Community"
+  Meetup.com Dhaka Tech events
+  LinkedIn: Follow BD tech influencers
+
+30-Day Study Plan (Interview Preparation):
+───────────────────────────────────────────
+Week 1: C# Fundamentals + OOP
+  Day 1-2:  C# basics, data types, collections
+  Day 3-4:  OOP (encapsulation, inheritance, polymorphism)
+  Day 5-6:  SOLID Principles — implement examples
+  Day 7:    Review + practice MCQ
+
+Week 2: ASP.NET Core + EF Core
+  Day 8-9:  Middleware, DI, routing, controllers
+  Day 10-11: JWT auth, policies, CORS
+  Day 12-13: EF Core, migrations, LINQ, N+1
+  Day 14:   Build a REST API from scratch
+
+Week 3: Advanced Topics
+  Day 15-16: Design Patterns (Factory, Strategy, Repository)
+  Day 17-18: Clean Architecture + CQRS + MediatR
+  Day 19-20: Testing (xUnit, Moq, integration test)
+  Day 21:   Docker basics, GitHub Actions CI/CD
+
+Week 4: Interview Practice
+  Day 22-23: PART 14 questions practice (aloud)
+  Day 24-25: Mock interview with friend/colleague
+  Day 26-27: Portfolio project polish + GitHub README
+  Day 28-29: Company research, CV update
+  Day 30:   Mock interview + rest
+
+Daily Routine (2 hours/day):
+  30 min: Theory (one topic from this handbook)
+  45 min: Coding practice (LeetCode or build something)
+  30 min: Review previous day
+  15 min: Community (read blog post, tweet, discuss)
+
+Certification Path:
+────────────────────
+  AZ-900: Azure Fundamentals (free exam voucher from Microsoft Learn)
+  AZ-204: Azure Developer Associate (most relevant)
+  AZ-305: Azure Solutions Architect Expert
+  Exam tips: Microsoft Learn free paths + practice exams
+```
+
+---
+
+## সমাপ্তি বার্তা
+
+```
+এই handbook টি সম্পূর্ণ করার জন্য অভিনন্দন! 🎉
+
+আপনি শিখেছেন:
+─────────────────────────────────────────────────
+PART  1: .NET Ecosystem ও CLR fundamentals
+PART  2: C# Language basics থেকে advanced
+PART  3: OOP ও Object-oriented design
+PART  4: C# Advanced — Delegates, LINQ, async/await
+PART  5: ASP.NET Core Web API architecture
+PART  6: REST API design ও best practices
+PART  7: Entity Framework Core ও database
+PART  8: Authentication, Security ও OWASP
+PART  9: Frontend integration ও Full Stack
+PART 10: Testing, Debugging ও Performance
+PART 11: Docker, Kubernetes ও DevOps
+PART 12: System Design — Clean Arch, DDD, CQRS
+PART 13: Portfolio Projects — 5 real-world apps
+PART 14: 210+ Interview Questions (all levels)
+PART 15: BD Market, Salary, Career Roadmap
+─────────────────────────────────────────────────
+
+মনে রাখবেন:
+  ✅ Code প্রতিদিন লিখুন — reading alone যথেষ্ট না।
+  ✅ Projects build করুন — theory + practice = mastery।
+  ✅ Community-তে থাকুন — একা শেখা কঠিন।
+  ✅ Rejection স্বাভাবিক — প্রতিটা interview শেখার সুযোগ।
+  ✅ Salary negotiate করুন — market rate জানুন।
+  ✅ English improve করুন — international market খুলে যাবে।
+
+শুভকামনা! আপনার journey সফল হোক।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
