@@ -23,8 +23,8 @@
 | [PART 7](#part7) | Database & Entity Framework Core | ✅ |
 | [PART 8](#part8) | Authentication & Security | ✅ |
 | [PART 9](#part9) | Frontend Integration & Full Stack | ✅ |
-| PART 10 | Testing & Debugging | ⏳ |
-| PART 11 | Deployment & DevOps Basics | ⏳ |
+| [PART 10](#part10) | Testing & Debugging | ✅ |
+| [PART 11](#part11) | Deployment & DevOps Basics | ✅ |
 | PART 12 | System Design with .NET | ⏳ |
 | PART 13 | .NET Projects | ⏳ |
 | PART 14 | Interview Questions Bank | ⏳ |
@@ -11004,3 +11004,1613 @@ gRPC → Internal microservice communication, performance critical।
 ---
 
 > **📌 পরবর্তী:** PART 10 — Testing ও Debugging (Unit Testing, Integration Testing, xUnit, Moq, TestContainers, Logging, Debugging Tips এবং আরও...)
+
+---
+
+<a id="part10"></a>
+## PART 10: Testing ও Debugging
+
+> Unit Testing, Integration Testing, xUnit, Moq, TestContainers, Logging (Serilog), Debugging এবং Performance Profiling।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Unit Testing — xUnit & NUnit](#p10-unit) |
+| 2 | [Test Patterns — AAA, Fixtures, Theory](#p10-patterns) |
+| 3 | [Mocking with Moq](#p10-moq) |
+| 4 | [Integration Testing — WebApplicationFactory](#p10-integration) |
+| 5 | [TestContainers — Real DB in Tests](#p10-testcontainers) |
+| 6 | [Test Coverage](#p10-coverage) |
+| 7 | [Logging — ILogger, Serilog, Structured Logging](#p10-logging) |
+| 8 | [Debugging Tips — VS Debugger, dotnet-trace](#p10-debugging) |
+| 9 | [Performance Profiling](#p10-profiling) |
+| 10 | [Testing Best Practices](#p10-bestpractices) |
+
+---
+
+<a id="p10-unit"></a>
+### Topic 1: Unit Testing — xUnit & NUnit
+
+```bash
+# Setup
+dotnet new xunit -o MyApp.Tests
+cd MyApp.Tests
+dotnet add reference ../MyApp/MyApp.csproj
+dotnet add package Moq
+dotnet add package FluentAssertions
+dotnet add package Microsoft.AspNetCore.Mvc.Testing
+```
+
+```csharp
+// ── xUnit ─────────────────────────────────────────────
+public class OrderCalculatorTests
+{
+    private readonly OrderCalculator _sut; // System Under Test
+
+    public OrderCalculatorTests()
+    {
+        _sut = new OrderCalculator();
+    }
+
+    [Fact]
+    public void CalculateTotal_WithValidItems_ReturnsCorrectTotal()
+    {
+        // Arrange
+        var items = new List<OrderItem>
+        {
+            new(ProductId: 1, Quantity: 2, UnitPrice: 100m),
+            new(ProductId: 2, Quantity: 1, UnitPrice: 50m),
+        };
+
+        // Act
+        var total = _sut.CalculateTotal(items);
+
+        // Assert
+        Assert.Equal(250m, total);
+    }
+
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(-1, false)]
+    [InlineData(1, true)]
+    [InlineData(100, true)]
+    public void IsValidQuantity_ReturnsExpected(int quantity, bool expected)
+    {
+        var result = _sut.IsValidQuantity(quantity);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void CalculateTotal_WithEmptyList_ThrowsArgumentException()
+    {
+        var act = () => _sut.CalculateTotal(new List<OrderItem>());
+        Assert.Throws<ArgumentException>(act);
+    }
+}
+
+// ── NUnit (alternative) ───────────────────────────────
+[TestFixture]
+public class ProductServiceNUnitTests
+{
+    private ProductService _sut = null!;
+
+    [SetUp]
+    public void Setup() => _sut = new ProductService();
+
+    [TearDown]
+    public void Cleanup() => _sut.Dispose();
+
+    [Test]
+    public void GetProduct_WhenExists_ReturnsProduct()
+    {
+        var result = _sut.GetById(1);
+        Assert.That(result, Is.Not.Null);
+        Assert.That(result!.Id, Is.EqualTo(1));
+    }
+
+    [TestCase(1, true)]
+    [TestCase(999, false)]
+    public void ProductExists_ReturnsExpected(int id, bool expected)
+    {
+        Assert.That(_sut.Exists(id), Is.EqualTo(expected));
+    }
+}
+```
+
+---
+
+<a id="p10-patterns"></a>
+### Topic 2: Test Patterns — AAA, Fixtures, Theory
+
+```csharp
+// ── AAA Pattern ───────────────────────────────────────
+// Arrange — setup data and dependencies
+// Act     — call the method being tested
+// Assert  — verify the outcome
+
+[Fact]
+public async Task CreateOrder_ValidInput_ReturnsCreatedOrder()
+{
+    // Arrange
+    var dto = new CreateOrderDto
+    {
+        CustomerId = 1,
+        Items = new[] { new OrderItemDto(ProductId: 10, Quantity: 2) }
+    };
+    var mockRepo = new Mock<IOrderRepository>();
+    mockRepo.Setup(r => r.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Order o, CancellationToken _) => o);
+
+    var service = new OrderService(mockRepo.Object);
+
+    // Act
+    var result = await service.CreateAsync(dto);
+
+    // Assert
+    Assert.NotNull(result);
+    Assert.Equal(dto.CustomerId, result.CustomerId);
+    mockRepo.Verify(r => r.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()),
+        Times.Once);
+}
+
+// ── Class Fixtures — shared setup ────────────────────
+public class DatabaseFixture : IDisposable
+{
+    public AppDbContext Context { get; }
+
+    public DatabaseFixture()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+        Context = new AppDbContext(options);
+        Context.Database.EnsureCreated();
+        SeedData();
+    }
+
+    private void SeedData()
+    {
+        Context.Products.AddRange(
+            new Product { Id = 1, Name = "Widget", Price = 9.99m },
+            new Product { Id = 2, Name = "Gadget", Price = 19.99m }
+        );
+        Context.SaveChanges();
+    }
+
+    public void Dispose() => Context.Dispose();
+}
+
+public class ProductRepositoryTests : IClassFixture<DatabaseFixture>
+{
+    private readonly AppDbContext _db;
+    public ProductRepositoryTests(DatabaseFixture fixture) => _db = fixture.Context;
+
+    [Fact]
+    public async Task GetByIdAsync_ExistingId_ReturnsProduct()
+    {
+        var repo   = new ProductRepository(_db);
+        var result = await repo.GetByIdAsync(1);
+        Assert.Equal("Widget", result?.Name);
+    }
+}
+
+// ── FluentAssertions — readable assertions ────────────
+[Fact]
+public void Order_ShouldHave_CorrectState()
+{
+    var order = Order.Create(customerId: 1);
+
+    order.Should().NotBeNull();
+    order.Status.Should().Be(OrderStatus.Pending);
+    order.Items.Should().BeEmpty();
+    order.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+}
+```
+
+---
+
+<a id="p10-moq"></a>
+### Topic 3: Mocking with Moq
+
+```csharp
+// ── Basic Mocking ──────────────────────────────────────
+var mockRepo = new Mock<IOrderRepository>();
+
+// Setup return value
+mockRepo.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>()))
+        .ReturnsAsync(new Order { Id = 1, CustomerId = 100 });
+
+// Setup — any matching argument
+mockRepo.Setup(r => r.ExistsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        .ReturnsAsync(true);
+
+// Setup — throw exception
+mockRepo.Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>()))
+        .ThrowsAsync(new NotFoundException("Order not found"));
+
+// ── Verify calls ──────────────────────────────────────
+mockRepo.Verify(r => r.AddAsync(
+    It.Is<Order>(o => o.CustomerId == 100),
+    It.IsAny<CancellationToken>()), Times.Once);
+
+mockRepo.Verify(r => r.DeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()),
+    Times.Never);
+
+// ── Callback — capture arguments ─────────────────────
+Order? savedOrder = null;
+mockRepo.Setup(r => r.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
+        .Callback<Order, CancellationToken>((o, _) => savedOrder = o)
+        .ReturnsAsync((Order o, CancellationToken _) => o);
+
+// After act:
+Assert.Equal(100, savedOrder?.CustomerId);
+
+// ── Mock HttpClient ───────────────────────────────────
+// dotnet add package RichardSzalay.MockHttp
+
+var mockHttp = new MockHttpMessageHandler();
+mockHttp.When("https://api.example.com/products/*")
+        .Respond("application/json",
+            JsonSerializer.Serialize(new ProductDto { Id = 1, Name = "Widget" }));
+
+var client  = mockHttp.ToHttpClient();
+client.BaseAddress = new Uri("https://api.example.com");
+
+var service = new ExternalProductService(client);
+var result  = await service.GetProductAsync(1);
+Assert.Equal("Widget", result?.Name);
+
+// ── Mock ILogger ──────────────────────────────────────
+var mockLogger = new Mock<ILogger<OrderService>>();
+
+// Verify a warning was logged:
+mockLogger.Verify(
+    x => x.Log(
+        LogLevel.Warning,
+        It.IsAny<EventId>(),
+        It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("not found")),
+        It.IsAny<Exception?>(),
+        It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+    Times.Once);
+```
+
+---
+
+<a id="p10-integration"></a>
+### Topic 4: Integration Testing — WebApplicationFactory
+
+```csharp
+// dotnet add package Microsoft.AspNetCore.Mvc.Testing
+
+// ── Custom factory ────────────────────────────────────
+public class TestWebAppFactory : WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.ConfigureServices(services =>
+        {
+            // Replace real DB with in-memory
+            var dbDescriptor = services.SingleOrDefault(
+                d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
+            if (dbDescriptor is not null)
+                services.Remove(dbDescriptor);
+
+            services.AddDbContext<AppDbContext>(opts =>
+                opts.UseInMemoryDatabase("TestDb_" + Guid.NewGuid()));
+
+            // Replace external services with fakes
+            services.AddScoped<IEmailService, FakeEmailService>();
+
+            // Seed test data
+            var sp = services.BuildServiceProvider();
+            using var scope = sp.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.EnsureCreated();
+            SeedTestData(db);
+        });
+    }
+
+    private static void SeedTestData(AppDbContext db)
+    {
+        db.Customers.Add(new Customer { Id = 1, Name = "Test User", Email = "test@test.com" });
+        db.Products.Add(new Product { Id = 1, Name = "Widget", Price = 10m, Stock = 100 });
+        db.SaveChanges();
+    }
+}
+
+// ── Integration test ──────────────────────────────────
+public class OrdersEndpointTests : IClassFixture<TestWebAppFactory>
+{
+    private readonly HttpClient _client;
+
+    public OrdersEndpointTests(TestWebAppFactory factory)
+    {
+        _client = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task GetOrder_ExistingId_Returns200WithOrder()
+    {
+        var response = await _client.GetAsync("/api/orders/1");
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var order = await response.Content.ReadFromJsonAsync<OrderDto>();
+        order.Should().NotBeNull();
+        order!.Id.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateOrder_ValidPayload_Returns201()
+    {
+        var dto = new CreateOrderDto
+        {
+            CustomerId = 1,
+            Items = new[] { new OrderItemDto(ProductId: 1, Quantity: 2) }
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/orders", dto);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        response.Headers.Location.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task CreateOrder_InvalidPayload_Returns400()
+    {
+        var response = await _client.PostAsJsonAsync("/api/orders",
+            new CreateOrderDto()); // empty/invalid
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+}
+
+// ── Authenticated requests ────────────────────────────
+public class AuthenticatedTestFactory : TestWebAppFactory
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddAuthentication("Test")
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", _ => { });
+        });
+    }
+}
+
+public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
+{
+    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    {
+        var claims = new[] { new Claim(ClaimTypes.Name, "testuser"),
+                             new Claim(ClaimTypes.Role, "Admin") };
+        var identity  = new ClaimsIdentity(claims, "Test");
+        var principal = new ClaimsPrincipal(identity);
+        var ticket    = new AuthenticationTicket(principal, "Test");
+        return Task.FromResult(AuthenticateResult.Success(ticket));
+    }
+}
+```
+
+---
+
+<a id="p10-testcontainers"></a>
+### Topic 5: TestContainers — Real DB in Tests
+
+```csharp
+// dotnet add package Testcontainers.PostgreSql
+// dotnet add package Testcontainers.MsSql
+
+public class PostgreSqlIntegrationTests : IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
+        .WithImage("postgres:16-alpine")
+        .WithDatabase("testdb")
+        .WithUsername("test")
+        .WithPassword("test")
+        .Build();
+
+    private AppDbContext _db = null!;
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseNpgsql(_postgres.GetConnectionString())
+            .Options;
+
+        _db = new AppDbContext(options);
+        await _db.Database.MigrateAsync(); // run real migrations
+    }
+
+    public async Task DisposeAsync()
+    {
+        await _db.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Insert_And_Query_Product_Works()
+    {
+        // Arrange
+        var product = new Product { Name = "Widget", Price = 9.99m, Stock = 50 };
+        _db.Products.Add(product);
+        await _db.SaveChangesAsync();
+
+        // Act
+        var fetched = await _db.Products.FindAsync(product.Id);
+
+        // Assert
+        fetched.Should().NotBeNull();
+        fetched!.Name.Should().Be("Widget");
+        fetched.Price.Should().Be(9.99m);
+    }
+
+    [Fact]
+    public async Task Complex_Query_With_Joins_Returns_Correct_Results()
+    {
+        // Seed
+        var customer = new Customer { Name = "Alice", Email = "alice@test.com" };
+        _db.Customers.Add(customer);
+        await _db.SaveChangesAsync();
+
+        var order = new Order { CustomerId = customer.Id, Status = "Pending",
+            Items = new List<OrderItem> { new() { ProductId = 1, Quantity = 2, UnitPrice = 9.99m } } };
+        _db.Orders.Add(order);
+        await _db.SaveChangesAsync();
+
+        // Test complex LINQ query
+        var result = await _db.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.Items)
+            .Where(o => o.Customer.Email == "alice@test.com")
+            .FirstOrDefaultAsync();
+
+        result.Should().NotBeNull();
+        result!.Items.Should().HaveCount(1);
+    }
+}
+```
+
+---
+
+<a id="p10-coverage"></a>
+### Topic 6: Test Coverage
+
+```bash
+# dotnet test with coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Generate HTML report
+# dotnet tool install -g dotnet-reportgenerator-globaltool
+reportgenerator \
+  -reports:"**/coverage.cobertura.xml" \
+  -targetdir:"coveragereport" \
+  -reporttypes:Html
+
+# Coverage thresholds in .csproj
+# <PropertyGroup>
+#   <CoverageThreshold>80</CoverageThreshold>
+# </PropertyGroup>
+```
+
+```xml
+<!-- .runsettings — coverage configuration -->
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>[*.Tests]*,[*.IntegrationTests]*</Exclude>
+          <ExcludeByAttribute>GeneratedCodeAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
+```
+
+```csharp
+// Exclude from coverage — generated/trivial code
+[ExcludeFromCodeCoverage]
+public class AutoGeneratedMappingProfile : Profile { }
+```
+
+---
+
+<a id="p10-logging"></a>
+### Topic 7: Logging — ILogger, Serilog, Structured Logging
+
+```csharp
+// ── ILogger — built-in ────────────────────────────────
+public class OrderService
+{
+    private readonly ILogger<OrderService> _logger;
+
+    public OrderService(ILogger<OrderService> logger) => _logger = logger;
+
+    public async Task<Order> CreateAsync(CreateOrderDto dto)
+    {
+        _logger.LogInformation("Creating order for customer {CustomerId}", dto.CustomerId);
+
+        try
+        {
+            var order = await _repo.AddAsync(dto);
+
+            // Structured logging — searchable properties
+            _logger.LogInformation(
+                "Order {OrderId} created for customer {CustomerId}. Total: {Total:C}",
+                order.Id, dto.CustomerId, order.TotalAmount);
+
+            return order;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to create order for customer {CustomerId}", dto.CustomerId);
+            throw;
+        }
+    }
+}
+
+// Log levels:
+// LogTrace    → very detailed, rarely used in production
+// LogDebug    → debug info, disabled in production
+// LogInformation → general flow
+// LogWarning  → unexpected, recoverable situation
+// LogError    → failure, action required
+// LogCritical → system failure, immediate attention
+
+// ── Serilog ───────────────────────────────────────────
+// dotnet add package Serilog.AspNetCore
+// dotnet add package Serilog.Sinks.Console
+// dotnet add package Serilog.Sinks.File
+// dotnet add package Serilog.Sinks.Seq        (dev dashboard)
+// dotnet add package Serilog.Sinks.ApplicationInsights
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithMachineName()
+    .WriteTo.Console(new JsonFormatter())   // JSON in production
+    .WriteTo.File(
+        path: "logs/app-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 14,
+        formatter: new JsonFormatter())
+    .WriteTo.Seq("http://localhost:5341")   // dev
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+// Request logging middleware:
+app.UseSerilogRequestLogging(opts =>
+{
+    opts.MessageTemplate = "{RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000}ms";
+    opts.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("UserAgent",   httpContext.Request.Headers["User-Agent"]);
+        diagnosticContext.Set("UserId",      httpContext.User.FindFirstValue("sub"));
+    };
+});
+
+// ── Log Scopes — correlation ID ──────────────────────
+using (_logger.BeginScope(new Dictionary<string, object>
+    { ["OrderId"] = orderId, ["CustomerId"] = customerId }))
+{
+    _logger.LogInformation("Processing payment");
+    await _payment.ChargeAsync(orderId);
+    _logger.LogInformation("Payment completed");
+    // Both logs include OrderId and CustomerId
+}
+```
+
+---
+
+<a id="p10-debugging"></a>
+### Topic 8: Debugging Tips
+
+```csharp
+// ── Conditional Breakpoints ───────────────────────────
+// VS → Breakpoint → Conditions → "order.TotalAmount > 1000"
+// Useful for catching specific cases without stopping every iteration
+
+// ── Exception Breakpoints ─────────────────────────────
+// VS → Debug → Windows → Exception Settings
+// Check "Common Language Runtime Exceptions" → stops on any exception
+
+// ── Debug Watch Expressions ───────────────────────────
+// orders.Where(o => o.Status == "Pending").Count()
+// items.Sum(i => i.UnitPrice * i.Quantity)
+
+// ── DebuggerDisplay attribute ─────────────────────────
+[DebuggerDisplay("Order #{Id} - {Status} ({TotalAmount:C})")]
+public class Order
+{
+    public int    Id          { get; set; }
+    public string Status      { get; set; } = "";
+    public decimal TotalAmount { get; set; }
+}
+```
+
+```bash
+# ── dotnet-trace — CPU profiling ─────────────────────
+dotnet tool install -g dotnet-trace
+dotnet trace collect --process-id <PID> --duration 00:00:30
+dotnet trace convert trace.nettrace --format speedscope
+# Open speedscope.app → find hot paths
+
+# ── dotnet-dump — memory analysis ────────────────────
+dotnet tool install -g dotnet-dump
+dotnet dump collect --process-id <PID>
+dotnet dump analyze core_*
+
+# Inside analyzer:
+# dumpheap -stat         → objects by type
+# gcroot <address>       → find GC roots
+# dumpobj <address>      → inspect object
+
+# ── dotnet-counters — live metrics ───────────────────
+dotnet tool install -g dotnet-counters
+dotnet counters monitor --process-id <PID> \
+  System.Runtime Microsoft.AspNetCore.Hosting
+
+# Key counters:
+# cpu-usage            → CPU %
+# gc-heap-size         → memory
+# exception-count      → exceptions/sec
+# requests-per-second  → throughput
+# request-failed-rate  → error rate
+
+# ── HTTP diagnostics ──────────────────────────────────
+# appsettings.Development.json
+# "Logging": { "LogLevel": { "Microsoft.AspNetCore": "Debug" } }
+```
+
+---
+
+<a id="p10-profiling"></a>
+### Topic 9: Performance Profiling
+
+```csharp
+// ── BenchmarkDotNet ───────────────────────────────────
+// dotnet add package BenchmarkDotNet
+
+[MemoryDiagnoser]
+[SimpleJob(RuntimeMoniker.Net80)]
+public class StringConcatBenchmarks
+{
+    private const int N = 10_000;
+
+    [Benchmark(Baseline = true)]
+    public string StringConcat()
+    {
+        var result = "";
+        for (var i = 0; i < N; i++) result += i.ToString();
+        return result;
+    }
+
+    [Benchmark]
+    public string StringBuilder()
+    {
+        var sb = new StringBuilder();
+        for (var i = 0; i < N; i++) sb.Append(i);
+        return sb.ToString();
+    }
+
+    [Benchmark]
+    public string StringJoin() =>
+        string.Join("", Enumerable.Range(0, N));
+}
+
+// Run: dotnet run -c Release
+// Output: Mean, Error, StdDev, Gen0 GC, Alloc
+
+// ── Activity/Distributed Tracing ─────────────────────
+using var activity = Activity.Current?.Source
+    .StartActivity("ProcessOrder", ActivityKind.Internal);
+activity?.SetTag("order.id", orderId);
+activity?.SetTag("customer.id", customerId);
+
+// OpenTelemetry:
+// dotnet add package OpenTelemetry.AspNetCore
+builder.Services.AddOpenTelemetry()
+    .WithTracing(trace => trace
+        .AddAspNetCoreInstrumentation()
+        .AddEntityFrameworkCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter()); // Jaeger, Zipkin, Grafana Tempo
+```
+
+---
+
+<a id="p10-bestpractices"></a>
+### Topic 10: Testing Best Practices
+
+```
+Testing Pyramid:
+────────────────────────────────────────────────────────
+          /‾‾‾‾‾‾‾‾‾‾‾‾\
+         /  E2E Tests    \    ← Few, slow, expensive
+        /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
+       / Integration Tests \  ← Some, medium speed
+      /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
+     /     Unit Tests        \ ← Many, fast, cheap
+    /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
+────────────────────────────────────────────────────────
+```
+
+```csharp
+// ✅ Good Test Design Rules:
+
+// 1. One assert per test (ideally)
+// 2. Test behavior, not implementation
+// 3. Tests must be deterministic (no DateTime.Now, Guid.NewGuid without seeding)
+// 4. Avoid testing private methods directly
+// 5. Name: MethodName_Scenario_ExpectedResult
+
+// ✅ Use test doubles correctly:
+// Stub  → returns canned data  (no verification)
+// Mock  → verifiable expectations
+// Fake  → working implementation  (in-memory repo)
+// Spy   → records calls for later verification
+
+// ✅ Avoid common pitfalls:
+// ❌  Assert.True(result == expected)   → use Assert.Equal
+// ❌  Thread.Sleep in tests            → use Task.Delay or mock time
+// ❌  Sharing state between tests      → IClassFixture isolation
+// ❌  Testing framework code           → trust EF Core, test your code
+// ❌  Mocking everything               → integration tests for the full flow
+
+// ✅ Time abstraction for deterministic tests:
+public interface IDateTimeProvider
+{
+    DateTime UtcNow { get; }
+}
+
+public class DateTimeProvider : IDateTimeProvider
+{
+    public DateTime UtcNow => DateTime.UtcNow;
+}
+
+// In tests:
+var mockTime = new Mock<IDateTimeProvider>();
+mockTime.Setup(t => t.UtcNow).Returns(new DateTime(2025, 1, 1, 12, 0, 0));
+```
+
+---
+
+## PART 10 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| xUnit | `[Fact]`, `[Theory]`, `[InlineData]` |
+| NUnit | `[Test]`, `[TestCase]`, `[SetUp]`, `[TearDown]` |
+| AAA | Arrange → Act → Assert |
+| `IClassFixture<T>` | Shared setup across test class |
+| Moq | `Mock<T>`, `.Setup()`, `.Returns()`, `.Verify()` |
+| FluentAssertions | `.Should().Be()` — readable assertions |
+| WebApplicationFactory | Real HTTP integration tests in-process |
+| TestContainers | Real Docker DB — real migrations in tests |
+| `ILogger` | Built-in .NET logging abstraction |
+| Serilog | Structured logging — JSON, sinks, enrichers |
+| Log Scopes | Correlation ID across multiple log entries |
+| dotnet-trace | CPU profiling with flame graph |
+| dotnet-dump | Memory dump analysis |
+| dotnet-counters | Live CPU, GC, requests per second |
+| BenchmarkDotNet | Microbenchmarks — Mean, Alloc |
+| OpenTelemetry | Distributed tracing — Jaeger, Grafana |
+| Testing Pyramid | Many unit → some integration → few E2E |
+
+---
+
+## PART 10 Interview Q&A
+
+```
+প্রশ্ন: Unit Test আর Integration Test পার্থক্য?
+উত্তর:
+Unit Test     → Single class/method। Dependencies মক করা।
+               Fast (milliseconds)। External dependency নেই।
+Integration Test → Multiple components। Real DB/HTTP।
+               Slower। WebApplicationFactory দিয়ে in-process।
+
+প্রশ্ন: Moq-এ Setup আর Verify-এর পার্থক্য?
+উত্তর:
+Setup  → mock method কী return করবে define করে।
+Verify → method actually কতবার call হয়েছে তা check করে।
+Setup ছাড়া Verify করলে mock default value return করে।
+
+প্রশ্ন: TestContainers কেন ব্যবহার করবেন?
+উত্তর:
+InMemory DB → EF Core-specific bugs miss করে, SQL syntax check নেই।
+TestContainers → Real PostgreSQL/SQL Server Docker container।
+Real migrations, real SQL — production-like behavior।
+Slow কিন্তু reliable integration tests-এর জন্য ideal।
+
+প্রশ্ন: Structured logging কী?
+উত্তর:
+Plain text: "Order 123 created for customer 456"
+Structured: { OrderId: 123, CustomerId: 456, Action: "OrderCreated" }
+
+Structured → searchable, filterable in Seq/Kibana/Application Insights।
+_logger.LogInformation("Order {OrderId} created", orderId) — Serilog captures
+OrderId as a property, not just a string।
+
+প্রশ্ন: BenchmarkDotNet কখন ব্যবহার করবেন?
+উত্তর: Performance-critical code-এ micro-benchmark।
+String operations, LINQ vs loops, serialization।
+-c Release mode-এ run করতে হয়।
+[MemoryDiagnoser] → allocation tracking।
+Never use Stopwatch for benchmarks — JIT warm-up, GC noise।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 11 — Deployment ও DevOps (Docker, Kubernetes, Azure, CI/CD, GitHub Actions এবং আরও...)
+
+---
+
+<a id="part11"></a>
+## PART 11: Deployment ও DevOps Basics
+
+> Docker, Kubernetes, Azure App Service, CI/CD, GitHub Actions, Health Checks, Environment Management।
+
+| # | বিষয় |
+|---|-------|
+| 1 | [Docker — Containerize .NET App](#p11-docker) |
+| 2 | [Docker Compose — Multi-container](#p11-compose) |
+| 3 | [GitHub Actions — CI/CD Pipeline](#p11-gha) |
+| 4 | [Azure App Service Deployment](#p11-azure) |
+| 5 | [Kubernetes Basics (K8s)](#p11-k8s) |
+| 6 | [Environment & Configuration Management](#p11-config) |
+| 7 | [Health Checks & Readiness Probes](#p11-health) |
+| 8 | [Secrets Management](#p11-secrets) |
+
+---
+
+<a id="p11-docker"></a>
+### Topic 1: Docker — Containerize .NET App
+
+```dockerfile
+# ── Multi-stage Dockerfile (production best practice) ─
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy only project files first → layer caching
+COPY ["src/MyApp.Api/MyApp.Api.csproj",              "src/MyApp.Api/"]
+COPY ["src/MyApp.Application/MyApp.Application.csproj", "src/MyApp.Application/"]
+COPY ["src/MyApp.Domain/MyApp.Domain.csproj",        "src/MyApp.Domain/"]
+COPY ["src/MyApp.Infrastructure/MyApp.Infrastructure.csproj", "src/MyApp.Infrastructure/"]
+RUN dotnet restore "src/MyApp.Api/MyApp.Api.csproj"
+
+# Copy source and build
+COPY . .
+WORKDIR "/src/src/MyApp.Api"
+RUN dotnet build -c Release -o /app/build --no-restore
+
+# Publish
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish \
+    --no-restore \
+    /p:UseAppHost=false
+
+# Final runtime image (smaller — no SDK)
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+EXPOSE 8080
+
+# Security: non-root user
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+USER appuser
+
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "MyApp.Api.dll"]
+```
+
+```bash
+# Build & run
+docker build -t myapp:latest .
+docker run -p 8080:8080 \
+  -e ASPNETCORE_ENVIRONMENT=Production \
+  -e ConnectionStrings__Default="Server=db;Database=myapp;..." \
+  myapp:latest
+
+# Tag & push to registry
+docker tag myapp:latest myregistry.azurecr.io/myapp:1.0.0
+docker push myregistry.azurecr.io/myapp:1.0.0
+
+# Inspect running container
+docker logs <container-id> --tail 50 -f
+docker exec -it <container-id> sh
+docker stats                        # live resource usage
+```
+
+```json
+// .dockerignore — keep image small
+{
+  "files": [
+    ".git", ".gitignore",
+    "**/bin", "**/obj",
+    "**/*.md",
+    "tests/", "**/*.Tests",
+    ".env", "docker-compose.override.yml"
+  ]
+}
+```
+
+---
+
+<a id="p11-compose"></a>
+### Topic 2: Docker Compose — Multi-container
+
+```yaml
+# docker-compose.yml — development environment
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/MyApp.Api/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__Default=Host=db;Database=myapp;Username=app;Password=secret
+      - Redis__Connection=redis:6379
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB:       myapp
+      POSTGRES_USER:     app
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d myapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - "5341:80"
+    environment:
+      ACCEPT_EULA: Y
+    volumes:
+      - seq_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:
+  seq_data:
+```
+
+```bash
+docker compose up -d          # start all services
+docker compose logs api -f    # tail API logs
+docker compose ps             # status
+docker compose down -v        # stop + remove volumes (careful!)
+docker compose exec api sh    # shell into API container
+```
+
+---
+
+<a id="p11-gha"></a>
+### Topic 3: GitHub Actions — CI/CD Pipeline
+
+```yaml
+# .github/workflows/ci-cd.yml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY:    ghcr.io
+  IMAGE_NAME:  ${{ github.repository }}
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  # ── 1. Build & Test ──────────────────────────────────
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB:       testdb
+          POSTGRES_USER:     test
+          POSTGRES_PASSWORD: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      - name: Run tests
+        run: dotnet test --no-build -c Release \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./coverage
+        env:
+          ConnectionStrings__TestDb: Host=localhost;Database=testdb;Username=test;Password=test
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./coverage
+
+  # ── 2. Build & Push Docker Image ─────────────────────
+  docker:
+    name: Build & Push Image
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to:   type=gha,mode=max
+
+  # ── 3. Deploy to Azure ───────────────────────────────
+  deploy:
+    name: Deploy to Azure
+    needs: docker
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name:     ${{ vars.AZURE_APP_NAME }}
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+          images:       ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+```
+
+---
+
+<a id="p11-azure"></a>
+### Topic 4: Azure App Service Deployment
+
+```bash
+# ── Azure CLI deployment ──────────────────────────────
+az login
+az group create --name myapp-rg --location eastus
+
+# Create App Service Plan (Linux)
+az appservice plan create \
+  --name myapp-plan \
+  --resource-group myapp-rg \
+  --sku B1 \
+  --is-linux
+
+# Create Web App (Docker)
+az webapp create \
+  --resource-group myapp-rg \
+  --plan myapp-plan \
+  --name myapp-api \
+  --deployment-container-image-name mcr.microsoft.com/dotnet/samples:aspnetapp
+
+# Set environment variables
+az webapp config appsettings set \
+  --resource-group myapp-rg \
+  --name myapp-api \
+  --settings \
+    ASPNETCORE_ENVIRONMENT=Production \
+    "ConnectionStrings__Default=Server=...;Database=myapp;"
+
+# Deploy via zip (no Docker)
+dotnet publish -c Release -o ./publish
+cd publish && zip -r ../app.zip . && cd ..
+az webapp deploy \
+  --resource-group myapp-rg \
+  --name myapp-api \
+  --src-path app.zip
+
+# Enable logging
+az webapp log config \
+  --resource-group myapp-rg \
+  --name myapp-api \
+  --docker-container-logging filesystem
+
+# Stream live logs
+az webapp log tail --resource-group myapp-rg --name myapp-api
+```
+
+```csharp
+// Program.cs — production-ready startup
+var builder = WebApplication.CreateBuilder(args);
+
+// Azure App Configuration (centralized config)
+if (builder.Environment.IsProduction())
+{
+    builder.Configuration.AddAzureAppConfiguration(options =>
+        options.Connect(builder.Configuration["AzureAppConfig:ConnectionString"])
+               .UseFeatureFlags());
+}
+
+// Azure Application Insights telemetry
+builder.Services.AddApplicationInsightsTelemetry(
+    builder.Configuration["ApplicationInsights:ConnectionString"]);
+```
+
+---
+
+<a id="p11-k8s"></a>
+### Topic 5: Kubernetes Basics (K8s)
+
+```yaml
+# deployment.yml — app deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-api
+  namespace: production
+  labels:
+    app: myapp-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0     # zero-downtime deploy
+  template:
+    metadata:
+      labels:
+        app: myapp-api
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/myorg/myapp:sha-abc1234
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: ConnectionStrings__Default
+              valueFrom:
+                secretKeyRef:
+                  name: myapp-secrets
+                  key: db-connection-string
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu:    "250m"
+            limits:
+              memory: "512Mi"
+              cpu:    "500m"
+          # Health probes
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds:       15
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds:       10
+
+---
+# service.yml — internal load balancer
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-api-svc
+spec:
+  selector:
+    app: myapp-api
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: ClusterIP
+
+---
+# ingress.yml — external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: myapp-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: api.myapp.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: myapp-api-svc
+                port:
+                  number: 80
+```
+
+```bash
+# Common kubectl commands:
+kubectl apply -f deployment.yml        # deploy/update
+kubectl get pods -n production         # list pods
+kubectl logs <pod-name> -f             # live logs
+kubectl describe pod <pod-name>        # debug events
+kubectl exec -it <pod-name> -- sh      # shell
+kubectl rollout status deployment/myapp-api
+kubectl rollout undo deployment/myapp-api    # rollback
+kubectl scale deployment myapp-api --replicas=5
+```
+
+---
+
+<a id="p11-config"></a>
+### Topic 6: Environment & Configuration Management
+
+```csharp
+// ── Configuration hierarchy (later overrides earlier) ─
+// appsettings.json
+// appsettings.{Environment}.json
+// Environment variables (ASPNETCORE_ prefix → nested)
+// User secrets (development only)
+// Command line args
+
+// appsettings.json
+{
+  "App": {
+    "Name": "MyApp",
+    "MaxPageSize": 100
+  },
+  "ConnectionStrings": {
+    "Default": "placeholder"
+  }
+}
+
+// Environment variable override:
+// ConnectionStrings__Default="Server=prod.db;..."
+// App__MaxPageSize=50
+
+// ── Options pattern ───────────────────────────────────
+public class AppSettings
+{
+    public const string Section = "App";
+    public string Name        { get; init; } = "";
+    public int    MaxPageSize  { get; init; } = 50;
+}
+
+builder.Services.Configure<AppSettings>(
+    builder.Configuration.GetSection(AppSettings.Section));
+
+// Usage:
+public class ProductController
+{
+    private readonly AppSettings _settings;
+    public ProductController(IOptions<AppSettings> opts) =>
+        _settings = opts.Value;
+}
+
+// IOptionsMonitor — reloads on change (no restart)
+// IOptionsSnapshot — per-request snapshot
+// IOptions        — singleton, no reload
+
+// ── User Secrets (dev only) ───────────────────────────
+// dotnet user-secrets init
+// dotnet user-secrets set "ConnectionStrings:Default" "Server=localhost;..."
+// Stored in: ~/.microsoft/usersecrets/<guid>/secrets.json
+
+// ── .NET 8 — named environments ──────────────────────
+// ASPNETCORE_ENVIRONMENT: Development | Staging | Production
+// Custom: QA, UAT, etc.
+
+if (app.Environment.IsEnvironment("QA"))
+{
+    app.UseSwagger(); // only in QA
+}
+```
+
+---
+
+<a id="p11-health"></a>
+### Topic 7: Health Checks ও Readiness Probes
+
+```csharp
+// dotnet add package AspNetCore.HealthChecks.NpgSql
+// dotnet add package AspNetCore.HealthChecks.Redis
+// dotnet add package AspNetCore.HealthChecks.Uris
+
+builder.Services.AddHealthChecks()
+    .AddNpgSql(
+        connectionString: builder.Configuration.GetConnectionString("Default")!,
+        name: "database",
+        tags: new[] { "db", "ready" })
+    .AddRedis(
+        redisConnectionString: builder.Configuration["Redis:Connection"]!,
+        name: "redis",
+        tags: new[] { "cache", "ready" })
+    .AddUrlGroup(
+        uri: new Uri("https://api.payment.com/health"),
+        name: "payment-gateway",
+        tags: new[] { "external" })
+    .AddCheck<CustomApplicationHealthCheck>("app-logic",
+        tags: new[] { "ready" });
+
+// Map endpoints:
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    // Liveness → is the process alive?
+    Predicate = _ => false,   // no checks — just "I'm alive"
+    ResponseWriter = WriteResponse
+});
+
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    // Readiness → can I serve traffic?
+    Predicate = check => check.Tags.Contains("ready"),
+    ResponseWriter = WriteResponse
+});
+
+app.MapHealthChecks("/health/full", new HealthCheckOptions
+{
+    ResponseWriter = WriteResponse
+});
+
+// JSON response writer:
+static Task WriteResponse(HttpContext ctx, HealthReport report)
+{
+    ctx.Response.ContentType = "application/json; charset=utf-8";
+    var result = JsonSerializer.Serialize(new
+    {
+        status   = report.Status.ToString(),
+        duration = report.TotalDuration.TotalMilliseconds,
+        checks   = report.Entries.Select(e => new
+        {
+            name     = e.Key,
+            status   = e.Value.Status.ToString(),
+            duration = e.Value.Duration.TotalMilliseconds,
+            error    = e.Value.Exception?.Message
+        })
+    });
+    return ctx.Response.WriteAsync(result);
+}
+
+// Custom health check:
+public class CustomApplicationHealthCheck : IHealthCheck
+{
+    private readonly AppDbContext _db;
+    public CustomApplicationHealthCheck(AppDbContext db) => _db = db;
+
+    public async Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context, CancellationToken ct)
+    {
+        try
+        {
+            // Test a critical query
+            var count = await _db.Orders
+                .Where(o => o.CreatedAt > DateTime.UtcNow.AddMinutes(-1))
+                .CountAsync(ct);
+
+            return HealthCheckResult.Healthy($"Recent orders: {count}");
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy("Database query failed", ex);
+        }
+    }
+}
+```
+
+---
+
+<a id="p11-secrets"></a>
+### Topic 8: Secrets Management
+
+```csharp
+// ── Development: User Secrets ─────────────────────────
+// dotnet user-secrets set "Jwt:Secret" "dev-secret-32-chars-long"
+// Never commit secrets to git
+
+// ── Production: Azure Key Vault ──────────────────────
+// dotnet add package Azure.Extensions.AspNetCore.Configuration.Secrets
+// dotnet add package Azure.Identity
+
+if (builder.Environment.IsProduction())
+{
+    var keyVaultUri = new Uri(builder.Configuration["KeyVault:Uri"]!);
+    builder.Configuration.AddAzureKeyVault(
+        keyVaultUri,
+        new DefaultAzureCredential()); // Managed Identity — no credentials in code!
+}
+
+// Secret naming in Key Vault: "ConnectionStrings--Default" → "ConnectionStrings:Default"
+
+// ── AWS Secrets Manager ───────────────────────────────
+// Similar pattern with AWSSDK.SecretsManager
+
+// ── Environment Variable injection (Docker/K8s) ───────
+// K8s Secret:
+// kubectl create secret generic myapp-secrets \
+//   --from-literal=db-connection-string="Server=prod;..."
+//
+// Pod spec references via secretKeyRef (shown in K8s section)
+
+// ── GitHub Actions Secrets ────────────────────────────
+// Repository → Settings → Secrets
+// ${{ secrets.MY_SECRET }} in workflow YAML
+// Never echo or print secrets in logs
+
+// ── .gitignore — critical files ──────────────────────
+/*
+appsettings.*.Local.json
+.env
+.env.local
+secrets.json
+*.pfx
+*.p12
+*/
+```
+
+---
+
+## PART 11 Quick Revision Table
+
+| Concept | মূল কথা |
+|---------|---------|
+| Multi-stage Dockerfile | SDK build → runtime final (smaller image) |
+| `.dockerignore` | bin/, obj/, .git → faster builds, smaller image |
+| `docker compose` | Local multi-service dev environment |
+| GitHub Actions | CI/CD — test → build → push → deploy |
+| `actions/cache` | NuGet cache → faster builds |
+| Azure App Service | PaaS — easy deployment, auto-scaling |
+| Deployment slot | Staging → swap to production (zero-downtime) |
+| K8s Deployment | Declarative pod management, rolling update |
+| K8s Service | Internal load balancing across pods |
+| K8s Ingress | External HTTP routing (nginx/traefik) |
+| liveness probe | Is the pod alive? Restart if unhealthy |
+| readiness probe | Can the pod serve traffic? Remove from LB |
+| Options pattern | `IOptions<T>`, `IOptionsMonitor<T>` |
+| User Secrets | Dev-only local secrets (not committed) |
+| Azure Key Vault | Production secrets — Managed Identity |
+| Health Checks | `/health/live`, `/health/ready` endpoints |
+| `DefaultAzureCredential` | Managed Identity — no hardcoded credentials |
+
+---
+
+## PART 11 Interview Q&A
+
+```
+প্রশ্ন: Multi-stage Dockerfile-এর সুবিধা কী?
+উত্তর: Final image-এ শুধু runtime (.NET aspnet)।
+SDK image (~700MB) vs runtime (~200MB)।
+Build tools, source code, intermediate files → production image-এ নেই।
+Security surface কমে। Pull ও startup faster।
+
+প্রশ্ন: liveness probe আর readiness probe পার্থক্য?
+উত্তর:
+liveness  → pod জীবিত আছে? Fail হলে K8s restart করে।
+             /health/live → always return 200 (process running)
+readiness → traffic নিতে পারবে? Fail হলে load balancer সরিয়ে দেয়।
+             /health/ready → DB, Redis, dependencies check করে।
+Startup-এ DB connect হওয়ার আগেই liveness pass কিন্তু readiness fail।
+
+প্রশ্ন: Zero-downtime deployment কীভাবে করবেন?
+উত্তর:
+K8s: RollingUpdate strategy। maxUnavailable: 0 → নতুন pod ready হলে পুরোনো সরে।
+Azure: Deployment slots — staging slot-এ deploy → swap।
+       Both: Readiness probe সফল না হলে traffic যায় না।
+
+প্রশ্ন: Secrets কীভাবে manage করবেন?
+উত্তর:
+Dev     → User Secrets (dotnet user-secrets) — never committed।
+CI/CD   → GitHub Actions Secrets (${{ secrets.* }})।
+Production → Azure Key Vault + Managed Identity।
+             DefaultAzureCredential → no hardcoded credentials।
+Never:  → appsettings.json-এ production secrets।
+        → environment variables in Dockerfile।
+        → .env files committed to git।
+
+প্রশ্ন: GitHub Actions CI/CD-এ কী কী steps থাকা উচিত?
+উত্তর:
+1. Checkout code
+2. Setup .NET SDK
+3. Restore + cache NuGet
+4. Build (Release)
+5. Run tests (coverage)
+6. Docker build + push (on main only)
+7. Deploy to environment
+PR → শুধু build + test। Main merge → full deploy।
+Environment secrets → production-only deployment।
+```
+
+---
+
+[⬆ শীর্ষে ফিরুন](#top)
+
+---
+
+> **📌 পরবর্তী:** PART 12 — System Design with .NET (Microservices, DDD, CQRS, Event Sourcing, Clean Architecture এবং আরও...)
